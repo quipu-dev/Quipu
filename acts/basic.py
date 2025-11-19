@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
 from typing import List
+import logging
 from core.executor import Executor, ExecutionError
+
+logger = logging.getLogger(__name__)
 
 def register_basic_acts(executor: Executor):
     """注册基础文件系统操作"""
@@ -28,7 +31,7 @@ def _write_file(executor: Executor, args: List[str]):
     with open(target_path, 'w', encoding='utf-8') as f:
         f.write(content)
     
-    print(f"✅ [Write] 文件已写入: {target_path.relative_to(executor.root_dir)}")
+    logger.info(f"✅ [Write] 文件已写入: {target_path.relative_to(executor.root_dir)}")
 
 def _replace(executor: Executor, args: List[str]):
     """
@@ -60,4 +63,4 @@ def _replace(executor: Executor, args: List[str]):
     with open(target_path, 'w', encoding='utf-8') as f:
         f.write(new_content)
         
-    print(f"✅ [Replace] 文件内容已更新: {target_path.relative_to(executor.root_dir)}")
+    logger.info(f"✅ [Replace] 文件内容已更新: {target_path.relative_to(executor.root_dir)}")

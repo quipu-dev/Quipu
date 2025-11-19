@@ -24,7 +24,7 @@ def main(
             readable=True,
             resolve_path=True
         )
-    ],
+    ] = Path("o.md"),
     work_dir: Annotated[
         Path, 
         typer.Option(
