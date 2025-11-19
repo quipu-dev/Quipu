@@ -1,12 +1,11 @@
 import pytest
 from pathlib import Path
-from core.parser import MarkdownParser
+from core.parser import BacktickParser, TildeParser, get_parser
 from core.executor import Executor, ExecutionError
 
 class TestParser:
-    def test_parse_simple_flow(self):
+    def test_backtick_parser(self):
         md = """
-Instruction text...
 ```act
 write_file
 ```
@@ -17,14 +16,44 @@ test.txt
 hello
 ```
 """
-        parser = MarkdownParser()
+        parser = BacktickParser()
         stmts = parser.parse(md)
-        
         assert len(stmts) == 1
         assert stmts[0]['act'] == 'write_file'
-        # parser 会保留 block 中的换行符，这里用 strip 验证核心内容
         assert stmts[0]['contexts'][0].strip() == 'test.txt'
-        assert stmts[0]['contexts'][1].strip() == 'hello'
+
+    def test_tilde_parser(self):
+        # 测试蓝幕模式：当内容中包含反引号时，外部使用波浪号
+        md = """
+~~~act
+write_file
+~~~
+~~~path
+markdown_guide.md
+~~~
+~~~markdown
+Here is how you write code:
+```python
+print("hello")
+```
+~~~
+"""
+        parser = TildeParser()
+        stmts = parser.parse(md)
+        assert len(stmts) == 1
+        assert stmts[0]['act'] == 'write_file'
+        
+        # 验证内部的反引号是否被完整保留
+        content = stmts[0]['contexts'][1]
+        assert '```python' in content
+        assert 'print("hello")' in content
+        assert '```' in content
+
+    def test_factory(self):
+        assert isinstance(get_parser("backtick"), BacktickParser)
+        assert isinstance(get_parser("tilde"), TildeParser)
+        with pytest.raises(ValueError):
+            get_parser("unknown")
 
 class TestBasicActs:
     def test_write_file(self, executor: Executor, isolated_vault: Path):

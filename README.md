@@ -2,7 +2,7 @@
 
 > **The Effector for AI Agents.**
 
-Axon 是一个基于 Markdown 块流（Block Stream）的文件系统操作执行器。它旨在作为 AI 模型的“轴突”，将 AI 生成的思维链（Chain of Thought）或指令转化为实际的文件系统副作用。
+Axon 是一个基于 Markdown 块流（Block Stream）的文件系统操作执行器。它旨在作为 AI 模型的“轴突”，将 AI 生成的指令转化为实际的文件系统副作用。
 
 ## 🧠 核心理念
 
@@ -73,6 +73,41 @@ python main.py run plan.md
 
 ```bash
 python main.py run plan.md --work-dir ./my_project
+```
+
+### 🎭 幕布模式 (Parsers)
+
+当需要让 AI 修改 Markdown 文件或写入包含 \`\`\` 的复杂代码时，传统的反引号解析可能会混淆。Axon 提供了“幕布模式”，类似于电影制作中的“绿幕”和“蓝幕”。
+
+#### 1. Backtick (绿幕) - 默认
+使用 \`\`\` 作为分隔符。适用于绝大多数编程语言代码。
+
+```bash
+# 默认使用
+python main.py run plan.md
+```
+
+#### 2. Tilde (蓝幕)
+使用 `~~~` 作为分隔符。适用于指令内容本身包含 \`\`\` 的情况。
+
+`````markdown
+~~~act
+write_file
+~~~
+~~~path
+guide.md
+~~~
+~~~markdown
+Here is a code block:
+```python
+print("nested")
+```
+~~~
+`````
+
+```bash
+# 指定使用 tilde 解析器
+python main.py run plan.md --parser tilde
 ```
 
 ## 🛠️ 支持的操作 (Acts)
