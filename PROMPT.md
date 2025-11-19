@@ -81,28 +81,28 @@ src/main.py
         print("Fixed")
 ~~~~~
 
-#### 场景：安全修改配置
-> 在修改 `config.json` 之前，先断言它必须存在。如果用户当前目录没有这个文件，操作会直接停止，避免创建出无用的孤立文件。
+#### 场景：项目根目录验证与文件写入
+> `write_file` 总是会创建文件（即使用户位于错误的目录）。为了防止在错误的路径下（例如 `~/Desktop`）生成孤立的脚本，我们需要先**断言**当前工作区包含特定的特征文件（如 `.git` 文件夹或 `requirements.txt`），确认这确实是预期的项目根目录。
 
 ~~~~~act
 check_files_exist
 ~~~~~
 ~~~~~list
-config.json
-utils/helpers.py
+.git
+README.md
 ~~~~~
 
 ~~~~~act
-replace
+write_file
 ~~~~~
 ~~~~~path
-config.json
+.gitignore
 ~~~~~
-~~~~~json
-    "debug": false
-~~~~~
-~~~~~json
-    "debug": true
+~~~~~content
+# Ignore environment variables
+.env
+__pycache__/
+*.log
 ~~~~~
 
 ---
