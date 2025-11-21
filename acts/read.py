@@ -52,7 +52,8 @@ def _search_files(executor: Executor, args: List[str]):
             )
             
             if result.stdout:
-                logger.info(f"\n{result.stdout.strip()}")
+                # 结果输出到 STDOUT 以支持管道
+                print(result.stdout.strip())
                 return
             else:
                 logger.info("No matches found (via rg).")
@@ -98,7 +99,8 @@ def _python_search(start_path: Path, pattern_str: str):
 
     if matches:
         output = "\n".join(matches)
-        logger.info(f"\n{output}")
+        # 结果输出到 STDOUT
+        print(output)
     else:
         logger.info("No matches found (via Python).")
 
@@ -122,8 +124,9 @@ def _read_file(executor: Executor, args: List[str]):
 
     try:
         content = target_path.read_text(encoding='utf-8')
-        # 打印文件内容，带上简单的边框方便阅读
-        logger.info(f"\n📖 [Read] {target_path.name}:\n{'-'*40}\n{content}\n{'-'*40}")
+        logger.info(f"📖 [Read] Reading {target_path.name}...")
+        # 纯内容输出到 STDOUT，移除装饰性边框以便于管道处理
+        print(content)
     except UnicodeDecodeError:
         logger.error(f"❌ [Read] 无法读取二进制文件或非 UTF-8 文件: {raw_path}")
     except Exception as e:
@@ -168,4 +171,5 @@ def _list_files(executor: Executor, args: List[str]):
         for f in files:
             output_lines.append(f"{indent}  📄 {f}")
 
+    # 目录树是信息展示，通常也作为数据输出
     print("\n".join(output_lines))

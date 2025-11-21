@@ -11,7 +11,7 @@ class TestReadActs:
         """自动为每个测试注册 read acts"""
         register_read_acts(executor)
 
-    def test_search_python_fallback(self, executor: Executor, isolated_vault: Path, caplog, monkeypatch):
+    def test_search_python_fallback(self, executor: Executor, isolated_vault: Path, caplog, capsys, monkeypatch):
         """
         测试场景: 强制禁用 rg，验证 Python 原生搜索逻辑。
         """
@@ -31,12 +31,16 @@ class TestReadActs:
         search_func(executor, ["SECRET_KEY"])
 
         # 4. 断言
+        # 日志中断言执行路径
         assert "Using Python native search" in caplog.text
-        assert "config.py" in caplog.text
-        assert 'SECRET_KEY = "123456"' in caplog.text
+        
+        # STDOUT 中断言结果内容
+        captured = capsys.readouterr()
+        assert "config.py" in captured.out
+        assert 'SECRET_KEY = "123456"' in captured.out
 
     @pytest.mark.skipif(not shutil.which("rg"), reason="Ripgrep (rg) 未安装，跳过集成测试")
-    def test_search_with_ripgrep(self, executor: Executor, isolated_vault: Path, caplog):
+    def test_search_with_ripgrep(self, executor: Executor, isolated_vault: Path, caplog, capsys):
         """
         测试场景: 系统存在 rg 时，验证 ripgrep 调用路径。
         """
@@ -50,11 +54,13 @@ class TestReadActs:
 
         # 3. 断言
         assert "Using 'rg' (ripgrep)" in caplog.text
-        # rg 的输出格式通常包含文件名
-        assert "main.rs" in caplog.text
-        assert 'println!("Hello Axon")' in caplog.text
+        
+        # 结果应在 STDOUT
+        captured = capsys.readouterr()
+        assert "main.rs" in captured.out
+        assert 'println!("Hello Axon")' in captured.out
 
-    def test_search_scoped_path(self, executor: Executor, isolated_vault: Path, caplog, monkeypatch):
+    def test_search_scoped_path(self, executor: Executor, isolated_vault: Path, caplog, capsys, monkeypatch):
         """
         测试场景: 指定搜索特定子目录。
         """
@@ -75,18 +81,14 @@ class TestReadActs:
         search_func(executor, ["target_function", "src"])
 
         # 3. 断言
-        log_output = caplog.text
-        assert "src/inner.txt" in log_output or str(Path("src/inner.txt")) in log_output
-        # 根目录的文件不应该出现在结果中
-        # 注意：日志中可能包含文件名，需确保逻辑严谨
-        # 简单判断：如果出现了 isolated_vault/target.txt 相关的路径则失败
-        # 但由于 caplog 输出的是相对路径或绝对路径，我们检查出现的次数或特定路径更稳妥
+        captured = capsys.readouterr()
+        stdout = captured.out
         
-        # 检查 root 下的文件未被匹配
-        # 注意: 不能简单 count("target_function")，因为日志头部会回显 Pattern: 'target_function'
-        # 我们验证根目录下的文件路径不应该出现在结果中
+        assert "src/inner.txt" in stdout or str(Path("src/inner.txt")) in stdout
+        
+        # 验证根目录下的文件路径不应该出现在结果中
         root_target = isolated_vault / "target.txt"
-        assert str(root_target) not in log_output
+        assert str(root_target) not in stdout
 
     def test_search_no_match(self, executor: Executor, isolated_vault: Path, caplog, monkeypatch):
         """

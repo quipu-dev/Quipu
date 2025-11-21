@@ -168,7 +168,8 @@ def main(
         # 执行
         executor.execute(statements)
         
-        typer.echo("\n✨ 所有操作执行完毕。")
+        # 将结束语输出到 stderr，以免污染数据流
+        typer.secho("\n✨ 所有操作执行完毕。", err=True)
 
     except Exception as e:
         logger.error(f"运行时错误: {e}")

@@ -10,7 +10,8 @@ def setup_logging():
     
     # 避免重复添加 handler
     if not root_logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
+        # 关键修改: 将日志输出到 stderr，防止污染管道 stdout
+        handler = logging.StreamHandler(sys.stderr)
         formatter = logging.Formatter(
             fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S"
