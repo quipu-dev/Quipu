@@ -17,6 +17,7 @@ def _check_files_exist(executor: Executor, args: List[str]):
     Act: check_files_exist
     Args: [file_list_string]
     说明: 检查当前工作区内是否存在指定的文件。文件名通过换行符分隔。
+    注意：本指令禁用混合模式。若在 act 行内提供了参数，后续的代码块将被忽略。
     """
     if len(args) < 1:
         raise ExecutionError("check_files_exist 需要至少一个参数: [file_list_string]")

@@ -52,6 +52,7 @@ def _git_add(executor: Executor, args: List[str]):
     """
     Act: git_add
     Args: [files] (空白符（如空格，换行）分隔的文件列表，或者 "." )
+    注意：本指令禁用混合模式。若在 act 行内指定了文件，后续的代码块将被忽略。
     """
     if not args:
         target = "."
