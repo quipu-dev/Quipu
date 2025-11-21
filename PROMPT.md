@@ -209,9 +209,10 @@ __pycache__/
 #### F. 系统命令 (`run_command`)
 *   参数 1: `command` (e.g., `pip install -r requirements.txt`)
 
-#### G. 文件读取 (`read_file`, `list_files`)
+#### G. 文件读取 (`read_file`, `list_files`, `search_files`)
 *   `read_file path`: 读取内容。
 *   `list_files path`: 列出目录结构。
+*   `search_files pattern`: 全局搜索（支持正则）。可加第二个参数指定目录。
 
 #### H. 重构 (`move_file`, `delete_file`)
 *   `move_file src dest`: 移动/重命名。
