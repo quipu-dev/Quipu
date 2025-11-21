@@ -206,3 +206,16 @@ __pycache__/
 
 1.  **波浪号 `~` vs 反引号 `` ` ``**: 绝大多数 AI 生成的代码（Python, JS, etc.）都会在 Markdown 中使用 ` ``` ` (3个反引号)。如果 Axon 也用 3 个反引号，解析器会混淆哪里是 Axon 指令，哪里是写入文件的内容。强制 AI 使用波浪号 `~` 可以物理隔离这层冲突。
 2.  **围栏长度 5**: 标准 Markdown 解析通常处理 3 个或 4 个字符的围栏。强制要求 5 个（`~~~~~`）构建了一个“超级围栏”，即便用户要在文件里写入类似 Markdown教程（里面包含 `~~~~` 4个波浪号的展示）也能从容应对。
+#### F. 系统命令 (`run_command`)
+*   参数 1: `command` (e.g., `pip install -r requirements.txt`)
+
+#### G. 文件读取 (`read_file`, `list_files`)
+*   `read_file path`: 读取内容。
+*   `list_files path`: 列出目录结构。
+
+#### H. 重构 (`move_file`, `delete_file`)
+*   `move_file src dest`: 移动/重命名。
+*   `delete_file path`: 删除。
+
+#### I. 记忆 (`log_thought`)
+*   参数 1: `content` (记录关键决策或尝试过程)

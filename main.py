@@ -10,7 +10,10 @@ from core.executor import Executor
 from acts.basic import register_basic_acts
 from acts.check import register_check_acts
 from acts.git import register_git_acts
-# 如果之前有 acts.custom，也可以在这里导入，或者依赖后续的注册逻辑
+from acts.shell import register_shell_acts
+from acts.read import register_read_acts
+from acts.refactor import register_refactor_acts
+from acts.memory import register_memory_acts
 from config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE
 
 # 初始化日志
@@ -72,6 +75,10 @@ def main(
         register_basic_acts(executor)
         register_check_acts(executor)
         register_git_acts(executor)
+        register_shell_acts(executor)
+        register_read_acts(executor)
+        register_refactor_acts(executor)
+        register_memory_acts(executor)
         
         typer.secho("\n📋 可用的 Axon 指令列表:\n", fg=typer.colors.GREEN, bold=True)
         
@@ -143,6 +150,10 @@ def main(
         register_basic_acts(executor)
         register_check_acts(executor)
         register_git_acts(executor)
+        register_shell_acts(executor)
+        register_read_acts(executor)
+        register_refactor_acts(executor)
+        register_memory_acts(executor)
 
         # 4. 执行
         executor.execute(statements)

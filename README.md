@@ -213,4 +213,18 @@ pytest
 *   `tests/`: 单元测试。
 *   `main.py`: CLI 入口。
 
----
+---### 扩展操作 (Shell/Read/Refactor/Memory)
+
+#### 系统命令 (`acts/shell.py`)
+*   `run_command`: 执行 Shell 命令。`[command]`
+
+#### 读取与检索 (`acts/read.py`)
+*   `read_file`: 读取并打印文件内容。`[path]`
+*   `list_files`: 打印目录树。`[path]` (可选)
+
+#### 重构操作 (`acts/refactor.py`)
+*   `move_file`: 移动或重命名。`[src, dest]`
+*   `delete_file`: 删除文件或目录。`[path]`
+
+#### 记忆 (`acts/memory.py`)
+*   `log_thought`: 记录思维日志到 `.axon/memory.md`。`[content]`
