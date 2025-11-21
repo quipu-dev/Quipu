@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 def register_check_acts(executor: Executor):
     """注册检查类操作"""
-    executor.register("check_files_exist", _check_files_exist)
+    # 禁止混合模式，明确参数来源
+    executor.register("check_files_exist", _check_files_exist, allow_hybrid=False)
     executor.register("check_cwd_match", _check_cwd_match)
 
 def _check_files_exist(executor: Executor, args: List[str]):

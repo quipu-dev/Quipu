@@ -2,6 +2,7 @@ import logging
 import difflib
 import typer
 import shlex
+import sys
 from pathlib import Path
 from typing import Dict, Callable, List, Any
 from .types import Statement
@@ -21,7 +22,8 @@ class Executor:
     def __init__(self, root_dir: Path, yolo: bool = False):
         self.root_dir = root_dir.resolve()
         self.yolo = yolo
-        self._acts: Dict[str, ActFunction] = {}
+        # 存储结构变更为: name -> (func, allow_hybrid)
+        self._acts: Dict[str, tuple[ActFunction, bool]] = {}
         
         # 确保根目录存在
         if not self.root_dir.exists():
@@ -30,14 +32,19 @@ class Executor:
             except Exception as e:
                 logger.warning(f"无法创建根目录 {self.root_dir}: {e}")
 
-    def register(self, name: str, func: ActFunction):
-        """注册一个新的操作"""
-        self._acts[name] = func
-        logger.debug(f"注册 Act: {name}")
+    def register(self, name: str, func: ActFunction, allow_hybrid: bool = True):
+        """
+        注册一个新的操作
+        :param allow_hybrid: 是否允许同时使用行内参数和 Block 参数。
+                             默认为 True (如 replace, write_file)。
+                             设为 False 时 (如 git_add)，如果存在行内参数，将忽略后续 Block。
+        """
+        self._acts[name] = (func, allow_hybrid)
+        logger.debug(f"注册 Act: {name} (Hybrid: {allow_hybrid})")
 
     def get_registered_acts(self) -> Dict[str, str]:
         """获取所有已注册的 Act 及其文档字符串"""
-        return {name: func.__doc__ for name, func in self._acts.items()}
+        return {name: data[0].__doc__ for name, data in self._acts.items()}
 
     def resolve_path(self, rel_path: str) -> Path:
         """
@@ -91,7 +98,28 @@ class Executor:
         
         typer.echo("") # 空行
 
-        return typer.confirm(f"❓ 是否对 {file_path.name} 执行上述修改?", default=True)
+        prompt = f"❓ 是否对 {file_path.name} 执行上述修改?"
+
+        # 处理交互输入：
+        # 如果 STDIN 是终端，直接使用 Typer (Click) 的标准 confirm
+        if sys.stdin.isatty():
+            return typer.confirm(prompt, default=True)
+        
+        # 如果 STDIN 被管道占用 (如 echo "..." | axon)，我们需要尝试打开 /dev/tty 来获取用户输入
+        # 注意：这主要适用于 Linux/macOS。Windows 上可能需要 CONIN$ 处理，但 Axon 目前主要针对 Unix 风格环境。
+        try:
+            # explicitly open the controlling terminal for reading
+            with open("/dev/tty", "r") as tty:
+                typer.echo(f"{prompt} [Y/n]: ", nl=False)
+                answer = tty.readline().strip().lower()
+                if not answer:
+                    return True # Default Yes
+                return answer in ("y", "yes")
+        except Exception as e:
+            # 如果无法打开终端进行交互（例如在完全无头的 CI 环境中且没开 YOLO），为了安全，默认拒绝
+            logger.error(f"❌ 无法获取交互输入 (非 TTY 环境且无法访问 /dev/tty): {e}")
+            logger.warning("提示: 在非交互式环境中使用，请考虑添加 --yolo 参数以自动确认。")
+            return False
 
     def execute(self, statements: List[Statement]):
         """执行语句序列"""
@@ -116,16 +144,25 @@ class Executor:
             act_name = tokens[0]
             inline_args = tokens[1:]
             
-            # 2. 合并参数：行内参数在前，Block参数在后
-            final_args = inline_args + block_contexts
-            
             if act_name not in self._acts:
                 logger.warning(f"跳过未知操作 [{i+1}/{len(statements)}]: {act_name}")
                 continue
 
+            func, allow_hybrid = self._acts[act_name]
+
+            # 2. 参数合并策略
+            if not allow_hybrid and inline_args:
+                # 如果不允许混合，且用户提供了行内参数，则忽略所有 Block 上下文
+                final_args = inline_args
+                if block_contexts:
+                    logger.debug(f"ℹ️  [{act_name}] 检测到行内参数，忽略了随后的 {len(block_contexts)} 个 Block 参数。")
+            else:
+                # 允许混合 (默认)，或者没有行内参数 -> 拼接
+                final_args = inline_args + block_contexts
+
             try:
                 logger.info(f"执行操作 [{i+1}/{len(statements)}]: {act_name} (Args: {len(final_args)})")
-                self._acts[act_name](self, final_args)
+                func(self, final_args)
             except Exception as e:
                 logger.error(f"执行失败 '{act_name}': {e}")
                 # 根据策略，这里可以选择抛出异常终止整个流程，或者继续

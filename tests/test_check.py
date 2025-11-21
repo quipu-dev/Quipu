@@ -20,7 +20,8 @@ class TestCheckActs:
         config.json
         src/main.py
         """
-        executor._acts['check_files_exist'](executor, [file_list])
+        func, _ = executor._acts['check_files_exist']
+        func(executor, [file_list])
 
     def test_check_files_exist_fail(self, executor: Executor, isolated_vault: Path):
         (isolated_vault / "exists.txt").touch()
@@ -31,7 +32,8 @@ class TestCheckActs:
         """
         
         with pytest.raises(ExecutionError) as excinfo:
-            executor._acts['check_files_exist'](executor, [file_list])
+            func, _ = executor._acts['check_files_exist']
+            func(executor, [file_list])
         
         msg = str(excinfo.value)
         assert "missing.txt" in msg
@@ -41,12 +43,14 @@ class TestCheckActs:
         # 获取当前测试 vault 的绝对路径
         real_path = str(isolated_vault.resolve())
         
-        executor._acts['check_cwd_match'](executor, [real_path])
+        func, _ = executor._acts['check_cwd_match']
+        func(executor, [real_path])
 
     def test_check_cwd_match_fail(self, executor: Executor):
         wrong_path = "/this/path/does/not/exist"
         
         with pytest.raises(ExecutionError) as excinfo:
-            executor._acts['check_cwd_match'](executor, [wrong_path])
+            func, _ = executor._acts['check_cwd_match']
+            func(executor, [wrong_path])
             
         assert "工作区目录不匹配" in str(excinfo.value)

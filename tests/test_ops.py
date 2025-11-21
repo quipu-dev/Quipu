@@ -97,7 +97,7 @@ class TestBasicActs:
         contexts = ["docs/readme.md", "# Hello"]
         
         # 直接调用注册在 executor 中的函数逻辑
-        write_func = executor._acts['write_file']
+        write_func, _ = executor._acts['write_file']
         write_func(executor, contexts)
         
         expected_file = isolated_vault / "docs/readme.md"
@@ -109,7 +109,7 @@ class TestBasicActs:
         f = isolated_vault / "main.py"
         f.write_text('print("Hello World")', encoding='utf-8')
         
-        replace_func = executor._acts['replace']
+        replace_func, _ = executor._acts['replace']
         replace_func(executor, ["main.py", 'print("Hello World")', 'print("Hello AI")'])
         
         assert f.read_text(encoding='utf-8') == 'print("Hello AI")'
@@ -118,7 +118,7 @@ class TestBasicActs:
         f = isolated_vault / "wrong.txt"
         f.write_text("AAA", encoding='utf-8')
         
-        replace_func = executor._acts['replace']
+        replace_func, _ = executor._acts['replace']
         
         with pytest.raises(ExecutionError) as excinfo:
             replace_func(executor, ["wrong.txt", "BBB", "CCC"])
@@ -133,14 +133,14 @@ class TestBasicActs:
         # 执行追加
         # 注意：这里假设 _acts 字典中已经有了 'append_file'，
         # 这通常通过 conftest.py 中的 register_basic_acts 自动完成
-        append_func = executor._acts['append_file']
+        append_func, _ = executor._acts['append_file']
         append_func(executor, ["log.txt", "Line 2"])
         
         # 验证
         assert f.read_text(encoding='utf-8') == "Line 1\nLine 2"
 
     def test_append_fail_not_found(self, executor: Executor):
-        append_func = executor._acts['append_file']
+        append_func, _ = executor._acts['append_file']
         
         with pytest.raises(ExecutionError) as excinfo:
             append_func(executor, ["ghost.txt", "content"])

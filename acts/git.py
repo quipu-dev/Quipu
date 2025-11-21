@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 def register_git_acts(executor: Executor):
     """注册 Git 相关操作"""
     executor.register("git_init", _git_init)
-    executor.register("git_add", _git_add)
+    # git_add: 禁止混合模式，防止误吞后续代码块
+    executor.register("git_add", _git_add, allow_hybrid=False)
     executor.register("git_commit", _git_commit)
     executor.register("git_status", _git_status)
 
