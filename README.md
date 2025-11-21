@@ -244,7 +244,9 @@ pytest
 *   `delete_file`: 删除文件或目录。`[path]`
 
 #### 记忆 (`acts/memory.py`)
-*   `log_thought`: 记录思维日志到 `.axon/memory.md`。`[content]`### 🚀 高级用法：管道与重定向
+*   `log_thought`: 记录思维日志到 `.axon/memory.md`。`[content]`
+
+### 🚀 高级用法：管道与重定向
 
 Axon 支持标准的 Unix 管道操作，这使得它可以轻松集成到其他工具链中（例如直接接收 LLM 的 API 输出）。
 
