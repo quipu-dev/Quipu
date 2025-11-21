@@ -11,6 +11,62 @@ from core.executor import Executor
 from core.plugin_loader import load_plugins
 from config import PROJECT_ROOT
 from config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE
+import os
+
+def _find_project_root(start_path: Path) -> Optional[Path]:
+    """向上递归查找包含 .git 的目录作为项目根目录"""
+    try:
+        current = start_path.resolve()
+        for parent in [current] + list(current.parents):
+            if (parent / ".git").exists():
+                return parent
+    except Exception:
+        pass
+    return None
+
+def _load_extra_plugins(executor: Executor, work_dir: Path):
+    """
+    按照层级顺序加载外部插件。
+    加载顺序（优先级从低到高，后加载的覆盖先加载的）：
+    1. 用户全局 ($HOME/.axon/acts)
+    2. 环境变量指定 (AXON_EXTRA_ACTS_DIR)
+    3. 项目根目录 (.git/../.axon/acts)
+    4. 当前工作区 (CWD/.axon/acts)
+    """
+    plugin_dirs = []
+    
+    # 1. User Home
+    home_acts = Path.home() / ".axon" / "acts"
+    plugin_dirs.append(("🏠 Global", home_acts))
+
+    # 2. Config / Env
+    env_path = os.getenv("AXON_EXTRA_ACTS_DIR")
+    if env_path:
+        plugin_dirs.append(("🔧 Env", Path(env_path)))
+
+    # 3. Project Root (Context)
+    project_root = _find_project_root(work_dir)
+    if project_root:
+        proj_acts = project_root / ".axon" / "acts"
+        # 避免与 CWD 重复，如果 ProjectRoot == WorkDir，只加一次
+        if proj_acts != (work_dir / ".axon" / "acts"):
+             plugin_dirs.append(("📦 Project", proj_acts))
+
+    # 4. Current Work Dir (Local)
+    cwd_acts = work_dir / ".axon" / "acts"
+    plugin_dirs.append(("📂 Local", cwd_acts))
+
+    # 执行加载
+    seen_paths = set()
+    for label, path in plugin_dirs:
+        resolved = path.resolve() if path.exists() else path
+        if resolved in seen_paths:
+            continue
+            
+        if path.exists() and path.is_dir():
+            # logger.info(f"加载 {label} 插件: {path}")
+            load_plugins(executor, path)
+            seen_paths.add(resolved)
 
 # 初始化日志
 setup_logging()
@@ -145,7 +201,12 @@ def main(
 
         # 初始化执行器并加载插件
         executor = Executor(root_dir=work_dir, yolo=yolo)
+        
+        # 1. 加载内置插件
         load_plugins(executor, PROJECT_ROOT / "acts")
+        
+        # 2. 加载扩展插件 (按照层级)
+        _load_extra_plugins(executor, work_dir)
 
         # 执行
         executor.execute(statements)
