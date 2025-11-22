@@ -11,6 +11,18 @@ def register(executor: Executor):
     executor.register("write_file", _write_file, arg_mode="hybrid")
     executor.register("replace", _replace, arg_mode="hybrid")
     executor.register("append_file", _append_file, arg_mode="hybrid")
+    # 注册 end 指令作为无操作指令，用于显式截断参数流
+    executor.register("end", _end, arg_mode="hybrid")
+
+def _end(executor: Executor, args: List[str]):
+    """
+    Act: end
+    Args: [ignored_contexts...]
+    说明: 这是一个空操作。
+    它的作用是显式结束上一个指令的参数收集。
+    解析器会将后续的 block 视为 end 的参数，而 end 函数会忽略它们。
+    """
+    pass
 
 def _write_file(executor: Executor, args: List[str]):
     """

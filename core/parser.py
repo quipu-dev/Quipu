@@ -88,10 +88,8 @@ class RegexBlockParser(BaseParser):
                 }
                 statements.append(current_statement)
             
-            elif lang == "end":
-                current_statement = None
-            
             else:
+                # 将非 act 的块作为上下文添加到当前语句
                 if current_statement is not None:
                     current_statement["contexts"].append(raw_content)
             
