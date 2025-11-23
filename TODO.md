@@ -67,7 +67,7 @@
 *   [x] **CLI 图导航 (`undo`, `redo`, `prev`, `next`)**
     *   [x] 实现快捷命令，允许在历史图谱中进行相对移动。
 *   [x] **交互式 TUI (`axon ui`)**
-    *   [x] 集成 Textual，提供一个可视化的历史浏览器和检出工具。
+    *   [x] 集成 Textual，提供一个可视化的、类似 `git log --graph` 的历史浏览器。
 
 ---
 
@@ -75,10 +75,10 @@
 
 让 Axon 从一个原型变成一个可靠的工具。
 
-*   [ ] **完善错误处理**：
+*   [x] **完善错误处理**：
     *   [x] 处理 `git` 未安装或工作目录非 Git 仓库的情况。
     *   [x] 在文件操作中处理权限问题 (`PermissionError`)。
     *   [ ] 细化 Plan 执行失败时的错误报告。
 *   [x] **配置系统**：实现 `core/config_manager.py` 以加载 `.axon/config.yml`，并集成了第一个配置项 (`sync.remote_name`)。
-*   [ ] **文档更新**：更新 `README.md` 和 `PROMPT.md`，反映 v4.2 的新概念和工作流。
+*   [x] **文档更新**：更新 `README.md` 和 `docs/` 目录，反映 v4.3 的新概念和工作流。
 *   [ ] **打包与分发**：为 `pip` 发布做准备。
