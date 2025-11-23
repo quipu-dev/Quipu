@@ -42,6 +42,70 @@ def sync(
 
     此命令会推送本地的 Axon 历史记录，并拉取远程的更新。
     """
+@app.command()
+def discard(
+    ctx: typer.Context,
+    work_dir: Annotated[
+        Path,
+        typer.Option(
+            "--work-dir", "-w",
+            help="操作执行的根目录（工作区）",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True
+        )
+    ] = DEFAULT_WORK_DIR,
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force", "-f",
+            help="强制执行，跳过确认提示。"
+        )
+    ] = False,
+):
+    """
+    丢弃工作区所有未记录的变更，恢复到上一个干净状态。
+    
+    此操作类似于 'git checkout .'，会清空所有因 Plan 失败或手动修改而产生的变更。
+    """
+    setup_logging()
+    
+    # 1. 初始化引擎并加载历史
+    engine = Engine(work_dir)
+    history_dir = work_dir.resolve() / ".axon" / "history"
+    graph = load_history_graph(history_dir)
+    
+    if not graph:
+        typer.secho("❌ 错误: 找不到任何历史记录，无法确定要恢复到哪个状态。", fg=typer.colors.RED, err=True)
+        ctx.exit(1)
+        
+    # 2. 找到最新的节点作为目标状态
+    latest_node = max(graph.values(), key=lambda n: n.timestamp)
+    target_tree_hash = latest_node.output_tree
+
+    # 3. 检查当前状态
+    current_hash = engine.git_db.get_tree_hash()
+    if current_hash == target_tree_hash:
+        typer.secho(f"✅ 工作区已经是干净状态 ({latest_node.short_hash})，无需操作。", fg=typer.colors.GREEN, err=True)
+        ctx.exit(0)
+
+    # 4. 确认操作
+    if not force:
+        confirm = typer.confirm(
+            f"🚨 即将丢弃工作区所有未记录的变更，并恢复到状态 {latest_node.short_hash}。\n"
+            f"此操作不可逆。是否继续？",
+            abort=True
+        )
+
+    # 5. 执行恢复
+    try:
+        engine.git_db.checkout_tree(target_tree_hash)
+        typer.secho(f"✅ 工作区已成功恢复到节点 {latest_node.short_hash}。", fg=typer.colors.GREEN, err=True)
+    except Exception as e:
+        typer.secho(f"❌ 恢复状态失败: {e}", fg=typer.colors.RED, err=True)
+        ctx.exit(1)
+
+
     setup_logging()
     work_dir = work_dir.resolve()
     

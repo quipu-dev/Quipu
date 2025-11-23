@@ -245,3 +245,35 @@ Now creating tests for the `checkout` functionality.
 **恢复策略**:
 1.  **感知 (Perceive)**: 使用 `read_file` 指令获取 `acts/read.py` 的确切内容。
 2.  **行动 (Act)**: 在下一步中，利用 `read_file` 的输出作为 `replace` 指令中准确的“旧内容”块，重新执行替换、添加和提交操作，以完成整个 `ActContext` 的重构。
+
+## [2025-11-23 18:11:38]
+The user has requested a 'git checkout .' equivalent to discard changes from a failed plan. This is a fantastic idea for improving the workflow's robustness.
+
+**Feature Name**: `axon discard`
+
+**Logic**:
+1.  The command needs to identify the "last clean state". In Axon's model, this is the `output_tree` of the most recently created history node (based on timestamp).
+2.  The command will then use the existing `git_db.checkout_tree()` method to perform a hard reset of the workspace to that state's hash.
+3.  It must include a confirmation prompt, as this is a destructive action (it discards unrecorded work). A `--force` flag will be provided to skip this.
+4.  Edge cases to handle:
+    - What if there is no history yet? The command should fail gracefully with a message.
+    - What if the workspace is already in the last clean state? It should inform the user and do nothing.
+
+**Implementation**:
+- Add a new command function `discard()` to `main.py` using Typer.
+- The function will instantiate an `Engine` to access `git_db` and helper methods.
+- It will use `load_history_graph` to get all nodes.
+- It will find the latest node by sorting on `timestamp`.
+- It will perform the necessary checks and confirmation before calling `engine.git_db.checkout_tree()`.
+- The implementation will be placed right after the `sync` command in `main.py` for logical grouping.
+
+## [2025-11-23 18:12:23]
+The user has approved the implementation of the `axon discard` command. I will now create a Git commit to persist this new feature.
+
+**Commit Strategy:**
+- **Type:** `feat` - This is a new feature for the user.
+- **Scope:** `cli` - The change is primarily an addition to the command-line interface.
+- **Subject:** A clear, concise summary: "Add `axon discard` command for workspace reset".
+- **Body:** Explain the motivation and functionality. It solves the problem of a dirty workspace after a failed plan by providing a `git checkout .` style reset to the last known clean state.
+
+This commit will finalize the implementation of this important workflow improvement.
