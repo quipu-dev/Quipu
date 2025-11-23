@@ -34,10 +34,15 @@ def _move_file(executor: Executor, args: List[str]):
         logger.warning("❌ [Skip] 用户取消移动")
         return
 
-    # 确保目标父目录存在
-    dest_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    shutil.move(str(src_path), str(dest_path))
+    try:
+        # 确保目标父目录存在
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        shutil.move(str(src_path), str(dest_path))
+    except PermissionError:
+        raise ExecutionError(f"移动/重命名失败: 权限不足。源: '{src_raw}', 目标: '{dest_raw}'")
+    except Exception as e:
+        raise ExecutionError(f"移动/重命名时发生未知错误: {e}")
     logger.info(f"✅ [Move] 已移动/重命名: {src_raw} -> {dest_raw}")
 
 def _delete_file(executor: Executor, args: List[str]):
@@ -64,9 +69,14 @@ def _delete_file(executor: Executor, args: List[str]):
         logger.warning("❌ [Skip] 用户取消删除")
         return
 
-    if target_path.is_dir():
-        shutil.rmtree(target_path)
-    else:
-        target_path.unlink()
+    try:
+        if target_path.is_dir():
+            shutil.rmtree(target_path)
+        else:
+            target_path.unlink()
+    except PermissionError:
+        raise ExecutionError(f"删除失败: 对 '{raw_path}' 的访问权限不足。")
+    except Exception as e:
+        raise ExecutionError(f"删除时发生未知错误: {e}")
         
     logger.info(f"🗑️  [Delete] 已删除: {raw_path}")

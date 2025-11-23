@@ -139,3 +139,25 @@ Now creating tests for the `checkout` functionality.
 1.  修改 `acts/basic.py` 中的 `_write_file`, `_replace`, `_append_file` 函数。
 2.  在文件读写和操作的代码块外层添加 `try...except PermissionError`。
 3.  如果捕获到 `PermissionError`，则抛出 `ExecutionError`，说明是权限问题，并建议用户检查权限。
+
+## [2025-11-23 16:50:27]
+继续完善错误处理，聚焦文件权限问题。
+
+**策略**:
+在 `acts` 模块的底层文件操作函数中，使用 `try...except PermissionError` 块来捕获权限错误。
+当捕获到该错误时，重新抛出一个 `ExecutionError`，其中包含更友好的、针对用户操作的上下文信息，例如 "无法写入文件 [文件名]，权限不足"。
+
+**执行步骤**:
+1.  修改 `acts/basic.py` 中的 `_write_file`, `_replace`, `_append_file` 函数。
+2.  在 `open()` 语句外层包裹 `try...except`。
+3.  在 `except` 块中，`raise ExecutionError(f"对 {raw_path} 的操作失败：权限不足。")`。
+
+这将使错误信息从通用的 "Permission denied" 变为与 Axon 操作直接相关的 "写入/替换/追加失败：权限不足"。
+
+## [2025-11-23 16:51:20]
+对刚才完成的错误处理改进进行评估，确定是否需要编写自动化测试。
+
+1.  **Git 存在性检查**: 已被现有集成测试覆盖。
+2.  **权限错误捕获**: 测试实现复杂，依赖于修改文件系统权限，可能导致测试不稳定。鉴于添加的逻辑非常简单（try/except 结构），通过代码审查足以保证质量。
+
+结论是跳过专门的测试，直接提交。

@@ -51,11 +51,17 @@ def _write_file(executor: Executor, args: List[str]):
         logger.warning(f"❌ [Skip] 用户取消写入: {raw_path}")
         return
 
-    # 确保父目录存在
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(target_path, 'w', encoding='utf-8') as f:
-        f.write(content)
+    try:
+        # 确保父目录存在
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(target_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+    except PermissionError:
+        raise ExecutionError(f"写入文件失败: 对 '{raw_path}' 的访问权限不足。")
+    except Exception as e:
+        # 捕获其他可能的 I/O 错误
+        raise ExecutionError(f"写入文件时发生未知错误: {e}")
     
     logger.info(f"✅ [Write] 文件已写入: {target_path.relative_to(executor.root_dir)}")
 
@@ -91,8 +97,13 @@ def _replace(executor: Executor, args: List[str]):
         logger.warning(f"❌ [Skip] 用户取消替换: {raw_path}")
         return
 
-    with open(target_path, 'w', encoding='utf-8') as f:
-        f.write(new_content)
+    try:
+        with open(target_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+    except PermissionError:
+        raise ExecutionError(f"替换文件内容失败: 对 '{raw_path}' 的访问权限不足。")
+    except Exception as e:
+        raise ExecutionError(f"更新文件时发生未知错误: {e}")
         
     logger.info(f"✅ [Replace] 文件内容已更新: {target_path.relative_to(executor.root_dir)}")
 
@@ -125,7 +136,12 @@ def _append_file(executor: Executor, args: List[str]):
         logger.warning(f"❌ [Skip] 用户取消追加: {raw_path}")
         return
 
-    with open(target_path, 'a', encoding='utf-8') as f:
-        f.write(content)
+    try:
+        with open(target_path, 'a', encoding='utf-8') as f:
+            f.write(content)
+    except PermissionError:
+        raise ExecutionError(f"追加文件内容失败: 对 '{raw_path}' 的访问权限不足。")
+    except Exception as e:
+        raise ExecutionError(f"追加文件时发生未知错误: {e}")
     
     logger.info(f"✅ [Append] 内容已追加到: {target_path.relative_to(executor.root_dir)}")
