@@ -9,16 +9,70 @@ from core.controller import run_axon
 from config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE, PROJECT_ROOT
 from core.plugin_loader import load_plugins
 from core.executor import Executor
+from core.history import load_history_graph
 import inspect
 
 # 注意：不要在模块级别直接调用 setup_logging()，
 # 否则会导致 CliRunner 测试中的 I/O 流过早绑定/关闭问题。
 logger = logging.getLogger(__name__)
 
-app = typer.Typer(add_completion=False)
+# 将主应用改名为 app，并将旧的 cli 命令重命名为 'run'
+app = typer.Typer(add_completion=False, name="axon")
 
 @app.command()
-def cli(
+def log(
+    work_dir: Annotated[
+        Path,
+        typer.Option(
+            "--work-dir", "-w",
+            help="操作执行的根目录（工作区）",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True
+        )
+    ] = DEFAULT_WORK_DIR,
+):
+    """
+    显示 Axon 历史图谱日志。
+    """
+    setup_logging()
+    
+    history_dir = work_dir.resolve() / ".axon" / "history"
+    if not history_dir.exists():
+        typer.secho(f"❌ 在 '{work_dir}' 中未找到 Axon 历史记录 (.axon/history)。", fg=typer.colors.RED, err=True)
+        raise typer.Exit(1)
+
+    graph = load_history_graph(history_dir)
+    if not graph:
+        typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
+        raise typer.Exit(0)
+        
+    # 按时间戳降序排序
+    nodes = sorted(graph.values(), key=lambda n: n.timestamp, reverse=True)
+    
+    typer.secho("--- Axon History Log ---", bold=True, err=True)
+    for node in nodes:
+        ts = node.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # 颜色和标签
+        color = typer.colors.CYAN if node.node_type == "plan" else typer.colors.MAGENTA
+        tag = f"[{node.node_type.upper()}]"
+        
+        # 摘要
+        first_line = node.content.strip().split('\n')[0]
+        # 尝试从 plan 中提取 act 名称作为摘要
+        if node.node_type == 'plan' and 'act' in first_line:
+            summary = first_line
+        else:
+             summary = (first_line[:70] + '...') if len(first_line) > 70 else first_line
+
+
+        typer.secho(f"{ts} {tag:<9} {node.short_hash}", fg=color, nl=False, err=True)
+        typer.echo(f" - {summary}", err=True)
+
+
+@app.command(name="run")
+def run_command(
     ctx: typer.Context,
     file: Annotated[
         Optional[Path], 
@@ -120,8 +174,8 @@ def cli(
     if not content.strip():
         typer.secho(f"⚠️  提示: 未提供输入，且当前目录下未找到默认文件 '{DEFAULT_ENTRY_FILE.name}'。", fg=typer.colors.YELLOW, err=True)
         typer.echo("\n用法示例:", err=True)
-        typer.echo("  axon my_plan.md       # 指定文件", err=True)
-        typer.echo("  echo '...' | axon     # 管道输入", err=True)
+        typer.echo("  axon run my_plan.md       # 指定文件", err=True)
+        typer.echo("  echo '...' | axon run     # 管道输入", err=True)
         typer.echo("\n更多选项请使用 --help", err=True)
         ctx.exit(0) # 这是一个正常的空运行退出，不应报错
 

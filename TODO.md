@@ -55,8 +55,8 @@
 
 当核心循环跑通后，我们将添加让用户能够与历史图谱交互的核心功能。
 
-*   [ ] **历史查看 (`axon log`)**
-    *   [ ] 实现一个新的 CLI 命令 `axon log`，用于列出 `.axon/history` 中的所有节点。
+*   [x] **历史查看 (`axon log`)**
+    *   [x] 实现一个新的 CLI 命令 `axon log`，用于列出 `.axon/history` 中的所有节点。
     *   [ ] (可选) 实现 `--graph` 标志，以 TUI 形式可视化历史分支。
 *   [ ] **时间旅行 (`axon checkout`)**
     *   [ ] 实现 CLI 命令 `axon checkout <node_hash>`。
