@@ -23,6 +23,46 @@ logger = logging.getLogger(__name__)
 app = typer.Typer(add_completion=False, name="axon")
 
 @app.command()
+def save(
+    ctx: typer.Context,
+    message: Annotated[Optional[str], typer.Argument(help="本次快照的简短描述。")] = None,
+    work_dir: Annotated[
+        Path,
+        typer.Option(
+            "--work-dir", "-w",
+            help="操作执行的根目录（工作区）",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True
+        )
+    ] = DEFAULT_WORK_DIR,
+):
+    """
+    捕获当前工作区的状态，创建一个“微提交”快照。
+
+    这是一种轻量级的版本控制，用于记录开发过程中的思考步骤，
+    而无需创建正式的 Git Commit。
+    """
+    setup_logging()
+    
+    engine = Engine(work_dir)
+    status = engine.align()
+    
+    if status == "CLEAN":
+        typer.secho("✅ 工作区状态未发生变化，无需创建快照。", fg=typer.colors.GREEN, err=True)
+        ctx.exit(0)
+    
+    current_hash = engine.git_db.get_tree_hash()
+    try:
+        node = engine.capture_drift(current_hash, message=message)
+        msg_suffix = f' ({message})' if message else ''
+        typer.secho(f"📸 快照已保存: {node.short_hash}{msg_suffix}", fg=typer.colors.GREEN, err=True)
+    except Exception as e:
+        typer.secho(f"❌ 创建快照失败: {e}", fg=typer.colors.RED, err=True)
+        ctx.exit(1)
+
+
+@app.command()
 def sync(
     ctx: typer.Context,
     work_dir: Annotated[

@@ -68,23 +68,21 @@ class Engine:
         
         return "DIRTY"
 
-    def capture_drift(self, current_hash: str) -> AxonNode:
+    def capture_drift(self, current_hash: str, message: Optional[str] = None) -> AxonNode:
         """
         捕获当前工作区的漂移，生成一个新的 CaptureNode。
+        可以附带一条可选的消息。
         """
-        logger.info(f"📸 正在捕获工作区漂移，新状态 Hash: {current_hash[:7]}")
-        
+        log_message = f"📸 正在捕获工作区漂移 (Message: {message})" if message else f"📸 正在捕获工作区漂移"
+        logger.info(f"{log_message}，新状态 Hash: {current_hash[:7]}")
+
         # 1. 确定父节点
-        # 使用 Git 官方的 Empty Tree Hash 作为创世基准
-        # 这允许 diff-tree 正确计算从"无"到"有"的变更
-        input_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+        input_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904" # Git Empty Tree Hash
         last_commit_hash = None
         
         if self.history_graph:
-            # 按时间戳找到最近的节点作为父节点
             last_node = max(self.history_graph.values(), key=lambda node: node.timestamp)
             input_hash = last_node.output_tree
-            # 获取上一个锚点 commit 用于链接历史
             parent_ref_commit_result = self.git_db._run(["rev-parse", "refs/axon/history"], check=False)
             if parent_ref_commit_result.returncode == 0:
                 last_commit_hash = parent_ref_commit_result.stdout.strip()
@@ -97,13 +95,13 @@ class Engine:
         ts_str = timestamp.strftime("%Y%m%d%H%M%S")
         filename = self.history_dir / f"{input_hash}_{current_hash}_{ts_str}.md"
         
-        meta = {
-            "type": "capture",
-            "input_tree": input_hash,
-            "output_tree": current_hash
-        }
+        meta = {"type": "capture", "input_tree": input_hash, "output_tree": current_hash}
+        
+        # 动态构建 Markdown Body
+        user_message_section = f"### 💬 备注:\n{message}\n\n" if message else ""
         body = (
             f"# 📸 Snapshot Capture\n\n"
+            f"{user_message_section}"
             f"检测到工作区发生变更。\n\n"
             f"### 📝 变更文件摘要:\n```\n{diff_summary}\n```"
         )
@@ -113,7 +111,7 @@ class Engine:
         filename.write_text(frontmatter + body, "utf-8")
         
         # 5. 创建锚点 Commit 并更新引用
-        commit_msg = f"Axon Capture: {current_hash[:7]}"
+        commit_msg = f"Axon Save: {message}" if message else f"Axon Capture: {current_hash[:7]}"
         parents = [last_commit_hash] if last_commit_hash else []
         new_commit_hash = self.git_db.create_anchor_commit(current_hash, commit_msg, parent_commits=parents)
         self.git_db.update_ref("refs/axon/history", new_commit_hash)
