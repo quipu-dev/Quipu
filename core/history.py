@@ -71,9 +71,11 @@ def load_history_graph(history_dir: Path) -> Dict[str, AxonNode]:
     for node in graph.values():
         # 节点的 input_tree 就是其父节点的 output_tree
         if node.input_tree in graph:
-            parent_node = graph[node.input_tree]
-            node.parent = parent_node
-            parent_node.children.append(node)
+            potential_parent = graph[node.input_tree]
+            # 关键修复：防止因幂等操作导致节点成为自己的父节点
+            if potential_parent is not node:
+                node.parent = potential_parent
+                potential_parent.children.append(node)
 
     # 为所有节点的子列表按时间排序，确保导航行为一致
     for node in graph.values():
