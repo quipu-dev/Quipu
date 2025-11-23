@@ -319,14 +319,27 @@ def run_command(
         content = DEFAULT_ENTRY_FILE.read_text(encoding="utf-8")
         source_desc = f"默认文件 ({DEFAULT_ENTRY_FILE.name})"
 
+    # 智能纠错提示：
+    # 如果用户输入了 'axon log' 但被解析为 'axon run log' (即 file="log")，
+    # 且 "log" 文件不存在，我们应该提示用户可能想执行的是命令。
+    if file and not file.exists() and file.name in ["log", "checkout", "sync", "init"]:
+        typer.secho(f"❌ 错误: 找不到指令文件: {file}", fg=typer.colors.RED, err=True)
+        typer.secho(f"💡 提示: 你是不是想执行 'axon {file.name}' 命令？", fg=typer.colors.YELLOW, err=True)
+        typer.echo(f"  请尝试: python main.py {file.name} ...", err=True)
+        ctx.exit(1)
+
     # D. 最终检查
     if not content.strip():
-        typer.secho(f"⚠️  提示: 未提供输入，且当前目录下未找到默认文件 '{DEFAULT_ENTRY_FILE.name}'。", fg=typer.colors.YELLOW, err=True)
-        typer.echo("\n用法示例:", err=True)
-        typer.echo("  axon run my_plan.md       # 指定文件", err=True)
-        typer.echo("  echo '...' | axon run     # 管道输入", err=True)
-        typer.echo("\n更多选项请使用 --help", err=True)
-        ctx.exit(0) # 这是一个正常的空运行退出，不应报错
+        if file:
+             # 如果指定了文件但读取失败或为空（前面已处理存在性，这里处理内容）
+             pass 
+        else:
+            typer.secho(f"⚠️  提示: 未提供输入，且当前目录下未找到默认文件 '{DEFAULT_ENTRY_FILE.name}'。", fg=typer.colors.YELLOW, err=True)
+            typer.echo("\n用法示例:", err=True)
+            typer.echo("  axon run my_plan.md       # 指定文件", err=True)
+            typer.echo("  echo '...' | axon run     # 管道输入", err=True)
+            typer.echo("\n更多选项请使用 --help", err=True)
+            ctx.exit(0) # 这是一个正常的空运行退出，不应报错
 
     logger.info(f"已加载指令源: {source_desc}")
     logger.info(f"工作区根目录: {work_dir}")
