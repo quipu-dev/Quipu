@@ -11,6 +11,9 @@ o
 t
 tmpfile
 
+# axon
+.axon
+
 # Distribution / Packaging
 .Python
 build/

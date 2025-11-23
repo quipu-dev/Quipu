@@ -1,83 +1,29 @@
 import typer
 import logging
-import inspect
 import sys
 from pathlib import Path
 from typing import Annotated, Optional
 
 from logger_config import setup_logging
-from core.parser import get_parser, list_parsers, detect_best_parser
-from core.executor import Executor
+from core.controller import run_axon
+from config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE, PROJECT_ROOT
 from core.plugin_loader import load_plugins
-from config import PROJECT_ROOT
-from config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE
-import os
+from core.executor import Executor
+import inspect
 
-def _find_project_root(start_path: Path) -> Optional[Path]:
-    """向上递归查找包含 .git 的目录作为项目根目录"""
-    try:
-        current = start_path.resolve()
-        for parent in [current] + list(current.parents):
-            if (parent / ".git").exists():
-                return parent
-    except Exception:
-        pass
-    return None
-
-def _load_extra_plugins(executor: Executor, work_dir: Path):
-    """
-    按照层级顺序加载外部插件。
-    加载顺序（优先级从低到高，后加载的覆盖先加载的）：
-    1. 用户全局 ($HOME/.axon/acts)
-    2. 环境变量指定 (AXON_EXTRA_ACTS_DIR)
-    3. 项目根目录 (.git/../.axon/acts)
-    4. 当前工作区 (CWD/.axon/acts)
-    """
-    plugin_dirs = []
-    
-    # 1. User Home
-    home_acts = Path.home() / ".axon" / "acts"
-    plugin_dirs.append(("🏠 Global", home_acts))
-
-    # 2. Config / Env
-    env_path = os.getenv("AXON_EXTRA_ACTS_DIR")
-    if env_path:
-        plugin_dirs.append(("🔧 Env", Path(env_path)))
-
-    # 3. Project Root (Context)
-    project_root = _find_project_root(work_dir)
-    if project_root:
-        proj_acts = project_root / ".axon" / "acts"
-        # 避免与 CWD 重复，如果 ProjectRoot == WorkDir，只加一次
-        if proj_acts != (work_dir / ".axon" / "acts"):
-             plugin_dirs.append(("📦 Project", proj_acts))
-
-    # 4. Current Work Dir (Local)
-    cwd_acts = work_dir / ".axon" / "acts"
-    plugin_dirs.append(("📂 Local", cwd_acts))
-
-    # 执行加载
-    seen_paths = set()
-    for label, path in plugin_dirs:
-        resolved = path.resolve() if path.exists() else path
-        if resolved in seen_paths:
-            continue
-            
-        if path.exists() and path.is_dir():
-            # logger.info(f"加载 {label} 插件: {path}")
-            load_plugins(executor, path)
-            seen_paths.add(resolved)
-
-# 初始化日志
-setup_logging()
+# 注意：不要在模块级别直接调用 setup_logging()，
+# 否则会导致 CliRunner 测试中的 I/O 流过早绑定/关闭问题。
 logger = logging.getLogger(__name__)
 
-def main(
+app = typer.Typer(add_completion=False)
+
+@app.command()
+def cli(
     ctx: typer.Context,
     file: Annotated[
         Optional[Path], 
         typer.Argument(
-            help=f"包含 Markdown 指令的文件路径。若省略则尝试读取 STDIN 或默认文件 {DEFAULT_ENTRY_FILE.name}",
+            help=f"包含 Markdown 指令的文件路径。",
             resolve_path=True
         )
     ] = None,
@@ -95,7 +41,7 @@ def main(
         str,
         typer.Option(
             "--parser", "-p",
-            help=f"选择解析器语法。默认为 'auto' (自动检测)。可用: {['auto'] + list_parsers()}",
+            help=f"选择解析器语法。默认为 'auto'。",
         )
     ] = "auto",
     yolo: Annotated[
@@ -117,12 +63,15 @@ def main(
     Axon: 执行 Markdown 文件中的操作指令。
     支持从文件参数、管道 (STDIN) 或默认文件中读取指令。
     """
+    # 延迟初始化日志，确保流处理正确
+    setup_logging()
+    
+    # --- 1. 特殊指令处理 ---
     if list_acts:
-        # 初始化一个临时 Executor 并加载所有插件以获取注册表
         executor = Executor(root_dir=Path("."), yolo=True)
         load_plugins(executor, PROJECT_ROOT / "acts")
         
-        typer.secho("\n📋 可用的 Axon 指令列表:\n", fg=typer.colors.GREEN, bold=True)
+        typer.secho("\n📋 可用的 Axon 指令列表:\n", fg=typer.colors.GREEN, bold=True, err=True)
         
         acts = executor.get_registered_acts()
         for name in sorted(acts.keys()):
@@ -130,53 +79,51 @@ def main(
             clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
             indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
             
-            typer.secho(f"🔹 {name}", fg=typer.colors.CYAN, bold=True)
-            typer.echo(f"{indented_doc}\n")
+            typer.secho(f"🔹 {name}", fg=typer.colors.CYAN, bold=True, err=True)
+            typer.echo(f"{indented_doc}\n", err=True)
             
-        raise typer.Exit()
+        ctx.exit(0)
 
-    # --- 输入源处理逻辑 ---
-    
+    # --- 2. 输入源处理 (Input Normalization) ---
     content = ""
     source_desc = ""
 
-    # 1. 优先检查显式文件参数
+    # A. 显式文件参数
     if file:
         if not file.exists():
-            typer.secho(f"❌ 错误: 找不到指令文件: {file}", fg=typer.colors.RED)
-            raise typer.Exit(code=1)
+            typer.secho(f"❌ 错误: 找不到指令文件: {file}", fg=typer.colors.RED, err=True)
+            ctx.exit(1)
         if not file.is_file():
-            typer.secho(f"❌ 错误: 路径不是文件: {file}", fg=typer.colors.RED)
-            raise typer.Exit(code=1)
-        
+            typer.secho(f"❌ 错误: 路径不是文件: {file}", fg=typer.colors.RED, err=True)
+            ctx.exit(1)
         content = file.read_text(encoding="utf-8")
         source_desc = f"文件 ({file.name})"
 
-    # 2. 检查 STDIN (管道/重定向)
+    # B. 尝试读取 STDIN (管道)
+    # 只要不是 TTY，就尝试读取。这解决了 isatty 在测试环境中的歧义。
     elif not sys.stdin.isatty():
-        # 当 sys.stdin.isatty() 为 False 时，说明有数据被 pipe 进来
-        logger.info("正在从 STDIN (管道) 读取指令...")
-        content = sys.stdin.read()
-        source_desc = "STDIN (管道流)"
+        try:
+            # 读取所有内容，如果为空字符串说明没有数据
+            stdin_content = sys.stdin.read()
+            if stdin_content:
+                content = stdin_content
+                source_desc = "STDIN (管道流)"
+        except Exception:
+            pass # 读取失败则忽略
 
-    # 3. 回退到默认文件
-    elif DEFAULT_ENTRY_FILE.exists():
+    # C. 回退到默认文件
+    if not content and DEFAULT_ENTRY_FILE.exists():
         content = DEFAULT_ENTRY_FILE.read_text(encoding="utf-8")
         source_desc = f"默认文件 ({DEFAULT_ENTRY_FILE.name})"
-        
-    # 4. 无输入 -> 显示帮助
-    else:
-        typer.secho(f"⚠️  提示: 未提供输入，且当前目录下未找到默认文件 '{DEFAULT_ENTRY_FILE.name}'。", fg=typer.colors.YELLOW)
-        typer.echo("\n用法示例:")
-        typer.echo("  axon my_plan.md       # 指定文件")
-        typer.echo("  cat plan.md | axon    # 管道输入")
-        typer.echo("  axon < plan.md        # 重定向输入")
-        typer.echo("\n更多选项请使用 --help")
-        raise typer.Exit(code=0)
 
+    # D. 最终检查
     if not content.strip():
-        typer.secho("❌ 错误: 输入内容为空。", fg=typer.colors.RED)
-        raise typer.Exit(code=1)
+        typer.secho(f"⚠️  提示: 未提供输入，且当前目录下未找到默认文件 '{DEFAULT_ENTRY_FILE.name}'。", fg=typer.colors.YELLOW, err=True)
+        typer.echo("\n用法示例:", err=True)
+        typer.echo("  axon my_plan.md       # 指定文件", err=True)
+        typer.echo("  echo '...' | axon     # 管道输入", err=True)
+        typer.echo("\n更多选项请使用 --help", err=True)
+        ctx.exit(0) # 这是一个正常的空运行退出，不应报错
 
     logger.info(f"已加载指令源: {source_desc}")
     logger.info(f"工作区根目录: {work_dir}")
@@ -184,40 +131,27 @@ def main(
     if yolo:
         logger.warning("⚠️  YOLO 模式已开启：将自动确认所有修改。")
 
-    try:
-        # 解析
-        final_parser_name = parser_name
-        if parser_name == "auto":
-            final_parser_name = detect_best_parser(content)
-            if final_parser_name != "backtick":
-                logger.info(f"🔍 自动检测到解析器: {final_parser_name}")
+    # --- 3. 调用核心控制器 (Core Execution) ---
+    result = run_axon(
+        content=content,
+        work_dir=work_dir,
+        parser_name=parser_name,
+        yolo=yolo
+    )
 
-        parser = get_parser(final_parser_name)
-        statements = parser.parse(content)
-        
-        if not statements:
-            typer.echo(f"⚠️  使用 '{final_parser_name}' 解析器未找到任何有效的 'act' 操作块。")
-            raise typer.Exit()
+    # --- 4. 处理结果 (Output Mapping) ---
+    if result.message:
+        # 将摘要信息输出到 stderr
+        color = typer.colors.GREEN if result.success else typer.colors.RED
+        typer.secho(f"\n{result.message}", fg=color, err=True)
 
-        # 初始化执行器并加载插件
-        executor = Executor(root_dir=work_dir, yolo=yolo)
-        
-        # 1. 加载内置插件
-        load_plugins(executor, PROJECT_ROOT / "acts")
-        
-        # 2. 加载扩展插件 (按照层级)
-        _load_extra_plugins(executor, work_dir)
+    # 如果有数据需要输出到 stdout (例如 read_file 的内容)，在这里处理
+    # 目前 Controller 还没有数据返回机制，暂时保留接口
+    if result.data:
+        typer.echo(result.data)
 
-        # 执行
-        executor.execute(statements)
-        
-        # 将结束语输出到 stderr，以免污染数据流
-        typer.secho("\n✨ 所有操作执行完毕。", err=True)
-
-    except Exception as e:
-        logger.error(f"运行时错误: {e}")
-        typer.secho(f"❌ 错误: {e}", fg=typer.colors.RED)
-        raise typer.Exit(code=1)
+    # 使用 ctx.exit 而不是 raise typer.Exit，对测试框架更友好
+    ctx.exit(result.exit_code)
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()

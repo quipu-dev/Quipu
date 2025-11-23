@@ -20,6 +20,9 @@ class Engine:
         self.axon_dir = self.root_dir / ".axon"
         self.history_dir = self.axon_dir / "history"
         
+        # 确保目录结构存在
+        self.history_dir.mkdir(parents=True, exist_ok=True)
+        
         self.git_db = GitDB(self.root_dir)
         self.history_graph: Dict[str, AxonNode] = {}
         self.current_node: Optional[AxonNode] = None
@@ -62,7 +65,9 @@ class Engine:
         logger.info(f"📸 正在捕获工作区漂移，新状态 Hash: {current_hash[:7]}")
         
         # 1. 确定父节点
-        input_hash = "_" * 40
+        # 使用 Git 官方的 Empty Tree Hash 作为创世基准
+        # 这允许 diff-tree 正确计算从"无"到"有"的变更
+        input_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
         last_commit_hash = None
         
         if self.history_graph:
@@ -118,4 +123,69 @@ class Engine:
         self.current_node = new_node
         
         logger.info(f"✅ 捕获完成，新节点已创建: {filename.name}")
+        return new_node
+
+    def create_plan_node(self, input_tree: str, output_tree: str, plan_content: str) -> AxonNode:
+        """
+        将一次成功的 Plan 执行固化为历史节点。
+        """
+        if input_tree == output_tree:
+            # 这是一个策略选择：如果执行完 Plan 后状态无变化（例如只读操作），是否要生成节点？
+            # 记录下来有助于审计“做过什么”，但也可能导致历史图谱充斥无意义节点。
+            # v4.2 策略：如果无变化，仅记录日志，不生成节点。
+            logger.info("⚠️  状态未发生变更 (Idempotent)，跳过历史记录。")
+            return self.current_node
+
+        logger.info(f"📝 正在记录 Plan 节点: {input_tree[:7]} -> {output_tree[:7]}")
+        
+        timestamp = datetime.now()
+        ts_str = timestamp.strftime("%Y%m%d%H%M%S")
+        filename = self.history_dir / f"{input_tree}_{output_tree}_{ts_str}.md"
+        
+        # 1. 准备元数据
+        meta = {
+            "type": "plan",
+            "input_tree": input_tree,
+            "output_tree": output_tree
+        }
+        
+        # 2. 准备内容：直接保存 Plan 原文
+        # 为了避免 Frontmatter 解析混淆，确保 plan_content 前后有换行
+        body = f"{plan_content.strip()}\n"
+        
+        frontmatter = f"---\n{yaml.dump(meta, sort_keys=False)}---\n\n"
+        
+        # 3. 写入文件
+        filename.write_text(frontmatter + body, "utf-8")
+        
+        # 4. Git 锚定
+        # 获取父 Commit (如果存在)
+        parent_commit = None
+        try:
+            res = self.git_db._run(["rev-parse", "refs/axon/history"], check=False)
+            if res.returncode == 0:
+                parent_commit = res.stdout.strip()
+        except Exception:
+            pass
+            
+        commit_msg = f"Axon Plan: {output_tree[:7]}"
+        parents = [parent_commit] if parent_commit else []
+        
+        new_commit_hash = self.git_db.create_anchor_commit(output_tree, commit_msg, parent_commits=parents)
+        self.git_db.update_ref("refs/axon/history", new_commit_hash)
+        
+        # 5. 更新内存状态
+        new_node = AxonNode(
+            input_tree=input_tree,
+            output_tree=output_tree,
+            timestamp=timestamp,
+            filename=filename,
+            node_type="plan",
+            content=body
+        )
+        
+        self.history_graph[output_tree] = new_node
+        self.current_node = new_node
+        
+        logger.info(f"✅ Plan 已归档: {filename.name}")
         return new_node

@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from core.executor import Executor
 from core.plugin_loader import load_plugins
-from main import _find_project_root  # 导入我们新增加的辅助函数
+from core.controller import _find_project_root  # 从 Controller 导入辅助函数
 
 class TestPluginLoading:
     
