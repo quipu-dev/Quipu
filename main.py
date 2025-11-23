@@ -2,7 +2,7 @@ import typer
 import logging
 import sys
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Dict
 
 from logger_config import setup_logging
 from core.controller import run_axon
@@ -11,6 +11,7 @@ from core.plugin_loader import load_plugins
 from core.executor import Executor
 from core.engine import Engine
 from core.history import load_history_graph
+from core.models import AxonNode # <-- 新增导入
 import inspect
 import subprocess
 from core.config_manager import ConfigManager
@@ -21,6 +22,33 @@ logger = logging.getLogger(__name__)
 
 # 将主应用改名为 app，并将旧的 cli 命令重命名为 'run'
 app = typer.Typer(add_completion=False, name="axon")
+
+# --- 导航命令辅助函数 ---
+
+def _find_current_node(engine: Engine, graph: Dict[str, AxonNode]) -> Optional[AxonNode]:
+    """在图中查找与当前工作区状态匹配的节点"""
+    current_hash = engine.git_db.get_tree_hash()
+    node = graph.get(current_hash)
+    if not node:
+        typer.secho("⚠️  当前工作区状态未在历史中找到，或存在未保存的变更。", fg=typer.colors.YELLOW, err=True)
+        typer.secho("💡  请先运行 'axon save' 创建一个快照，再进行导航。", fg=typer.colors.YELLOW, err=True)
+    return node
+
+def _execute_checkout(ctx: typer.Context, target_node: AxonNode, work_dir: Path):
+    """通过子进程调用 checkout 命令以复用逻辑"""
+    typer.secho(f"🚀 正在导航到节点: {target_node.short_hash} ({target_node.timestamp})", err=True)
+    result = subprocess.run(
+        [sys.executable, __file__, "checkout", target_node.output_tree, "--work-dir", str(work_dir), "--force"],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        typer.secho("❌ 导航操作失败:", fg=typer.colors.RED, err=True)
+        typer.secho(result.stderr, err=True)
+        ctx.exit(1)
+    else:
+        # checkout 的成功信息在 stderr
+        typer.secho(result.stderr, err=True)
+
 
 @app.command()
 def save(
@@ -82,6 +110,58 @@ def sync(
 
     此命令会推送本地的 Axon 历史记录，并拉取远程的更新。
     """
+    setup_logging()
+    work_dir = work_dir.resolve()
+    
+    # 加载配置来确定默认的远程仓库
+    config = ConfigManager(work_dir)
+    if remote is None:
+        remote = config.get("sync.remote_name", "origin")
+
+    refspec = "refs/axon/history:refs/axon/history"
+    
+    def run_git_command(args: list[str]):
+        try:
+            result = subprocess.run(
+                ["git"] + args,
+                cwd=work_dir,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            if result.stdout:
+                typer.echo(result.stdout, err=True)
+            if result.stderr:
+                typer.echo(result.stderr, err=True)
+        except subprocess.CalledProcessError as e:
+            typer.secho(f"❌ Git 命令执行失败: git {' '.join(args)}", fg=typer.colors.RED, err=True)
+            typer.secho(e.stderr, fg=typer.colors.YELLOW, err=True)
+            ctx.exit(1)
+        except FileNotFoundError:
+            typer.secho("❌ 错误: 未找到 'git' 命令。", fg=typer.colors.RED, err=True)
+            ctx.exit(1)
+
+
+    # 1. Fetch from remote
+    typer.secho(f"⬇️  正在从 '{remote}' 拉取 Axon 历史...", fg=typer.colors.BLUE, err=True)
+    run_git_command(["fetch", remote, refspec])
+
+    # 2. Push to remote
+    typer.secho(f"⬆️  正在向 '{remote}' 推送 Axon 历史...", fg=typer.colors.BLUE, err=True)
+    run_git_command(["push", remote, refspec])
+    
+    typer.secho("\n✅ Axon 历史同步完成。", fg=typer.colors.GREEN, err=True)
+    
+    # Check for fetch config and provide guidance if missing
+    config_get_res = subprocess.run(
+        ["git", "config", "--get", f"remote.{remote}.fetch"],
+        cwd=work_dir, capture_output=True, text=True
+    )
+    if refspec not in config_get_res.stdout:
+        typer.secho("\n💡 提示: 为了让 `git pull` 自动同步 Axon 历史，请执行以下命令:", fg=typer.colors.YELLOW, err=True)
+        typer.echo(f'  git config --add remote.{remote}.fetch "{refspec}"')
+
+
 @app.command()
 def discard(
     ctx: typer.Context,
@@ -144,58 +224,6 @@ def discard(
     except Exception as e:
         typer.secho(f"❌ 恢复状态失败: {e}", fg=typer.colors.RED, err=True)
         ctx.exit(1)
-
-
-    setup_logging()
-    work_dir = work_dir.resolve()
-    
-    # 加载配置来确定默认的远程仓库
-    config = ConfigManager(work_dir)
-    if remote is None:
-        remote = config.get("sync.remote_name", "origin")
-
-    refspec = "refs/axon/history:refs/axon/history"
-    
-    def run_git_command(args: list[str]):
-        try:
-            result = subprocess.run(
-                ["git"] + args,
-                cwd=work_dir,
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            if result.stdout:
-                typer.echo(result.stdout, err=True)
-            if result.stderr:
-                typer.echo(result.stderr, err=True)
-        except subprocess.CalledProcessError as e:
-            typer.secho(f"❌ Git 命令执行失败: git {' '.join(args)}", fg=typer.colors.RED, err=True)
-            typer.secho(e.stderr, fg=typer.colors.YELLOW, err=True)
-            ctx.exit(1)
-        except FileNotFoundError:
-            typer.secho("❌ 错误: 未找到 'git' 命令。", fg=typer.colors.RED, err=True)
-            ctx.exit(1)
-
-
-    # 1. Fetch from remote
-    typer.secho(f"⬇️  正在从 '{remote}' 拉取 Axon 历史...", fg=typer.colors.BLUE, err=True)
-    run_git_command(["fetch", remote, refspec])
-
-    # 2. Push to remote
-    typer.secho(f"⬆️  正在向 '{remote}' 推送 Axon 历史...", fg=typer.colors.BLUE, err=True)
-    run_git_command(["push", remote, refspec])
-    
-    typer.secho("\n✅ Axon 历史同步完成。", fg=typer.colors.GREEN, err=True)
-    
-    # Check for fetch config and provide guidance if missing
-    config_get_res = subprocess.run(
-        ["git", "config", "--get", f"remote.{remote}.fetch"],
-        cwd=work_dir, capture_output=True, text=True
-    )
-    if refspec not in config_get_res.stdout:
-        typer.secho("\n💡 提示: 为了让 `git pull` 自动同步 Axon 历史，请执行以下命令:", fg=typer.colors.YELLOW, err=True)
-        typer.echo(f'  git config --add remote.{remote}.fetch "{refspec}"')
 
 
 @app.command()
@@ -270,6 +298,133 @@ def checkout(
     except Exception as e:
         typer.secho(f"❌ 恢复状态失败: {e}", fg=typer.colors.RED, err=True)
         ctx.exit(1)
+
+# --- 新增的导航命令 ---
+
+@app.command()
+def undo(
+    ctx: typer.Context,
+    count: Annotated[int, typer.Option("--count", "-n", help="向上移动的步数。")] = 1,
+    work_dir: Annotated[
+        Path,
+        typer.Option("--work-dir", "-w", help="工作区根目录。")
+    ] = DEFAULT_WORK_DIR,
+):
+    """
+    向上移动到当前状态的父节点 (类似 Ctrl+Z)。
+    """
+    setup_logging()
+    engine = Engine(work_dir)
+    graph = load_history_graph(engine.history_dir)
+    current_node = _find_current_node(engine, graph)
+    if not current_node: ctx.exit(1)
+    
+    target_node = current_node
+    for i in range(count):
+        if not target_node.parent:
+            msg = f"已到达历史根节点 (移动了 {i} 步)。" if i > 0 else "已在历史根节点。"
+            typer.secho(f"✅ {msg}", fg=typer.colors.GREEN, err=True)
+            if target_node == current_node: ctx.exit(0)
+            break
+        target_node = target_node.parent
+    
+    _execute_checkout(ctx, target_node, work_dir)
+
+@app.command()
+def redo(
+    ctx: typer.Context,
+    count: Annotated[int, typer.Option("--count", "-n", help="向下移动的步数。")] = 1,
+    work_dir: Annotated[
+        Path,
+        typer.Option("--work-dir", "-w", help="工作区根目录。")
+    ] = DEFAULT_WORK_DIR,
+):
+    """
+    向下移动到子节点 (类似 Ctrl+Y)。默认选择最新的子节点。
+    """
+    setup_logging()
+    engine = Engine(work_dir)
+    graph = load_history_graph(engine.history_dir)
+    current_node = _find_current_node(engine, graph)
+    if not current_node: ctx.exit(1)
+
+    target_node = current_node
+    for i in range(count):
+        if not target_node.children:
+            msg = f"已到达分支末端 (移动了 {i} 步)。" if i > 0 else "已在分支末端。"
+            typer.secho(f"✅ {msg}", fg=typer.colors.GREEN, err=True)
+            if target_node == current_node: ctx.exit(0)
+            break
+        # 默认选择最新的子节点 (列表已按时间排序)
+        target_node = target_node.children[-1]
+        if len(current_node.children) > 1:
+            typer.secho(f"💡 当前节点有多个分支，已自动选择最新分支 -> {target_node.short_hash}", fg=typer.colors.YELLOW, err=True)
+
+    _execute_checkout(ctx, target_node, work_dir)
+
+@app.command()
+def prev(
+    ctx: typer.Context,
+    work_dir: Annotated[
+        Path,
+        typer.Option("--work-dir", "-w", help="工作区根目录。")
+    ] = DEFAULT_WORK_DIR,
+):
+    """
+    在同一父节点的兄弟分支间，切换到上一个 (更旧的) 节点。
+    """
+    setup_logging()
+    engine = Engine(work_dir)
+    graph = load_history_graph(engine.history_dir)
+    current_node = _find_current_node(engine, graph)
+    if not current_node: ctx.exit(1)
+
+    siblings = current_node.siblings
+    if len(siblings) <= 1:
+        typer.secho("✅ 当前节点没有兄弟分支。", fg=typer.colors.GREEN, err=True)
+        ctx.exit(0)
+    
+    try:
+        idx = siblings.index(current_node)
+        if idx == 0:
+            typer.secho("✅ 已在最旧的兄弟分支。", fg=typer.colors.GREEN, err=True)
+            ctx.exit(0)
+        target_node = siblings[idx - 1]
+        _execute_checkout(ctx, target_node, work_dir)
+    except ValueError: # Should not happen if _find_current_node works
+        pass 
+
+@app.command()
+def next(
+    ctx: typer.Context,
+    work_dir: Annotated[
+        Path,
+        typer.Option("--work-dir", "-w", help="工作区根目录。")
+    ] = DEFAULT_WORK_DIR,
+):
+    """
+    在同一父节点的兄弟分支间，切换到下一个 (更新的) 节点。
+    """
+    setup_logging()
+    engine = Engine(work_dir)
+    graph = load_history_graph(engine.history_dir)
+    current_node = _find_current_node(engine, graph)
+    if not current_node: ctx.exit(1)
+
+    siblings = current_node.siblings
+    if len(siblings) <= 1:
+        typer.secho("✅ 当前节点没有兄弟分支。", fg=typer.colors.GREEN, err=True)
+        ctx.exit(0)
+    
+    try:
+        idx = siblings.index(current_node)
+        if idx == len(siblings) - 1:
+            typer.secho("✅ 已在最新的兄弟分支。", fg=typer.colors.GREEN, err=True)
+            ctx.exit(0)
+        target_node = siblings[idx + 1]
+        _execute_checkout(ctx, target_node, work_dir)
+    except ValueError:
+        pass
 
 
 @app.command()
