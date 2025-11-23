@@ -51,3 +51,83 @@ type: "plan"
     assert engine.current_node is not None
     assert engine.current_node.output_tree == clean_hash
     assert engine.current_node.filename == history_file
+
+def test_align_dirty_state(engine_setup):
+    """
+    测试场景：当工作区被修改，与任何历史节点都不匹配时，
+    引擎应能正确识别为 "DIRTY" 状态。
+    """
+    engine, repo_path = engine_setup
+    
+    # 1. 伪造一个过去的历史节点
+    ts = datetime.now().strftime("%Y%m%d%H%M%S")
+    past_hash = "a" * 40
+    history_filename = f'{"_"*40}_{past_hash}_{ts}.md'
+    (engine.history_dir / history_filename).write_text("---\ntype: plan\n---", "utf-8")
+    
+    # 2. 在工作区创建一个新文件，确保当前 hash 与历史不匹配
+    (repo_path / "main.py").write_text("print('dirty state')", "utf-8")
+    
+    # 3. 运行对齐
+    status = engine.align()
+    
+    # 4. 断言
+    assert status == "DIRTY"
+    assert engine.current_node is None # 在漂移状态下，引擎不应锁定到任何节点
+
+def test_align_orphan_state(engine_setup):
+    """
+    测试场景：在一个没有 .axon/history 目录或目录为空的项目中运行时，
+    引擎应能正确识别为 "ORPHAN" 状态。
+    """
+    engine, repo_path = engine_setup
+    
+    # 1. 确保 history 目录是空的 (fixture 已经保证了这一点)
+    # 2. 在工作区创建文件
+    (repo_path / "main.py").write_text("print('new project')", "utf-8")
+    
+    # 3. 运行对齐
+    status = engine.align()
+    
+    # 4. 断言
+    assert status == "ORPHAN"
+    assert engine.current_node is None
+    """
+    测试场景：当工作区被修改，与任何历史节点都不匹配时，
+    引擎应能正确识别为 "DIRTY" 状态。
+    """
+    engine, repo_path = engine_setup
+    
+    # 1. 伪造一个过去的历史节点
+    ts = datetime.now().strftime("%Y%m%d%H%M%S")
+    past_hash = "a" * 40
+    history_filename = f'{"_"*40}_{past_hash}_{ts}.md'
+    (engine.history_dir / history_filename).write_text("---\ntype: plan\n---", "utf-8")
+    
+    # 2. 在工作区创建一个新文件，确保当前 hash 与历史不匹配
+    (repo_path / "main.py").write_text("print('dirty state')", "utf-8")
+    
+    # 3. 运行对齐
+    status = engine.align()
+    
+    # 4. 断言
+    assert status == "DIRTY"
+    assert engine.current_node is None # 在漂移状态下，引擎不应锁定到任何节点
+
+def test_align_orphan_state(engine_setup):
+    """
+    测试场景：在一个没有 .axon/history 目录或目录为空的项目中运行时，
+    引擎应能正确识别为 "ORPHAN" 状态。
+    """
+    engine, repo_path = engine_setup
+    
+    # 1. 确保 history 目录是空的 (fixture 已经保证了这一点)
+    # 2. 在工作区创建文件
+    (repo_path / "main.py").write_text("print('new project')", "utf-8")
+    
+    # 3. 运行对齐
+    status = engine.align()
+    
+    # 4. 断言
+    assert status == "ORPHAN"
+    assert engine.current_node is None
