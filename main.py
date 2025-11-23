@@ -82,7 +82,13 @@ def ui(
         
     root_nodes = [node for node in graph.values() if not node.parent]
     
-    app_instance = AxonUiApp(root_nodes)
+    # 获取当前工作区状态哈希，用于在 UI 中自动定位
+    current_hash = engine.git_db.get_tree_hash()
+    
+    # 传入所有节点（不仅仅是 root_nodes，因为我们需要线性列表）和当前哈希
+    all_nodes = list(graph.values())
+    
+    app_instance = AxonUiApp(all_nodes, current_hash=current_hash)
     selected_hash = app_instance.run()
 
     if selected_hash:
