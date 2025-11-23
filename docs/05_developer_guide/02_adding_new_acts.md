@@ -18,25 +18,37 @@ Axon 按以下优先级顺序加载插件 (高优先级覆盖低优先级):
 创建一个 Python 文件（例如 `my_plugin.py`），并实现 `register` 函数。
 
 ```python
+import logging
 from typing import List
-from core.executor import Executor, ExecutionError
+from core.types import ActContext, Executor # Executor for register, ActContext for the act
+
+logger = logging.getLogger(__name__)
 
 def register(executor: Executor):
     """注册插件入口"""
     # 参数模式可选: "hybrid", "exclusive", "block_only"
     executor.register("my_hello", _my_hello, arg_mode="hybrid")
 
-def _my_hello(executor: Executor, args: List[str]):
+def _my_hello(ctx: ActContext, args: List[str]):
     """
     Act: my_hello
     Args: [name]
+    说明: 一个简单的问候插件，演示新的 ActContext API。
     """
     if not args:
         name = "World"
     else:
         name = args[0]
         
+    # 使用 logger 记录执行信息 (到 stderr)
+    logger.info(f"Saying hello from project: {ctx.root_dir.name}")
+    
+    # 使用 print 输出结果数据 (到 stdout)
     print(f"Hello, {name}!")
+
+    # 如果需要，可以这样安全地抛出错误
+    # if name == "error":
+    #     ctx.fail("Invalid name provided.")
 ```
 
 ## 测试插件

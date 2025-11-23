@@ -196,3 +196,32 @@ Now creating tests for the `checkout` functionality.
     -   `Env` (`$AXON_EXTRA_ACTS_DIR`)
     -   `User` (`~/.axon/acts/`) - 最低
 3.  **显式优于隐式**: 这种方式移除了模糊的约定，使行为可预测，并从根本上解决了与 Engine 的冲突，保证了状态管理的健壮性。
+
+## [2025-11-23 17:59:19]
+## 架构重构：建立稳定的插件 API (ActContext)
+
+**问题**: 当前插件 (`acts/*.py`) 直接导入并依赖 `core.executor.Executor` 和 `core.exceptions.ExecutionError`，造成了插件生态与核心实现的紧密耦合。这使得核心的任何重构都可能破坏所有插件，不利于长期维护和生态发展。
+
+**解决方案**:
+实施“依赖注入”模式，引入一个“上下文对象” (`ActContext`)作为插件和执行器之间的稳定 API 接口。
+
+1.  **创建 `ActContext`**: 在 `core/types.py` 中定义 `ActContext` 类。它将封装所有插件需要的功能（如路径解析、用户确认、错误报告），并向插件隐藏具体的实现细节。
+2.  **解耦插件**: 插件的函数签名将从 `_func(executor: Executor, ...)` 变为 `_func(ctx: ActContext, ...)`。
+3.  **隐藏实现**: 插件不再直接 `raise ExecutionError`，而是调用 `ctx.fail("...")`。它们不再调用 `executor.resolve_path()`，而是 `ctx.resolve_path()`。
+
+**收益**:
+- **强解耦**: 核心可以自由重构，只要 `ActContext` 接口保持稳定，插件就无需修改。
+- **清晰的 API**: 为插件开发者提供了清晰、简洁、稳定的开发契约。
+- **可移植性**: 插件不再依赖 Axon 的内部实现，理论上可被任何遵循此 API 的执行器使用。
+- **提升可测试性**: 测试插件时只需 mock `ActContext` 接口，而非整个 `Executor`。
+
+## [2025-11-23 18:01:16]
+## 测试失败分析与修复 (`ActContext` Refactor Fallout)
+
+**诊断**: 6 个测试失败。
+- **5x `AttributeError`**: 发生在 `test_check.py`, `test_ops.py`, `test_read.py`。根本原因是测试代码没有跟上 `ActContext` API 的重构。测试用例直接将 `Executor` 实例传递给了期望 `ActContext` 实例的 act 函数，导致 `ctx.fail()` 调用失败。
+- **1x `AssertionError`**: 发生在 `test_search_scoped_path`。根本原因是 `_python_search` 的路径输出逻辑问题。它将路径格式化为相对于搜索目录，而不是项目根目录，导致断言失败。
+
+**修复计划**:
+1.  **修复测试用例**: 在所有直接调用 act 函数的测试中，引入 `from core.types import ActContext`，并在调用前创建 `ctx = ActContext(executor)`，然后传递 `ctx`。
+2.  **修复搜索实现**: 向 `_python_search` 函数传递 `ctx`，并修改其输出格式，使用 `file_path.relative_to(ctx.root_dir)` 来确保路径的一致性。

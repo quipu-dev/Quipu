@@ -4,14 +4,12 @@ import typer
 import shlex
 import sys
 from pathlib import Path
-from typing import Dict, Callable, List, Any
-from .types import Statement
+from typing import Dict, List, Any
+from .types import Statement, ActFunction, ActContext
 from .exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
 
-# Act 函数签名定义: (executor_instance, args) -> None
-ActFunction = Callable[['Executor', List[str]], None]
 
 class Executor:
     """
@@ -22,11 +20,8 @@ class Executor:
     def __init__(self, root_dir: Path, yolo: bool = False):
         self.root_dir = root_dir.resolve()
         self.yolo = yolo
-        # 存储结构变更为: name -> (func, arg_mode)
-        # arg_mode: "hybrid", "smart", "block_only"
         self._acts: Dict[str, tuple[ActFunction, str]] = {}
         
-        # 确保根目录存在
         if not self.root_dir.exists():
             try:
                 self.root_dir.mkdir(parents=True, exist_ok=True)
@@ -57,14 +52,9 @@ class Executor:
         将相对路径转换为基于 root_dir 的绝对路径。
         包含基本的路径逃逸检查。
         """
-        # 清理路径中的空白字符
         clean_rel = rel_path.strip()
-        
-        # 拼接路径
         abs_path = (self.root_dir / clean_rel).resolve()
         
-        # 简单的安全检查：确保最终路径在 root_dir 内部
-        # 注意：在某些 symlink 场景下可能需要更复杂的判断，这里做基础防护
         if not str(abs_path).startswith(str(self.root_dir)):
             raise ExecutionError(f"安全警告：路径 '{clean_rel}' 试图访问工作区外部: {abs_path}")
             
@@ -73,12 +63,11 @@ class Executor:
     def request_confirmation(self, file_path: Path, old_content: str, new_content: str) -> bool:
         """
         生成 diff 并请求用户确认。
-        如果 self.yolo 为 True，则自动返回 True。
+        如果 self.yolo 为 True,则自动返回 True。
         """
         if self.yolo:
             return True
 
-        # 生成 Diff
         diff = list(difflib.unified_diff(
             old_content.splitlines(keepends=True),
             new_content.splitlines(keepends=True),
@@ -90,7 +79,6 @@ class Executor:
             logger.info("⚠️  内容无变化")
             return True
 
-        # 打印 Diff (手动简单的着色)
         typer.echo("\n🔍 变更预览:")
         for line in diff:
             if line.startswith('+'):
@@ -102,45 +90,36 @@ class Executor:
             else:
                 typer.echo(line.strip('\n'))
         
-        typer.echo("") # 空行
-
+        typer.echo("")
         prompt = f"❓ 是否对 {file_path.name} 执行上述修改?"
 
-        # 处理交互输入：
-        # 如果 STDIN 是终端，直接使用 Typer (Click) 的标准 confirm
         if sys.stdin.isatty():
             return typer.confirm(prompt, default=True)
         
-        # 如果 STDIN 被管道占用 (如 echo "..." | axon)，我们需要尝试打开 /dev/tty 来获取用户输入
-        # 注意：这主要适用于 Linux/macOS。Windows 上可能需要 CONIN$ 处理，但 Axon 目前主要针对 Unix 风格环境。
         try:
-            # explicitly open the controlling terminal for reading
             with open("/dev/tty", "r") as tty:
                 typer.echo(f"{prompt} [Y/n]: ", nl=False)
                 answer = tty.readline().strip().lower()
-                if not answer:
-                    return True # Default Yes
-                return answer in ("y", "yes")
+                return not answer or answer in ("y", "yes")
         except Exception as e:
-            # 如果无法打开终端进行交互（例如在完全无头的 CI 环境中且没开 YOLO），为了安全，默认拒绝
             logger.error(f"❌ 无法获取交互输入 (非 TTY 环境且无法访问 /dev/tty): {e}")
             logger.warning("提示: 在非交互式环境中使用，请考虑添加 --yolo 参数以自动确认。")
             return False
 
     def execute(self, statements: List[Statement]):
-        """Executes a sequence of statements."""
+        """执行一系列语句"""
         logger.info(f"Starting execution of {len(statements)} operations...")
+        
+        # 创建一个可重用的上下文对象
+        ctx = ActContext(self)
         
         for i, stmt in enumerate(statements):
             raw_act_line = stmt["act"]
             block_contexts = stmt["contexts"]
             
-            # 1. Parse the Act line: separate command name and inline args
             try:
-                # Use shlex to support quotes, e.g., write_file "my file.txt"
                 tokens = shlex.split(raw_act_line)
             except ValueError as e:
-                # Usually indicates an unclosed quote
                 raise ExecutionError(f"Error parsing Act command line: {raw_act_line} ({e})")
             
             if not tokens:
@@ -156,36 +135,25 @@ class Executor:
 
             func, arg_mode = self._acts[act_name]
 
-            # 2. Argument merging strategy (ArgMode Protocol)
             final_args = []
-            
             if arg_mode == "hybrid":
-                # Greedy mode: merge all sources
                 final_args = inline_args + block_contexts
-                
             elif arg_mode == "exclusive":
-                # Exclusive mode: prefer inline args; otherwise, use blocks
                 if inline_args:
                     final_args = inline_args
                     if block_contexts:
                         logger.debug(f"ℹ️  [{act_name} - Exclusive] Inline args detected, ignoring {len(block_contexts)} subsequent Block(s).")
                 else:
                     final_args = block_contexts
-                    
             elif arg_mode == "block_only":
-                # Strict mode: only use blocks
                 if inline_args:
                     logger.warning(f"⚠️  [{act_name} - BlockOnly] Ignoring illegal inline arguments: {inline_args}")
                 final_args = block_contexts
             
-            else:
-                # Fallback (should not happen, checked in register)
-                final_args = inline_args + block_contexts
-
             try:
                 logger.info(f"Executing operation [{i+1}/{len(statements)}]: {act_name} (Mode: {arg_mode}, Args: {len(final_args)})")
-                func(self, final_args)
+                # 传递上下文对象，而不是 executor 实例
+                func(ctx, final_args)
             except Exception as e:
                 logger.error(f"Execution failed for '{act_name}': {e}")
-                # Depending on the strategy, we can re-raise to halt the entire process
                 raise ExecutionError(f"An error occurred while executing '{act_name}': {e}") from e
