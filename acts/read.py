@@ -78,7 +78,9 @@ def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):
                     for i, line in enumerate(f, 1):
                         if regex.search(line):
                             clean_line = line.strip()
-                            matches.append(f"{file_path.relative_to(start_path)}:{i}:{clean_line[:200]}")
+                            # 关键修复：路径始终相对于项目根目录，以保证输出一致性
+                            relative_path = file_path.relative_to(ctx.root_dir)
+                            matches.append(f"{relative_path}:{i}:{clean_line[:200]}")
             except (UnicodeDecodeError, PermissionError):
                 continue
 

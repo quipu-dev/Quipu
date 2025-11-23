@@ -225,3 +225,23 @@ Now creating tests for the `checkout` functionality.
 **修复计划**:
 1.  **修复测试用例**: 在所有直接调用 act 函数的测试中，引入 `from core.types import ActContext`，并在调用前创建 `ctx = ActContext(executor)`，然后传递 `ctx`。
 2.  **修复搜索实现**: 向 `_python_search` 函数传递 `ctx`，并修改其输出格式，使用 `file_path.relative_to(ctx.root_dir)` 来确保路径的一致性。
+
+## [2025-11-23 18:02:14]
+## 测试失败分析与修复 (`ActContext` Refactor Fallout)
+
+**诊断**: 6 个测试失败。
+- **5x `AttributeError`**: 发生在 `test_check.py`, `test_ops.py`, `test_read.py`。根本原因是测试代码没有跟上 `ActContext` API 的重构。测试用例直接将 `Executor` 实例传递给了期望 `ActContext` 实例的 act 函数，导致 `ctx.fail()` 调用失败。
+- **1x `AssertionError`**: 发生在 `test_search_scoped_path`。根本原因是 `_python_search` 的路径输出逻辑问题。它将路径格式化为相对于搜索目录，而不是项目根目录，导致断言失败。
+
+**修复计划**:
+1.  **修复测试用例**: 在所有直接调用 act 函数的测试中，引入 `from core.types import ActContext`，并在调用前创建 `ctx = ActContext(executor)`，然后传递 `ctx`。
+2.  **修复搜索实现**: 向 `_python_search` 函数传递 `ctx`，并修改其输出格式，使用 `file_path.relative_to(ctx.root_dir)` 来确保路径的一致性。
+
+## [2025-11-23 18:04:52]
+## 纠正：`replace` 指令失败
+
+**诊断**: 针对 `acts/read.py` 的 `replace` 操作失败，原因是提供的旧代码块与文件实际内容不完全匹配。这证明了 `replace` 指令严格性的重要性，它能防止对状态不确定的文件进行意外修改。
+
+**恢复策略**:
+1.  **感知 (Perceive)**: 使用 `read_file` 指令获取 `acts/read.py` 的确切内容。
+2.  **行动 (Act)**: 在下一步中，利用 `read_file` 的输出作为 `replace` 指令中准确的“旧内容”块，重新执行替换、添加和提交操作，以完成整个 `ActContext` 的重构。

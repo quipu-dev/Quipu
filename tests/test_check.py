@@ -2,6 +2,7 @@ import pytest
 from pathlib import Path
 from core.executor import Executor, ExecutionError
 from acts.check import register as register_check_acts
+from core.types import ActContext
 
 class TestCheckActs:
     @pytest.fixture(autouse=True)
@@ -10,47 +11,40 @@ class TestCheckActs:
         register_check_acts(executor)
 
     def test_check_files_exist_success(self, executor: Executor, isolated_vault: Path):
-        # 准备环境
         (isolated_vault / "config.json").touch()
         (isolated_vault / "src").mkdir()
         (isolated_vault / "src/main.py").touch()
         
-        # 执行检查
-        file_list = """
-        config.json
-        src/main.py
-        """
+        file_list = "config.json\nsrc/main.py"
         func, _ = executor._acts['check_files_exist']
-        func(executor, [file_list])
+        ctx = ActContext(executor)
+        func(ctx, [file_list]) # No exception should be raised
 
     def test_check_files_exist_fail(self, executor: Executor, isolated_vault: Path):
         (isolated_vault / "exists.txt").touch()
-        
-        file_list = """
-        exists.txt
-        missing.txt
-        """
+        file_list = "exists.txt\nmissing.txt"
         
         with pytest.raises(ExecutionError) as excinfo:
             func, _ = executor._acts['check_files_exist']
-            func(executor, [file_list])
+            ctx = ActContext(executor)
+            func(ctx, [file_list])
         
         msg = str(excinfo.value)
         assert "missing.txt" in msg
-        assert "exists.txt" not in msg # 存在的文不应该报错
+        assert "exists.txt" not in msg
 
     def test_check_cwd_match_success(self, executor: Executor, isolated_vault: Path):
-        # 获取当前测试 vault 的绝对路径
         real_path = str(isolated_vault.resolve())
-        
         func, _ = executor._acts['check_cwd_match']
-        func(executor, [real_path])
+        ctx = ActContext(executor)
+        func(ctx, [real_path]) # No exception should be raised
 
     def test_check_cwd_match_fail(self, executor: Executor):
         wrong_path = "/this/path/does/not/exist"
         
         with pytest.raises(ExecutionError) as excinfo:
             func, _ = executor._acts['check_cwd_match']
-            func(executor, [wrong_path])
+            ctx = ActContext(executor)
+            func(ctx, [wrong_path])
             
         assert "工作区目录不匹配" in str(excinfo.value)
