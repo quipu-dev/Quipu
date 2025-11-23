@@ -34,12 +34,14 @@ def _parse_frontmatter(text: str) -> tuple[Dict, str]:
 
 def load_history_graph(history_dir: Path) -> Dict[str, AxonNode]:
     """
-    扫描历史目录，加载所有节点，构建一个以 output_tree_hash 为键的图。
+    扫描历史目录，加载所有节点，并构建一个包含父子关系的图。
+    返回以 output_tree_hash 为键的节点字典。
     """
     graph: Dict[str, AxonNode] = {}
     if not history_dir.exists():
         return graph
 
+    # --- 第一遍: 加载所有独立的节点 ---
     for file_path in history_dir.glob("*.md"):
         match = FILENAME_PATTERN.match(file_path.name)
         if not match:
@@ -65,5 +67,17 @@ def load_history_graph(history_dir: Path) -> Dict[str, AxonNode]:
         except Exception as e:
             logger.error(f"加载历史节点失败 {file_path.name}: {e}")
 
-    logger.info(f"从 '{history_dir}' 加载了 {len(graph)} 个历史节点。")
+    # --- 第二遍: 连接父子关系 ---
+    for node in graph.values():
+        # 节点的 input_tree 就是其父节点的 output_tree
+        if node.input_tree in graph:
+            parent_node = graph[node.input_tree]
+            node.parent = parent_node
+            parent_node.children.append(node)
+
+    # 为所有节点的子列表按时间排序，确保导航行为一致
+    for node in graph.values():
+        node.children.sort(key=lambda n: n.timestamp)
+
+    logger.info(f"从 '{history_dir}' 加载并连接了 {len(graph)} 个历史节点。")
     return graph

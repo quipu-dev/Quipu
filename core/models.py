@@ -1,7 +1,7 @@
 from __future__ import annotations
 import dataclasses
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional, List, Dict # <-- 引入 List
 from datetime import datetime
 
 @dataclasses.dataclass
@@ -25,8 +25,19 @@ class AxonNode:
     
     # 文件主体内容
     content: str = ""
+    
+    # --- 图遍历字段 (由加载器填充) ---
+    parent: Optional[AxonNode] = None
+    children: List[AxonNode] = dataclasses.field(default_factory=list)
 
     @property
     def short_hash(self) -> str:
         """返回一个用于UI展示的简短哈希"""
         return self.output_tree[:7]
+
+    @property
+    def siblings(self) -> List[AxonNode]:
+        """获取所有兄弟节点 (包括自身)，按时间排序"""
+        if not self.parent:
+            return [self]
+        return self.parent.children
