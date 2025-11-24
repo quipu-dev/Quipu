@@ -70,7 +70,7 @@ def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):
 
     matches = []
     for root, dirs, files in os.walk(start_path):
-        dirs[:] = [d for d in dirs if d not in {'.git', '__pycache__', '.idea', '.vscode', 'node_modules', '.axon'}]
+        dirs[:] = [d for d in dirs if d not in {'.git', '__pycache__', '.idea', '.vscode', 'node_modules', '.quipu'}]
         for file in files:
             file_path = Path(root) / file
             try:
@@ -135,7 +135,7 @@ def _list_files(ctx: ActContext, args: List[str]):
         logger.info(f"📂 [List] Directory Tree: {target_dir}")
         # Simplified tree implementation
         for path_object in sorted(target_dir.rglob('*')):
-             if '.git' in path_object.parts or '.axon' in path_object.parts: continue
+             if '.git' in path_object.parts or '.quipu' in path_object.parts: continue
              depth = len(path_object.relative_to(target_dir).parts) -1
              indent = '    ' * depth
              output.append(f"{indent}└── {path_object.name}{'/' if path_object.is_dir() else ''}")

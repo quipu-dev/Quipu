@@ -12,7 +12,7 @@ class TestHeadTracking:
         import subprocess
         subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
         # Config git user
-        subprocess.run(["git", "config", "user.email", "test@axon.dev"], cwd=repo, check=True)
+        subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo, check=True)
         subprocess.run(["git", "config", "user.name", "Axon Test"], cwd=repo, check=True)
         return Engine(repo)
 

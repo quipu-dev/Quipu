@@ -1,8 +1,8 @@
 import pytest
 from pathlib import Path
 from datetime import datetime
-from quipu.core.models import AxonNode
-from quipu.cli.tui import AxonUiApp
+from quipu.core.models import QuipuNode
+from quipu.cli.tui import QuipuUiApp
 from textual.widgets import DataTable
 
 class TestUiLogic:
@@ -10,11 +10,11 @@ class TestUiLogic:
     def test_graph_renderer_simple_linear(self):
         """测试简单的线性历史渲染"""
         # A <- B <- C
-        node_a = AxonNode("root", "a", datetime(2023,1,1), Path("f"), "plan")
-        node_b = AxonNode("a", "b", datetime(2023,1,2), Path("f"), "plan")
-        node_c = AxonNode("b", "c", datetime(2023,1,3), Path("f"), "plan")
+        node_a = QuipuNode("root", "a", datetime(2023,1,1), Path("f"), "plan")
+        node_b = QuipuNode("a", "b", datetime(2023,1,2), Path("f"), "plan")
+        node_c = QuipuNode("b", "c", datetime(2023,1,3), Path("f"), "plan")
         
-        app = AxonUiApp([node_a, node_b, node_c])
+        app = QuipuUiApp([node_a, node_b, node_c])
         
         # 我们可以通过 mock table 来验证，或者简单地运行 _populate_table 看是否报错
         # 由于 Textual 组件需要在 App 运行上下文中才能完整工作 (query_one)，
@@ -27,11 +27,11 @@ class TestUiLogic:
         """测试分叉历史渲染 (Smoke Test)"""
         # A <- B
         # A <- C
-        node_a = AxonNode("root", "a", datetime(2023,1,1), Path("f"), "plan")
-        node_b = AxonNode("a", "b", datetime(2023,1,2), Path("f"), "plan")
-        node_c = AxonNode("a", "c", datetime(2023,1,3), Path("f"), "plan") # Branch C is newer
+        node_a = QuipuNode("root", "a", datetime(2023,1,1), Path("f"), "plan")
+        node_b = QuipuNode("a", "b", datetime(2023,1,2), Path("f"), "plan")
+        node_c = QuipuNode("a", "c", datetime(2023,1,3), Path("f"), "plan") # Branch C is newer
         
-        app = AxonUiApp([node_a, node_b, node_c])
+        app = QuipuUiApp([node_a, node_b, node_c])
         
         # 验证排序: C (newest), B, A
         assert app.sorted_nodes[0].output_tree == "c"
@@ -55,6 +55,6 @@ class TestUiLogic:
         pass
 
     def test_get_node_summary(self):
-        node = AxonNode("a", "b", datetime.now(), Path("f"), "plan", content="~~~act\nrun\n~~~")
-        app = AxonUiApp([], None)
+        node = QuipuNode("a", "b", datetime.now(), Path("f"), "plan", content="~~~act\nrun\n~~~")
+        app = QuipuUiApp([], None)
         assert app._get_node_summary(node) == "run"

@@ -6,7 +6,7 @@ from datetime import datetime
 
 from .git_db import GitDB
 from .history import load_history_graph
-from quipu.core.models import AxonNode
+from quipu.core.models import QuipuNode
 
 logger = logging.getLogger(__name__)
 
@@ -17,33 +17,33 @@ class Engine:
     """
     def __init__(self, root_dir: Path):
         self.root_dir = root_dir.resolve()
-        self.axon_dir = self.root_dir / ".axon"
-        self.history_dir = self.axon_dir / "history"
-        self.head_file = self.axon_dir / "HEAD"
+        self.quipu_dir = self.root_dir / ".quipu"
+        self.history_dir = self.quipu_dir / "history"
+        self.head_file = self.quipu_dir / "HEAD"
         
         # 确保目录结构存在
         self.history_dir.mkdir(parents=True, exist_ok=True)
         
-        # 核心：确保 .axon 目录被 Git 忽略
-        axon_gitignore = self.axon_dir / ".gitignore"
-        if not axon_gitignore.exists():
+        # 核心：确保 .quipu 目录被 Git 忽略
+        quipu_gitignore = self.quipu_dir / ".gitignore"
+        if not quipu_gitignore.exists():
             try:
-                axon_gitignore.write_text("*\n", encoding="utf-8")
+                quipu_gitignore.write_text("*\n", encoding="utf-8")
             except Exception as e:
-                logger.warning(f"无法创建隔离文件 {axon_gitignore}: {e}")
+                logger.warning(f"无法创建隔离文件 {quipu_gitignore}: {e}")
         
         self.git_db = GitDB(self.root_dir)
-        self.history_graph: Dict[str, AxonNode] = {}
-        self.current_node: Optional[AxonNode] = None
+        self.history_graph: Dict[str, QuipuNode] = {}
+        self.current_node: Optional[QuipuNode] = None
 
     def _read_head(self) -> Optional[str]:
-        """读取 .axon/HEAD 文件中的 Hash"""
+        """读取 .quipu/HEAD 文件中的 Hash"""
         if self.head_file.exists():
             return self.head_file.read_text(encoding="utf-8").strip()
         return None
 
     def _write_head(self, tree_hash: str):
-        """更新 .axon/HEAD"""
+        """更新 .quipu/HEAD"""
         try:
             self.head_file.write_text(tree_hash, encoding="utf-8")
         except Exception as e:
@@ -84,7 +84,7 @@ class Engine:
         
         return "DIRTY"
 
-    def capture_drift(self, current_hash: str, message: Optional[str] = None) -> AxonNode:
+    def capture_drift(self, current_hash: str, message: Optional[str] = None) -> QuipuNode:
         """
         捕获当前工作区的漂移，生成一个新的 CaptureNode。
         """
@@ -107,9 +107,9 @@ class Engine:
         
         # 获取父 Commit 用于 Git 锚定
         last_commit_hash = None
-        # 这里逻辑简化：不再依赖 rev-parse refs/axon/history，而是尝试通过 input_hash 找关系
+        # 这里逻辑简化：不再依赖 rev-parse refs/quipu/history，而是尝试通过 input_hash 找关系
         # 但为了保持兼容，我们还是尝试获取
-        res = self.git_db._run(["rev-parse", "refs/axon/history"], check=False)
+        res = self.git_db._run(["rev-parse", "refs/quipu/history"], check=False)
         if res.returncode == 0:
             last_commit_hash = res.stdout.strip()
 
@@ -139,10 +139,10 @@ class Engine:
         commit_msg = f"Axon Save: {message}" if message else f"Axon Capture: {current_hash[:7]}"
         parents = [last_commit_hash] if last_commit_hash else []
         new_commit_hash = self.git_db.create_anchor_commit(current_hash, commit_msg, parent_commits=parents)
-        self.git_db.update_ref("refs/axon/history", new_commit_hash)
+        self.git_db.update_ref("refs/quipu/history", new_commit_hash)
 
         # 6. 更新内存状态
-        new_node = AxonNode(
+        new_node = QuipuNode(
             input_tree=input_hash,
             output_tree=current_hash,
             timestamp=timestamp,
@@ -160,7 +160,7 @@ class Engine:
         logger.info(f"✅ 捕获完成，新节点已创建: {filename.name}")
         return new_node
 
-    def create_plan_node(self, input_tree: str, output_tree: str, plan_content: str) -> AxonNode:
+    def create_plan_node(self, input_tree: str, output_tree: str, plan_content: str) -> QuipuNode:
         """
         将一次成功的 Plan 执行固化为历史节点。
         """
@@ -187,7 +187,7 @@ class Engine:
         # Git 锚定逻辑保持不变...
         parent_commit = None
         try:
-            res = self.git_db._run(["rev-parse", "refs/axon/history"], check=False)
+            res = self.git_db._run(["rev-parse", "refs/quipu/history"], check=False)
             if res.returncode == 0:
                 parent_commit = res.stdout.strip()
         except Exception: pass
@@ -196,9 +196,9 @@ class Engine:
         parents = [parent_commit] if parent_commit else []
         
         new_commit_hash = self.git_db.create_anchor_commit(output_tree, commit_msg, parent_commits=parents)
-        self.git_db.update_ref("refs/axon/history", new_commit_hash)
+        self.git_db.update_ref("refs/quipu/history", new_commit_hash)
         
-        new_node = AxonNode(
+        new_node = QuipuNode(
             input_tree=input_tree,
             output_tree=output_tree,
             timestamp=timestamp,

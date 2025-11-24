@@ -30,9 +30,9 @@ def load_plugins(executor: Executor, plugin_dir: Path):
             continue
 
         # 构造唯一的模块名称，防止冲突
-        # 格式: axon_plugin.{parent_dir_hash}.{filename}
+        # 格式: quipu_plugin.{parent_dir_hash}.{filename}
         # 这里简单使用全路径哈希或替换字符来保证唯一性
-        safe_name = f"axon_plugin_{file_path.stem}_{abs(hash(str(file_path)))}"
+        safe_name = f"quipu_plugin_{file_path.stem}_{abs(hash(str(file_path)))}"
 
         try:
             # 使用 importlib.util 从文件路径直接加载

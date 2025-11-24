@@ -19,7 +19,7 @@ class GitDB:
             raise ExecutionError("未找到 'git' 命令。请安装 Git 并确保它在系统的 PATH 中。")
 
         self.root = root_dir.resolve()
-        self.axon_dir = self.root / ".axon"
+        self.quipu_dir = self.root / ".quipu"
         self._ensure_git_repo()
 
     def _ensure_git_repo(self):
@@ -55,8 +55,8 @@ class GitDB:
         上下文管理器：创建一个隔离的 Shadow Index。
         在此上下文内的操作不会污染用户的 .git/index。
         """
-        index_path = self.axon_dir / "tmp_index"
-        self.axon_dir.mkdir(exist_ok=True)
+        index_path = self.quipu_dir / "tmp_index"
+        self.quipu_dir.mkdir(exist_ok=True)
         
         # 定义隔离的环境变量
         env = {"GIT_INDEX_FILE": str(index_path)}
@@ -78,11 +78,11 @@ class GitDB:
         """
         with self.shadow_index() as env:
             # 1. 将当前工作区全量加载到影子索引
-            # 使用 ':(exclude).axon' 确保 Axon 自身数据不影响状态计算
+            # 使用 ':(exclude).quipu' 确保 Axon 自身数据不影响状态计算
             # -A: 自动处理添加、修改、删除
             # --ignore-errors: 即使某些文件无法读取也继续（尽力而为）
             self._run(
-                ["add", "-A", "--ignore-errors", ".", ":(exclude).axon"],
+                ["add", "-A", "--ignore-errors", ".", ":(exclude).quipu"],
                 env=env
             )
             
@@ -106,7 +106,7 @@ class GitDB:
 
     def update_ref(self, ref_name: str, commit_hash: str):
         """
-        更新引用 (如 refs/axon/history)。
+        更新引用 (如 refs/quipu/history)。
         防止 Commit 被 GC 回收。
         """
         self._run(["update-ref", ref_name, commit_hash])
@@ -155,7 +155,7 @@ class GitDB:
         
         # 3. 清理工作区中多余的文件和目录
         # -d: 目录, -f: 强制, -x: 包含忽略文件
-        # -e .axon: 排除 .axon 目录，防止自毁
-        self._run(["clean", "-dfx", "-e", ".axon"])
+        # -e .quipu: 排除 .quipu 目录，防止自毁
+        self._run(["clean", "-dfx", "-e", ".quipu"])
         
         logger.info("✅ Workspace reset to target state.")

@@ -11,16 +11,16 @@ DEFAULTS = {
         "remote_name": "origin"
     },
     "list_files": {
-        "ignore_patterns": [".git", "__pycache__", ".idea", ".vscode", "node_modules", ".axon"]
+        "ignore_patterns": [".git", "__pycache__", ".idea", ".vscode", "node_modules", ".quipu"]
     }
 }
 
 class ConfigManager:
     """
-    负责加载和管理 .axon/config.yml 文件。
+    负责加载和管理 .quipu/config.yml 文件。
     """
     def __init__(self, work_dir: Path):
-        self.config_path = work_dir.resolve() / ".axon" / "config.yml"
+        self.config_path = work_dir.resolve() / ".quipu" / "config.yml"
         self.user_config: Dict[str, Any] = self._load_config()
 
     def _load_config(self) -> Dict[str, Any]:

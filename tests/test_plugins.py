@@ -10,7 +10,7 @@ class TestPluginLoading:
     @pytest.fixture
     def custom_plugin_dir(self, tmp_path):
         """创建一个模拟的外部插件目录"""
-        plugin_dir = tmp_path / ".axon" / "acts"
+        plugin_dir = tmp_path / ".quipu" / "acts"
         plugin_dir.mkdir(parents=True)
         return plugin_dir
 
@@ -31,8 +31,8 @@ def register(executor):
         assert "hello_world" in executor._acts
         
         # 验证模块是否被正确隔离加载（检查 sys.modules 中的名称）
-        # 我们的 loader 使用了 "axon_plugin_" 前缀
-        loaded_modules = [m for m in sys.modules.keys() if "axon_plugin_hello_world" in m]
+        # 我们的 loader 使用了 "quipu_plugin_" 前缀
+        loaded_modules = [m for m in sys.modules.keys() if "quipu_plugin_hello_world" in m]
         assert len(loaded_modules) > 0
 
     def test_ignore_invalid_files(self, executor: Executor, custom_plugin_dir):

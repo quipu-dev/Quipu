@@ -1,8 +1,8 @@
 import pytest
 from pathlib import Path
 from datetime import datetime
-from quipu.core.models import AxonNode
-from quipu.cli.tui import AxonUiApp
+from quipu.core.models import QuipuNode
+from quipu.cli.tui import QuipuUiApp
 
 class TestUiReachability:
     
@@ -16,24 +16,24 @@ class TestUiReachability:
            /
         Current
         """
-        root = AxonNode("null", "root", datetime(2023,1,1), Path("f"), "plan")
+        root = QuipuNode("null", "root", datetime(2023,1,1), Path("f"), "plan")
         
-        node_a = AxonNode("root", "a", datetime(2023,1,2), Path("f"), "plan")
+        node_a = QuipuNode("root", "a", datetime(2023,1,2), Path("f"), "plan")
         node_a.parent = root
         root.children.append(node_a)
         
-        node_b = AxonNode("root", "b", datetime(2023,1,3), Path("f"), "plan")
+        node_b = QuipuNode("root", "b", datetime(2023,1,3), Path("f"), "plan")
         node_b.parent = root
         root.children.append(node_b)
         
-        node_current = AxonNode("a", "curr", datetime(2023,1,4), Path("f"), "plan")
+        node_current = QuipuNode("a", "curr", datetime(2023,1,4), Path("f"), "plan")
         node_current.parent = node_a
         node_a.children.append(node_current)
         
         # Scenario 1: Focus on 'curr'
         # Reachable should be: curr, a, root (Ancestors) + (Descendants: None)
         # Unreachable: b
-        app = AxonUiApp([root, node_a, node_b, node_current], current_hash="curr")
+        app = QuipuUiApp([root, node_a, node_b, node_current], current_hash="curr")
         reachable = app.reachable_hashes
         
         assert "curr" in reachable
@@ -43,7 +43,7 @@ class TestUiReachability:
         
         # Scenario 2: Focus on 'root'
         # Reachable: root + all descendants (a, b, curr)
-        app_root = AxonUiApp([root, node_a, node_b, node_current], current_hash="root")
+        app_root = QuipuUiApp([root, node_a, node_b, node_current], current_hash="root")
         reachable_root = app_root.reachable_hashes
         
         assert "curr" in reachable_root
@@ -52,8 +52,8 @@ class TestUiReachability:
     def test_filter_unreachable(self):
         """测试 populate 时的过滤逻辑"""
         # Linear: A -> B
-        node_a = AxonNode("root", "a", datetime(2023,1,1), Path("f"), "plan")
-        node_b = AxonNode("a", "b", datetime(2023,1,2), Path("f"), "plan")
+        node_a = QuipuNode("root", "a", datetime(2023,1,1), Path("f"), "plan")
+        node_b = QuipuNode("a", "b", datetime(2023,1,2), Path("f"), "plan")
         # Link them manually as load_history_graph would
         node_b.parent = node_a
         node_a.children.append(node_b)
@@ -63,10 +63,10 @@ class TestUiReachability:
         # Wait, if focus is A, B is reachable via Redo. Correct.
         
         # Let's make an unreachable node C (sibling of A)
-        node_c = AxonNode("root", "c", datetime(2023,1,3), Path("f"), "plan")
+        node_c = QuipuNode("root", "c", datetime(2023,1,3), Path("f"), "plan")
         
         nodes = [node_a, node_b, node_c]
-        app = AxonUiApp(nodes, current_hash="a")
+        app = QuipuUiApp(nodes, current_hash="a")
         
         # 1. Default: Show all, but C is dim (logic handled in rendering string, hard to test here without inspecting Textual widgets deep state)
         # But we can check internal logic

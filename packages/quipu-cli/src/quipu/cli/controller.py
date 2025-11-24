@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from quipu.core.result import AxonResult
+from quipu.core.result import QuipuResult
 from quipu.core.state_machine import Engine
 from quipu.core.executor import Executor, ExecutionError
 from quipu.core.exceptions import ExecutionError as CoreExecutionError
@@ -36,7 +36,7 @@ def _load_extra_plugins(executor: Executor, work_dir: Path):
     
     # 优先级由低到高添加，后面的会覆盖前面的
     # 1. User Home (Lowest priority)
-    home_acts = Path.home() / ".axon" / "acts"
+    home_acts = Path.home() / ".quipu" / "acts"
     plugin_sources.append(("🏠 Global", home_acts))
 
     # 2. Config / Env
@@ -47,7 +47,7 @@ def _load_extra_plugins(executor: Executor, work_dir: Path):
     # 3. Project Root (Highest priority)
     project_root = find_project_root(work_dir)
     if project_root:
-        proj_acts = project_root / ".axon" / "acts"
+        proj_acts = project_root / ".quipu" / "acts"
         plugin_sources.append(("📦 Project", proj_acts))
 
     seen_paths = set()
@@ -62,17 +62,17 @@ def _load_extra_plugins(executor: Executor, work_dir: Path):
         load_plugins(executor, path)
         seen_paths.add(resolved_path)
 
-def run_axon(
+def run_quipu(
     content: str,
     work_dir: Path,
     parser_name: str = "auto",
     yolo: bool = False
-) -> AxonResult:
+) -> QuipuResult:
     """
     Axon 核心业务逻辑入口。
     
     负责协调 Engine (状态), Parser (解析), Executor (执行) 三者的工作。
-    任何异常都会被捕获并转化为失败的 AxonResult。
+    任何异常都会被捕获并转化为失败的 QuipuResult。
     """
     try:
         # --- Phase 0: Root Canonicalization (根目录规范化) ---
@@ -121,7 +121,7 @@ def run_axon(
         statements = parser.parse(content)
         
         if not statements:
-            return AxonResult(
+            return QuipuResult(
                 success=False, 
                 exit_code=0, # 没找到指令不算错误，但也无需继续
                 message=f"⚠️  使用 '{final_parser_name}' 解析器未找到任何有效的 'act' 操作块。"
@@ -154,14 +154,14 @@ def run_axon(
         else:
             logger.warning("⚠️  Engine 尚未实现 'create_plan_node'，跳过历史记录。")
 
-        return AxonResult(success=True, exit_code=0, message="✨ 执行成功")
+        return QuipuResult(success=True, exit_code=0, message="✨ 执行成功")
 
     except (ExecutionError, CoreExecutionError) as e:
         # 预期的执行错误 (如文件找不到，Git 冲突等)
         logger.error(f"❌ 操作失败: {e}")
-        return AxonResult(success=False, exit_code=1, message=str(e), error=e)
+        return QuipuResult(success=False, exit_code=1, message=str(e), error=e)
         
     except Exception as e:
         # 意外的运行时错误
         logger.error(f"运行时错误: {e}", exc_info=True)
-        return AxonResult(success=False, exit_code=1, message=f"系统错误: {e}", error=e)
+        return QuipuResult(success=False, exit_code=1, message=f"系统错误: {e}", error=e)

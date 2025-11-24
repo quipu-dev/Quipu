@@ -6,9 +6,9 @@ from textual.widgets import Header, Footer, DataTable
 from textual.binding import Binding
 from textual.coordinate import Coordinate
 
-from quipu.core.models import AxonNode
+from quipu.core.models import QuipuNode
 
-class AxonUiApp(App):
+class QuipuUiApp(App):
     CSS = """
     DataTable { height: 100%; background: $surface; border: none; }
     """
@@ -21,14 +21,14 @@ class AxonUiApp(App):
         Binding("down", "cursor_down", "下移", show=False),
     ]
 
-    def __init__(self, nodes: List[AxonNode], current_hash: Optional[str] = None):
+    def __init__(self, nodes: List[QuipuNode], current_hash: Optional[str] = None):
         super().__init__()
         self.sorted_nodes = sorted(nodes, key=lambda n: n.timestamp, reverse=True)
         self.current_hash = current_hash
         
         # 关键变更: 创建多个查找映射
-        self.node_by_filename: Dict[str, AxonNode] = {str(node.filename): node for node in nodes}
-        self.nodes_by_output_hash: Dict[str, List[AxonNode]] = {}
+        self.node_by_filename: Dict[str, QuipuNode] = {str(node.filename): node for node in nodes}
+        self.nodes_by_output_hash: Dict[str, List[QuipuNode]] = {}
         for node in nodes:
             self.nodes_by_output_hash.setdefault(node.output_tree, []).append(node)
         
@@ -124,7 +124,7 @@ class AxonUiApp(App):
             # 使用 filename 作为唯一的行 key
             table.add_row(ts_str, "".join(graph_chars), info_str, key=str(node.filename))
 
-    def _get_node_summary(self, node: AxonNode) -> str:
+    def _get_node_summary(self, node: QuipuNode) -> str:
         content = node.content.strip()
         lines = content.split('\n')
         summary = "No description"

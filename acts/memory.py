@@ -13,14 +13,14 @@ def _log_thought(ctx: ActContext, args: List[str]):
     """
     Act: log_thought
     Args: [content]
-    说明: 将思维过程追加到 .axon/memory.md 文件中，用于长期记忆。
+    说明: 将思维过程追加到 .quipu/memory.md 文件中，用于长期记忆。
     """
     if len(args) < 1:
         ctx.fail("log_thought 需要内容参数")
     
     content = args[0]
     
-    memory_dir = ctx.root_dir / ".axon"
+    memory_dir = ctx.root_dir / ".quipu"
     memory_dir.mkdir(exist_ok=True)
     
     memory_file = memory_dir / "memory.md"
@@ -34,4 +34,4 @@ def _log_thought(ctx: ActContext, args: List[str]):
     except Exception as e:
         ctx.fail(f"无法写入记忆文件: {e}")
         
-    logger.info(f"🧠 [Memory] 思维已记录到 .axon/memory.md")
+    logger.info(f"🧠 [Memory] 思维已记录到 .quipu/memory.md")

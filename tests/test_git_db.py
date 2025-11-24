@@ -11,7 +11,7 @@ def git_repo(tmp_path):
     subprocess.run(["git", "init"], cwd=root, check=True)
     
     # 配置 User，防止 Commit 报错
-    subprocess.run(["git", "config", "user.email", "test@axon.dev"], cwd=root, check=True)
+    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=root, check=True)
     subprocess.run(["git", "config", "user.name", "Axon Test"], cwd=root, check=True)
     
     return root
@@ -66,17 +66,17 @@ class TestGitDBPlumbing:
         assert status_after == status_before
         
         # 验证 Shadow Index 文件已被清理
-        assert not (git_repo / ".axon" / "tmp_index").exists()
+        assert not (git_repo / ".quipu" / "tmp_index").exists()
 
-    def test_exclude_axon_dir(self, git_repo, db):
-        """测试：.axon 目录内的变化不应改变 Tree Hash"""
+    def test_exclude_quipu_dir(self, git_repo, db):
+        """测试：.quipu 目录内的变化不应改变 Tree Hash"""
         (git_repo / "main.py").touch()
         hash_base = db.get_tree_hash()
         
-        # 在 .axon 目录下乱写东西
-        axon_dir = git_repo / ".axon"
-        axon_dir.mkdir(exist_ok=True)
-        (axon_dir / "history.md").write_text("some history", encoding="utf-8")
+        # 在 .quipu 目录下乱写东西
+        quipu_dir = git_repo / ".quipu"
+        quipu_dir.mkdir(exist_ok=True)
+        (quipu_dir / "history.md").write_text("some history", encoding="utf-8")
         
         hash_new = db.get_tree_hash()
         
@@ -91,7 +91,7 @@ class TestGitDBPlumbing:
         commit_hash = db.create_anchor_commit(tree_hash, "Axon Shadow Commit")
         
         # 更新引用
-        ref_name = "refs/axon/history"
+        ref_name = "refs/quipu/history"
         db.update_ref(ref_name, commit_hash)
         
         # 验证 Git 能够读取该引用
@@ -139,10 +139,10 @@ class TestGitDBPlumbing:
             (git_repo / "common.txt").write_text("shared", "utf-8")
             hash_a = db.get_tree_hash()
             
-            # Create a file inside .axon to ensure it's not deleted
-            axon_dir = git_repo / ".axon"
-            axon_dir.mkdir(exist_ok=True)
-            (axon_dir / "preserve.me").touch()
+            # Create a file inside .quipu to ensure it's not deleted
+            quipu_dir = git_repo / ".quipu"
+            quipu_dir.mkdir(exist_ok=True)
+            (quipu_dir / "preserve.me").touch()
 
             # 2. Create State B
             (git_repo / "file1.txt").write_text("version 2", "utf-8")
@@ -155,4 +155,4 @@ class TestGitDBPlumbing:
             assert (git_repo / "file1.txt").read_text("utf-8") == "version 1"
             assert (git_repo / "common.txt").exists()
             assert not (git_repo / "file2.txt").exists(), "file2.txt should have been cleaned"
-            assert (axon_dir / "preserve.me").exists(), ".axon directory should be preserved"
+            assert (quipu_dir / "preserve.me").exists(), ".quipu directory should be preserved"

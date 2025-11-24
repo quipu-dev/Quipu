@@ -29,7 +29,7 @@ class TestReadActs:
 
     @pytest.mark.skipif(not shutil.which("rg"), reason="Ripgrep (rg) 未安装，跳过集成测试")
     def test_search_with_ripgrep(self, executor: Executor, isolated_vault: Path, caplog, capsys):
-        (isolated_vault / "main.rs").write_text('fn main() { println!("Hello Axon"); }', encoding='utf-8')
+        (isolated_vault / "main.rs").write_text('fn main() { println!("Hello Quipu"); }', encoding='utf-8')
 
         caplog.set_level(logging.INFO)
         search_func, _ = executor._acts['search_files']
@@ -39,7 +39,7 @@ class TestReadActs:
         assert "Using 'rg' (ripgrep)" in caplog.text
         captured = capsys.readouterr()
         assert "main.rs" in captured.out
-        assert 'println!("Hello Axon")' in captured.out
+        assert 'println!("Hello Quipu")' in captured.out
 
     def test_search_scoped_path(self, executor: Executor, isolated_vault: Path, caplog, capsys, monkeypatch):
         monkeypatch.setattr(shutil, "which", lambda x: None)

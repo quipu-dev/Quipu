@@ -1,7 +1,7 @@
 import pytest
 import subprocess
 from pathlib import Path
-from quipu.cli.controller import run_axon
+from quipu.cli.controller import run_quipu
 
 @pytest.fixture
 def project_with_subdir(tmp_path):
@@ -49,14 +49,14 @@ class TestRootInvariance:
         """
         project_root, subdir = project_with_subdir
         
-        # 关键测试点：我们使用子目录 `subdir` 作为 `work_dir` 来调用 run_axon，
-        # 模拟 `cd src; axon run ../plan.md` 的场景。
+        # 关键测试点：我们使用子目录 `subdir` 作为 `work_dir` 来调用 run_quipu，
+        # 模拟 `cd src; quipu run ../plan.md` 的场景。
         # plan.md 本身在根目录，其内容引用的路径 'result.txt' 也是相对于根目录的。
         
         # 注意：controller 层不负责解析 `../`，所以我们传 plan 的内容而不是路径
         plan_content = (project_root / "plan.md").read_text("utf-8")
         
-        result = run_axon(
+        result = run_quipu(
             content=plan_content,
             work_dir=subdir,  # <--- 从子目录运行
             yolo=True
@@ -71,7 +71,7 @@ class TestRootInvariance:
         assert expected_file.read_text("utf-8") == "Success from subdir"
 
         # 2. 验证 Engine 状态记录的正确性
-        history_dir = project_root / ".axon" / "history"
+        history_dir = project_root / ".quipu" / "history"
         assert history_dir.exists(), "历史目录应在项目根目录创建"
         
         history_files = list(history_dir.glob("*.md"))

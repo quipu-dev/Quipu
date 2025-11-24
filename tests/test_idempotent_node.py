@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from quipu.core.state_machine import Engine
-from quipu.cli.controller import run_axon
+from quipu.cli.controller import run_quipu
 
 class TestIdempotentNode:
     
@@ -15,21 +15,21 @@ class TestIdempotentNode:
         
         # 2. 先执行一个会产生变更的操作 (State A)
         plan_1 = "~~~act\nwrite_file a.txt\n~~~\n~~~content\nA\n~~~"
-        run_axon(plan_1, workspace, yolo=True)
+        run_quipu(plan_1, workspace, yolo=True)
         
         engine = Engine(workspace)
-        nodes_1 = list((workspace / ".axon" / "history").glob("*.md"))
+        nodes_1 = list((workspace / ".quipu" / "history").glob("*.md"))
         assert len(nodes_1) == 1
         
         # 3. 执行一个无变更的操作 (State A -> State A)
         # 例如读取文件或运行 ls
         plan_2 = "~~~act\nread_file a.txt\n~~~"
-        result = run_axon(plan_2, workspace, yolo=True)
+        result = run_quipu(plan_2, workspace, yolo=True)
         
         assert result.success is True
         
         # 4. 验证是否生成了新节点
-        nodes_2 = list((workspace / ".axon" / "history").glob("*.md"))
+        nodes_2 = list((workspace / ".quipu" / "history").glob("*.md"))
         assert len(nodes_2) == 2
         
         # 验证新节点的 input == output

@@ -78,7 +78,7 @@ def test_align_dirty_state(engine_setup):
 
 def test_align_orphan_state(engine_setup):
     """
-    测试场景：在一个没有 .axon/history 目录或目录为空的项目中运行时，
+    测试场景：在一个没有 .quipu/history 目录或目录为空的项目中运行时，
     引擎应能正确识别为 "ORPHAN" 状态。
     """
     engine, repo_path = engine_setup
@@ -117,7 +117,7 @@ def test_align_orphan_state(engine_setup):
 
 def test_align_orphan_state(engine_setup):
     """
-    测试场景：在一个没有 .axon/history 目录或目录为空的项目中运行时，
+    测试场景：在一个没有 .quipu/history 目录或目录为空的项目中运行时，
     引擎应能正确识别为 "ORPHAN" 状态。
     """
     engine, repo_path = engine_setup
@@ -150,7 +150,7 @@ def test_capture_drift(engine_setup):
     
     # 手动锚定初始 commit
     initial_commit = engine.git_db.create_anchor_commit(initial_hash, "Initial")
-    engine.git_db.update_ref("refs/axon/history", initial_commit)
+    engine.git_db.update_ref("refs/quipu/history", initial_commit)
     
     # 加载历史，确保 engine 知道初始状态
     engine.history_graph = load_history_graph(engine.history_dir)
@@ -179,7 +179,7 @@ def test_capture_drift(engine_setup):
 
     # 4.3 Git 状态 (最关键的)
     latest_ref_commit = subprocess.check_output(
-        ["git", "rev-parse", "refs/axon/history"], cwd=repo_path
+        ["git", "rev-parse", "refs/quipu/history"], cwd=repo_path
     ).decode().strip()
     assert latest_ref_commit != initial_commit, "Git 引用必须更新到新的锚点"
     

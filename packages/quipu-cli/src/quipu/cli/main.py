@@ -5,13 +5,13 @@ from pathlib import Path
 from typing import Annotated, Optional, Dict
 
 from .logger_config import setup_logging
-from .controller import run_axon, find_project_root
+from .controller import run_quipu, find_project_root
 from .config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE, PROJECT_ROOT
 from quipu.core.plugin_loader import load_plugins
 from quipu.core.executor import Executor
 from quipu.core.state_machine import Engine
 from quipu.core.history import load_history_graph
-from quipu.core.models import AxonNode
+from quipu.core.models import QuipuNode
 import inspect
 import subprocess
 from quipu.core.config import ConfigManager
@@ -20,7 +20,7 @@ from quipu.core.config import ConfigManager
 # 否则会导致 CliRunner 测试中的 I/O 流过早绑定/关闭问题。
 logger = logging.getLogger(__name__)
 
-app = typer.Typer(add_completion=False, name="axon")
+app = typer.Typer(add_completion=False, name="quipu")
 
 def _resolve_root(work_dir: Path) -> Path:
     """辅助函数：解析项目根目录，如果未找到则回退到 work_dir"""
@@ -28,16 +28,16 @@ def _resolve_root(work_dir: Path) -> Path:
     return root if root else work_dir
 
 # --- 导航命令辅助函数 ---
-def _find_current_node(engine: Engine, graph: Dict[str, AxonNode]) -> Optional[AxonNode]:
+def _find_current_node(engine: Engine, graph: Dict[str, QuipuNode]) -> Optional[QuipuNode]:
     """在图中查找与当前工作区状态匹配的节点"""
     current_hash = engine.git_db.get_tree_hash()
     node = graph.get(current_hash)
     if not node:
         typer.secho("⚠️  当前工作区状态未在历史中找到，或存在未保存的变更。", fg=typer.colors.YELLOW, err=True)
-        typer.secho("💡  请先运行 'axon save' 创建一个快照，再进行导航。", fg=typer.colors.YELLOW, err=True)
+        typer.secho("💡  请先运行 'quipu save' 创建一个快照，再进行导航。", fg=typer.colors.YELLOW, err=True)
     return node
 
-def _execute_checkout(ctx: typer.Context, target_node: AxonNode, work_dir: Path):
+def _execute_checkout(ctx: typer.Context, target_node: QuipuNode, work_dir: Path):
     """通过子进程调用 checkout 命令以复用逻辑"""
     typer.secho(f"🚀 正在导航到节点: {target_node.short_hash} ({target_node.timestamp})", err=True)
     result = subprocess.run(
@@ -71,7 +71,7 @@ def ui(
     以交互式 TUI 模式显示 Axon 历史图谱。
     """
     try:
-        from .tui import AxonUiApp
+        from .tui import QuipuUiApp
     except ImportError:
         typer.secho("❌ TUI 依赖 'textual' 未安装。", fg=typer.colors.RED, err=True)
         typer.secho("💡 请运行: pip install 'textual>=0.58.0'", err=True)
@@ -94,7 +94,7 @@ def ui(
     graph = load_history_graph(engine.history_dir)
     current_hash = engine.git_db.get_tree_hash()
     
-    app_instance = AxonUiApp(all_nodes, current_hash=current_hash)
+    app_instance = QuipuUiApp(all_nodes, current_hash=current_hash)
     selected_hash = app_instance.run()
 
     if selected_hash:
@@ -164,7 +164,7 @@ def sync(
     config = ConfigManager(work_dir)
     if remote is None:
         remote = config.get("sync.remote_name", "origin")
-    refspec = "refs/axon/history:refs/axon/history"
+    refspec = "refs/quipu/history:refs/quipu/history"
     def run_git_command(args: list[str]):
         try:
             result = subprocess.run(["git"] + args, cwd=work_dir, capture_output=True, text=True, check=True)
@@ -424,9 +424,9 @@ def log(
     """
     setup_logging()
     real_root = _resolve_root(work_dir)
-    history_dir = real_root / ".axon" / "history"
+    history_dir = real_root / ".quipu" / "history"
     if not history_dir.exists():
-        typer.secho(f"❌ 在 '{work_dir}' 中未找到 Axon 历史记录 (.axon/history)。", fg=typer.colors.RED, err=True)
+        typer.secho(f"❌ 在 '{work_dir}' 中未找到 Axon 历史记录 (.quipu/history)。", fg=typer.colors.RED, err=True)
         raise typer.Exit(1)
     graph = load_history_graph(history_dir)
     if not graph:
@@ -505,16 +505,16 @@ def run_command(
         content = DEFAULT_ENTRY_FILE.read_text(encoding="utf-8"); source_desc = f"默认文件 ({DEFAULT_ENTRY_FILE.name})"
     if file and not file.exists() and file.name in ["log", "checkout", "sync", "init", "ui"]:
         typer.secho(f"❌ 错误: 找不到指令文件: {file}", fg=typer.colors.RED, err=True)
-        typer.secho(f"💡 提示: 你是不是想执行 'axon {file.name}' 命令？", fg=typer.colors.YELLOW, err=True)
+        typer.secho(f"💡 提示: 你是不是想执行 'quipu {file.name}' 命令？", fg=typer.colors.YELLOW, err=True)
         ctx.exit(1)
     if not content.strip():
         if not file:
             typer.secho(f"⚠️  提示: 未提供输入，且当前目录下未找到默认文件 '{DEFAULT_ENTRY_FILE.name}'。", fg=typer.colors.YELLOW, err=True)
-            typer.echo("\n用法示例:", err=True); typer.echo("  axon run my_plan.md", err=True); typer.echo("  echo '...' | axon run", err=True)
+            typer.echo("\n用法示例:", err=True); typer.echo("  quipu run my_plan.md", err=True); typer.echo("  echo '...' | quipu run", err=True)
             ctx.exit(0)
     logger.info(f"已加载指令源: {source_desc}"); logger.info(f"工作区根目录: {work_dir}")
     if yolo: logger.warning("⚠️  YOLO 模式已开启：将自动确认所有修改。")
-    result = run_axon(content=content, work_dir=work_dir, parser_name=parser_name, yolo=yolo)
+    result = run_quipu(content=content, work_dir=work_dir, parser_name=parser_name, yolo=yolo)
     if result.message:
         color = typer.colors.GREEN if result.success else typer.colors.RED
         typer.secho(f"\n{result.message}", fg=color, err=True)

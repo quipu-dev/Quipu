@@ -17,8 +17,8 @@ class TestGitActs:
         func(executor, [])
         
         # 配置测试用的 user，防止 CI/Test 环境报错
-        subprocess.run(["git", "config", "user.email", "axon@test.com"], cwd=isolated_vault, check=True)
-        subprocess.run(["git", "config", "user.name", "Axon Bot"], cwd=isolated_vault, check=True)
+        subprocess.run(["git", "config", "user.email", "quipu@test.com"], cwd=isolated_vault, check=True)
+        subprocess.run(["git", "config", "user.name", "Quipu Bot"], cwd=isolated_vault, check=True)
 
     def test_git_workflow(self, executor: Executor, isolated_vault: Path):
         # 1. 创建文件

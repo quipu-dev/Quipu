@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 from typing import Dict, Optional, List
 import yaml
-from quipu.core.models import AxonNode
+from quipu.core.models import QuipuNode
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -23,15 +23,15 @@ def _parse_frontmatter(text: str) -> tuple[Dict, str]:
     except yaml.YAMLError:
         return {}, text
 
-def load_all_history_nodes(history_dir: Path) -> List[AxonNode]:
+def load_all_history_nodes(history_dir: Path) -> List[QuipuNode]:
     """
     (For UI & Graphing)
     加载所有历史事件，构建完整的父子关系图，并返回所有节点的列表。
     """
     if not history_dir.exists(): return []
 
-    all_nodes: List[AxonNode] = []
-    nodes_by_output: Dict[str, List[AxonNode]] = {}
+    all_nodes: List[QuipuNode] = []
+    nodes_by_output: Dict[str, List[QuipuNode]] = {}
 
     for file_path in history_dir.glob("*.md"):
         match = FILENAME_PATTERN.match(file_path.name)
@@ -44,7 +44,7 @@ def load_all_history_nodes(history_dir: Path) -> List[AxonNode]:
             full_content = file_path.read_text("utf-8")
             meta, body_content = _parse_frontmatter(full_content)
             
-            node = AxonNode(
+            node = QuipuNode(
                 input_tree=input_hash, output_tree=output_hash,
                 timestamp=datetime.strptime(ts_str, "%Y%m%d%H%M%S"),
                 filename=file_path, node_type=meta.get("type", "unknown"),
@@ -71,14 +71,14 @@ def load_all_history_nodes(history_dir: Path) -> List[AxonNode]:
         
     return all_nodes
 
-def load_history_graph(history_dir: Path) -> Dict[str, AxonNode]:
+def load_history_graph(history_dir: Path) -> Dict[str, QuipuNode]:
     """
     (For Engine Alignment)
-    加载历史图谱，并返回一个从 Tree Hash 到最新 AxonNode 的映射。
+    加载历史图谱，并返回一个从 Tree Hash 到最新 QuipuNode 的映射。
     这个字典用于快速确定当前工作区状态对应于哪个历史节点。
     """
     all_nodes = load_all_history_nodes(history_dir)
-    final_graph: Dict[str, AxonNode] = {}
+    final_graph: Dict[str, QuipuNode] = {}
     
     for node in all_nodes:
         if node.output_tree not in final_graph or node.timestamp > final_graph[node.output_tree].timestamp:

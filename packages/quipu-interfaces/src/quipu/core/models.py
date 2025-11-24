@@ -5,7 +5,7 @@ from typing import Optional, List, Dict # <-- 引入 List
 from datetime import datetime
 
 @dataclasses.dataclass
-class AxonNode:
+class QuipuNode:
     """
     表示 Axon 历史图谱中的一个节点。
     
@@ -27,8 +27,8 @@ class AxonNode:
     content: str = ""
     
     # --- 图遍历字段 (由加载器填充) ---
-    parent: Optional[AxonNode] = None
-    children: List[AxonNode] = dataclasses.field(default_factory=list)
+    parent: Optional[QuipuNode] = None
+    children: List[QuipuNode] = dataclasses.field(default_factory=list)
 
     @property
     def short_hash(self) -> str:
@@ -36,7 +36,7 @@ class AxonNode:
         return self.output_tree[:7]
 
     @property
-    def siblings(self) -> List[AxonNode]:
+    def siblings(self) -> List[QuipuNode]:
         """获取所有兄弟节点 (包括自身)，按时间排序"""
         if not self.parent:
             return [self]

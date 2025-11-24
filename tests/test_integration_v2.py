@@ -2,7 +2,7 @@ import pytest
 import logging
 from pathlib import Path
 from typer.testing import CliRunner
-from quipu.cli.controller import run_axon, AxonResult
+from quipu.cli.controller import run_quipu, QuipuResult
 from quipu.cli.main import app
 from quipu.core.executor import Executor
 from acts.basic import register as register_basic
@@ -32,7 +32,7 @@ def workspace(tmp_path):
     import subprocess
     subprocess.run(["git", "init"], cwd=ws, check=True, capture_output=True)
     # 设置 user 避免 commit 报错
-    subprocess.run(["git", "config", "user.email", "test@axon.dev"], cwd=ws, check=True)
+    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=ws, check=True)
     subprocess.run(["git", "config", "user.name", "Axon Test"], cwd=ws, check=True)
     
     return ws
@@ -42,7 +42,7 @@ def workspace(tmp_path):
 
 class TestController:
 
-    def test_run_axon_success(self, workspace):
+    def test_run_quipu_success(self, workspace):
         """测试正常执行流程"""
         plan = """
 ~~~act
@@ -52,21 +52,21 @@ write_file
 hello.txt
 ~~~
 ~~~content
-Hello Axon
+Hello Quipu
 ~~~
 """
-        result = run_axon(content=plan, work_dir=workspace, yolo=True)
+        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
         
         assert result.success is True
         assert result.exit_code == 0
         assert (workspace / "hello.txt").exists()
         
         # 验证 Engine 是否生成了 Plan 节点
-        history_dir = workspace / ".axon" / "history"
+        history_dir = workspace / ".quipu" / "history"
         assert history_dir.exists()
         assert len(list(history_dir.glob("*.md"))) >= 1
 
-    def test_run_axon_execution_error(self, workspace):
+    def test_run_quipu_execution_error(self, workspace):
         """测试执行期间的预期错误 (如文件不存在)"""
         # 试图追加到一个不存在的文件
         plan = """
@@ -80,17 +80,17 @@ ghost.txt
 boo
 ~~~
 """
-        result = run_axon(content=plan, work_dir=workspace, yolo=True)
+        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
         
         assert result.success is False
         assert result.exit_code == 1
         assert "文件不存在" in result.message
 
-    def test_run_axon_empty_plan(self, workspace):
+    def test_run_quipu_empty_plan(self, workspace):
         """测试无有效指令"""
         plan = "Just some text, no acts."
         
-        result = run_axon(content=plan, work_dir=workspace, yolo=True)
+        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
         
         assert result.success is False # 视为非成功状态（虽然不是错误，但任务未完成）
         assert result.exit_code == 0   # 但退出码为 0，不报错
@@ -165,20 +165,20 @@ class TestCheckoutCLI:
         """
         # State A: Create a.txt
         plan_a = "~~~act\nwrite_file a.txt\n~~~\n~~~content\nState A\n~~~"
-        run_axon(content=plan_a, work_dir=workspace, yolo=True)
+        run_quipu(content=plan_a, work_dir=workspace, yolo=True)
         
         # Find the hash for State A. It's the latest one at this point.
-        history_nodes_a = list(sorted((workspace / ".axon" / "history").glob("*.md"), key=lambda p: p.stat().st_mtime))
+        history_nodes_a = list(sorted((workspace / ".quipu" / "history").glob("*.md"), key=lambda p: p.stat().st_mtime))
         hash_a = history_nodes_a[-1].name.split("_")[1]
 
         # Manually create State B by removing a.txt and adding b.txt
         # This ensures State B is distinct from State A, not an addition.
         (workspace / "a.txt").unlink()
         plan_b = "~~~act\nwrite_file b.txt\n~~~\n~~~content\nState B\n~~~"
-        run_axon(content=plan_b, work_dir=workspace, yolo=True)
+        run_quipu(content=plan_b, work_dir=workspace, yolo=True)
 
         # Find the hash for State B. It's the newest node now.
-        history_nodes_b = list(sorted((workspace / ".axon" / "history").glob("*.md"), key=lambda p: p.stat().st_mtime))
+        history_nodes_b = list(sorted((workspace / ".quipu" / "history").glob("*.md"), key=lambda p: p.stat().st_mtime))
         hash_b = history_nodes_b[-1].name.split("_")[1]
         
         # The workspace is now physically in State B before the test starts.
@@ -209,7 +209,7 @@ class TestCheckoutCLI:
         # Make the workspace dirty
         (workspace / "c_dirty.txt").write_text("uncommitted change")
         
-        history_dir = workspace / ".axon" / "history"
+        history_dir = workspace / ".quipu" / "history"
         num_nodes_before = len(list(history_dir.glob("*.md")))
 
         result = runner.invoke(app, ["checkout", hash_a[:8], "--work-dir", str(workspace), "--force"])
