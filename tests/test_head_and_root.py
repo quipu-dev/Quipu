@@ -1,7 +1,7 @@
 import pytest
 import os
 from pathlib import Path
-from core.engine import Engine
+from core.eng_state_machine import Engine
 from core.controller import find_project_root
 
 class TestHeadTracking:

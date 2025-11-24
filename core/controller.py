@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from .intf_result import AxonResult
-from .engine import Engine
+from .eng_state_machine import Engine
 from .executor import Executor, ExecutionError
 from .intf_exceptions import ExecutionError as CoreExecutionError # Alias to avoid conflict
 from .parser import get_parser, detect_best_parser

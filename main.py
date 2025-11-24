@@ -9,12 +9,12 @@ from core.controller import run_axon, find_project_root
 from config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE, PROJECT_ROOT
 from core.plugin_loader import load_plugins
 from core.executor import Executor
-from core.engine import Engine
-from core.history import load_history_graph
+from core.eng_state_machine import Engine
+from core.eng_history import load_history_graph
 from core.intf_models import AxonNode
 import inspect
 import subprocess
-from core.config_manager import ConfigManager
+from core.eng_config import ConfigManager
 
 # 注意：不要在模块级别直接调用 setup_logging()，
 # 否则会导致 CliRunner 测试中的 I/O 流过早绑定/关闭问题。
@@ -81,7 +81,7 @@ def ui(
     # 关键修复: 我们需要两种数据结构
     # 1. 完整的节点列表 (all_nodes) -> 用于 UI 渲染
     # 2. 从哈希到最新节点的映射 (graph) -> 用于 checkout 查找
-    from core.history import load_all_history_nodes, load_history_graph
+    from core.eng_history import load_all_history_nodes, load_history_graph
     
     real_root = _resolve_root(work_dir)
     engine = Engine(real_root)
