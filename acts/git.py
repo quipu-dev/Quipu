@@ -2,8 +2,8 @@ import subprocess
 import logging
 import os
 from typing import List
-from core.types import ActContext, Executor
-from core.exceptions import ExecutionError
+from core.intf_types import ActContext, Executor
+from core.intf_exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
 

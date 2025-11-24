@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from datetime import datetime
-from core.models import AxonNode
+from core.intf_models import AxonNode
 from ui.tui import AxonUiApp
 
 class TestUiReachability:

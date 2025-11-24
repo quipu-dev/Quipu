@@ -4,10 +4,10 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from .result import AxonResult
+from .intf_result import AxonResult
 from .engine import Engine
 from .executor import Executor, ExecutionError
-from .exceptions import ExecutionError as CoreExecutionError # Alias to avoid conflict
+from .intf_exceptions import ExecutionError as CoreExecutionError # Alias to avoid conflict
 from .parser import get_parser, detect_best_parser
 from .plugin_loader import load_plugins
 

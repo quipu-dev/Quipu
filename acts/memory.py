@@ -1,7 +1,7 @@
 import logging
 from typing import List
 from datetime import datetime
-from core.types import ActContext, Executor
+from core.intf_types import ActContext, Executor
 
 logger = logging.getLogger(__name__)
 

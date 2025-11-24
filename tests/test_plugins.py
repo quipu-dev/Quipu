@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from core.executor import Executor
 from core.plugin_loader import load_plugins
-from core.controller import _find_project_root  # 从 Controller 导入辅助函数
+from core.controller import find_project_root  # 从 Controller 导入辅助函数
 
 class TestPluginLoading:
     
@@ -60,14 +60,14 @@ def register(executor):
         subdir.mkdir(parents=True)
         
         # 从子目录查找
-        found = _find_project_root(subdir)
+        found = find_project_root(subdir)
         assert found == root.resolve()
         
         # 从根目录查找
-        found_root = _find_project_root(root)
+        found_root = find_project_root(root)
         assert found_root == root.resolve()
         
         # 在非 git 目录查找
         orphan = tmp_path / "orphan"
         orphan.mkdir()
-        assert _find_project_root(orphan) is None
+        assert find_project_root(orphan) is None

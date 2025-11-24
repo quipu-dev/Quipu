@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from core.parser import BacktickParser, TildeParser, get_parser
 from core.executor import Executor, ExecutionError
-from core.types import ActContext
+from core.intf_types import ActContext
 
 class TestParser:
     # ... (Parser tests are unchanged)

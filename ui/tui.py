@@ -7,7 +7,7 @@ from textual.binding import Binding
 from textual.coordinate import Coordinate
 
 sys.path.append('..')
-from core.models import AxonNode
+from core.intf_models import AxonNode
 
 class AxonUiApp(App):
     CSS = """

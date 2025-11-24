@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from core.executor import Executor, ExecutionError
 from acts.read import register as register_read_acts
-from core.types import ActContext
+from core.intf_types import ActContext
 
 class TestReadActs:
     @pytest.fixture(autouse=True)

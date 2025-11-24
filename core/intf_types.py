@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TypedDict, List, Callable
 from pathlib import Path
-from .exceptions import ExecutionError
+from .intf_exceptions import ExecutionError
 
 # --- Forward declaration to avoid circular imports ---
 # The real Executor class is in core.executor

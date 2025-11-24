@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Optional, Dict
 from contextlib import contextmanager
-from .exceptions import ExecutionError
+from .intf_exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
 

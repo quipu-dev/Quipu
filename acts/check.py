@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import List
 import logging
-from core.types import ActContext, Executor
+from core.intf_types import ActContext, Executor
 
 logger = logging.getLogger(__name__)
 

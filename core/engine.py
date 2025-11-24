@@ -6,7 +6,7 @@ from datetime import datetime
 
 from .git_db import GitDB
 from .history import load_history_graph
-from .models import AxonNode
+from .intf_models import AxonNode
 
 logger = logging.getLogger(__name__)
 

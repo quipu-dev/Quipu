@@ -11,7 +11,7 @@ from core.plugin_loader import load_plugins
 from core.executor import Executor
 from core.engine import Engine
 from core.history import load_history_graph
-from core.models import AxonNode
+from core.intf_models import AxonNode
 import inspect
 import subprocess
 from core.config_manager import ConfigManager

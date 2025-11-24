@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from core.executor import Executor, ExecutionError
 from acts.check import register as register_check_acts
-from core.types import ActContext
+from core.intf_types import ActContext
 
 class TestCheckActs:
     @pytest.fixture(autouse=True)

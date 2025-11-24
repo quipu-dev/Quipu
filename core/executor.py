@@ -5,8 +5,8 @@ import shlex
 import sys
 from pathlib import Path
 from typing import Dict, List, Any
-from .types import Statement, ActFunction, ActContext
-from .exceptions import ExecutionError
+from .intf_types import Statement, ActFunction, ActContext
+from .intf_exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
 
