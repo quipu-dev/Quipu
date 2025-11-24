@@ -9,9 +9,9 @@
 pip install -r requirements.txt
 ```
 
-*(注意：正式发布后将支持 `pip install axon-dev`)*
+*(注意：正式发布后将支持 `pip install quipu-dev`)*
 
-## 第一个 Axon 脚本
+## 第一个 Quipu 脚本
 
 创建一个名为 `hello.md` 的文件，写入以下内容：
 
@@ -27,7 +27,7 @@ write_file
 hello.py
 ```
 ```python
-print("Hello Axon!")
+print("Hello Quipu!")
 ```
 ````
 
@@ -47,7 +47,7 @@ python main.py run hello.md -y
 
 ## 查看历史
 
-Axon 会自动记录你的操作历史。
+Quipu 会自动记录你的操作历史。
 
 ```bash
 python main.py log

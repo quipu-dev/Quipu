@@ -92,7 +92,7 @@ source dev_setup.fish
 
 ### Q: 我不小心执行了 `qpromote`，把坏掉的代码同步到了 `qx`，现在两个都坏了！
 **A**:
-1.  **Git 回滚**: 使用 `git checkout` 或使用 `axon ui` 恢复源码到上一个好状态。
+1.  **Git 回滚**: 使用 `git checkout` 或使用 `qx ui` 恢复源码到上一个好状态。
 2.  **再次晋升**: 运行 `qpromote`。这会将回滚后的好代码重新安装到 `qx`。
 
 ### Q: `qtest` 找不到我新加的包？

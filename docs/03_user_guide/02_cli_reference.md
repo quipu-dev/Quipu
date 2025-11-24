@@ -1,13 +1,13 @@
 # 💻 CLI 命令参考
 
-Axon 的命令行界面设计得简洁直观。所有命令的入口均为 `axon`。
+Quipu 的命令行界面设计得简洁直观。所有命令的入口均为 `quipu`。
 
 ## `run` - 执行脚本
 
 执行 Markdown 文件中的指令。
 
 ```bash
-axon run [FILE] [OPTIONS]
+quipu run [FILE] [OPTIONS]
 ```
 
 *   `FILE`: (可选) 要执行的 Markdown 文件路径。如果不提供且没有管道输入，默认寻找 `o.md`。
@@ -17,16 +17,16 @@ axon run [FILE] [OPTIONS]
 *   `--list-acts, -l`: 列出所有可用的 Act 指令。
 
 **示例**:```bash
-# 管道模式：将 LLM 的输出直接喂给 Axon
-llm "Refactor code" | axon run -y
+# 管道模式：将 LLM 的输出直接喂给 Quipu
+llm "Refactor code" | quipu run -y
 ```
 
 ## `log` - 查看历史
 
-以列表形式显示 Axon 的操作历史。
+以列表形式显示 Quipu 的操作历史。
 
 ```bash
-axon log [OPTIONS]
+quipu log [OPTIONS]
 ```
 
 *   `--work-dir, -w`: 指定工作区。
@@ -38,7 +38,7 @@ axon log [OPTIONS]
 将工作区重置到指定的历史状态。
 
 ```bash
-axon checkout <HASH_PREFIX> [OPTIONS]
+quipu checkout <HASH_PREFIX> [OPTIONS]
 ```
 
 *   `<HASH_PREFIX>`: 目标状态 Hash 的前几位（从 `log` 或 `ui` 命令获取）。
@@ -48,10 +48,10 @@ axon checkout <HASH_PREFIX> [OPTIONS]
 
 ## `discard` - 丢弃变更
 
-丢弃工作区中所有未被 Axon 记录的变更，将文件恢复到上一个干净的历史状态。
+丢弃工作区中所有未被 Quipu 记录的变更，将文件恢复到上一个干净的历史状态。
 
 ```bash
-axon discard [OPTIONS]
+quipu discard [OPTIONS]
 ```
 
 *   `--force, -f`: 强制执行，不询问确认。
@@ -60,22 +60,22 @@ axon discard [OPTIONS]
 
 ## `sync` - 远程同步
 
-同步 Axon 的隐形历史记录到远程 Git 仓库。
+同步 Quipu 的隐形历史记录到远程 Git 仓库。
 
 ```bash
-axon sync [OPTIONS]
+quipu sync [OPTIONS]
 ```
 
 *   `--remote, -r`: 指定远程仓库名称（默认 `origin`）。
 
-此命令通过 `git push/pull refs/axon/history` 实现历史共享，让团队成员可以复现彼此的 AI 操作历史。
+此命令通过 `git push/pull refs/quipu/history` 实现历史共享，让团队成员可以复现彼此的 AI 操作历史。
 
 ## `save` - 保存快照 (微提交)
 
 创建一个当前工作区状态的轻量级快照。
 
 ```bash
-axon save "[MESSAGE]" [OPTIONS]
+quipu save "[MESSAGE]" [OPTIONS]
 ```
 
 *   `[MESSAGE]`: (可选) 为这个快照添加一句描述，例如 "尝试修复 bug" 或 "重构前的状态"。
@@ -90,10 +90,10 @@ axon save "[MESSAGE]" [OPTIONS]
 
 | 命令 | 描述 | 示例 |
 | :--- | :--- | :--- |
-| `axon undo` | 移动到当前节点的**父节点** (类似 Ctrl+Z)。 | `axon undo -n 2` (向上移动2次) |
-| `axon redo` | 移动到当前节点的**子节点** (类似 Ctrl+Y)。 | `axon redo` |
-| `axon prev` | 在兄弟分支间，切换到**上一个 (更旧的)** 分支。 | `axon prev` |
-| `axon next` | 在兄弟分支间，切换到**下一个 (更新的)** 分支。 | `axon next` |
+| `quipu undo` | 移动到当前节点的**父节点** (类似 Ctrl+Z)。 | `quipu undo -n 2` (向上移动2次) |
+| `quipu redo` | 移动到当前节点的**子节点** (类似 Ctrl+Y)。 | `quipu redo` |
+| `quipu prev` | 在兄弟分支间，切换到**上一个 (更旧的)** 分支。 | `quipu prev` |
+| `quipu next` | 在兄弟分支间，切换到**下一个 (更新的)** 分支。 | `quipu next` |
 
 ## 📺 交互式界面
 
@@ -102,7 +102,7 @@ axon save "[MESSAGE]" [OPTIONS]
 提供一个全屏的、可视化的界面来浏览和操作历史图谱。
 
 ```bash
-axon ui
+quipu ui
 ```
 
 *   **视图**: 类似于 `git log --graph` 的垂直时间轴，清晰展示主干与分支。
@@ -115,10 +115,10 @@ axon ui
 
 ## `discard` - 丢弃变更
 
-丢弃工作区中所有未被 Axon 记录的变更，将文件恢复到上一个干净的历史状态。
+丢弃工作区中所有未被 Quipu 记录的变更，将文件恢复到上一个干净的历史状态。
 
 ```bash
-axon discard [OPTIONS]
+quipu discard [OPTIONS]
 ```
 
 *   `--force, -f`: 强制执行，不询问确认。
@@ -127,22 +127,22 @@ axon discard [OPTIONS]
 
 ## `sync` - 远程同步
 
-同步 Axon 的隐形历史记录到远程 Git 仓库。
+同步 Quipu 的隐形历史记录到远程 Git 仓库。
 
 ```bash
-axon sync [OPTIONS]
+quipu sync [OPTIONS]
 ```
 
 *   `--remote, -r`: 指定远程仓库名称（默认 `origin`）。
 
-此命令通过 `git push/pull refs/axon/history` 实现历史共享，让团队成员可以复现彼此的 AI 操作历史。
+此命令通过 `git push/pull refs/quipu/history` 实现历史共享，让团队成员可以复现彼此的 AI 操作历史。
 
 ## `save` - 保存快照 (微提交)
 
 创建一个当前工作区状态的轻量级快照。
 
 ```bash
-axon save "[MESSAGE]" [OPTIONS]
+quipu save "[MESSAGE]" [OPTIONS]
 ```
 
 *   `[MESSAGE]`: (可选) 为这个快照添加一句描述，例如 "尝试修复 bug" 或 "重构前的状态"。
@@ -157,10 +157,10 @@ axon save "[MESSAGE]" [OPTIONS]
 
 | 命令 | 描述 | 示例 |
 | :--- | :--- | :--- |
-| `axon undo` | 移动到当前节点的**父节点** (类似 Ctrl+Z)。 | `axon undo -n 2` (向上移动2次) |
-| `axon redo` | 移动到当前节点的**子节点** (类似 Ctrl+Y)。 | `axon redo` |
-| `axon prev` | 在兄弟分支间，切换到**上一个 (更旧的)** 分支。 | `axon prev` |
-| `axon next` | 在兄弟分支间，切换到**下一个 (更新的)** 分支。 | `axon next` |
+| `quipu undo` | 移动到当前节点的**父节点** (类似 Ctrl+Z)。 | `quipu undo -n 2` (向上移动2次) |
+| `quipu redo` | 移动到当前节点的**子节点** (类似 Ctrl+Y)。 | `quipu redo` |
+| `quipu prev` | 在兄弟分支间，切换到**上一个 (更旧的)** 分支。 | `quipu prev` |
+| `quipu next` | 在兄弟分支间，切换到**下一个 (更新的)** 分支。 | `quipu next` |
 
 ## 📺 交互式界面
 
@@ -169,7 +169,7 @@ axon save "[MESSAGE]" [OPTIONS]
 提供一个全屏的、可视化的界面来浏览和操作历史图谱。
 
 ```bash
-axon ui
+quipu ui
 ```
 
 *   **操作**:

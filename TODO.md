@@ -1,16 +1,16 @@
 ## ✅ 已完成里程碑
 
-我们已经成功完成了 Axon 架构的核心重构和引擎集成。主要成就包括：
+我们已经成功完成了 Quipu 架构的核心重构和引擎集成。主要成就包括：
 
-*   **引擎集成与核心生命周期**：Phantom State Engine 不再是一个孤立的模块。它现在完全驱动着 Axon 的核心“感知-行动-记录”循环。应用启动时会自动对齐状态（`align`），在执行 Plan 前会自动捕获任何环境漂移（`capture_drift`），并在成功后将 Plan 固化为历史节点（`create_plan_node`）。
+*   **引擎集成与核心生命周期**：Phantom State Engine 不再是一个孤立的模块。它现在完全驱动着 Quipu 的核心“感知-行动-记录”循环。应用启动时会自动对齐状态（`align`），在执行 Plan 前会自动捕获任何环境漂移（`capture_drift`），并在成功后将 Plan 固化为历史节点（`create_plan_node`）。
 
-*   **核壳分离架构 (Core-Shell Architecture)**：我们通过将业务逻辑（**核**：`core/controller.py`）与 CLI 交互（**壳**：`main.py`）彻底解耦，从根本上解决了测试环境的 I/O 冲突问题。这不仅使测试变得极其稳定，也为未来将 Axon 核心逻辑暴露为 API 或集成到其他工具中奠定了基础。
+*   **核壳分离架构 (Core-Shell Architecture)**：我们通过将业务逻辑（**核**：`core/controller.py`）与 CLI 交互（**壳**：`main.py`）彻底解耦，从根本上解决了测试环境的 I/O 冲突问题。这不仅使测试变得极其稳定，也为未来将 Quipu 核心逻辑暴露为 API 或集成到其他工具中奠定了基础。
 
 *   **端到端测试验证**：新的分层架构由一套全新的、稳定的集成测试套件（`tests/test_integration_v2.py`）提供支持，所有测试均已通过，证明了新设计的健壮性和正确性。
 
 ---
 
-## 🚀 Axon 开发路线图 (v0.3.x)
+## 🚀 Quipu 开发路线图 (v0.3.x)
 
 ### ✅ 阶段 1: 幽灵引擎内核 (已完成)
 
@@ -22,7 +22,7 @@
     *   [x] 实现历史保活机制 (`create_anchor_commit`, `update_ref`)
     *   [x] 实现 Git 血统检测 (`is_ancestor`)
 *   [x] **数据模型与历史加载器 (`core/models.py`, `core/history.py`)**
-    *   [x] 定义 `AxonNode` 数据结构
+    *   [x] 定义 `QuipuNode` 数据结构
     *   [x] 实现从文件系统加载历史图谱 (`load_history_graph`)
 *   [x] **核心状态机逻辑 (`core/engine.py`)**
     *   [x] 实现 `align` 方法，可准确识别 `CLEAN`, `DIRTY`, `ORPHAN` 状态
@@ -47,7 +47,7 @@
     *   [x] 为 `Engine` 添加并实现了 `create_plan_node(...)` 方法。
     *   [x] Controller 调用该方法，将本次执行的 Plan 固化为一个新的 `PlanNode`，并更新 Git 引用。
 *   [x] **端到端测试**
-    *   [x] 编写了新的集成测试 (`test_integration_v2.py`)，模拟 `axon run plan.md` 的完整流程，验证 Capture 和 Plan 节点都按预期生成，且所有测试通过。
+    *   [x] 编写了新的集成测试 (`test_integration_v2.py`)，模拟 `quipu run plan.md` 的完整流程，验证 Capture 和 Plan 节点都按预期生成，且所有测试通过。
 
 ---
 
@@ -55,30 +55,30 @@
 
 当核心循环跑通后，我们将添加让用户能够与历史图谱交互的核心功能。
 
-*   [x] **历史查看 (`axon log`)**
-    *   [x] 实现一个新的 CLI 命令 `axon log`，用于列出 `.axon/history` 中的所有节点。
-*   [x] **时间旅行 (`axon checkout`)**
-    *   [x] 实现 CLI 命令 `axon checkout <node_hash>`。
+*   [x] **历史查看 (`quipu log`)**
+    *   [x] 实现一个新的 CLI 命令 `quipu log`，用于列出 `.quipu/history` 中的所有节点。
+*   [x] **时间旅行 (`quipu checkout`)**
+    *   [x] 实现 CLI 命令 `quipu checkout <node_hash>`。
     *   [x] 在 `GitDB` 中添加 `checkout_tree(tree_hash)` 方法，用于将工作区硬重置到指定状态。
-*   [x] **工作区重置 (`axon discard`)**
-    *   [x] 实现 `axon discard` 命令，用于一键恢复到上一个干净状态，清理失败 Plan 留下的变更。
-*   [x] **分布式协作 (`axon sync`)**
-    *   [x] 实现 `axon sync` 命令，用于 `git push/pull` `refs/axon/history` 引用。
+*   [x] **工作区重置 (`quipu discard`)**
+    *   [x] 实现 `quipu discard` 命令，用于一键恢复到上一个干净状态，清理失败 Plan 留下的变更。
+*   [x] **分布式协作 (`quipu sync`)**
+    *   [x] 实现 `quipu sync` 命令，用于 `git push/pull` `refs/quipu/history` 引用。
 *   [x] **CLI 图导航 (`undo`, `redo`, `prev`, `next`)**
     *   [x] 实现快捷命令，允许在历史图谱中进行相对移动。
-*   [x] **交互式 TUI (`axon ui`)**
+*   [x] **交互式 TUI (`quipu ui`)**
     *   [x] 集成 Textual，提供一个可视化的、类似 `git log --graph` 的历史浏览器。
 
 ---
 
 ### 🛠️ 阶段 4: 健壮性与打磨
 
-让 Axon 从一个原型变成一个可靠的工具。
+让 Quipu 从一个原型变成一个可靠的工具。
 
 *   [x] **完善错误处理**：
     *   [x] 处理 `git` 未安装或工作目录非 Git 仓库的情况。
     *   [x] 在文件操作中处理权限问题 (`PermissionError`)。
     *   [ ] 细化 Plan 执行失败时的错误报告。
-*   [x] **配置系统**：实现 `core/config_manager.py` 以加载 `.axon/config.yml`，并集成了第一个配置项 (`sync.remote_name`)。
+*   [x] **配置系统**：实现 `core/config_manager.py` 以加载 `.quipu/config.yml`，并集成了第一个配置项 (`sync.remote_name`)。
 *   [x] **文档更新**：更新 `README.md` 和 `docs/` 目录，反映 0.3.x 的新概念和工作流。
 *   [x] **打包与分发**：为 `pip` 发布做准备。

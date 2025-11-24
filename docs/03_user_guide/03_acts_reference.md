@@ -96,6 +96,6 @@
 ## 记忆 (Memory)
 
 ### `log_thought`
-记录思维链或决策过程到 `.axon/memory.md`。
+记录思维链或决策过程到 `.quipu/memory.md`。
 *   参数: `[content]`
 *   模式: Block Only

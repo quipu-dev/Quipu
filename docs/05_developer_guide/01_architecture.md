@@ -1,6 +1,6 @@
 # 🏗️ 架构深度解析
 
-Axon 采用了 **核壳分离 (Core-Shell)** 架构。
+Quipu 采用了 **核壳分离 (Core-Shell)** 架构。
 
 ## 目录结构
 
@@ -16,7 +16,7 @@ Axon 采用了 **核壳分离 (Core-Shell)** 架构。
 
 1.  **启动 (Boot)**:
     *   `Engine` 初始化，通过 `GitDB` 计算当前 Tree Hash。
-    *   调用 `align()` 在 `.axon/history` 中查找匹配节点。
+    *   调用 `align()` 在 `.quipu/history` 中查找匹配节点。
     *   如果状态是 `DIRTY` 或 `ORPHAN`，自动触发 Capture 流程，生成快照节点。
 
 2.  **解析 (Parse)**:
