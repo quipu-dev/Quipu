@@ -3,7 +3,7 @@ import shutil
 import logging
 from pathlib import Path
 from quipu.core.executor import Executor, ExecutionError
-from acts.read import register as register_read_acts
+from quipu.acts.read import register as register_read_acts
 from quipu.core.types import ActContext
 
 class TestReadActs:

@@ -21,13 +21,6 @@ quipu = "quipu.cli.main:app"
 py-modules = []
 
 [tool.pytest.ini_options]
-pythonpath = [
-    ".",
-    "packages/quipu-interfaces/src",
-    "packages/quipu-engine/src",
-    "packages/quipu-runtime/src",
-    "packages/quipu-cli/src",
-]
 testpaths = ["tests"]
 log_cli = true
 log_cli_level = "INFO"

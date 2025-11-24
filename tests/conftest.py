@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from typing import TYPE_CHECKING
-from acts.basic import register as register_basic_acts
+from quipu.acts.basic import register as register_basic_acts
 
 # 使用 TYPE_CHECKING 块来辅助静态分析工具，而不在运行时导入
 if TYPE_CHECKING:

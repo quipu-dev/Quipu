@@ -13,6 +13,7 @@ from quipu.core.plugin_loader import load_plugins
 
 # 从配置导入，注意为了解耦，未来可能需要将 config 注入而不是直接导入
 from .config import PROJECT_ROOT
+from quipu.acts import register_core_acts
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,7 @@ def run_quipu(
         executor = Executor(root_dir=project_root, yolo=yolo) # 使用 project_root
         
         # 加载插件
-        load_plugins(executor, PROJECT_ROOT / "acts") # 内置
+        register_core_acts(executor) # 内置 (从 runtime 包加载)
         _load_extra_plugins(executor, project_root)       # 外部 (也基于 project_root)
 
         # 3.3 Execute

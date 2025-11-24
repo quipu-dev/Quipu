@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from quipu.core.executor import Executor
 from quipu.core.exceptions import ExecutionError
-from acts.check import register as register_check_acts
+from quipu.acts.check import register as register_check_acts
 from quipu.core.types import ActContext
 
 class TestCheckActs:

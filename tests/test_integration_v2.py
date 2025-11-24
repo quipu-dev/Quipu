@@ -5,7 +5,7 @@ from typer.testing import CliRunner
 from quipu.cli.controller import run_quipu, QuipuResult
 from quipu.cli.main import app
 from quipu.core.executor import Executor
-from acts.basic import register as register_basic
+from quipu.acts.basic import register as register_basic
 
 # --- Fixtures ---
 

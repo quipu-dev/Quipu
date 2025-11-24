@@ -10,7 +10,7 @@ def _find_project_root() -> Path:
     """
     current = Path(__file__).resolve()
     for parent in [current] + list(current.parents):
-        if (parent / "acts").exists() and (parent / "packages").exists():
+        if (parent / "packages").exists() and (parent / "pyproject.toml").exists():
             return parent
         if (parent / "pyproject.toml").exists():
             # 简单的检查，看是否是顶层配置

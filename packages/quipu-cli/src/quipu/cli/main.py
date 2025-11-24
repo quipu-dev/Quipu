@@ -481,7 +481,8 @@ def run_command(
     setup_logging()
     if list_acts:
         executor = Executor(root_dir=Path("."), yolo=True)
-        load_plugins(executor, PROJECT_ROOT / "acts")
+        from quipu.acts import register_core_acts
+        register_core_acts(executor)
         typer.secho("\n📋 可用的 Axon 指令列表:\n", fg=typer.colors.GREEN, bold=True, err=True)
         acts = executor.get_registered_acts()
         for name in sorted(acts.keys()):
