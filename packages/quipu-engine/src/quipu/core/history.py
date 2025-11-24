@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 from typing import Dict, Optional, List
 import yaml
-from .intf_models import AxonNode
+from quipu.core.models import AxonNode
 from datetime import datetime
 
 logger = logging.getLogger(__name__)

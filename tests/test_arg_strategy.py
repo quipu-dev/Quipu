@@ -1,5 +1,5 @@
 import pytest
-from core.rt_executor import Executor
+from quipu.core.executor import Executor
 
 class TestArgStrategy:
     

@@ -1,8 +1,8 @@
 import pytest
 from pathlib import Path
 from datetime import datetime
-from core.intf_models import AxonNode
-from ui.tui import AxonUiApp
+from quipu.core.models import AxonNode
+from quipu.cli.tui import AxonUiApp
 from textual.widgets import DataTable
 
 class TestUiLogic:

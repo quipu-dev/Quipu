@@ -1,7 +1,7 @@
 import pytest
 import subprocess
 from pathlib import Path
-from core.cli_controller import run_axon
+from quipu.cli.controller import run_axon
 
 @pytest.fixture
 def project_with_subdir(tmp_path):

@@ -1,8 +1,8 @@
 import pytest
 from pathlib import Path
-from core.rt_parser import BacktickParser, TildeParser, get_parser
-from core.rt_executor import Executor, ExecutionError
-from core.intf_types import ActContext
+from quipu.core.parser import BacktickParser, TildeParser, get_parser
+from quipu.core.executor import Executor, ExecutionError
+from quipu.core.types import ActContext
 
 class TestParser:
     # ... (Parser tests are unchanged)

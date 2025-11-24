@@ -4,9 +4,9 @@ from typing import Dict, Optional
 import yaml
 from datetime import datetime
 
-from .eng_git_db import GitDB
-from .eng_history import load_history_graph
-from .intf_models import AxonNode
+from .git_db import GitDB
+from .history import load_history_graph
+from quipu.core.models import AxonNode
 
 logger = logging.getLogger(__name__)
 

@@ -4,15 +4,15 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from .intf_result import AxonResult
-from .eng_state_machine import Engine
-from .rt_executor import Executor, ExecutionError
-from .intf_exceptions import ExecutionError as CoreExecutionError # Alias to avoid conflict
-from .rt_parser import get_parser, detect_best_parser
-from .rt_plugin_loader import load_plugins
+from quipu.core.result import AxonResult
+from quipu.core.state_machine import Engine
+from quipu.core.executor import Executor, ExecutionError
+from quipu.core.exceptions import ExecutionError as CoreExecutionError
+from quipu.core.parser import get_parser, detect_best_parser
+from quipu.core.plugin_loader import load_plugins
 
 # 从配置导入，注意为了解耦，未来可能需要将 config 注入而不是直接导入
-from config import PROJECT_ROOT
+from .config import PROJECT_ROOT
 
 logger = logging.getLogger(__name__)
 

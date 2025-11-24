@@ -6,8 +6,7 @@ from textual.widgets import Header, Footer, DataTable
 from textual.binding import Binding
 from textual.coordinate import Coordinate
 
-sys.path.append('..')
-from core.intf_models import AxonNode
+from quipu.core.models import AxonNode
 
 class AxonUiApp(App):
     CSS = """

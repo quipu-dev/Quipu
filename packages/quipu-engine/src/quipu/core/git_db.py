@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Optional, Dict
 from contextlib import contextmanager
-from .intf_exceptions import ExecutionError
+from quipu.core.exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
 

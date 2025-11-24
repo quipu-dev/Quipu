@@ -2,9 +2,9 @@ import pytest
 import logging
 from pathlib import Path
 from typer.testing import CliRunner
-from core.cli_controller import run_axon, AxonResult
-from main import app
-from core.rt_executor import Executor
+from quipu.cli.controller import run_axon, AxonResult
+from quipu.cli.main import app
+from quipu.core.executor import Executor
 from acts.basic import register as register_basic
 
 # --- Fixtures ---

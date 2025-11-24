@@ -2,9 +2,9 @@ import pytest
 import subprocess
 from pathlib import Path
 from datetime import datetime
-from core.eng_state_machine import Engine
-from core.eng_git_db import GitDB
-from core.eng_history import load_history_graph
+from quipu.core.state_machine import Engine
+from quipu.core.git_db import GitDB
+from quipu.core.history import load_history_graph
 
 @pytest.fixture
 def engine_setup(tmp_path):

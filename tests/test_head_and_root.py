@@ -1,8 +1,8 @@
 import pytest
 import os
 from pathlib import Path
-from core.eng_state_machine import Engine
-from core.cli_controller import find_project_root
+from quipu.core.state_machine import Engine
+from quipu.cli.controller import find_project_root
 
 class TestHeadTracking:
     @pytest.fixture

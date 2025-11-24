@@ -1,7 +1,7 @@
 import pytest
 import subprocess
 from pathlib import Path
-from core.eng_git_db import GitDB
+from quipu.core.git_db import GitDB
 
 @pytest.fixture
 def git_repo(tmp_path):

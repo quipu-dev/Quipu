@@ -1,8 +1,9 @@
 import pytest
 from pathlib import Path
-from core.rt_executor import Executor, ExecutionError
+from quipu.core.executor import Executor
+from quipu.core.exceptions import ExecutionError
 from acts.check import register as register_check_acts
-from core.intf_types import ActContext
+from quipu.core.types import ActContext
 
 class TestCheckActs:
     @pytest.fixture(autouse=True)

@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import TypedDict, List, Callable
 from pathlib import Path
-from .intf_exceptions import ExecutionError
+from .exceptions import ExecutionError
 
 # --- Forward declaration to avoid circular imports ---
-# The real Executor class is in core.executor
+# The real Executor class is in quipu.core.executor
 class Executor: ...
 
 class ActContext:

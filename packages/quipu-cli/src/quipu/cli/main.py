@@ -4,17 +4,17 @@ import sys
 from pathlib import Path
 from typing import Annotated, Optional, Dict
 
-from logger_config import setup_logging
-from core.cli_controller import run_axon, find_project_root
-from config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE, PROJECT_ROOT
-from core.rt_plugin_loader import load_plugins
-from core.rt_executor import Executor
-from core.eng_state_machine import Engine
-from core.eng_history import load_history_graph
-from core.intf_models import AxonNode
+from .logger_config import setup_logging
+from .controller import run_axon, find_project_root
+from .config import DEFAULT_WORK_DIR, DEFAULT_ENTRY_FILE, PROJECT_ROOT
+from quipu.core.plugin_loader import load_plugins
+from quipu.core.executor import Executor
+from quipu.core.state_machine import Engine
+from quipu.core.history import load_history_graph
+from quipu.core.models import AxonNode
 import inspect
 import subprocess
-from core.eng_config import ConfigManager
+from quipu.core.config import ConfigManager
 
 # 注意：不要在模块级别直接调用 setup_logging()，
 # 否则会导致 CliRunner 测试中的 I/O 流过早绑定/关闭问题。
@@ -71,7 +71,7 @@ def ui(
     以交互式 TUI 模式显示 Axon 历史图谱。
     """
     try:
-        from ui.tui import AxonUiApp
+        from .tui import AxonUiApp
     except ImportError:
         typer.secho("❌ TUI 依赖 'textual' 未安装。", fg=typer.colors.RED, err=True)
         typer.secho("💡 请运行: pip install 'textual>=0.58.0'", err=True)
@@ -81,7 +81,7 @@ def ui(
     # 关键修复: 我们需要两种数据结构
     # 1. 完整的节点列表 (all_nodes) -> 用于 UI 渲染
     # 2. 从哈希到最新节点的映射 (graph) -> 用于 checkout 查找
-    from core.eng_history import load_all_history_nodes, load_history_graph
+    from quipu.core.history import load_all_history_nodes, load_history_graph
     
     real_root = _resolve_root(work_dir)
     engine = Engine(real_root)

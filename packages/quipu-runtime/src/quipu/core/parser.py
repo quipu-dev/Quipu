@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from typing import List, Type
-from .intf_types import Statement
+from quipu.core.types import Statement
 
 class BaseParser(ABC):
     """所有解析器的抽象基类"""

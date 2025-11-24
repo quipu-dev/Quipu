@@ -5,8 +5,8 @@ import shlex
 import sys
 from pathlib import Path
 from typing import Dict, List, Any
-from .intf_types import Statement, ActFunction, ActContext
-from .intf_exceptions import ExecutionError
+from quipu.core.types import Statement, ActFunction, ActContext
+from quipu.core.exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
 

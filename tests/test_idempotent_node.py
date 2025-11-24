@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
-from core.eng_state_machine import Engine
-from core.cli_controller import run_axon
+from quipu.core.state_machine import Engine
+from quipu.cli.controller import run_axon
 
 class TestIdempotentNode:
     

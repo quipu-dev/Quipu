@@ -2,9 +2,9 @@ import pytest
 import shutil
 import logging
 from pathlib import Path
-from core.rt_executor import Executor, ExecutionError
+from quipu.core.executor import Executor, ExecutionError
 from acts.read import register as register_read_acts
-from core.intf_types import ActContext
+from quipu.core.types import ActContext
 
 class TestReadActs:
     @pytest.fixture(autouse=True)
