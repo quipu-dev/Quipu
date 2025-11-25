@@ -1,19 +1,21 @@
-# fix: 修复 Git Tree 对象解析问题
+# fix: 修复 get_node_content 读取 Tree 对象的方式
 
 ## 用户需求
-`GitObjectHistoryReader.load_all_nodes` 在批处理优化后无法正确加载历史节点。
+`GitObjectHistoryReader.get_node_content` 无法正确读取节点内容，导致相关测试失败。
 
 ## 评论
-测试失败表明 `load_all_nodes` 返回了空列表。这是因为 `git cat-file --batch` 返回的是 Git Tree 对象的原始二进制数据，而不是 `git cat-file -p` 返回的格式化文本。之前的实现试图用文本方式解析二进制数据，导致无法提取 `metadata.json` 的 Blob Hash。
+问题出在 `GitDB.cat_file` 对于 tree 对象默认使用了 `-p` (pretty-print) 参数，返回的是格式化后的文本。而我们在 `GitObjectHistoryReader` 中新实现的 `_parse_tree_binary` 方法期望的是 Git 原始的二进制 Tree 格式 (由 `batch_cat_file` 返回的那种)。
+
+这导致 `get_node_content` 在尝试解析 Tree 以获取 `content.md` 的哈希时失败，最终返回空字符串。
 
 ## 目标
-在 `GitObjectHistoryReader` 中实现 Git 二进制 Tree 对象的解析逻辑，以正确提取元数据 Blob Hash。
+修改 `GitObjectHistoryReader.get_node_content`，使其使用 `batch_cat_file` (即使只读取一个对象) 来获取原始二进制 Tree 数据，从而与 `_parse_tree_binary` 兼容。
 
 ## 基本原理
-Git Tree 对象的原始格式为一系列条目的拼接，每个条目格式为：
-`[mode] [space] [path] [null-byte] [20-byte-binary-hash]`
+`git cat-file --batch` 返回的是对象的原始数据。对于 Tree 对象，这是二进制格式。
+`git cat-file -p <tree>` 返回的是渲染后的文本列表。
 
-我们需要在 Python 中解析这个字节流，而不是使用字符串 `splitlines()`。
+为了保持解析逻辑的一致性，且复用已验证的二进制解析器，我们应统一获取原始数据。
 
 ## 标签
 #comp/engine #fix #scope/core
@@ -22,9 +24,9 @@ Git Tree 对象的原始格式为一系列条目的拼接，每个条目格式�
 
 ## Script
 
-### Acts 1: 修复 GitObjectHistoryReader
+### Acts 1: 修复 GitObjectHistoryReader.get_node_content
 
-在 `GitObjectHistoryReader` 中添加 `_parse_tree_binary` 方法，并更新 `load_all_nodes` 使用该方法。
+修改 `packages/quipu-engine/src/quipu/core/git_object_storage.py`，让 `get_node_content` 使用 `batch_cat_file` 获取 Tree 内容。
 
 ~~~~~act
 write_file packages/quipu-engine/src/quipu/core/git_object_storage.py
@@ -232,8 +234,12 @@ class GitObjectHistoryReader(HistoryReader):
             tree_hash = tree_line.split()[1]
 
             # 2. Get content.md Blob Hash from Tree
-            # Use the new binary parser for consistency
-            tree_content = self.git_db.cat_file(tree_hash, "tree")
+            # Use batch_cat_file to get RAW binary tree content, compatible with _parse_tree_binary
+            tree_content_map = self.git_db.batch_cat_file([tree_hash])
+            if tree_hash not in tree_content_map:
+                return ""
+            
+            tree_content = tree_content_map[tree_hash]
             entries = self._parse_tree_binary(tree_content)
             
             blob_hash = entries.get("content.md")
@@ -241,7 +247,7 @@ class GitObjectHistoryReader(HistoryReader):
             if not blob_hash:
                 return "" # No content found
             
-            # 3. Read Blob
+            # 3. Read Blob (also raw binary)
             content_bytes = self.git_db.cat_file(blob_hash)
             content = content_bytes.decode('utf-8', errors='ignore')
             
