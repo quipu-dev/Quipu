@@ -222,8 +222,16 @@ def discard(
     if current_hash == target_tree_hash:
         typer.secho(f"✅ 工作区已经是干净状态 ({latest_node.short_hash})，无需操作。", fg=typer.colors.GREEN, err=True)
         ctx.exit(0)
+
+    # 显示将要被丢弃的变更
+    diff_stat = engine.git_db.get_diff_stat(target_tree_hash, current_hash)
+    typer.secho("\n以下是即将被丢弃的变更:", fg=typer.colors.YELLOW, err=True)
+    typer.secho("-" * 20, err=True)
+    typer.echo(diff_stat, err=True)
+    typer.secho("-" * 20, err=True)
+
     if not force:
-        typer.confirm(f"🚨 即将丢弃工作区所有未记录的变更，并恢复到状态 {latest_node.short_hash}。\n此操作不可逆。是否继续？", abort=True)
+        typer.confirm(f"🚨 即将丢弃上述所有变更，并恢复到状态 {latest_node.short_hash}。\n此操作不可逆。是否继续？", abort=True)
     try:
         engine.checkout(target_tree_hash)
         typer.secho(f"✅ 工作区已成功恢复到节点 {latest_node.short_hash}。", fg=typer.colors.GREEN, err=True)
