@@ -4,6 +4,6 @@
 
 ### 📝 变更文件摘要:
 ```
-ui/tui.py | 176 ++++++++++++++++++++++----------------------------------------
- 1 file changed, 61 insertions(+), 115 deletions(-)
+ui/tui.py | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 ```
