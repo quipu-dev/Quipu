@@ -155,11 +155,16 @@ class HistoryMigrator:
             # 6. 更新映射
             tree_to_commit[node.output_tree] = commit_hash
             
-            # 7. 更新 Ref (每次都更新，确保 HEAD 指向最新的)
-            # 注意：对于分叉的情况，这会导致 HEAD 在不同分支间跳动，最终指向时间戳最新的那个
-            # 这对于单线历史是可以的。对于复杂图谱，我们可能需要更复杂的 ref 管理
-            # 但 QDPS v1.0 暂定使用单一 refs/quipu/history
+            # 7. 引用管理 (Multi-Head Strategy)
+            # 总是更新 history 指针到最新迁移的节点
             self.git_db.update_ref("refs/quipu/history", commit_hash)
+            
+            # 维护分支 Heads
+            self.git_db.update_ref(f"refs/quipu/heads/{commit_hash}", commit_hash)
+            
+            # 如果父节点存在，移除其 Head 引用（因为它已经延伸了）
+            if parent_commit:
+                self.git_db.delete_ref(f"refs/quipu/heads/{parent_commit}")
             
             migrated_count += 1
             logger.debug(f"已迁移节点: {node.summary} -> {commit_hash[:7]}")

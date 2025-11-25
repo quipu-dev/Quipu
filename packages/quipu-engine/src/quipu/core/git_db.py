@@ -142,6 +142,30 @@ class GitDB:
         """
         self._run(["update-ref", ref_name, commit_hash])
 
+    def delete_ref(self, ref_name: str):
+        """删除指定的引用"""
+        self._run(["update-ref", "-d", ref_name], check=False)
+
+    def get_commit_by_output_tree(self, tree_hash: str) -> Optional[str]:
+        """
+        根据 Trailer 中的 X-Quipu-Output-Tree 查找对应的 Commit Hash。
+        用于在创建新节点时定位语义上的父节点。
+        """
+        # 使用 grep 搜索所有 refs/quipu/ 下的记录
+        # 注意：这假设 Output Tree 是唯一的，这在大概率上是成立的，
+        # 且即使有重复（如 merge），找到任意一个作为父节点通常也是可接受的起点。
+        cmd = [
+            "log",
+            "--all",
+            f"--grep=X-Quipu-Output-Tree: {tree_hash}",
+            "--format=%H",
+            "-n", "1"
+        ]
+        res = self._run(cmd, check=False)
+        if res.returncode == 0 and res.stdout.strip():
+            return res.stdout.strip()
+        return None
+
     def get_head_commit(self) -> Optional[str]:
         """获取当前工作区 HEAD 的 Commit Hash"""
         try:

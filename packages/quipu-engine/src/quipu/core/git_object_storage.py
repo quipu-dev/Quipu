@@ -240,18 +240,33 @@ class GitObjectHistoryWriter(HistoryWriter):
         )
         tree_hash = self.git_db.mktree(tree_descriptor)
 
-        last_commit_hash: Optional[str] = None
-        res = self.git_db._run(["rev-parse", "refs/quipu/history"], check=False, log_error=False)
-        if res.returncode == 0:
-            last_commit_hash = res.stdout.strip()
+        # 1. 确定父节点 (Topological Parent)
+        # 根据 input_tree 查找对应的 Commit，而不是盲目使用最新的 history ref
+        parent_commit = self.git_db.get_commit_by_output_tree(input_tree)
+        parents = [parent_commit] if parent_commit else None
+        
+        if not parent_commit and input_tree != "4b825dc642cb6eb9a060e54bf8d69288fbee4904":
+             # 如果不是创世节点，但找不到父节点，记录警告（可能是断链或首次迁移）
+             logger.warning(f"⚠️  Could not find parent commit for input state {input_tree[:7]}. This node may be detached.")
 
-        parents = [last_commit_hash] if last_commit_hash else None
+        # 2. 创建 Commit
         commit_message = f"{summary}\n\nX-Quipu-Output-Tree: {output_tree}"
         new_commit_hash = self.git_db.commit_tree(
             tree_hash=tree_hash, parent_hashes=parents, message=commit_message
         )
 
+        # 3. 引用管理 (Multi-Head Strategy)
+        # 3.1 总是更新 history 指针到最新操作 (Chronological Head)
         self.git_db.update_ref("refs/quipu/history", new_commit_hash)
+        
+        # 3.2 维护分支 Heads (Topological Heads)
+        # 将当前新节点标记为一个 Head
+        self.git_db.update_ref(f"refs/quipu/heads/{new_commit_hash}", new_commit_hash)
+        
+        # 如果父节点之前是 Head，现在它有了孩子，不再是 Head，删除其引用
+        if parent_commit:
+            self.git_db.delete_ref(f"refs/quipu/heads/{parent_commit}")
+
         logger.info(f"✅ History node created as commit {new_commit_hash[:7]}")
 
         # 返回一个 QuipuNode 实例以兼容现有接口
