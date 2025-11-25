@@ -1,161 +1,64 @@
-# fix-test 修复 Acts 迁移后的导入路径
+# fix-namespace 修复命名空间包冲突
 
 ## 目标
-修复 `acts` 目录迁移到 `quipu-runtime` 包后，测试文件和 CLI 入口中因引用旧路径而导致的 `ModuleNotFoundError`。
+删除所有子包顶层 `quipu` 目录下的 `__init__.py` 文件。
 
 ## 基本原理
-上一阶段将 `acts/` 移动到了 `packages/quipu-runtime/src/quipu/acts/`。现有的测试代码仍试图从根目录的 `acts` 模块导入，导致 pytest 失败。同时，CLI 的 `--list-acts` 功能也依赖旧目录结构，需要一并更新为从包中导入。
+Quipu 采用 Monorepo 结构，`quipu` 是一个命名空间包 (Namespace Package)。如果有任何一个子包在 `src/quipu/` 目录下包含了 `__init__.py`，Python 就会将其视为普通包，从而导致其他子包（如 `quipu.acts` 所在的 `quipu-runtime`）无法被正确发现和导入。这通常是 `ModuleNotFoundError: No module named 'quipu.acts'` 的根源。
 
 ## 标签
-#fix #test #cli
+#fix #python #packaging
 
 ---
 
 ## Script
 
-### Act 1: 修复测试配置 (conftest.py)
-
-更新 `conftest.py` 中的导入路径，从 `quipu.acts.basic` 导入注册函数。
+### Act 1: 移除 Interface 包的顶层 init
 
 ~~~~~act
-replace tests/conftest.py
+delete_file packages/quipu-interfaces/src/quipu/__init__.py
 ~~~~~
 
-~~~~~python
-from pathlib import Path
-from typing import TYPE_CHECKING
-from acts.basic import register as register_basic_acts
-
-# 使用 TYPE_CHECKING 块来辅助静态分析工具，而不在运行时导入
-~~~~~
-
-~~~~~python
-from pathlib import Path
-from typing import TYPE_CHECKING
-from quipu.acts.basic import register as register_basic_acts
-
-# 使用 TYPE_CHECKING 块来辅助静态分析工具，而不在运行时导入
-~~~~~
-
-### Act 2: 修复 Check 测试
-
-更新 `tests/test_check.py` 的导入路径。
+### Act 2: 移除 Engine 包的顶层 init
 
 ~~~~~act
-replace tests/test_check.py
+delete_file packages/quipu-engine/src/quipu/__init__.py
 ~~~~~
 
-~~~~~python
-from pathlib import Path
-from quipu.core.executor import Executor
-from quipu.core.exceptions import ExecutionError
-from acts.check import register as register_check_acts
-from quipu.core.types import ActContext
-~~~~~
-
-~~~~~python
-from pathlib import Path
-from quipu.core.executor import Executor
-from quipu.core.exceptions import ExecutionError
-from quipu.acts.check import register as register_check_acts
-from quipu.core.types import ActContext
-~~~~~
-
-### Act 3: 修复 Git 测试
-
-更新 `tests/test_git.py` 的导入路径。
+### Act 3: 移除 Runtime 包的顶层 init
 
 ~~~~~act
-replace tests/test_git.py
+delete_file packages/quipu-runtime/src/quipu/__init__.py
 ~~~~~
 
-~~~~~python
-from pathlib import Path
-from quipu.core.executor import Executor
-from acts.git import register as register_git_acts
-
-@pytest.mark.skipif(not shutil.which("git"), reason="Git 命令未找到，跳过 Git 测试")
-~~~~~
-
-~~~~~python
-from pathlib import Path
-from quipu.core.executor import Executor
-from quipu.acts.git import register as register_git_acts
-
-@pytest.mark.skipif(not shutil.which("git"), reason="Git 命令未找到，跳过 Git 测试")
-~~~~~
-
-### Act 4: 修复 Read 测试
-
-更新 `tests/test_read.py` 的导入路径。
+### Act 4: 移除 CLI 包的顶层 init
 
 ~~~~~act
-replace tests/test_read.py
+delete_file packages/quipu-cli/src/quipu/__init__.py
 ~~~~~
 
-~~~~~python
-import logging
-from pathlib import Path
-from quipu.core.executor import Executor, ExecutionError
-from acts.read import register as register_read_acts
-from quipu.core.types import ActContext
-~~~~~
+### Act 5: 确保 Acts 包有 init
 
-~~~~~python
-import logging
-from pathlib import Path
-from quipu.core.executor import Executor, ExecutionError
-from quipu.acts.read import register as register_read_acts
-from quipu.core.types import ActContext
-~~~~~
-
-### Act 5: 修复集成测试
-
-更新 `tests/test_integration_v2.py` 的导入路径。
+虽然我们要删除顶层的 init，但 `acts` 是一个具体的子模块，它必须拥有 `__init__.py` 才能被导入。这里重新写入它以防万一（或确认其内容正确）。
 
 ~~~~~act
-replace tests/test_integration_v2.py
+write_file
+~~~~~
+
+~~~~~path
+packages/quipu-runtime/src/quipu/acts/__init__.py
 ~~~~~
 
 ~~~~~python
-from quipu.cli.main import app
-from quipu.core.executor import Executor
-from acts.basic import register as register_basic
+from . import basic, check, git, memory, read, refactor, shell
 
-# --- Fixtures ---
-~~~~~
-
-~~~~~python
-from quipu.cli.main import app
-from quipu.core.executor import Executor
-from quipu.acts.basic import register as register_basic
-
-# --- Fixtures ---
-~~~~~
-
-### Act 6: 修复 CLI 列表功能
-
-更新 `packages/quipu-cli/src/quipu/cli/main.py`，使其使用 `register_core_acts` 来列出指令，而不是扫描已删除的 `acts` 目录。
-
-~~~~~act
-replace packages/quipu-cli/src/quipu/cli/main.py
-~~~~~
-
-~~~~~python
-    setup_logging()
-    if list_acts:
-        executor = Executor(root_dir=Path("."), yolo=True)
-        load_plugins(executor, PROJECT_ROOT / "acts")
-        typer.secho("\n📋 可用的 Axon 指令列表:\n", fg=typer.colors.GREEN, bold=True, err=True)
-        acts = executor.get_registered_acts()
-~~~~~
-
-~~~~~python
-    setup_logging()
-    if list_acts:
-        executor = Executor(root_dir=Path("."), yolo=True)
-        from quipu.acts import register_core_acts
-        register_core_acts(executor)
-        typer.secho("\n📋 可用的 Axon 指令列表:\n", fg=typer.colors.GREEN, bold=True, err=True)
-        acts = executor.get_registered_acts()
+def register_core_acts(executor):
+    """注册所有核心 Acts"""
+    basic.register(executor)
+    check.register(executor)
+    git.register(executor)
+    memory.register(executor)
+    read.register(executor)
+    refactor.register(executor)
+    shell.register(executor)
 ~~~~~
