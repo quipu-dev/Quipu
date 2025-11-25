@@ -1,225 +1,62 @@
-# fix: 更新 test_navigation.py 以使用 GitObjectStorage
+# fix-test: 修复 TUI 摘要测试用例以匹配新实现
 
 ## 用户需求
-在执行 `pytest` 时，`tests/test_navigation.py` 模块因 `ModuleNotFoundError: No module named 'quipu.core.file_system_storage'` 而收集失败。这是因为上一步重构移除了旧的文件系统存储实现，但此测试文件未同步更新。
+在运行 `pytest` 时，`tests/test_ui_logic.py` 中的 `TestUiLogic.test_get_node_summary` 测试用例失败。失败原因是该测试错误地假设 TUI 会从 `node.content` 动态生成摘要，而新实现是直接使用 `node.summary` 字段。
 
 ## 评论
-这是一个典型的重构遗留问题。修复此问题可以确保测试套件的完整性，并验证导航功能 (`back`, `forward`, `checkout`) 在新的 `GitObjectStorage` 架构下依然能正常工作。
+这是一个典型的因代码重构而导致测试用例过时的案例。修复此测试可以确保我们对 TUI 的渲染逻辑有正确的验证，并消除测试套件中的失败项。
 
 ## 目标
-1.  修改 `tests/test_navigation.py`，移除对 `FileSystemHistoryReader` 和 `FileSystemHistoryWriter` 的导入。
-2.  更新该文件中的 `nav_workspace` 和 `cli_workspace` 这两个 pytest fixture，使其使用 `GitObjectHistoryReader` 和 `GitObjectHistoryWriter` 来构建测试用的 `Engine` 实例。
-3.  确保修改后的测试文件能够成功通过测试。
+1.  修改 `tests/test_ui_logic.py` 中的 `test_get_node_summary` 函数。
+2.  更新测试逻辑，使其验证 `QuipuUiApp._get_node_summary` 方法能正确返回 `QuipuNode` 实例中预设的 `summary` 字段。
+3.  同时验证当 `summary` 字段为空时，该方法能正确回退到 `"No description"`。
 
 ## 基本原理
-测试代码也是项目代码的一部分，必须与主干代码的架构演进保持同步。通过将测试 fixture 迁移到新的存储后端，我们不仅修复了当前的导入错误，也确保了对核心导航功能的测试覆盖在新架构下依然有效。
+测试应该验证代码的**实际行为**，而不是**过时的期望**。本次修复将使测试用例与 `QuipuUiApp` 的当前实现保持一致。`QuipuUiApp` 的设计目标是高性能渲染，因此它消费预处理好的数据 (`node.summary`)，而不是在渲染循环中执行昂贵的解析操作。测试代码必须反映这一设计决策。
 
 ## 标签
-#comp/tests #scope/dx #fix
+#comp/tests #comp/cli #scope/dx #fix
 
 ---
 
 ## Script
 
-### Acts 1: 修复 test_navigation.py
+### Acts 1: 修正测试用例
 
-我将使用 `write_file` 覆盖整个测试文件，以确保其内容完全更新为使用 `GitObjectStorage` 的版本。
+我将重写 `test_get_node_summary` 函数，使其正确反映 TUI 的行为。
 
 ~~~~~act
-write_file
+replace
 ~~~~~
 ~~~~~path
-tests/test_navigation.py
+tests/test_ui_logic.py
 ~~~~~
 ~~~~~python
-import pytest
-import subprocess
-from pathlib import Path
-from typer.testing import CliRunner
+    def test_get_node_summary(self):
+        node = QuipuNode("a", "b", datetime.now(), Path("f"), "plan", content="~~~act\nrun\n~~~")
+        app = QuipuUiApp([], None)
+        assert app._get_node_summary(node) == "run"
+~~~~~
+~~~~~python
+    def test_get_node_summary(self):
+        """
+        测试 TUI 是否正确使用预加载的 summary 字段，而不是动态解析。
+        """
+        app = QuipuUiApp([], None)
 
-from quipu.core.state_machine import Engine
-from quipu.core.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.core.git_db import GitDB
-from quipu.cli.main import app
+        # 案例 1: 节点带有预设的 summary
+        # TUI 应该直接使用它。
+        node_with_summary = QuipuNode(
+            "a", "b", datetime.now(), Path("f1"), "plan",
+            summary="This is a pre-calculated summary."
+        )
+        assert app._get_node_summary(node_with_summary) == "This is a pre-calculated summary."
 
-# --- Fixtures ---
-
-@pytest.fixture
-def nav_workspace(tmp_path):
-    """
-    创建一个包含 Git 仓库和 Engine 实例的测试环境。
-    """
-    repo_path = tmp_path / "nav_repo"
-    repo_path.mkdir()
-    subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo_path, check=True)
-
-    git_db = GitDB(repo_path)
-    reader = GitObjectHistoryReader(git_db)
-    writer = GitObjectHistoryWriter(git_db)
-    engine = Engine(repo_path, reader=reader, writer=writer)
-    
-    # Helper to create distinct states
-    def create_state(content: str) -> str:
-        (repo_path / "file.txt").write_text(content)
-        return engine.git_db.get_tree_hash()
-
-    return engine, create_state
-
-@pytest.fixture
-def runner():
-    return CliRunner()
-
-# --- 1. Unit Tests (Engine Logic) ---
-
-class TestNavigationEngine:
-
-    def test_basic_back_and_forward(self, nav_workspace):
-        engine, create_state = nav_workspace
-        
-        hash_a = create_state("A")
-        hash_b = create_state("B")
-        
-        engine.visit(hash_a)
-        engine.visit(hash_b)
-        
-        # We are at B, go back to A
-        engine.back()
-        assert (engine.root_dir / "file.txt").read_text() == "A"
-        
-        # We are at A, go forward to B
-        engine.forward()
-        assert (engine.root_dir / "file.txt").read_text() == "B"
-
-    def test_boundary_conditions(self, nav_workspace):
-        engine, create_state = nav_workspace
-        
-        hash_a = create_state("A")
-        engine.visit(hash_a)
-        
-        # At the end, forward should do nothing
-        assert engine.forward() is None
-        assert (engine.root_dir / "file.txt").read_text() == "A"
-        
-        # At the beginning, back should do nothing
-        assert engine.back() is None
-        assert (engine.root_dir / "file.txt").read_text() == "A"
-
-    def test_history_truncation_on_new_visit(self, nav_workspace):
-        engine, create_state = nav_workspace
-        
-        hash_a = create_state("A")
-        hash_b = create_state("B")
-        hash_c = create_state("C")
-        hash_d = create_state("D")
-        
-        engine.visit(hash_a)
-        engine.visit(hash_b)
-        engine.visit(hash_c)
-        
-        # History: [A, B, C], ptr at C
-        
-        # Go back to B
-        engine.back()
-        # History: [A, B, C], ptr at B
-        
-        # Now visit a new state D. This should truncate C.
-        engine.visit(hash_d)
-        # History: [A, B, D], ptr at D
-        
-        # Verify state
-        assert (engine.root_dir / "file.txt").read_text() == "D"
-        
-        # Verify that forward is now impossible
-        assert engine.forward() is None
-        
-        # Go back twice to verify the new history
-        engine.back() # -> B
-        assert (engine.root_dir / "file.txt").read_text() == "B"
-        engine.back() # -> A
-        assert (engine.root_dir / "file.txt").read_text() == "A"
-        
-    def test_visit_idempotency(self, nav_workspace):
-        engine, create_state = nav_workspace
-        hash_a = create_state("A")
-        
-        engine.visit(hash_a)
-        engine.visit(hash_a)
-        engine.visit(hash_a)
-        
-        log, _ = engine._read_nav()
-        # The log might contain the initial HEAD, so we check the end
-        assert log[-1] == hash_a
-        assert len([h for h in log if h == hash_a]) <= 1 
-
-# --- 2. Integration Tests (CLI) ---
-
-class TestNavigationCLI:
-
-    @pytest.fixture
-    def cli_workspace(self, tmp_path):
-        ws = tmp_path / "cli_ws"
-        ws.mkdir()
-        subprocess.run(["git", "init"], cwd=ws, check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=ws, check=True)
-        subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=ws, check=True)
-        
-        git_db = GitDB(ws)
-        reader = GitObjectHistoryReader(git_db)
-        writer = GitObjectHistoryWriter(git_db)
-        engine = Engine(ws, reader=reader, writer=writer)
-
-        (ws / "a.txt").write_text("A")
-        hash_a = engine.git_db.get_tree_hash()
-        engine.create_plan_node("_" * 40, hash_a, "State A")
-
-        (ws / "b.txt").write_text("B")
-        (ws / "a.txt").unlink()
-        hash_b = engine.git_db.get_tree_hash()
-        engine.create_plan_node(hash_a, hash_b, "State B")
-        
-        return ws, hash_a, hash_b
-
-    def test_cli_back_forward_flow(self, runner, cli_workspace):
-        workspace, hash_a, hash_b = cli_workspace
-        
-        # Initial state is B. Let's checkout to A.
-        runner.invoke(app, ["checkout", hash_a[:7], "-w", str(workspace), "-f"])
-        assert (workspace / "a.txt").exists()
-        assert not (workspace / "b.txt").exists()
-        
-        # Now we are at A. Let's go back. It should go to the previous state (B).
-        result_back = runner.invoke(app, ["back", "-w", str(workspace)])
-        assert result_back.exit_code == 0
-        assert "✅ 已后退到状态" in result_back.stderr
-        assert (workspace / "b.txt").exists()
-        assert not (workspace / "a.txt").exists()
-        
-        # Now we are back at B. Let's go forward to A again.
-        result_fwd = runner.invoke(app, ["forward", "-w", str(workspace)])
-        assert result_fwd.exit_code == 0
-        assert "✅ 已前进到状态" in result_fwd.stderr
-        assert (workspace / "a.txt").exists()
-        assert not (workspace / "b.txt").exists()
-
-    def test_cli_boundary_messages(self, runner, cli_workspace):
-        workspace, hash_a, hash_b = cli_workspace
-        
-        # Go to a known state
-        runner.invoke(app, ["checkout", hash_a[:7], "-w", str(workspace), "-f"])
-
-        # Back until the beginning
-        runner.invoke(app, ["back", "-w", str(workspace)]) # to B
-        result1 = runner.invoke(app, ["back", "-w", str(workspace)]) # to genesis state if any was recorded
-        result2 = runner.invoke(app, ["back", "-w", str(workspace)]) # one more should hit boundary
-        
-        assert "已到达访问历史的起点" in result2.stderr
-        
-        # Forward until the end
-        runner.invoke(app, ["forward", "-w", str(workspace)]) # to B
-        runner.invoke(app, ["forward", "-w", str(workspace)]) # to A
-        result3 = runner.invoke(app, ["forward", "-w", str(workspace)]) # should fail
-        
-        assert "已到达访问历史的终点" in result3.stderr
+        # 案例 2: 节点的 summary 为空
+        # TUI 应该回退到默认值。
+        node_without_summary = QuipuNode(
+            "c", "d", datetime.now(), Path("f2"), "capture",
+            summary=""  # 明确为空
+        )
+        assert app._get_node_summary(node_without_summary) == "No description"
 ~~~~~
