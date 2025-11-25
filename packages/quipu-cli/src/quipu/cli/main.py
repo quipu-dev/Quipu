@@ -315,6 +315,17 @@ def checkout(
         typer.secho("⚠️  检测到当前工作区存在未记录的变更，将自动创建捕获节点...", fg=typer.colors.YELLOW, err=True)
         engine.capture_drift(current_hash)
         typer.secho("✅ 变更已捕获。", fg=typer.colors.GREEN, err=True)
+        # 捕获后，当前 hash 已更新，重新获取以确保 diff 准确
+        current_hash = engine.git_db.get_tree_hash()
+
+    # 显示将要发生的变更
+    diff_stat = engine.git_db.get_diff_stat(current_hash, target_tree_hash)
+    if diff_stat:
+        typer.secho("\n以下是将要发生的变更:", fg=typer.colors.YELLOW, err=True)
+        typer.secho("-" * 20, err=True)
+        typer.echo(diff_stat, err=True)
+        typer.secho("-" * 20, err=True)
+
     if not force:
         prompt = f"🚨 即将重置工作区到状态 {target_node.short_hash} ({target_node.timestamp})。\n此操作会覆盖未提交的更改。是否继续？"
         if not _prompt_for_confirmation(prompt, default=False):
