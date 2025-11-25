@@ -1,84 +1,48 @@
-# diagnose-import 诊断导入路径问题
+# fix-install-strategy 调整安装策略
 
 ## 目标
-运行一个独立的 Python 脚本，打印 `quipu` 包的路径列表 (`__path__`) 和 `sys.path`，以确定为什么 Python 无法找到 `quipu.acts`。这将揭示是命名空间合并失败，还是路径指向错误。
+通过仅安装子包（Sub-packages）而不安装根包（Root Package），来避免 `pip` 将子包作为普通依赖复制到 `site-packages`，从而破坏 Editable 状态和命名空间合并。
 
 ## 基本原理
-Python 的命名空间包机制允许 `quipu` 映射到多个物理目录。通过打印 `quipu.__path__`，我们可以看到 Python 到底加载了哪些目录。如果列表中缺少 `.../packages/quipu-runtime/src/quipu`，则说明该包未正确安装或被屏蔽。
+根目录的 `quipu-dev` 包定义了对子包的本地文件依赖。当执行 `pip install -e .` 时，`pip` 可能会优先满足这些依赖，将其构建为 wheel 并安装到 `site-packages`，这会覆盖我们之前手动执行的 `pip install -e packages/...`。
+由于 `quipu` CLI 入口点已在 `quipu-cli` 包中定义，我们实际上不需要安装根包即可拥有完整的开发环境。
 
 ## 标签
-#debug #import #namespace
+#fix #env #install-strategy
 
 ---
 
 ## Script
 
-### Act 1: 创建并运行诊断脚本
+### Act 1: 彻底清理环境
 
-写入一个临时脚本并执行，输出关键的调试信息。
+卸载所有相关的包，并手动删除残留目录，确保从零开始。
 
 ~~~~~act
-write_file
+run_command
 ~~~~~
 
-~~~~~path
-debug_quipu.py
+~~~~~bash
+pip uninstall -y quipu-cli quipu-engine quipu-runtime quipu-interfaces quipu-dev
+rm -rf /home/doucx/pyvenv/lib/python3.13/site-packages/quipu
+rm -rf /home/doucx/pyvenv/lib/python3.13/site-packages/quipu*
 ~~~~~
 
-~~~~~python
-import sys
-import os
-from pathlib import Path
+### Act 2: 仅安装子包
 
-print("=== Debugging Quipu Import ===")
+以 Editable 模式安装四个核心子包。**不安装根目录**。
 
-# 1. Check physical directory
-runtime_acts = Path("packages/quipu-runtime/src/quipu/acts")
-print(f"\n[Filesystem Check]")
-if runtime_acts.exists():
-    print(f"  Found: {runtime_acts}")
-    print(f"  Is Dir: {runtime_acts.is_dir()}")
-    init_file = runtime_acts / "__init__.py"
-    print(f"  Has __init__: {init_file.exists()}")
-else:
-    print(f"  MISSING: {runtime_acts}")
-
-# 2. Check sys.path (first 5 entries are usually enough)
-print(f"\n[Sys.path Top 5]")
-for p in sys.path[:5]:
-    print(f"  {p}")
-
-# 3. Attempt Import
-print(f"\n[Import Check]")
-try:
-    import quipu
-    print(f"  Successfully imported 'quipu'")
-    print(f"  quipu.__path__: {list(quipu.__path__)}")
-    
-    try:
-        import quipu.acts
-        print(f"  Successfully imported 'quipu.acts'")
-        print(f"  quipu.acts.__file__: {quipu.acts.__file__}")
-    except ImportError as e:
-        print(f"  FAILED to import 'quipu.acts': {e}")
-        # Check if runtime path is in quipu.__path__
-        cwd = os.getcwd()
-        expected_part = "packages/quipu-runtime/src/quipu"
-        found = False
-        for p in quipu.__path__:
-            if expected_part in p or (cwd in p and "quipu-runtime" in p):
-                found = True
-                print(f"  -> Found runtime path in namespace: {p}")
-        if not found:
-            print(f"  -> CRITICAL: Runtime path NOT found in quipu namespace paths!")
-
-except ImportError as e:
-    print(f"  FAILED to import 'quipu': {e}")
-
-print("==============================")
+~~~~~act
+run_command
 ~~~~~
 
-### Act 2: 运行诊断脚本
+~~~~~bash
+pip install -e packages/quipu-interfaces -e packages/quipu-engine -e packages/quipu-runtime -e packages/quipu-cli
+~~~~~
+
+### Act 3: 验证安装与导入
+
+运行诊断脚本。如果策略正确，`quipu.__path__` 应该包含四个 `src/quipu` 路径。
 
 ~~~~~act
 run_command
@@ -86,4 +50,14 @@ run_command
 
 ~~~~~bash
 python3 debug_quipu.py
+~~~~~
+
+### Act 4: 运行测试
+
+~~~~~act
+run_command
+~~~~~
+
+~~~~~bash
+pytest
 ~~~~~
