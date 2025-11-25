@@ -1,12 +1,12 @@
-# fix: 修复命名空间包在开发模式下的解析问题
+# build: 采用依赖委托模式正确配置 Monorepo
 
 ## 目标
-通过在根 `pyproject.toml` 中正确声明命名空间包，解决在执行 `quipu` 命令时出现的 `ModuleNotFoundError: No module named 'quipu.cli'` 问题。
+修改根 `pyproject.toml`，从“包发现”模式切换到“依赖委托”模式，以正确地在开发环境中安装所有子包，并最终解决 `quipu` 命令的 `ModuleNotFoundError`。
 
 ## 基本原理
-`quipu` 包是一个跨越多个子项目的命名空间包。`setuptools` 在构建项目时，需要被明确告知这一点。当前根 `pyproject.toml` 的 `[tool.setuptools.packages.find]` 配置中缺少 `namespaces = true` 声明，导致 `setuptools` 未能将所有 `quipu` 的代码片段正确地组合起来。
+`setuptools` 的 `find_packages` 功能难以处理我们这种包含多个 `src`-layout 的 Monorepo 结构，导致开发模式 (`pip install -e .`) 安装不完整。
 
-通过添加此声明，`pip install -e .` 将能够正确地为所有 `quipu` 子模块创建链接，使得 Python 运行时环境能够完整地解析 `quipu` 命名空间，从而解决模块找不到的问题。
+我们将改变策略：不再让顶层包自己去寻找所有模块，而是让它通过 `[project.dependencies]` 明确声明对本地子包的依赖。`pip` 会解析这些本地依赖，并分别对每个子包执行正确的、独立的开发模式安装。这确保了每个子包的 `src` 目录都被正确地链接到 Python 环境中，从而构建出完整的 `quipu` 命名空间。
 
 ## 标签
 #fix #build #chore
@@ -15,23 +15,46 @@
 
 ## Script
 
-### Act 1: 为 setuptools find 指令添加 namespace 声明
+### Act 1: 重构根 pyproject.toml 以使用本地路径依赖
 
-此操作将向根 `pyproject.toml` 添加 `namespaces = true`，以修正包的发现和安装逻辑。
+此操作将移除 `[tool.setuptools.packages.find]` 并添加 `[project.dependencies]`，将安装逻辑委托给各个子包。
 
 ~~~~~act
-replace pyproject.toml
+write_file pyproject.toml
 ~~~~~
 
 ~~~~~toml
-[tool.setuptools.packages.find]
-where = ["packages"]
-include = ["quipu*"]
-~~~~~
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-~~~~~toml
-[tool.setuptools.packages.find]
-where = ["packages"]
-include = ["quipu*"]
-namespaces = true
+[project]
+name = "quipu-dev"
+version = "0.1.0"
+description = "Metapackage for the Quipu monorepo development environment."
+requires-python = ">=3.8"
+dependencies = [
+    "quipu-interfaces @ file:./packages/quipu-interfaces",
+    "quipu-engine @ file:./packages/quipu-engine",
+    "quipu-runtime @ file:./packages/quipu-runtime",
+    "quipu-cli @ file:./packages/quipu-cli",
+]
+
+[project.scripts]
+quipu = "quipu.cli.main:app"
+
+[tool.setuptools]
+py-modules = []
+
+[tool.pytest.ini_options]
+pythonpath = [
+    ".",
+    "packages/quipu-interfaces/src",
+    "packages/quipu-engine/src",
+    "packages/quipu-runtime/src",
+    "packages/quipu-cli/src",
+]
+testpaths = ["tests"]
+log_cli = true
+log_cli_level = "INFO"
 ~~~~~
