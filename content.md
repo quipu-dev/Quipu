@@ -1,20 +1,18 @@
-# fix-test: Repair test suite failures from API implementation
+# fix-test: Fix ambiguous regex in engine find_nodes test
 
 ## 用户需求
-在实现了 `find_nodes` API 和 `quipu find` 命令后，测试套件出现了多处失败。失败的原因包括：对命令行输出格式的解析不健壮、测试装置 (fixture) 使用了无效的 Git 哈希导致底层命令失败，以及测试装置的依赖注入不正确。
+在之前的 `feat` 提交中，测试套件 `tests/test_engine.py` 中引入了一个失败。具体来说，`TestEngineFindNodes::test_find_combined_filters` 测试用例失败，因为它错误地断言一个查询结果为空，但实际返回了一个节点。
 
 ## 评论
-修复这些测试是确保新功能稳定可靠的关键步骤。本次修复将提高测试代码的健壮性，使其更能抵抗未来对输出格式的微小调整，并确保测试环境的正确性。
+这个失败是由测试数据和查询条件的意外交互引起的。测试中使用的正则表达式 `feat` 不够精确，意外地匹配了另一个节点摘要中的子字符串 `feature`，导致了错误的查询结果。修复此问题将使测试更加精确和健壮，确保 `find_nodes` API 的行为符合预期。
 
 ## 目标
-1.  修复 `test_storage_integration.py` 中对 `quipu find` 命令输出的解析逻辑，使其能够正确处理带空格的时间戳和格式化填充。
-2.  修复 `test_engine.py` 中的 `populated_engine` 测试装置，使其使用真实的文件变更和有效的 Git Tree 哈希来创建历史节点，避免底层 `git diff-tree` 命令失败。
-3.  修复 `test_storage_integration.py` 中的 `populated_workspace` 测试装置，为其正确注入 `runner` 依赖，解决 `AttributeError`。
+1.  定位 `tests/test_engine.py` 中 `test_find_combined_filters` 函数的错误。
+2.  将模糊的查询正则表达式 `feat` 修改为更精确的 `^feat:`，以确保它只匹配以 `feat:` 开头的摘要。
+3.  确保修改后所有测试都能通过。
 
 ## 基本原理
-1.  **健壮的输出解析**: `quipu find` 的输出行格式为 `[日期] [时间] [类型] [哈希] - [摘要]`。由于时间戳包含空格，简单的 `split()` 可能会导致索引错误。我们将更新测试代码，使用更可靠的索引 `[3]` 来定位哈希。
-2.  **真实的测试数据**: 单元测试和集成测试应尽可能模拟真实世界的使用场景。`Engine` 的内部方法依赖于有效的 Git 对象。我们将修改测试装置，通过实际的文件系统操作来生成这些有效的 Git 对象 (Tree 哈希)，而不是使用伪造的字符串。
-3.  **正确的依赖注入**: `pytest` 通过函数的参数签名来注入测试装置。一个测试装置如果需要使用另一个测试装置，必须在其参数列表中声明它。我们将修正 `populated_workspace` 的签名，使其正确接收 `runner` 实例。
+测试的健壮性依赖于查询条件的精确性。当测试数据包含可能引起歧义的子字符串时 (如 `feat` vs `feature`)，测试断言必须使用更严格的模式来消除歧义。通过使用锚点 (`^`) 来限定正则表达式的匹配位置，我们可以确保测试只验证其明确意图的行为，从而避免因数据巧合而导致的假失败。
 
 ## 标签
 #comp/tests #scope/dx #fix
@@ -23,9 +21,9 @@
 
 ## Script
 
-### Acts 1: 修复测试逻辑与装置
+### Acts 1: 修复测试文件
 
-我们将一次性应用所有对测试文件的修复。
+我们将直接更新 `tests/test_engine.py` 文件，修正其中不精确的正则表达式，以确保测试的正确性。
 
 ~~~~~act
 write_file tests/test_engine.py
@@ -177,7 +175,8 @@ class TestEngineFindNodes:
         assert len(results) == 1
         assert "Cleanup code" in results[0].summary
         
-        empty_results = populated_engine.find_nodes(summary_regex="feat", node_type="capture")
+        # 使用更精确的正则表达式 (^feat:) 避免匹配 'feature'
+        empty_results = populated_engine.find_nodes(summary_regex="^feat:", node_type="capture")
         assert len(empty_results) == 0
 
     def test_find_limit(self, populated_engine):
@@ -269,186 +268,4 @@ class TestPersistentIgnores:
         assert "custom_dir/" in content
         assert "*.tmp" in content
         assert ".envs" not in content
-~~~~~
-
-~~~~~act
-write_file tests/test_storage_integration.py
-~~~~~
-
-~~~~~python
-import pytest
-import subprocess
-from pathlib import Path
-from typer.testing import CliRunner
-
-from quipu.cli.main import app
-
-# A simple plan that creates one file
-PLAN_A = """
-~~~act
-write_file a.txt
-~~~
-~~~content
-File A content
-~~~
-"""
-
-# A simple plan that creates a different file
-PLAN_B = """
-~~~act
-write_file b.txt
-~~~
-~~~content
-File B content
-~~~
-"""
-
-@pytest.fixture
-def runner():
-    return CliRunner()
-
-@pytest.fixture
-def git_workspace(tmp_path: Path) -> Path:
-    """Creates a temporary directory and initializes it as a Git repository."""
-    ws = tmp_path / "ws"
-    ws.mkdir()
-    subprocess.run(["git", "init"], cwd=ws, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=ws, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=ws, check=True)
-    return ws
-
-def git_rev_parse(ref: str, cwd: Path) -> str:
-    """Helper to get the hash of a git ref."""
-    result = subprocess.run(["git", "rev-parse", ref], cwd=cwd, capture_output=True, text=True)
-    if result.returncode != 0:
-        return ""
-    return result.stdout.strip()
-
-
-class TestStorageSelection:
-    """Tests the automatic detection and selection of storage backends."""
-
-    def test_defaults_to_git_object_storage_on_new_project(self, runner, git_workspace):
-        """
-        SCENARIO: A user starts a new project.
-        EXPECTATION: The system should use the new Git Object storage by default.
-        """
-        # Action: Run a plan in the new workspace
-        result = runner.invoke(app, ["run", "-y", "-w", str(git_workspace)], input=PLAN_A)
-        
-        assert result.exit_code == 0, result.stderr
-        
-        # Verification
-        assert (git_workspace / "a.txt").exists()
-        
-        # 1. New ref should exist
-        ref_hash = git_rev_parse("refs/quipu/history", git_workspace)
-        assert len(ref_hash) == 40, "A git ref for quipu history should have been created."
-        
-        # 2. Old directory should NOT exist
-        legacy_history_dir = git_workspace / ".quipu" / "history"
-        assert not legacy_history_dir.exists(), "Legacy file system history should not be used."
-
-
-    def test_continues_using_git_object_storage(self, runner, git_workspace):
-        """
-        SCENARIO: A user runs quipu in a project already using the new format.
-        EXPECTATION: The system should continue using the Git Object storage.
-        """
-        # Setup: Run one command to establish the new format
-        runner.invoke(app, ["run", "-y", "-w", str(git_workspace)], input=PLAN_A)
-        hash_after_a = git_rev_parse("refs/quipu/history", git_workspace)
-        assert hash_after_a
-        
-        # Action: Run a second command
-        result = runner.invoke(app, ["run", "-y", "-w", str(git_workspace)], input=PLAN_B)
-        
-        assert result.exit_code == 0, result.stderr
-        
-        # Verification
-        # 1. The ref should be updated to a new commit
-        hash_after_b = git_rev_parse("refs/quipu/history", git_workspace)
-        assert hash_after_b != hash_after_a, "The history ref should point to a new commit."
-        
-        # 2. The parent of the new commit should be the old one
-        parent_hash = git_rev_parse(f"{hash_after_b}^", git_workspace)
-        assert parent_hash == hash_after_a, "The new commit should be parented to the previous one."
-
-        # 3. No legacy files should be created
-        assert not (git_workspace / ".quipu" / "history").exists()
-
-
-class TestGitObjectWorkflow:
-    """End-to-end tests for core commands using the Git Object backend."""
-
-    def test_full_workflow_with_git_object_storage(self, runner, git_workspace):
-        # 1. Run a plan to create state A
-        res_run = runner.invoke(app, ["run", "-y", "-w", str(git_workspace)], input=PLAN_A)
-        assert res_run.exit_code == 0
-        assert (git_workspace / "a.txt").exists()
-        
-        # 2. Manually add a file and use `save` to create state B
-        (git_workspace / "b.txt").write_text("manual change")
-        res_save = runner.invoke(app, ["save", "add b.txt", "-w", str(git_workspace)])
-        assert res_save.exit_code == 0
-        assert "快照已保存" in res_save.stderr
-        
-        # 3. Use `log` to check history
-        res_log = runner.invoke(app, ["log", "-w", str(git_workspace)])
-        assert res_log.exit_code == 0
-        assert "add b.txt" in res_log.stderr  # Summary of the save message
-        assert "write_file a.txt" in res_log.stderr # Summary of the plan
-        
-        # 4. Use `find` and `checkout` to go back to state A
-        # --- REFACTOR START ---
-        # Use the robust find_nodes API via CLI to get the target hash
-        res_find = runner.invoke(app, ["find", "--summary", "write_file a.txt", "-w", str(git_workspace)])
-        assert res_find.exit_code == 0
-        
-        # Parse the output to get the full hash
-        found_line = res_find.stderr.strip().splitlines()[-1] # Get the last line of output
-        parts = found_line.split()
-        # Format: YYYY-MM-DD HH:MM:SS [TYPE] HASH - Summary
-        # Index:    0          1         2     3
-        output_tree_a = parts[3] 
-        
-        assert len(output_tree_a) == 40
-        # --- REFACTOR END ---
-
-        res_checkout = runner.invoke(app, ["checkout", output_tree_a[:8], "-f", "-w", str(git_workspace)])
-        assert res_checkout.exit_code == 0, res_checkout.stderr
-        
-        # Verification of state A
-        assert (git_workspace / "a.txt").exists()
-        assert not (git_workspace / "b.txt").exists()
-
-class TestFindCliCommand:
-
-    @pytest.fixture
-    def populated_workspace(self, git_workspace, runner): # Correctly inject runner
-        # Run plan A
-        runner.invoke(app, ["run", "-y", "-w", str(git_workspace)], input=PLAN_A)
-        # Run save
-        (git_workspace / "change.txt").write_text("manual")
-        runner.invoke(app, ["save", "Snapshot 1", "-w", str(git_workspace)])
-        return git_workspace
-
-    def test_find_cli_by_type(self, runner, populated_workspace):
-        result = runner.invoke(app, ["find", "--type", "plan", "-w", str(populated_workspace)])
-        assert result.exit_code == 0
-        assert "[PLAN]" in result.stderr
-        assert "[CAPTURE]" not in result.stderr
-        assert "write_file a.txt" in result.stderr
-
-    def test_find_cli_by_summary(self, runner, populated_workspace):
-        result = runner.invoke(app, ["find", "-s", "snapshot", "-w", str(populated_workspace)])
-        assert result.exit_code == 0
-        assert "[CAPTURE]" in result.stderr
-        assert "Snapshot 1" in result.stderr
-        assert "[PLAN]" not in result.stderr
-
-    def test_find_cli_no_results(self, runner, populated_workspace):
-        result = runner.invoke(app, ["find", "-s", "non-existent", "-w", str(populated_workspace)])
-        assert result.exit_code == 0
-        assert "未找到符合条件" in result.stderr
 ~~~~~
