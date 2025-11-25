@@ -4,6 +4,7 @@
 
 ### 📝 变更文件摘要:
 ```
-.gitignore | 3 +++
- 1 file changed, 3 insertions(+)
+TODO.md                  | 84 ------------------------------------------------
+ TODO_archive_20251124.md | 84 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 84 insertions(+), 84 deletions(-)
 ```
