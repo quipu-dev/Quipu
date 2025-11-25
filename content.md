@@ -4,6 +4,7 @@
 
 ### 📝 变更文件摘要:
 ```
-core/controller.py | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+core/engine.py                | 12 +++++------
+ tests/test_idempotent_node.py | 46 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+), 7 deletions(-)
 ```
