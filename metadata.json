@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "fix-test: 修复 TUI 摘要测试用例以匹配新实现", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764076300.0706394, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "chore: 完成存储层重构并提交最终变更", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764076428.178401, "duration_ms": 0}}
