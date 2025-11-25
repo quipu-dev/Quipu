@@ -1,147 +1,89 @@
-# fix: 修复 TUI 测试中的构造函数参数缺失
+# fix: TUI 分栏模式下保留摘要显示
 
 ## 用户需求
-更新后的 `QuipuUiApp` 需要 `content_loader` 参数，导致现有 UI 测试因参数缺失而失败。需要更新测试代码以适配新的 API。
+用户发现在 TUI 的分栏预览模式下，左侧列表隐藏了“Node Info”（摘要）列，导致浏览体验下降。用户希望无论是否分栏，都始终显示摘要信息，充分利用屏幕空间。
 
 ## 目标
-1. 修复 `tests/test_ui_logic.py` 中的 `QuipuUiApp` 实例化。
-2. 修复 `tests/test_ui_reachability.py` 中的 `QuipuUiApp` 实例化。
-3. 确保所有测试通过。
+1.  修改 `tui.py`，在分栏模式下不再隐藏 "Node Info" 列。
+2.  确保左侧列表在变窄（50% 宽度）后，摘要列依然存在（接受被截断）。
 
 ## 基本原理
-为测试用例注入一个简单的 Lambda 函数 `lambda n: "mock content"` 作为 `content_loader`，满足类型签名要求且不影响测试逻辑（因为这些测试主要关注图谱渲染和可达性计算，不涉及内容加载）。
+移除 `_refresh_table` 和 `_populate_table` 方法中关于 `self.is_split_mode` 的条件判断，使得第三列（摘要）始终被渲染。Textual 的 DataTable 会自动处理列宽适应。
 
 ## 标签
-#comp/tests #scope/dx #fix
+#comp/cli #scope/ux #fix
 
 ---
 
 ## Script
 
-### Acts 1: 修复 UI 逻辑测试
+### Acts 1: 移除列隐藏逻辑
 
-为 `test_ui_logic.py` 中的 App 实例化添加 `content_loader` 参数。
-
-~~~~~act
-replace tests/test_ui_logic.py
-~~~~~
-~~~~~python
-        node_c = QuipuNode("b", "c", datetime(2023,1,3), Path("f"), "plan")
-        
-        app = QuipuUiApp([node_a, node_b, node_c])
-        
-        # 我们可以通过 mock table 来验证，或者简单地运行 _populate_table 看是否报错
-~~~~~
-~~~~~python
-        node_c = QuipuNode("b", "c", datetime(2023,1,3), Path("f"), "plan")
-        
-        app = QuipuUiApp([node_a, node_b, node_c], content_loader=lambda n: "mock")
-        
-        # 我们可以通过 mock table 来验证，或者简单地运行 _populate_table 看是否报错
-~~~~~
+修改 `tui.py`，让 "Node Info" 列常驻。
 
 ~~~~~act
-replace tests/test_ui_logic.py
+replace packages/quipu-cli/src/quipu/cli/tui.py
 ~~~~~
 ~~~~~python
-        node_c = QuipuNode("a", "c", datetime(2023,1,3), Path("f"), "plan") # Branch C is newer
+    def _refresh_table(self):
+        table = self.query_one(DataTable)
+        table.clear(columns=True)
         
-        app = QuipuUiApp([node_a, node_b, node_c])
+        # 在分栏模式下，隐藏详细信息列以节省空间
+        cols = ["Time", "Graph"]
+        if not self.is_split_mode:
+            cols.append("Node Info")
+            
+        table.add_columns(*cols)
+        self._populate_table(table)
         
-        # 验证排序: C (newest), B, A
+        # 初始加载时定位到当前 HEAD
 ~~~~~
 ~~~~~python
-        node_c = QuipuNode("a", "c", datetime(2023,1,3), Path("f"), "plan") # Branch C is newer
+    def _refresh_table(self):
+        table = self.query_one(DataTable)
+        table.clear(columns=True)
         
-        app = QuipuUiApp([node_a, node_b, node_c], content_loader=lambda n: "mock")
+        # 始终显示详细信息列，即使在分栏模式下
+        cols = ["Time", "Graph", "Node Info"]
+            
+        table.add_columns(*cols)
+        self._populate_table(table)
         
-        # 验证排序: C (newest), B, A
+        # 初始加载时定位到当前 HEAD
 ~~~~~
 
 ~~~~~act
-replace tests/test_ui_logic.py
+replace packages/quipu-cli/src/quipu/cli/tui.py
 ~~~~~
 ~~~~~python
-    def test_get_node_summary(self):
-        """
-        测试 TUI 是否正确使用预加载的 summary 字段，而不是动态解析。
-        """
-        app = QuipuUiApp([], None)
-
-        # 案例 1: 节点带有预设的 summary
+            ts_str = f"{dim_tag}{node.timestamp.strftime('%Y-%m-%d %H:%M')}{end_dim_tag}"
+            
+            row_data = [ts_str, "".join(graph_chars)]
+            
+            # 仅在非分栏模式下显示详细信息列
+            if not self.is_split_mode:
+                summary = self._get_node_summary(node)
+                tag_char = node.node_type.upper()
+                info_text = f"[{base_color}][{tag_char}] {node.short_hash}[/{base_color}] - {summary}"
+                info_str = f"{dim_tag}{info_text}{end_dim_tag}"
+                row_data.append(info_str)
+            
+            # 使用 filename 作为唯一的 key
+            table.add_row(*row_data, key=str(node.filename))
 ~~~~~
 ~~~~~python
-    def test_get_node_summary(self):
-        """
-        测试 TUI 是否正确使用预加载的 summary 字段，而不是动态解析。
-        """
-        app = QuipuUiApp([], content_loader=lambda n: "mock", current_hash=None)
-
-        # 案例 1: 节点带有预设的 summary
-~~~~~
-
-### Acts 2: 修复 UI 可达性测试
-
-为 `test_ui_reachability.py` 中的 App 实例化添加 `content_loader` 参数。
-
-~~~~~act
-replace tests/test_ui_reachability.py
-~~~~~
-~~~~~python
-        # Scenario 1: Focus on 'curr'
-        # Reachable should be: curr, a, root (Ancestors) + (Descendants: None)
-        # Unreachable: b
-        app = QuipuUiApp([root, node_a, node_b, node_current], current_hash="curr")
-        reachable = app.reachable_hashes
-        
-        assert "curr" in reachable
-~~~~~
-~~~~~python
-        # Scenario 1: Focus on 'curr'
-        # Reachable should be: curr, a, root (Ancestors) + (Descendants: None)
-        # Unreachable: b
-        app = QuipuUiApp([root, node_a, node_b, node_current], content_loader=lambda n: "mock", current_hash="curr")
-        reachable = app.reachable_hashes
-        
-        assert "curr" in reachable
-~~~~~
-
-~~~~~act
-replace tests/test_ui_reachability.py
-~~~~~
-~~~~~python
-        # Scenario 2: Focus on 'root'
-        # Reachable: root + all descendants (a, b, curr)
-        app_root = QuipuUiApp([root, node_a, node_b, node_current], current_hash="root")
-        reachable_root = app_root.reachable_hashes
-        
-        assert "curr" in reachable_root
-~~~~~
-~~~~~python
-        # Scenario 2: Focus on 'root'
-        # Reachable: root + all descendants (a, b, curr)
-        app_root = QuipuUiApp([root, node_a, node_b, node_current], content_loader=lambda n: "mock", current_hash="root")
-        reachable_root = app_root.reachable_hashes
-        
-        assert "curr" in reachable_root
-~~~~~
-
-~~~~~act
-replace tests/test_ui_reachability.py
-~~~~~
-~~~~~python
-        node_c = QuipuNode("root", "c", datetime(2023,1,3), Path("f"), "plan")
-        
-        nodes = [node_a, node_b, node_c]
-        app = QuipuUiApp(nodes, current_hash="a")
-        
-        # 1. Default: Show all, but C is dim (logic handled in rendering string, hard to test here without inspecting Textual widgets deep state)
-~~~~~
-~~~~~python
-        node_c = QuipuNode("root", "c", datetime(2023,1,3), Path("f"), "plan")
-        
-        nodes = [node_a, node_b, node_c]
-        app = QuipuUiApp(nodes, content_loader=lambda n: "mock", current_hash="a")
-        
-        # 1. Default: Show all, but C is dim (logic handled in rendering string, hard to test here without inspecting Textual widgets deep state)
+            ts_str = f"{dim_tag}{node.timestamp.strftime('%Y-%m-%d %H:%M')}{end_dim_tag}"
+            
+            row_data = [ts_str, "".join(graph_chars)]
+            
+            # 始终显示详细信息列
+            summary = self._get_node_summary(node)
+            tag_char = node.node_type.upper()
+            info_text = f"[{base_color}][{tag_char}] {node.short_hash}[/{base_color}] - {summary}"
+            info_str = f"{dim_tag}{info_text}{end_dim_tag}"
+            row_data.append(info_str)
+            
+            # 使用 filename 作为唯一的 key
+            table.add_row(*row_data, key=str(node.filename))
 ~~~~~
