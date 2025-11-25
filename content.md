@@ -1,38 +1,37 @@
-# refactor: 完成代码中从 Axon 到 Quipu 的品牌重塑
+# fix: 修复命名空间包在开发模式下的解析问题
 
 ## 目标
-创建一个 Git 提交，正式记录从 `Axon` 到 `Quipu` 的全局品牌重塑、测试环境修复以及 Monorepo 开发工作流的建立。
+通过在根 `pyproject.toml` 中正确声明命名空间包，解决在执行 `quipu` 命令时出现的 `ModuleNotFoundError: No module named 'quipu.cli'` 问题。
 
 ## 基本原理
-这个提交标志着阶段性重构的成功完成。它将所有相关的代码修改、配置调整和测试修复作为一个原子性操作，记录到版本历史中。这为项目后续的开发提供了一个干净、稳定且已更名的基线。
+`quipu` 包是一个跨越多个子项目的命名空间包。`setuptools` 在构建项目时，需要被明确告知这一点。当前根 `pyproject.toml` 的 `[tool.setuptools.packages.find]` 配置中缺少 `namespaces = true` 声明，导致 `setuptools` 未能将所有 `quipu` 的代码片段正确地组合起来。
+
+通过添加此声明，`pip install -e .` 将能够正确地为所有 `quipu` 子模块创建链接，使得 Python 运行时环境能够完整地解析 `quipu` 命名空间，从而解决模块找不到的问题。
 
 ## 标签
-#refactor #chore #test #build #rebranding
+#fix #build #chore
 
 ---
 
 ## Script
 
-### Act 1: 暂存所有变更
+### Act 1: 为 setuptools find 指令添加 namespace 声明
 
-将所有修改过的文件添加到 Git 暂存区，为提交做准备。
-
-~~~~~act
-git_add .
-~~~~~
-
-### Act 2: 提交代码
-
-创建 Git 提交，固化本次重构的所有成果。
+此操作将向根 `pyproject.toml` 添加 `namespaces = true`，以修正包的发现和安装逻辑。
 
 ~~~~~act
-git_commit
+replace pyproject.toml
 ~~~~~
 
+~~~~~toml
+[tool.setuptools.packages.find]
+where = ["packages"]
+include = ["quipu*"]
 ~~~~~
-refactor: 完成从 Axon 到 Quipu 的品牌重塑
 
-- 执行了全局的 `axon` 到 `quipu` 的重命名。
-- 修复了因命名空间包配置不当导致的 `pytest` 导入错误。
-- 配置了顶层 `pyproject.toml` 以支持 monorepo 开发模式 (`pip install -e .`)，统一了开发与测试环境。
+~~~~~toml
+[tool.setuptools.packages.find]
+where = ["packages"]
+include = ["quipu*"]
+namespaces = true
 ~~~~~
