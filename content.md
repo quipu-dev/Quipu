@@ -1,40 +1,34 @@
-## fix: 适配 UI 层以使用 GraphViewModel 实现分页与按需加载
+## fix: 修复 TUI 中 DataTable.Scroll 属性错误并实现无限滚动
+
+### 错误分析
+在 `tui.py` 中使用了 `DataTable.Scroll` 作为事件监听器 (`@on(DataTable.Scroll)`)，但 `DataTable` 类并没有这个属性（也没有定义该类型的消息）。这导致了 `pytest` 收集测试用例时抛出 `AttributeError`。Textual 的 `DataTable` 并不直接发出 `Scroll` 消息。
 
 ### 用户需求
-用户需要优化 Quipu UI 的启动性能，支持大规模历史记录的秒级启动和无限滚动，并能展示节点的私有数据（开发者意图）。
+修复测试错误，并正确实现当用户滚动到底部时自动加载更多数据的逻辑。
 
 ### 评论
-这是一个涉及 UI 核心逻辑重构的高风险任务。我们将 `QuipuUiApp` 从“全量数据持有者”转变为“视图控制器”，将数据管理委托给 `GraphViewModel`。这将彻底解决启动慢和内存占用高的问题。
+需要通过子类化 `DataTable` 来捕获滚动行为（包括鼠标滚动和键盘导航），并发射自定义消息 `NearBottom` 来触发加载。这是实现“无限滚动”的标准 Textual 模式。
 
 ### 目标
-1.  重构 `QuipuUiApp` 以使用 `GraphViewModel`。
-2.  实现异步分页加载 (`load_more_data`) 和无限滚动。
-3.  实现增量式 Git 图谱渲染。
-4.  在 UI 中展示合并后的公共/私有内容。
+1.  在 `tui.py` 中定义 `HistoryDataTable` 子类。
+2.  实现滚动检测逻辑（覆盖 `on_scroll` 事件和键盘动作）。
+3.  修复 `QuipuUiApp` 以使用新组件和消息。
 
 ### 基本原理
-通过 MVVM 模式解耦视图和数据。`tui.py` 不再直接操作数据库或持有完整节点列表，而是向 `GraphViewModel` 请求数据。图谱渲染逻辑由全量重绘改为增量追加 (`self.tracks` 状态持久化)。
+由于 `DataTable` 没有内置的滚动到底部通知，我们需要拦截导致视图滚动的操作。通过检查 `scroll_offset.y` 与 `row_count` 的关系，判断是否接近底部，并发送自定义消息通知 App 层加载数据。
 
 ### 标签
-#intent/refine #flow/ready #priority/high
-#comp/cli #concept/ui #scope/ux
+#intent/fix #flow/ready #priority/high
+#comp/cli #concept/ui #scope/dx
 #ai/refine
-#task/domain/ui #task/object/tui #task/action/refactor
+#task/domain/ui #task/object/tui #task/action/fix-scroll
 #task/state/continue #task/status/active
 
 ---
 
 ### Script
 
-#### Acts 1: 重写 tui.py 以适配 ViewModel
-
-我们将使用 `write_file` 重写 `tui.py`，因为改动涉及类的初始化签名、核心渲染循环和事件处理结构，`patch_file` 过于脆弱。
-
-主要变更点：
-1.  **引入 `GraphViewModel`**：取代原有的 `nodes` 列表和 `content_loader`。
-2.  **增量渲染**：维护 `self.tracks` 状态，`_populate_table` 改为追加模式。
-3.  **异步加载**：使用 `worker` 进行数据加载，避免阻塞 UI。
-4.  **滚动监听**：监听 `DataTable.Scroll` 事件触发下一页加载。
+#### Acts 1: 修正 tui.py 实现 HistoryDataTable
 
 ~~~~~act
 write_file packages/quipu-cli/src/quipu/cli/tui.py
@@ -47,8 +41,8 @@ from textual.widgets import Header, Footer, DataTable, Markdown, Static
 from textual.containers import Horizontal, Vertical
 from textual.binding import Binding
 from textual.coordinate import Coordinate
+from textual.message import Message
 from textual import on, work
-from textual.worker import Worker, WorkerState
 
 from quipu.core.models import QuipuNode
 from .view_model import GraphViewModel
@@ -58,13 +52,55 @@ from .view_model import GraphViewModel
 UiResult = Tuple[str, str]
 
 
+class HistoryDataTable(DataTable):
+    """
+    自定义 DataTable，用于检测滚动到底部的事件。
+    """
+    class NearBottom(Message):
+        """当滚动位置接近底部时发送的消息。"""
+        pass
+
+    def _check_scroll_position(self):
+        """检查当前滚动位置，如果接近底部则发送 NearBottom 消息。"""
+        if self.row_count == 0:
+            return
+
+        # 获取可视区域高度
+        visible_height = self.size.height
+        if visible_height == 0:
+            return
+
+        # scroll_offset.y 是当前顶部的行索引（浮点数）
+        # 如果 (总行数 - 当前滚动位置 - 可视高度) < 阈值，则认为接近底部
+        # 阈值设为 10 行
+        if (self.row_count - self.scroll_offset.y - visible_height) < 10:
+            self.post_message(self.NearBottom())
+
+    def on_scroll(self, event) -> None:
+        """处理滚动事件（通常由鼠标滚轮触发）。"""
+        super().on_scroll(event)
+        self._check_scroll_position()
+
+    def action_cursor_down(self) -> None:
+        """处理向下移动光标（键盘 j / down）。"""
+        super().action_cursor_down()
+        self._check_scroll_position()
+
+    def action_page_down(self) -> None:
+        """处理向下翻页（键盘 PageDown）。"""
+        super().action_page_down()
+        self._check_scroll_position()
+    
+    # 注意：还有其他可能改变滚动位置的操作，但覆盖主要操作通常足够
+
+
 class QuipuUiApp(App[Optional[UiResult]]):
     CSS = """
     #main-container {
         height: 100%;
     }
     
-    DataTable { 
+    HistoryDataTable { 
         height: 100%; 
         background: $surface; 
         border: none; 
@@ -123,7 +159,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
         # UI State
         self.is_split_mode = False
         self.current_selected_node: Optional[QuipuNode] = None
-        self.show_unreachable = True  # 暂时保留此标记，虽然 VM 处理了可达性，但 UI 可能仍需控制过滤
+        self.show_unreachable = True  # 暂时保留此标记
         
         # Graph Rendering State (Incremental)
         self.tracks: List[Optional[str]] = []
@@ -139,7 +175,8 @@ class QuipuUiApp(App[Optional[UiResult]]):
 
         # 使用 Horizontal 容器包裹列表和内容预览
         with Horizontal(id="main-container"):
-            yield DataTable(id="history-table", cursor_type="row", zebra_stripes=False)
+            # 使用自定义的 HistoryDataTable
+            yield HistoryDataTable(id="history-table", cursor_type="row", zebra_stripes=False)
 
             with Vertical(id="content-view"):
                 yield Static("Node Content", id="content-header")
@@ -148,7 +185,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
         yield Footer()
 
     def on_mount(self) -> None:
-        table = self.query_one(DataTable)
+        table = self.query_one(HistoryDataTable)
         # 初始化列
         table.add_columns("Time", "Graph", "Node Info")
         
@@ -180,7 +217,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
 
     def _append_nodes(self, new_nodes: List[QuipuNode]):
         """将新节点追加到表格中"""
-        table = self.query_one(DataTable)
+        table = self.query_one(HistoryDataTable)
         
         for node in new_nodes:
             # 更新本地查找缓存
@@ -251,16 +288,14 @@ class QuipuUiApp(App[Optional[UiResult]]):
     # --- Actions ---
 
     def action_move_up(self) -> None:
-        self.query_one(DataTable).action_cursor_up()
+        self.query_one(HistoryDataTable).action_cursor_up()
 
     def action_move_down(self) -> None:
-        self.query_one(DataTable).action_cursor_down()
+        self.query_one(HistoryDataTable).action_cursor_down()
 
     def action_toggle_hidden(self) -> None:
         # TODO: 由于现在是增量加载，简单的隐藏逻辑可能不再适用或需要重新实现过滤
-        # 暂时只做标记反转，未来可以在 VM 中实现过滤
         self.show_unreachable = not self.show_unreachable
-        # 提示用户
         status = "显示" if self.show_unreachable else "隐藏"
         self.notify(f"已切换不可达节点显示: {status} (需刷新生效，功能开发中)")
 
@@ -295,31 +330,15 @@ class QuipuUiApp(App[Optional[UiResult]]):
             if self.is_split_mode:
                 self._update_content_view()
 
-    @on(DataTable.Scroll)
-    def on_data_table_scroll(self, event: DataTable.Scroll) -> None:
-        """监听滚动事件实现无限加载"""
-        # 当滚动位置接近底部 (倒数 10 行) 时触发加载
-        table = self.query_one(DataTable)
-        if table.row_count > 0:
-            # event.y 是滚动位置，table.size.height 是可视区域高度
-            # 简单的判断：如果 (total_rows - scroll_y) < buffer
-            # 注意：DataTable 的滚动计算比较复杂，这里使用简化阈值
-            
-            # 使用 table.scroll_offset 获取精确滚动坐标
-            scroll_y = table.scroll_offset.y
-            visible_height = table.size.height
-            total_height = table.row_count # 假设行高为 1
-            
-            if (total_height - scroll_y - visible_height) < 10:
-                self.load_more_data()
+    @on(HistoryDataTable.NearBottom)
+    def on_history_table_near_bottom(self, event: HistoryDataTable.NearBottom) -> None:
+        """当滚动到底部时触发加载"""
+        self.load_more_data()
 
     def _focus_current_node(self, table: DataTable):
         if not self.view_model.current_hash:
             return
             
-        # 尝试在已加载的节点中找到 current_hash
-        # 注意：由于现在节点是动态加载的，current_hash 可能尚未加载
-        # 这里只在其出现在第一页时有效
         for key, node in self.node_by_filename.items():
             if node.output_tree == self.view_model.current_hash:
                 try:
@@ -344,15 +363,13 @@ class QuipuUiApp(App[Optional[UiResult]]):
     @work(exclusive=True)
     async def _load_content_async(self, node: QuipuNode):
         markdown_widget = self.query_one("#content-body", Markdown)
-        markdown_widget.update("Loading content...")
         
         # 在 VM 中获取内容 bundle
         content = self.view_model.get_content_bundle(node)
         
         # 回到 UI 线程更新
         self.call_from_thread(markdown_widget.update, content)
-
 ~~~~~
 
 ### 下一步建议
-现在 `tui.py` 已经准备好使用 `GraphViewModel`。下一步必须执行 **Phase 4: 集成与测试**，特别是更新 `packages/quipu-cli/src/quipu/cli/main.py` 以正确实例化新的 `QuipuUiApp` 并注入 `GraphViewModel`，否则 `quipu ui` 命令将无法运行。
+修复了 `tui.py` 后，需要继续 **Phase 4**，即修改 `main.py` 以正确调用新的 `QuipuUiApp` 构造函数。此外，需要修复可能因为这次重构而破坏的单元测试。
