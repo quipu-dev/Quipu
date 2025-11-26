@@ -1,23 +1,26 @@
-# fix: 修复因缺少类型导入导致的 NameError
+# fix: 修复内存测试后端未实现 find_nodes 接口导致的 TypeError
 
 ## 用户需求
-在执行上一步的重构后，运行 `pytest` 测试套件时，系统在收集测试用例阶段就因 `NameError: name 'Optional' is not defined` 而崩溃。这个错误发生在 `packages/quipu-engine/src/quipu/core/sqlite_storage.py` 文件中，是由于新添加的 `find_nodes` 方法使用了 `Optional` 类型提示，但没有在文件顶部导入它。
+在修复了上一个导入错误后，再次运行 `pytest`，大部分测试通过了，但 `tests/test_engine_memory.py` 中的所有测试都失败了，并抛出 `TypeError: Can't instantiate abstract class InMemoryHistoryManager without an implementation for abstract method 'find_nodes'`。
 
-需要修复这个导入错误，以使测试套件能够正常运行。
+这是因为我们向 `HistoryReader` 抽象基类添加了 `find_nodes` 方法，但用于测试的内存模拟实现 `InMemoryHistoryManager`（位于 `tests/helpers.py`）没有相应地更新，导致它不再满足接口契约。
 
 ## 评论
-这是一个简单的疏忽，是在上一次重构中引入的典型 Bug。通过快速修复这个导入问题，我们可以恢复开发流程的正常状态，并验证上一步重构的正确性。
+这个错误是接口驱动开发中的一个典型且健康的信号。它表明我们的抽象层正在按预期工作，强制所有实现（包括测试替身）保持一致。修复这个问题只需要在我们的测试辅助类中补全缺失的方法实现即可。
 
 ## 目标
-1.  在 `sqlite_storage.py` 文件中，从 `typing` 模块导入 `Optional`。
-2.  确保 `pytest` 能够成功收集并运行所有测试用例。
+1.  在 `tests/helpers.py` 文件的 `InMemoryHistoryManager` 类中，实现 `find_nodes` 方法。
+2.  该方法的实现将模仿 `GitObjectHistoryReader` 中的内存过滤逻辑，以确保其行为与非数据库后端一致。
+3.  修复后，所有测试用例应能成功通过。
 
 ## 基本原理
-Python 的类型提示系统要求所有用作提示的类型在使用前都必须被定义或导入。`Optional` 是 `typing` 标准库的一部分，因此只需在文件顶部的导入语句中添加它即可解决 `NameError`。
+当一个类继承自一个包含抽象方法 (`@abstractmethod`) 的抽象基类 (ABC) 时，该子类必须实现所有这些抽象方法，否则在实例化时就会抛出 `TypeError`。我们的 `InMemoryHistoryManager` 同时继承了 `HistoryReader` 和 `HistoryWriter`，因此必须实现 `find_nodes`。
+
+我们将添加一个内存过滤版本的 `find_nodes`，它会加载所有内存中的节点，然后依次应用 `node_type` 和 `summary_regex` 过滤器，最后排序并返回结果。
 
 ## 标签
 #intent/fix #flow/ready #priority/critical
-#comp/engine #scope/core #dx
+#comp/tests #scope/dx
 #ai/instruct
 #task/domain/storage #task/object/sqlite-backend #task/action/integration
 #task/state/continue #task/status/active
@@ -26,24 +29,77 @@ Python 的类型提示系统要求所有用作提示的类型在使用前都必�
 
 ## Script
 
-### Acts 1: 修复 `sqlite_storage.py` 中的导入错误
+### Acts 1: 在测试辅助类中实现 `find_nodes`
 
-我们将定位到 `sqlite_storage.py` 文件，并在 `typing` 的导入语句中添加 `Optional`。
+我们将在 `tests/helpers.py` 中为 `InMemoryHistoryManager` 类添加 `find_nodes` 方法的实现，并补充必要的 `re` 模块导入。
 
 ~~~~~act
-replace packages/quipu-engine/src/quipu/core/sqlite_storage.py
+replace tests/helpers.py
 ~~~~~
 ~~~~~python
-import json
-import logging
-from typing import Any, List, Dict
+import hashlib
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Any
+
+from quipu.core.models import QuipuNode
+from quipu.core.storage import HistoryReader, HistoryWriter
 ~~~~~
 ~~~~~python
-import json
-import logging
-from typing import Any, List, Dict, Optional
+import hashlib
+import re
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Any
+
+from quipu.core.models import QuipuNode
+from quipu.core.storage import HistoryReader, HistoryWriter
+~~~~~
+
+~~~~~act
+replace tests/helpers.py
+~~~~~
+~~~~~python
+        if input_tree in self.db.nodes:
+            parent_node = self.db.nodes[input_tree]
+            node.parent = parent_node
+            parent_node.children.append(node)
+
+        self.db.nodes[output_tree] = node
+        return node
+~~~~~
+~~~~~python
+        if input_tree in self.db.nodes:
+            parent_node = self.db.nodes[input_tree]
+            node.parent = parent_node
+            parent_node.children.append(node)
+
+        self.db.nodes[output_tree] = node
+        return node
+
+    def find_nodes(
+        self,
+        summary_regex: Optional[str] = None,
+        node_type: Optional[str] = None,
+        limit: int = 10,
+    ) -> List[QuipuNode]:
+        """
+        内存后端的节点查找实现，通过在内存中过滤所有节点来工作。
+        """
+        candidates = self.load_all_nodes()
+
+        if summary_regex:
+            try:
+                pattern = re.compile(summary_regex, re.IGNORECASE)
+                candidates = [node for node in candidates if pattern.search(node.summary)]
+            except re.error:
+                return []  # 在测试中，无效的正则表达式直接返回空列表
+
+        if node_type:
+            candidates = [node for node in candidates if node.node_type == node_type]
+
+        # 按时间戳降序排序
+        candidates.sort(key=lambda n: n.timestamp, reverse=True)
+
+        return candidates[:limit]
 ~~~~~
