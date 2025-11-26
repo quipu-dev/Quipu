@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "feat: Implement SQLite write-path and infrastructure", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764152672.7854097, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "fix: 修复 SQLite 写入器集成测试中的逻辑错误", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764152791.8127477, "duration_ms": 0}}
