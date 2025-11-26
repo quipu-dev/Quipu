@@ -12,10 +12,8 @@ t
 tmpfile
 
 # Scaffoldings
-collectPrompt.sh
-
-# axon
-# .axon
+context_builder.yml
+context_builder.py
 
 # Distribution / Packaging
 .Python
