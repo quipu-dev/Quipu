@@ -1,21 +1,22 @@
-# fix: 修复 NameError 并统一测试代码块风格
+# fix: 更新测试 Fixtures 以适配 Engine 构造函数
 
 ## 用户需求
-你在执行上一个计划后，`pytest` 在收集测试用例阶段因 `NameError: name 'Any' is not defined` 错误而中断。同时，你希望将测试文件中用于定义 plan 内容的 `~~~` 围栏全部统一为 ````。
+在将 `Engine` 构造函数修改为需要一个 `db` 参数后，大量依赖旧构造函数的测试用例在启动时失败，并报告 `TypeError: Engine.__init__() missing 1 required positional argument: 'db'`。
 
 ## 评论
-这是一个典型的依赖导入错误，很容易修复。统一测试文件中的代码块风格可以提高代码库的一致性，便于后续的自动化处理和阅读。将这两个任务合并在一次提交中是高效的。
+这是一个典型的重构后遗症。修改了核心类的构造函数签名，就必须同步更新所有实例化该类的地方。这个修复很简单，只需要在所有创建 `Engine` 实例的测试 fixtures 中，将 `GitDB` 实例作为 `db` 参数传递进去即可。
 
 ## 目标
-1.  在 `packages/quipu-engine/src/quipu/core/state_machine.py` 文件中添加对 `Any` 的导入，解决 `NameError`。
-2.  修改 `tests/test_isolation.py`, `tests/test_root_invariance.py`, 和 `verify_sandbox.py` 三个文件，将其中定义的 plan 字符串中的 `~~~` 替换为 ````。
+1.  修改 `tests/test_engine.py` 中的 `engine_setup` fixture。
+2.  修改 `tests/test_head_and_root.py` 中的 `engine_with_repo` fixture。
+3.  修改 `tests/test_navigation.py` 中的 `nav_workspace` 和 `cli_workspace` fixtures。
+4.  确保所有测试都能成功通过收集阶段。
 
 ## 基本原理
-1.  **修复 `NameError`**: Python 的类型提示需要在运行时能够找到对应的类型定义。通过 `from typing import Any` 即可解决此问题。
-2.  **统一风格**: 使用 `replace` 指令，对目标文件中的特定多行字符串进行精确替换，以确保风格的统一。
+在每个受影响的 fixture 中，`GitDB` 实例已经被创建。我们只需要在调用 `Engine(...)` 时，通过关键字参数 `db=git_db` 将它传递给构造函数，就能满足新的接口要求。
 
 ## 标签
-#intent/fix #intent/tune #flow/ready #priority/critical 
+#intent/fix #flow/ready #priority/critical 
 #comp/engine #comp/tests 
 #scope/dx 
 #ai/instruct 
@@ -24,104 +25,76 @@
 
 ## Script
 
-### Acts 1: 修复 `NameError`
-
-在 `state_machine.py` 中导入 `Any` 类型。
+### Acts 1: 修复 `test_engine.py`
 
 ````act
-replace packages/quipu-engine/src/quipu/core/state_machine.py
+replace tests/test_engine.py
 ````
 ````python
-from typing import Dict, Optional, List, Tuple
+    git_db = GitDB(repo_path)
+    reader = GitObjectHistoryReader(git_db)
+    writer = GitObjectHistoryWriter(git_db)
+    engine = Engine(repo_path, reader=reader, writer=writer)
+
+    return engine, repo_path
 ````
 ````python
-from typing import Dict, Optional, List, Tuple, Any
+    git_db = GitDB(repo_path)
+    reader = GitObjectHistoryReader(git_db)
+    writer = GitObjectHistoryWriter(git_db)
+    engine = Engine(repo_path, db=git_db, reader=reader, writer=writer)
+
+    return engine, repo_path
 ````
 
-### Acts 2: 统一测试文件中的指令块风格
-
-将三个文件中使用 `~~~` 的 plan 定义字符串替换为使用 ````。
-
-````act
-replace tests/test_isolation.py
-````
-````python
-        plan_content = """
-~~~act
-write_file result.txt
-~~~
-~~~content
-isolation test
-~~~
-"""
-````
-````python
-        plan_content = """
-```act
-write_file result.txt
-```
-```content
-isolation test
-```
-"""
-````
+### Acts 2: 修复 `test_head_and_root.py`
 
 ````act
-replace tests/test_root_invariance.py
+replace tests/test_head_and_root.py
 ````
 ````python
-    plan_content = """
-~~~act
-write_file
-~~~
-~~~path
-result.txt
-~~~
-~~~content
-Success from subdir
-~~~
-"""
+        git_db = GitDB(repo)
+        reader = GitObjectHistoryReader(git_db)
+        writer = GitObjectHistoryWriter(git_db)
+        return Engine(repo, reader=reader, writer=writer)
 ````
 ````python
-    plan_content = """
-```act
-write_file
-```
-```path
-result.txt
-```
-```content
-Success from subdir
-```
-"""
+        git_db = GitDB(repo)
+        reader = GitObjectHistoryReader(git_db)
+        writer = GitObjectHistoryWriter(git_db)
+        return Engine(repo, db=git_db, reader=reader, writer=writer)
+````
+
+### Acts 3: 修复 `test_navigation.py`
+
+````act
+replace tests/test_navigation.py
+````
+````python
+    git_db = GitDB(repo_path)
+    reader = GitObjectHistoryReader(git_db)
+    writer = GitObjectHistoryWriter(git_db)
+    engine = Engine(repo_path, reader=reader, writer=writer)
+````
+````python
+    git_db = GitDB(repo_path)
+    reader = GitObjectHistoryReader(git_db)
+    writer = GitObjectHistoryWriter(git_db)
+    engine = Engine(repo_path, db=git_db, reader=reader, writer=writer)
 ````
 
 ````act
-replace verify_sandbox.py
+replace tests/test_navigation.py
 ````
 ````python
-    plan_content = """
-~~~act
-write_file
-~~~
-~~~path
-hello.txt
-~~~
-~~~content
-Hello from Sandbox
-~~~
-"""
+        git_db = GitDB(ws)
+        reader = GitObjectHistoryReader(git_db)
+        writer = GitObjectHistoryWriter(git_db)
+        engine = Engine(ws, reader=reader, writer=writer)
 ````
 ````python
-    plan_content = """
-```act
-write_file
-```
-```path
-hello.txt
-```
-```content
-Hello from Sandbox
-```
-"""
+        git_db = GitDB(ws)
+        reader = GitObjectHistoryReader(git_db)
+        writer = GitObjectHistoryWriter(git_db)
+        engine = Engine(ws, db=git_db, reader=reader, writer=writer)
 ````
