@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def register(executor: Executor):
     """注册基础文件系统操作"""
     executor.register("write_file", _write_file, arg_mode="hybrid", summarizer=_summarize_write)
-    executor.register("replace", _replace, arg_mode="hybrid", summarizer=_summarize_replace)
+    executor.register("patch_file", _patch_file, arg_mode="hybrid", summarizer=_summarize_patch_file)
     executor.register("append_file", _append_file, arg_mode="hybrid", summarizer=_summarize_append)
     executor.register("end", _end, arg_mode="hybrid")
     executor.register("echo", _echo, arg_mode="hybrid")
@@ -21,9 +21,9 @@ def _summarize_write(args: List[str], contexts: List[str]) -> str:
     return f"Write: {path}"
 
 
-def _summarize_replace(args: List[str], contexts: List[str]) -> str:
+def _summarize_patch_file(args: List[str], contexts: List[str]) -> str:
     path = args[0] if args else (contexts[0] if contexts else "???")
-    return f"Replace in: {path}"
+    return f"patch_file in: {path}"
 
 
 def _summarize_append(args: List[str], contexts: List[str]) -> str:
@@ -88,13 +88,13 @@ def _write_file(ctx: ActContext, args: List[str]):
     logger.info(f"✅ [Write] 文件已写入: {target_path.relative_to(ctx.root_dir)}")
 
 
-def _replace(ctx: ActContext, args: List[str]):
+def _patch_file(ctx: ActContext, args: List[str]):
     """
-    Act: replace
+    Act: patch_file
     Args: [path, old_string, new_string]
     """
     if len(args) < 3:
-        ctx.fail("replace 需要至少三个参数: [path, old_string, new_string]")
+        ctx.fail("patch_file 需要至少三个参数: [path, old_string, new_string]")
 
     raw_path, old_str, new_str = args[0], args[1], args[2]
     target_path = ctx.resolve_path(raw_path)
@@ -123,7 +123,7 @@ def _replace(ctx: ActContext, args: List[str]):
     except Exception as e:
         ctx.fail(f"更新文件时发生未知错误: {e}")
 
-    logger.info(f"✅ [Replace] 文件内容已更新: {target_path.relative_to(ctx.root_dir)}")
+    logger.info(f"✅ [patch_file] 文件内容已更新: {target_path.relative_to(ctx.root_dir)}")
 
 
 def _append_file(ctx: ActContext, args: List[str]):

@@ -95,25 +95,25 @@ class TestBasicActs:
         assert expected_file.exists()
         assert expected_file.read_text(encoding="utf-8") == "# Hello"
 
-    def test_replace_text(self, executor: Executor, isolated_vault: Path):
+    def test_patch_file_text(self, executor: Executor, isolated_vault: Path):
         f = isolated_vault / "main.py"
         f.write_text('print("Hello World")', encoding="utf-8")
 
-        replace_func, _, _ = executor._acts["replace"]
+        patch_file_func, _, _ = executor._acts["patch_file"]
         ctx = ActContext(executor)
-        replace_func(ctx, ["main.py", 'print("Hello World")', 'print("Hello AI")'])
+        patch_file_func(ctx, ["main.py", 'print("Hello World")', 'print("Hello AI")'])
 
         assert f.read_text(encoding="utf-8") == 'print("Hello AI")'
 
-    def test_replace_fail_not_found(self, executor: Executor, isolated_vault: Path):
+    def test_patch_file_fail_not_found(self, executor: Executor, isolated_vault: Path):
         f = isolated_vault / "wrong.txt"
         f.write_text("AAA", encoding="utf-8")
 
-        replace_func, _, _ = executor._acts["replace"]
+        patch_file_func, _, _ = executor._acts["patch_file"]
         ctx = ActContext(executor)
 
         with pytest.raises(ExecutionError) as excinfo:
-            replace_func(ctx, ["wrong.txt", "BBB", "CCC"])
+            patch_file_func(ctx, ["wrong.txt", "BBB", "CCC"])
 
         assert "未找到指定的旧文本" in str(excinfo.value)
 
