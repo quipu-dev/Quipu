@@ -1,274 +1,247 @@
-# feat: 集成 ruff 用于代码格式化
+# fix: 修正 ruff 命令并完善开发环境脚本
 
 ## 用户需求
-为了确保项目代码风格的统一性和高质量，需要引入一个现代化的代码格式化与检查工具。`ruff` 是一个优秀的选择，因为它集成了格式化和 linting 功能，并且性能极高。同时，根据开发要求，需要将测试用例中的 `~~~` 语法的指令块统一为 ```` ```` 语法，以提高可读性和一致性。
+用户根据上一个计划的指示，在更新了开发环境后尝试运行 `qd format .` 和 `qd check .`，但收到了 `No such command` 错误。这表明 `format` 和 `check` 并非 `quipu` CLI 的子命令。
 
 ## 评论
-这是一个标准的工程实践，有助于提升开发者体验 (DX) 和项目的长期可维护性。将 `ruff` 集成到开发环境中可以自动化格式问题，让开发者专注于逻辑实现。
+这是一个由上一个计划中错误的指令导致的直接问题。`ruff` 是一个独立的工具，它被安装到了开发环境中，但不应该通过 `quipu` 的别名 (`qd`) 来调用。正确的调用方式是直接使用 `ruff` 命令。
+
+为了从根本上解决这个问题并优化开发者体验，本次修复将不仅提供正确的命令，还会自动化创建别名设置脚本 (`dev_setup.sh` 和 `dev_setup.fish`)，并将 `ruff` 的别名也包含进去，确保环境设置的一致性和便捷性。
 
 ## 目标
-1.  在项目根目录的 `pyproject.toml` 中添加 `ruff` 的配置。
-2.  将 `ruff` 添加到 `dev` 环境的依赖中，通过修改 `bootstrap.py` 实现。
-3.  修改所有使用 `~~~` 语法的测试文件，将其统一为 ```` ````。
-4.  提供清晰的指令，指导用户如何使用新工具格式化整个代码库。
+1.  创建标准的 `dev_setup.sh` 和 `dev_setup.fish` 文件，用于设置 `qs`、`qd` 和 `ruff` 命令的别名。
+2.  修改 `bootstrap.py` 脚本，使其在 `init` 或 `promote` 过程中自动生成上述的 `dev_setup` 文件。
+3.  更新 `bootstrap.py` 中的使用说明，以反映新的 `ruff` 别名。
+4.  提供给用户最终的、正确的操作指令。
 
 ## 基本原理
-通过在 `pyproject.toml` 中定义共享的 `ruff` 规则，我们确保了所有开发者都遵循同一套标准。将 `ruff` 添加到 `bootstrap.py` 的开发环境安装列表中，可以保证 `qd` 环境中始终包含 `ruff` 命令。最后，通过 `replace` 指令批量更新测试文件，完成代码库的风格统一。
-
-此计划修改了项目的构建和测试工具链，但不会直接运行格式化命令。用户在执行此计划后，需要重新生成开发环境，然后手动运行一次格式化，以应用新的代码风格。
+通过让 `bootstrap.py` 脚本负责生成 shell 别名配置文件，我们消除了开发者手动创建和维护这些文件的需要，从而减少了因环境不一致或配置错误导致的问题。将 `ruff` 命令也纳入别名管理，使得格式化和代码检查的操作与 `quipu` 命令的调用方式保持一致，提升了整体的开发流程体验。
 
 ## 标签
-#comp/build #comp/tests #scope/dx
+#comp/build #scope/dx #fix
 
 ---
 
 ## Script
 
-### Acts 1: 配置 Ruff 并集成到开发环境
+### Acts 1: 创建标准的别名设置脚本
 
-首先，我们在根 `pyproject.toml` 文件中定义 `ruff` 的规则，然后修改 `bootstrap.py` 脚本，在创建开发环境时自动安装 `ruff`。
+我们将创建 `dev_setup.sh` (用于 bash/zsh) 和 `dev_setup.fish` (用于 fish shell)，这两个文件将包含所有必要的别名。
 
 ~~~~~act
-replace pyproject.toml
+write_file dev_setup.sh
 ~~~~~
-~~~~~toml
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+~~~~~bash
+#!/bin/bash
+# shellcheck disable=SC2034
+
+# Fhrsk (AyeL's private stack)
+# Quipu Development Environment Setup for bash/zsh
+
+# Get the absolute path of the script's directory
+# This ensures that the script can be sourced from anywhere
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Define aliases
+alias qs="$DIR/.envs/stable/bin/quipu"
+alias qd="$DIR/.envs/dev/bin/quipu"
+alias ruff="$DIR/.envs/dev/bin/ruff"
+
+echo "✅ Quipu & Ruff aliases activated for the current session:"
+echo "   qs   -> Stable Quipu (.envs/stable)"
+echo "   qd   -> Dev Quipu    (.envs/dev)"
+echo "   ruff -> Dev Ruff     (.envs/dev)"
 ~~~~~
-~~~~~toml
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
-[tool.ruff]
-line-length = 120
-target-version = "py38"
-select = ["E", "F", "I"] # Pycodestyle Errors, Pyflakes, isort
+~~~~~act
+write_file dev_setup.fish
+~~~~~
+~~~~~fish
+# Fhrsk (AyeL's private stack)
+# Quipu Development Environment Setup for Fish Shell
 
-[tool.ruff.format]
-quote-style = "double"
-docstring-code-format = true
+# Get the absolute path of the script's directory
+# This ensures that the script can be sourced from anywhere
+set SCRIPT_PATH (status --current-filename)
+set DIR (dirname "$SCRIPT_PATH")
+
+# Define aliases
+alias qs "$DIR/.envs/stable/bin/quipu"
+alias qd "$DIR/.envs/dev/bin/quipu"
+alias ruff "$DIR/.envs/dev/bin/ruff"
+
+echo "✅ Quipu & Ruff aliases activated for the current session:"
+echo "   qs   -> Stable Quipu (.envs/stable)"
+echo "   qd   -> Dev Quipu    (.envs/dev)"
+echo "   ruff -> Dev Ruff     (.envs/dev)"
+~~~~~
+
+### Acts 2: 更新 bootstrap.py 以自动生成脚本
+
+现在，我们将修改 `bootstrap.py`，让它在执行时自动创建或覆盖上述两个文件，并更新使用说明。
+
+~~~~~act
+replace bootstrap.py
+~~~~~
+~~~~~python
+def install_packages(env_path: Path, editable: bool):
+    """安装包到指定环境"""
+~~~~~
+~~~~~python
+def create_setup_scripts():
+    """自动生成 dev_setup.sh 和 dev_setup.fish 文件"""
+    sh_content = """#!/bin/bash
+# shellcheck disable=SC2034
+
+# Fhrsk (AyeL's private stack)
+# Quipu Development Environment Setup for bash/zsh
+
+# Get the absolute path of the script's directory
+# This ensures that the script can be sourced from anywhere
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Define aliases
+alias qs="$DIR/.envs/stable/bin/quipu"
+alias qd="$DIR/.envs/dev/bin/quipu"
+alias ruff="$DIR/.envs/dev/bin/ruff"
+
+echo "✅ Quipu & Ruff aliases activated for the current session:"
+echo "   qs   -> Stable Quipu (.envs/stable)"
+echo "   qd   -> Dev Quipu    (.envs/dev)"
+echo "   ruff -> Dev Ruff     (.envs/dev)"
+"""
+    
+    fish_content = """# Fhrsk (AyeL's private stack)
+# Quipu Development Environment Setup for Fish Shell
+
+# Get the absolute path of the script's directory
+# This ensures that the script can be sourced from anywhere
+set SCRIPT_PATH (status --current-filename)
+set DIR (dirname "$SCRIPT_PATH")
+
+# Define aliases
+alias qs="$DIR/.envs/stable/bin/quipu"
+alias qd="$DIR/.envs/dev/bin/quipu"
+alias ruff="$DIR/.envs/dev/bin/ruff"
+
+echo "✅ Quipu & Ruff aliases activated for the current session:"
+echo "   qs   -> Stable Quipu (.envs/stable)"
+echo "   qd   -> Dev Quipu    (.envs/dev)"
+echo "   ruff -> Dev Ruff     (.envs/dev)"
+"""
+    
+    (ROOT_DIR / "dev_setup.sh").write_text(sh_content)
+    (ROOT_DIR / "dev_setup.fish").write_text(fish_content)
+    print("✨ 已生成/更新别名设置脚本 (dev_setup.sh, dev_setup.fish)")
+
+
+def install_packages(env_path: Path, editable: bool):
+    """安装包到指定环境"""
 ~~~~~
 
 ~~~~~act
 replace bootstrap.py
 ~~~~~
 ~~~~~python
-        pip_cmd = ["uv", "pip", "install", "-p", str(env_path), "pytest", "pytest-cov"]
-~~~~~
-~~~~~python
-        pip_cmd = ["uv", "pip", "install", "-p", str(env_path), "pytest", "pytest-cov", "ruff"]
-~~~~~
+def setup():
+    """初始化双环境"""
+    ENVS_DIR.mkdir(exist_ok=True)
+    
+    # 1. Setup Stable (编译版)
+    create_venv(STABLE_DIR)
+    install_packages(STABLE_DIR, editable=False)
+    
+    # 2. Setup Dev (链接版)
+    create_venv(DEV_DIR)
+    install_packages(DEV_DIR, editable=True)
+    
+    print("\n✅ 环境初始化完成！")
+    print_usage()
 
-### Acts 2: 统一测试文件中的指令语法
+def promote():
+    """将当前源码晋升为 Stable 工具"""
+    print("🚀 正在晋升 Dev 代码到 Stable 环境...")
+    
+    # 重建 Stable
+    create_venv(STABLE_DIR)
+    install_packages(STABLE_DIR, editable=False)
+    
+    print("\n✅ 晋升完成！现在的 'qs' 是完全独立的二进制快照。")
+    print("   (即使删除 packages/ 目录，qs 依然可以运行)")
+~~~~~
+~~~~~python
+def setup():
+    """初始化双环境"""
+    ENVS_DIR.mkdir(exist_ok=True)
+    
+    # 1. Setup Stable (编译版)
+    create_venv(STABLE_DIR)
+    install_packages(STABLE_DIR, editable=False)
+    
+    # 2. Setup Dev (链接版)
+    create_venv(DEV_DIR)
+    install_packages(DEV_DIR, editable=True)
+    
+    create_setup_scripts()
+    print("\n✅ 环境初始化完成！")
+    print_usage()
 
-接下来，我们将几个关键的集成测试文件中的 `~~~` 指令块全部替换为 ```` ````，以保证一致性。
-
-~~~~~act
-replace tests/test_idempotent_node.py
-~~~~~
-~~~~~python
-        # 2. 先执行一个会产生变更的操作 (State A)
-        plan_1 = "~~~act\nwrite_file a.txt\n~~~\n~~~content\nA\n~~~"
-        run_quipu(plan_1, workspace, yolo=True)
-        
-        # 使用正确的 Engine 设置来验证
-        from quipu.cli.factory import create_engine
-        engine1 = create_engine(workspace)
-        nodes1 = engine1.reader.load_all_nodes()
-        assert len(nodes1) >= 1
-        
-        # 3. 执行一个无变更的操作 (State A -> State A)
-        plan_2 = "~~~act\nread_file a.txt\n~~~"
-        result = run_quipu(plan_2, workspace, yolo=True)
-~~~~~
-~~~~~python
-        # 2. 先执行一个会产生变更的操作 (State A)
-        plan_1 = "```act\nwrite_file a.txt\n```\n```content\nA\n```"
-        run_quipu(plan_1, workspace, yolo=True)
-        
-        # 使用正确的 Engine 设置来验证
-        from quipu.cli.factory import create_engine
-        engine1 = create_engine(workspace)
-        nodes1 = engine1.reader.load_all_nodes()
-        assert len(nodes1) >= 1
-        
-        # 3. 执行一个无变更的操作 (State A -> State A)
-        plan_2 = "```act\nread_file a.txt\n```"
-        result = run_quipu(plan_2, workspace, yolo=True)
-~~~~~
-
-~~~~~act
-replace tests/test_integration_v2.py
-~~~~~
-~~~~~python
-        plan = """
-~~~act
-write_file
-~~~
-~~~path
-hello.txt
-~~~
-~~~content
-Hello Quipu
-~~~
-"""
-        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
-~~~~~
-~~~~~python
-        plan = """
-```act
-write_file
-```
-```path
-hello.txt
-```
-```content
-Hello Quipu
-```
-"""
-        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
+def promote():
+    """将当前源码晋升为 Stable 工具"""
+    print("🚀 正在晋升 Dev 代码到 Stable 环境...")
+    
+    # 重建 Stable
+    create_venv(STABLE_DIR)
+    install_packages(STABLE_DIR, editable=False)
+    
+    # Dev 环境也需要 ruff，所以总是重新安装
+    create_venv(DEV_DIR)
+    install_packages(DEV_DIR, editable=True)
+    
+    create_setup_scripts()
+    print("\n✅ 晋升完成！现在的 'qs' 是完全独立的二进制快照。")
+    print("   (即使删除 packages/ 目录，qs 依然可以运行)")
 ~~~~~
 
 ~~~~~act
-replace tests/test_integration_v2.py
+replace bootstrap.py
 ~~~~~
 ~~~~~python
-        # 试图追加到一个不存在的文件
-        plan = """
-~~~act
-append_file
-~~~
-~~~path
-ghost.txt
-~~~
-~~~content
-boo
-~~~
-"""
-        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
+def print_usage():
+    print("-" * 50)
+    print("请运行以下命令激活别名:")
+    print("  source dev_setup.sh")
+    print("-" * 50)
+    print("命令说明:")
+    print("  qs <args>   -> Stable (独立副本，删除源码不影响)")
+    print("  qd <args>   -> Dev    (实时引用，修改源码即刻生效)")
+    print("-" * 50)
 ~~~~~
 ~~~~~python
-        # 试图追加到一个不存在的文件
-        plan = """
-```act
-append_file
-```
-```path
-ghost.txt
-```
-```content
-boo
-```
-"""
-        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
+def print_usage():
+    print("-" * 50)
+    print("请运行以下命令激活别名 (根据你的 shell 选择):")
+    print("  source dev_setup.sh    # for bash/zsh")
+    print("  source dev_setup.fish  # for fish")
+    print("-" * 50)
+    print("命令说明:")
+    print("  qs <args>    -> Stable (独立副本，删除源码不影响)")
+    print("  qd <args>    -> Dev    (实时引用，修改源码即刻生效)")
+    print("  ruff <args>  -> Dev ruff (用于格式化和检查)")
+    print("-" * 50)
 ~~~~~
 
-~~~~~act
-replace tests/test_integration_v2.py
-~~~~~
-~~~~~python
-        plan_file = tmp_path / "plan.md"
-        plan_file.write_text("~~~act\nend\n~~~", encoding="utf-8")
-~~~~~
-~~~~~python
-        plan_file = tmp_path / "plan.md"
-        plan_file.write_text("```act\nend\n```", encoding="utf-8")
-~~~~~
+### Acts 3: 正确的操作指令
 
-~~~~~act
-replace tests/test_integration_v2.py
-~~~~~
-~~~~~python
-        # State A: Create a.txt
-        plan_a = "~~~act\nwrite_file a.txt\n~~~\n~~~content\nState A\n~~~"
-        run_quipu(content=plan_a, work_dir=workspace, yolo=True)
-        
-        engine_after_a = create_engine(workspace)
-        nodes_after_a = sorted(engine_after_a.reader.load_all_nodes(), key=lambda n: n.timestamp)
-        node_a = nodes_after_a[-1]
-        hash_a = node_a.output_tree
+在执行完此计划后，请按照以下步骤操作：
 
-        # Manually create State B by removing a.txt and adding b.txt
-        (workspace / "a.txt").unlink()
-        plan_b = "~~~act\nwrite_file b.txt\n~~~\n~~~content\nState B\n~~~"
-        run_quipu(content=plan_b, work_dir=workspace, yolo=True)
-~~~~~
-~~~~~python
-        # State A: Create a.txt
-        plan_a = "```act\nwrite_file a.txt\n```\n```content\nState A\n```"
-        run_quipu(content=plan_a, work_dir=workspace, yolo=True)
-        
-        engine_after_a = create_engine(workspace)
-        nodes_after_a = sorted(engine_after_a.reader.load_all_nodes(), key=lambda n: n.timestamp)
-        node_a = nodes_after_a[-1]
-        hash_a = node_a.output_tree
-
-        # Manually create State B by removing a.txt and adding b.txt
-        (workspace / "a.txt").unlink()
-        plan_b = "```act\nwrite_file b.txt\n```\n```content\nState B\n```"
-        run_quipu(content=plan_b, work_dir=workspace, yolo=True)
-~~~~~
-
-~~~~~act
-replace tests/test_storage_integration.py
-~~~~~
-~~~~~python
-# A simple plan that creates one file
-PLAN_A = """
-~~~act
-write_file a.txt
-~~~
-~~~content
-File A content
-~~~
-"""
-
-# A simple plan that creates a different file
-PLAN_B = """
-~~~act
-write_file b.txt
-~~~
-~~~content
-File B content
-~~~
-"""
-~~~~~
-~~~~~python
-# A simple plan that creates one file
-PLAN_A = """
-```act
-write_file a.txt
-```
-```content
-File A content
-```
-"""
-
-# A simple plan that creates a different file
-PLAN_B = """
-```act
-write_file b.txt
-```
-```content
-File B content
-```
-"""
-~~~~~
-
-### Acts 3: 后续步骤说明
-
-此计划已完成对工具链的修改。请按以下步骤应用格式化：
-
-1.  **更新开发环境**:
-    运行 `python bootstrap.py promote` 来重建你的 `dev` 和 `stable` 环境。这将会安装 `ruff`。
+1.  **重新生成环境和脚本**:
+    运行 `python bootstrap.py promote`。这会重新构建环境，并创建 `dev_setup.sh` 和 `dev_setup.fish` 文件。
 
 2.  **激活别名**:
-    运行 `source dev_setup.sh` (或 `dev_setup.fish`) 来更新别名。
+    根据你的 shell，运行 `source dev_setup.sh` 或 `source dev_setup.fish`。
 
-3.  **格式化代码库**:
-    在项目根目录运行 `qd format .`。`ruff` 会自动格式化所有文件。
-
-4.  **检查代码**:
-    运行 `qd check .` 来查看是否有 `ruff` 无法自动修复的问题。
+3.  **格式化与检查 (正确方式)**:
+    现在你可以使用 `ruff` 别名了。在项目根目录运行：
+    *   `ruff format .` (格式化所有文件)
+    *   `ruff check .` (检查代码问题)
