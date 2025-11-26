@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from quipu.core.executor import Executor
 from quipu.core.plugin_loader import load_plugins
-from quipu.cli.factory import find_project_root  # 从 Factory 导入辅助函数
+from quipu.cli.utils import find_git_repository_root  # 从 utils 导入辅助函数
 
 
 class TestPluginLoading:
@@ -49,7 +49,7 @@ def register(executor):
         # (executor fixture 默认带有一些 basic acts，所以只要不崩溃且没增加奇怪的东西就行)
         assert "foo" not in executor._acts
 
-    def test_find_project_root(self, tmp_path):
+    def test_find_git_repository_root(self, tmp_path):
         """测试 Git 项目根目录检测逻辑"""
         # 结构: root/.git, root/src/subdir
         root = tmp_path / "my_project"
@@ -60,14 +60,14 @@ def register(executor):
         subdir.mkdir(parents=True)
 
         # 从子目录查找
-        found = find_project_root(subdir)
+        found = find_git_repository_root(subdir)
         assert found == root.resolve()
 
         # 从根目录查找
-        found_root = find_project_root(root)
+        found_root = find_git_repository_root(root)
         assert found_root == root.resolve()
 
         # 在非 git 目录查找
         orphan = tmp_path / "orphan"
         orphan.mkdir()
-        assert find_project_root(orphan) is None
+        assert find_git_repository_root(orphan) is None

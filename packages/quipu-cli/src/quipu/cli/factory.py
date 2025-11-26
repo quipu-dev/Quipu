@@ -6,7 +6,7 @@ from quipu.core.state_machine import Engine
 from quipu.core.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from quipu.core.git_db import GitDB
 from quipu.core.config import ConfigManager
-from .utils import find_project_root
+from .utils import find_git_repository_root
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def create_engine(work_dir: Path) -> Engine:
     此工厂现在由配置驱动，以决定使用何种存储后端。
     """
     # 1. 尝试查找真正的项目根目录 (包含 .git 的目录)
-    project_root = find_project_root(work_dir)
+    project_root = find_git_repository_root(work_dir)
     if not project_root:
         project_root = work_dir
 

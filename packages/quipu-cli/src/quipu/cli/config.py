@@ -4,10 +4,10 @@ from pathlib import Path
 # 全局配置中心
 
 
-def _find_project_root() -> Path:
+def _find_development_monorepo_root() -> Path:
     """
-    向上递归查找项目根目录。
-    依据：存在 'acts' 目录 或 顶层 'pyproject.toml'。
+    向上递归查找 Quipu 开发时的项目根目录 (monorepo root)。
+    依据：存在 'packages' 目录和顶层 'pyproject.toml'。
     """
     current = Path(__file__).resolve()
     for parent in [current] + list(current.parents):
@@ -27,7 +27,7 @@ def _find_project_root() -> Path:
 
 
 # 项目根目录（代码所在位置）
-PROJECT_ROOT: Path = _find_project_root()
+PROJECT_ROOT: Path = _find_development_monorepo_root()
 
 # 默认的工作区根目录，可以通过环境变量覆盖
 # 在实际运行时，通常由 CLI 参数指定

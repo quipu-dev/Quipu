@@ -3,7 +3,7 @@ from pathlib import Path
 
 from quipu.core.executor import Executor
 from quipu.core.plugin_loader import load_plugins
-from .utils import find_project_root
+from .utils import find_git_repository_root
 
 
 class PluginManager:
@@ -27,7 +27,7 @@ class PluginManager:
             plugin_sources.append(("🔧 Env", Path(env_path)))
 
         # 3. Project Root (Highest priority)
-        project_root_for_plugins = find_project_root(work_dir)
+        project_root_for_plugins = find_git_repository_root(work_dir)
         if project_root_for_plugins:
             proj_acts = project_root_for_plugins / ".quipu" / "acts"
             plugin_sources.append(("📦 Project", proj_acts))

@@ -2,7 +2,7 @@ import pytest
 import os
 from pathlib import Path
 from quipu.core.state_machine import Engine
-from quipu.cli.factory import find_project_root
+from quipu.cli.utils import find_git_repository_root
 from quipu.core.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 
 
@@ -97,7 +97,7 @@ class TestHeadTracking:
 
 
 class TestRootDiscovery:
-    def test_find_project_root(self, tmp_path):
+    def test_find_git_repository_root(self, tmp_path):
         # /project/.git
         # /project/src/subdir
         project = tmp_path / "project"
@@ -108,12 +108,12 @@ class TestRootDiscovery:
         subdir.mkdir(parents=True)
 
         # Case 1: From subdir
-        assert find_project_root(subdir) == project.resolve()
+        assert find_git_repository_root(subdir) == project.resolve()
 
         # Case 2: From root
-        assert find_project_root(project) == project.resolve()
+        assert find_git_repository_root(project) == project.resolve()
 
         # Case 3: Outside
         outside = tmp_path / "outside"
         outside.mkdir()
-        assert find_project_root(outside) is None
+        assert find_git_repository_root(outside) is None
