@@ -1,28 +1,28 @@
-好的，我立刻修复这个测试。
+你说得对，这个便捷方法在之前的重构中被遗漏了。
 
-## fix(tests): 修正 view_model 分页测试中的索引错误
+这是一个很好的补充，它遵循了 MVVM 的最佳实践：将分页状态管理的逻辑（如页码的增减和边界检查）完全保留在 ViewModel 中，而不是让 View (UI) 层来处理。
 
-### 错误分析
-测试 `test_pagination_flow` 失败，错误信息为 `AttributeError: 'list' object has no attribute 'output_tree'`。
+我现在就添加它们，以完全遵循设计方案，并简化后续 UI 层的调用。
 
-这是因为 `vm.load_page(1)` 方法正确地返回了一个节点列表 (`List[QuipuNode]`)，但测试代码错误地试图直接在这个列表对象上访问 `output_tree` 属性，而不是访问列表中的第一个节点 (`page1[0].output_tree`)。
+## feat(cli): 为 ViewModel 添加 next/previous_page 便捷方法
 
 ### 用户需求
-修复 `tests/test_view_model.py` 中因错误的属性访问而导致的测试失败。
+根据 `99_CURRENT_当前任务.md` 的设计方案，`GraphViewModel` 类应包含 `next_page()` 和 `previous_page()` 两个便捷方法，用于封装分页逻辑。当前实现中缺少这两个方法。
 
 ### 评论
-这是一个简单的索引错误，修复起来很直接。这再次证明了在重构后立即运行测试的重要性。
+这是一个小的功能增强，但它将使 `tui.py` 中的调用代码从 `self._load_page(self.view_model.current_page + 1)` 简化为 `self.view_model.next_page()`，提高了代码的可读性和内聚性。
 
 ### 目标
--   将 `page1.output_tree` 修改为 `page1[0].output_tree`。
--   对测试中的 `page2` 和 `page3` 做同样修改。
+1.  在 `GraphViewModel` 类中添加 `next_page()` 方法。
+2.  在 `GraphViewModel` 类中添加 `previous_page()` 方法。
+3.  确保这两个方法能正确调用 `load_page()` 并返回节点列表。
 
 ### 基本原理
-测试代码必须遵循被测方法的返回类型约定。`load_page` 的类型签名是 `-> List[QuipuNode]`，因此对其返回值的操作必须符合列表的操作方式。
+将分页导航的逻辑（“下一页是多少”、“上一页是多少”）封装在 ViewModel 内部，是 MVVM 模式的标准实践。这使得 View 层只负责触发动作和渲染结果，而不关心状态管理的具体实现。
 
 ### 标签
-#intent/fix #intent/tooling #flow/ready #priority/high
-#comp/tests #concept/ui #scope/dx
+#intent/build #flow/ready #priority/high
+#comp/cli #concept/ui #scope/api
 #ai/instruct
 #task/state/continue #task-status/active
 
@@ -30,179 +30,36 @@
 
 ### Script
 
-#### Acts 1: 修正 `test_pagination_flow`
+#### Acts 1: 向 ViewModel 添加便捷方法
 
-我将重写 `tests/test_view_model.py` 文件，修正其中的索引错误。
+我将使用 `patch_file` 在 `get_content_bundle` 方法之前，为 `GraphViewModel` 类添加 `next_page` 和 `previous_page` 方法。
 
 ~~~~~act
-write_file
+patch_file
 ~~~~~
 ~~~~~path
-tests/test_view_model.py
+packages/quipu-cli/src/quipu/cli/view_model.py
 ~~~~~
 ~~~~~python
-import pytest
-from pathlib import Path
-from datetime import datetime
-from typing import List, Optional, Set, Any
+    def get_content_bundle(self, node: QuipuNode) -> str:
+        """
+        获取节点的公共内容和私有内容，并将它们格式化成一个单一的字符串用于展示。
+        """
+~~~~~
+~~~~~python
+    def previous_page(self) -> List[QuipuNode]:
+        """加载上一页的数据。"""
+        return self.load_page(self.current_page - 1)
 
-from quipu.core.models import QuipuNode
-from quipu.core.storage import HistoryReader
-from quipu.cli.view_model import GraphViewModel
+    def next_page(self) -> List[QuipuNode]:
+        """加载下一页的数据。"""
+        return self.load_page(self.current_page + 1)
 
-
-class MockHistoryReader(HistoryReader):
-    """一个用于测试的、可配置的 HistoryReader 模拟实现。"""
-
-    def __init__(
-        self,
-        nodes: List[QuipuNode],
-        ancestors: Set[str] = None,
-        private_data: dict[str, str] = None,
-    ):
-        self._nodes = sorted(nodes, key=lambda n: n.timestamp, reverse=True)
-        self._ancestors = ancestors or set()
-        self._private_data = private_data or {}
-
-    def get_node_count(self) -> int:
-        return len(self._nodes)
-
-    def load_nodes_paginated(self, limit: int, offset: int) -> List[QuipuNode]:
-        return self._nodes[offset : offset + limit]
-
-    def get_ancestor_hashes(self, commit_hash: str) -> Set[str]:
-        return self._ancestors
-
-    def get_private_data(self, commit_hash: str) -> Optional[str]:
-        return self._private_data.get(commit_hash)
-
-    def get_node_content(self, node: QuipuNode) -> str:
-        # For simplicity, mock content is stored in the node's summary
-        return node.summary
-
-    # --- Unused abstract methods ---
-    def load_all_nodes(self) -> List[QuipuNode]:
-        return self._nodes
-
-    def find_nodes(
-        self,
-        summary_regex: Optional[str] = None,
-        node_type: Optional[str] = None,
-        limit: int = 10,
-    ) -> List[QuipuNode]:
-        return []
-
-
-@pytest.fixture
-def sample_nodes():
-    """生成一组用于测试的节点。"""
-    return [
-        QuipuNode("h0", f"h{i}", datetime(2023, 1, i + 1), Path(f"f{i}"), "plan", summary=f"Public {i}")
-        for i in range(10)
-    ]
-
-
-class TestGraphViewModel:
-    def test_initialization(self, sample_nodes):
-        """测试 ViewModel 初始化是否正确获取总数和可达性集合。"""
-        ancestors = {"h3", "h2", "h1"}
-        reader = MockHistoryReader(sample_nodes, ancestors=ancestors)
-        vm = GraphViewModel(reader, current_hash="h3")
-
-        vm.initialize()
-
-        assert vm.total_nodes == 10
-        assert vm.ancestor_set == {"h3", "h2", "h1"}
-        assert vm.current_page == 0
-
-    def test_pagination_flow(self, sample_nodes):
-        """测试分页加载逻辑是否正确。"""
-        reader = MockHistoryReader(sample_nodes)
-        # 10 nodes, page_size=4 -> 3 pages
-        vm = GraphViewModel(reader, current_hash=None, page_size=4)
-        vm.initialize()
-
-        assert vm.total_pages == 3
-
-        # 加载第一页
-        page1 = vm.load_page(1)
-        assert len(page1) == 4
-        assert page1[0].output_tree == "h9"  # Newest
-        assert vm.current_page == 1
-
-        # 加载第二页
-        page2 = vm.load_page(2)
-        assert len(page2) == 4
-        assert page2[0].output_tree == "h5"
-        assert vm.current_page == 2
-
-        # 加载最后一页 (不完整)
-        page3 = vm.load_page(3)
-        assert len(page3) == 2
-        assert page3[0].output_tree == "h1"
-        assert vm.current_page == 3
-
-        # 尝试加载越界页面
-        page4 = vm.load_page(4)
-        assert len(page4) == 0
-
-    def test_is_reachable(self, sample_nodes):
-        """测试可达性检查逻辑。"""
-        ancestors = {"h9", "h8"}  # current is h9, parent is h8
-        reader = MockHistoryReader(sample_nodes, ancestors=ancestors)
-        vm = GraphViewModel(reader, current_hash="h9")
-        vm.initialize()
-
-        assert vm.is_reachable("h9") is True  # Self
-        assert vm.is_reachable("h8") is True  # Ancestor
-        assert vm.is_reachable("h1") is False  # Unreachable
-
-    def test_is_reachable_no_current_hash(self, sample_nodes):
-        """测试在没有当前哈希时，所有节点都应被视为可达。"""
-        reader = MockHistoryReader(sample_nodes, ancestors=set())
-        vm = GraphViewModel(reader, current_hash=None)
-        vm.initialize()
-
-        assert vm.is_reachable("h9") is True
-        assert vm.is_reachable("h1") is True
-
-    def test_get_content_bundle(self):
-        """测试公共和私有内容的格式化逻辑。"""
-        # The key change is constructing a realistic filename where .name is the hash.
-        node_both = QuipuNode("a", "h_both", datetime.now(), Path("mock/h_both"), "plan", summary="Public Content")
-        node_public = QuipuNode("b", "h_public", datetime.now(), Path("mock/h_public"), "plan", summary="Public Only")
-        node_private = QuipuNode("c", "h_private", datetime.now(), Path("mock/h_private"), "plan", summary="") # No public
-        node_none = QuipuNode("d", "h_none", datetime.now(), Path("mock/h_none"), "plan", summary="")
-
-        private_data = {"h_both": "Private Intent", "h_private": "Private Only"}
-        reader = MockHistoryReader([], private_data=private_data)
-        vm = GraphViewModel(reader, current_hash=None)
-
-        # Case 1: Both public and private
-        bundle1 = vm.get_content_bundle(node_both)
-        assert "📜 公共计划内容" in bundle1
-        assert "Public Content" in bundle1
-        assert "🧠 开发者意图" in bundle1
-        assert "Private Intent" in bundle1
-
-        # Case 2: Public only
-        bundle2 = vm.get_content_bundle(node_public)
-        assert "📜 公共计划内容" in bundle2
-        assert "Public Only" in bundle2
-        assert "🧠 开发者意图" in bundle2
-        assert "*此节点无私有数据或来自协作者*" in bundle2
-
-        # Case 3: Private only
-        bundle3 = vm.get_content_bundle(node_private)
-        assert "📜 公共计划内容" not in bundle3
-        assert "🧠 开发者意图" in bundle3
-        assert "Private Only" in bundle3
-
-        # Case 4: Neither
-        bundle4 = vm.get_content_bundle(node_none)
-        assert bundle4 == "*此节点无详细内容*"
+    def get_content_bundle(self, node: QuipuNode) -> str:
+        """
+        获取节点的公共内容和私有内容，并将它们格式化成一个单一的字符串用于展示。
+        """
 ~~~~~
 
 ### 下一步建议
-测试已通过。现在 `ViewModel` 层已经完全准备就绪。我们可以放心地开始**阶段三：前端 UI 适配**。
-
+现在，`GraphViewModel` 的 API 已经完全符合设计方案。我们可以正式开始**阶段三：前端 UI 适配**，修改 `tui.py`。
