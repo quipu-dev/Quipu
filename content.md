@@ -1,103 +1,52 @@
-在 `checkout` 命令中，变量 `target_tree_hash` 被错误地使用，而实际定义的变量名是 `target_output_tree_hash`。这导致了 `NameError` 并使得相关测试失败。
+好的，我们将创建一个提交来正式结束这次重构。
 
-## fix: 修复 checkout 命令中的变量名错误
-
-### 错误分析
-测试失败显示 `checkout` 命令抛出了 `NameError: name 'target_tree_hash' is not defined`。这是因为在之前的重构中，变量被重命名为 `target_output_tree_hash` 以提高清晰度，但函数内部的引用未完全更新。
+## refactor(core): 最终完成标识符模糊性问题的解决
 
 ### 用户需求
-修复 `checkout` 命令，确保其能正常工作并通过所有测试。
+用户要求创建一个 Git 提交，以封装最近所有关于标识符模糊性问题的修复和重构，并正式标志此宏观任务的结束。
 
 ### 评论
-这是一个关键的修复，用于保证导航功能的核心逻辑正确。
+这个提交标志着一次关键架构重构的成功完成。通过建立清晰的 API 契约和数据模型，系统的长期可维护性和开发者体验得到了显著提升。
 
 ### 目标
-修正 `packages/quipu-cli/src/quipu/cli/main.py` 中的 `checkout` 函数。
+在 Git 历史中创建一个原子性的、描述清晰的提交，记录本次重构的所有变更。
 
 ### 基本原理
-将所有对 `target_tree_hash` 的引用替换为 `target_output_tree_hash`。
+使用 `git add` 和 `git_commit` 指令将当前工作区的所有变更暂存并提交，完成版本控制周期。
 
 ### 标签
-#intent/fix #flow/ready #priority/high
-#comp/cli #concept/navigation #scope/core
+#intent/refine #flow/ready #priority/high
+#comp/engine #comp/cli #comp/interfaces #concept/history #scope/api
 #ai/instruct
 #task/domain/storage #task/object/api-contract #task/action/refactor
-#task/state/continue #task/status/active
+#task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 修复 checkout 变量引用
+#### Acts 1: 暂存并提交所有变更
 
 ~~~~~act
-patch_file
+git_add .
 ~~~~~
-~~~~~path
-packages/quipu-cli/src/quipu/cli/main.py
+
+~~~~~act
+git_commit
 ~~~~~
-~~~~~old_string
-    target_node = matches[0]
-    target_output_tree_hash = target_node.output_tree
+~~~~~message
+refactor(core): Resolve identifier ambiguity
 
-    current_hash = engine.git_db.get_tree_hash()
-    if current_hash == target_tree_hash:
-        typer.secho(f"✅ 工作区已处于目标状态 ({target_node.short_hash})，无需操作。", fg=typer.colors.GREEN, err=True)
-        ctx.exit(0)
+This commit concludes a major refactoring to eliminate the ambiguity between 'commit_hash' and 'output_tree_hash' throughout the Quipu codebase.
 
-    is_dirty = engine.current_node is None or engine.current_node.output_tree != current_hash
-    if is_dirty:
-        typer.secho("⚠️  检测到当前工作区存在未记录的变更，将自动创建捕获节点...", fg=typer.colors.YELLOW, err=True)
-        engine.capture_drift(current_hash)
-        typer.secho("✅ 变更已捕获。", fg=typer.colors.GREEN, err=True)
-        current_hash = engine.git_db.get_tree_hash()
+Key changes:
+- QuipuNode now explicitly includes 'commit_hash'.
+- HistoryReader APIs are updated with precise parameter names (e.g., 'get_ancestor_output_trees').
+- Upper layers (ViewModel, TUI, CLI) are adapted to use the new explicit identifiers.
+- Removed reliance on parsing 'QuipuNode.filename' to derive the commit hash.
 
-    diff_stat = engine.git_db.get_diff_stat(current_hash, target_tree_hash)
-    if diff_stat:
-        typer.secho("\n以下是将要发生的变更:", fg=typer.colors.YELLOW, err=True)
-        typer.secho("-" * 20, err=True)
-        typer.echo(diff_stat, err=True)
-        typer.secho("-" * 20, err=True)
-
-    if not force:
-        prompt = f"🚨 即将重置工作区到状态 {target_node.short_hash} ({target_node.timestamp})。\n此操作会覆盖未提交的更改。是否继续？"
-        if not _prompt_for_confirmation(prompt, default=False):
-            typer.secho("\n🚫 操作已取消。", fg=typer.colors.YELLOW, err=True)
-            raise typer.Abort()
-
-    _execute_visit(ctx, engine, target_tree_hash, f"正在导航到节点: {target_node.short_hash}")
-~~~~~
-~~~~~new_string
-    target_node = matches[0]
-    target_output_tree_hash = target_node.output_tree
-
-    current_hash = engine.git_db.get_tree_hash()
-    if current_hash == target_output_tree_hash:
-        typer.secho(f"✅ 工作区已处于目标状态 ({target_node.short_hash})，无需操作。", fg=typer.colors.GREEN, err=True)
-        ctx.exit(0)
-
-    is_dirty = engine.current_node is None or engine.current_node.output_tree != current_hash
-    if is_dirty:
-        typer.secho("⚠️  检测到当前工作区存在未记录的变更，将自动创建捕获节点...", fg=typer.colors.YELLOW, err=True)
-        engine.capture_drift(current_hash)
-        typer.secho("✅ 变更已捕获。", fg=typer.colors.GREEN, err=True)
-        current_hash = engine.git_db.get_tree_hash()
-
-    diff_stat = engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
-    if diff_stat:
-        typer.secho("\n以下是将要发生的变更:", fg=typer.colors.YELLOW, err=True)
-        typer.secho("-" * 20, err=True)
-        typer.echo(diff_stat, err=True)
-        typer.secho("-" * 20, err=True)
-
-    if not force:
-        prompt = f"🚨 即将重置工作区到状态 {target_node.short_hash} ({target_node.timestamp})。\n此操作会覆盖未提交的更改。是否继续？"
-        if not _prompt_for_confirmation(prompt, default=False):
-            typer.secho("\n🚫 操作已取消。", fg=typer.colors.YELLOW, err=True)
-            raise typer.Abort()
-
-    _execute_visit(ctx, engine, target_output_tree_hash, f"正在导航到节点: {target_node.short_hash}")
+This change significantly improves the clarity and robustness of the core data model and storage interfaces, reducing the risk of future bugs related to identifier confusion.
 ~~~~~
 
 ### 下一步建议
-运行测试验证修复结果。
+标识符重构任务已完成。我们可以继续推进下一个宏观任务，例如 `Quipu Sync` 架构的实现或 `SQLite` 存储的进一步完善。
