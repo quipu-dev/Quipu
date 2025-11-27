@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "生成 `git add` 和 `git commit` 指令来保存这次重构", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764246333.3017259, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "feat(core): 创建 quipu-common 包以承载共享逻辑", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764250033.5305164, "duration_ms": 0}}
