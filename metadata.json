@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "fix(tests): 修复因 HistoryReader 接口变更导致的测试失败", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764239833.82911, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "Capture: M VERSION", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764241629.3759792, "duration_ms": 0}}
