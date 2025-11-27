@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "fix(tests): 修正 view_model 分页测试中的索引错误", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764211544.2349155, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "fix(tests): 修正 view_model 分页测试中的索引错误", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764211652.0037763, "duration_ms": 0}}

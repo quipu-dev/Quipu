@@ -127,19 +127,19 @@ class TestGraphViewModel:
         # 加载第一页
         page1 = vm.load_page(1)
         assert len(page1) == 4
-        assert page1.output_tree == "h9"  # Newest
+        assert page1[0].output_tree == "h9"  # Newest
         assert vm.current_page == 1
 
         # 加载第二页
         page2 = vm.load_page(2)
         assert len(page2) == 4
-        assert page2.output_tree == "h5"
+        assert page2[0].output_tree == "h5"
         assert vm.current_page == 2
 
         # 加载最后一页 (不完整)
         page3 = vm.load_page(3)
         assert len(page3) == 2
-        assert page3.output_tree == "h1"
+        assert page3[0].output_tree == "h1"
         assert vm.current_page == 3
 
         # 尝试加载越界页面
@@ -205,3 +205,4 @@ class TestGraphViewModel:
 
 ### 下一步建议
 测试已通过。现在 `ViewModel` 层已经完全准备就绪。我们可以放心地开始**阶段三：前端 UI 适配**。
+
