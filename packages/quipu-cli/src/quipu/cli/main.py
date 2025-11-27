@@ -3,7 +3,8 @@ import logging
 import sys
 import click  # 导入 click 库
 from pathlib import Path
-from typing import Annotated, Optional, Dict
+from typing import Annotated, Optional, Dict, Generator
+from contextlib import contextmanager
 
 from .logger_config import setup_logging, configure_file_logging
 from .controller import run_quipu
@@ -28,6 +29,20 @@ logger = logging.getLogger(__name__)
 app = typer.Typer(add_completion=False, name="quipu")
 cache_app = typer.Typer(name="cache", help="管理本地 SQLite 缓存。")
 app.add_typer(cache_app)
+
+
+@contextmanager
+def engine_context(work_dir: Path) -> Generator[Engine, None, None]:
+    """Context manager to set up logging, create, and automatically close a Quipu engine."""
+    setup_logging()
+    engine = None
+    try:
+        # create_engine handles align() internally, which is correct
+        engine = create_engine(work_dir)
+        yield engine
+    finally:
+        if engine:
+            engine.close()
 
 
 def _prompt_for_confirmation(message: str, default: bool = False) -> bool:
@@ -131,12 +146,9 @@ def ui(
         if action == "checkout":
             target_hash = data
             # 重新创建 Engine 执行导航操作
-            action_engine = create_engine(work_dir, lazy=True)
-            try:
+            with engine_context(work_dir) as action_engine:
                 typer.secho(f"\n> TUI 请求检出到: {target_hash[:7]}", err=True)
                 _execute_visit(ctx, action_engine, target_hash, f"正在导航到 TUI 选定节点: {target_hash[:7]}")
-            finally:
-                action_engine.close()
 
         elif action == "dump":
             # 直接将内容打印到 stdout
@@ -158,32 +170,31 @@ def save(
     """
     捕获当前工作区的状态，创建一个“微提交”快照。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-    # create_engine 内部已经调用了 align
+    with engine_context(work_dir) as engine:
+        # create_engine 内部已经调用了 align
 
-    # 判断是否 clean
-    current_tree_hash = engine.git_db.get_tree_hash()
+        # 判断是否 clean
+        current_tree_hash = engine.git_db.get_tree_hash()
 
-    # 1. 正常 Clean: current_node 存在且与当前 hash 一致
-    is_node_clean = (engine.current_node is not None) and (engine.current_node.output_tree == current_tree_hash)
+        # 1. 正常 Clean: current_node 存在且与当前 hash 一致
+        is_node_clean = (engine.current_node is not None) and (engine.current_node.output_tree == current_tree_hash)
 
-    # 2. 创世 Clean: 历史为空 且 当前是空树
-    EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-    is_genesis_clean = (not engine.history_graph) and (current_tree_hash == EMPTY_TREE_HASH)
+        # 2. 创世 Clean: 历史为空 且 当前是空树
+        EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+        is_genesis_clean = (not engine.history_graph) and (current_tree_hash == EMPTY_TREE_HASH)
 
-    if is_node_clean or is_genesis_clean:
-        typer.secho("✅ 工作区状态未发生变化，无需创建快照。", fg=typer.colors.GREEN, err=True)
-        ctx.exit(0)
+        if is_node_clean or is_genesis_clean:
+            typer.secho("✅ 工作区状态未发生变化，无需创建快照。", fg=typer.colors.GREEN, err=True)
+            ctx.exit(0)
 
-    current_hash = engine.git_db.get_tree_hash()
-    try:
-        node = engine.capture_drift(current_hash, message=message)
-        msg_suffix = f" ({message})" if message else ""
-        typer.secho(f"📸 快照已保存: {node.short_hash}{msg_suffix}", fg=typer.colors.GREEN, err=True)
-    except Exception as e:
-        typer.secho(f"❌ 创建快照失败: {e}", fg=typer.colors.RED, err=True)
-        ctx.exit(1)
+        current_hash = engine.git_db.get_tree_hash()
+        try:
+            node = engine.capture_drift(current_hash, message=message)
+            msg_suffix = f" ({message})" if message else ""
+            typer.secho(f"📸 快照已保存: {node.short_hash}{msg_suffix}", fg=typer.colors.GREEN, err=True)
+        except Exception as e:
+            typer.secho(f"❌ 创建快照失败: {e}", fg=typer.colors.RED, err=True)
+            ctx.exit(1)
 
 
 @app.command(name="find")
@@ -199,27 +210,25 @@ def find_command(
     """
     根据条件查找历史节点。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
+    with engine_context(work_dir) as engine:
+        if not engine.history_graph:
+            typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
+            ctx.exit(0)
 
-    if not engine.history_graph:
-        typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
-        ctx.exit(0)
+        nodes = engine.find_nodes(summary_regex=summary_regex, node_type=node_type, limit=limit)
 
-    nodes = engine.find_nodes(summary_regex=summary_regex, node_type=node_type, limit=limit)
+        if not nodes:
+            typer.secho("🤷 未找到符合条件的历史节点。", fg=typer.colors.YELLOW, err=True)
+            ctx.exit(0)
 
-    if not nodes:
-        typer.secho("🤷 未找到符合条件的历史节点。", fg=typer.colors.YELLOW, err=True)
-        ctx.exit(0)
-
-    typer.secho("--- 查找结果 ---", bold=True, err=True)
-    for node in nodes:
-        ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        color = typer.colors.CYAN if node.node_type == "plan" else typer.colors.MAGENTA
-        tag = f"[{node.node_type.upper()}]"
-        # 直接打印 output_tree hash，因为这是节点的唯一标识符
-        typer.secho(f"{ts} {tag:<9} {node.output_tree}", fg=color, nl=False, err=True)
-        typer.echo(f" - {node.summary}", err=True)
+        typer.secho("--- 查找结果 ---", bold=True, err=True)
+        for node in nodes:
+            ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            color = typer.colors.CYAN if node.node_type == "plan" else typer.colors.MAGENTA
+            tag = f"[{node.node_type.upper()}]"
+            # 直接打印 output_tree hash，因为这是节点的唯一标识符
+            typer.secho(f"{ts} {tag:<9} {node.output_tree}", fg=color, nl=False, err=True)
+            typer.echo(f" - {node.summary}", err=True)
 
 
 @app.command()
@@ -290,46 +299,45 @@ def discard(
     """
     丢弃工作区所有未记录的变更，恢复到上一个干净状态。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-    graph = engine.history_graph
-    if not graph:
-        typer.secho("❌ 错误: 找不到任何历史记录，无法确定要恢复到哪个状态。", fg=typer.colors.RED, err=True)
-        ctx.exit(1)
+    with engine_context(work_dir) as engine:
+        graph = engine.history_graph
+        if not graph:
+            typer.secho("❌ 错误: 找不到任何历史记录，无法确定要恢复到哪个状态。", fg=typer.colors.RED, err=True)
+            ctx.exit(1)
 
-    target_tree_hash = engine._read_head()
-    if not target_tree_hash or target_tree_hash not in graph:
-        latest_node = max(graph.values(), key=lambda n: n.timestamp)
-        target_tree_hash = latest_node.output_tree
-        typer.secho(
-            f"⚠️  HEAD 指针丢失或无效，将恢复到最新历史节点: {latest_node.short_hash}", fg=typer.colors.YELLOW, err=True
-        )
-    else:
-        latest_node = graph[target_tree_hash]
+        target_tree_hash = engine._read_head()
+        if not target_tree_hash or target_tree_hash not in graph:
+            latest_node = max(graph.values(), key=lambda n: n.timestamp)
+            target_tree_hash = latest_node.output_tree
+            typer.secho(
+                f"⚠️  HEAD 指针丢失或无效，将恢复到最新历史节点: {latest_node.short_hash}", fg=typer.colors.YELLOW, err=True
+            )
+        else:
+            latest_node = graph[target_tree_hash]
 
-    current_hash = engine.git_db.get_tree_hash()
-    if current_hash == target_tree_hash:
-        typer.secho(f"✅ 工作区已经是干净状态 ({latest_node.short_hash})，无需操作。", fg=typer.colors.GREEN, err=True)
-        ctx.exit(0)
+        current_hash = engine.git_db.get_tree_hash()
+        if current_hash == target_tree_hash:
+            typer.secho(f"✅ 工作区已经是干净状态 ({latest_node.short_hash})，无需操作。", fg=typer.colors.GREEN, err=True)
+            ctx.exit(0)
 
-    diff_stat = engine.git_db.get_diff_stat(target_tree_hash, current_hash)
-    typer.secho("\n以下是即将被丢弃的变更:", fg=typer.colors.YELLOW, err=True)
-    typer.secho("-" * 20, err=True)
-    typer.echo(diff_stat, err=True)
-    typer.secho("-" * 20, err=True)
+        diff_stat = engine.git_db.get_diff_stat(target_tree_hash, current_hash)
+        typer.secho("\n以下是即将被丢弃的变更:", fg=typer.colors.YELLOW, err=True)
+        typer.secho("-" * 20, err=True)
+        typer.echo(diff_stat, err=True)
+        typer.secho("-" * 20, err=True)
 
-    if not force:
-        prompt = f"🚨 即将丢弃上述所有变更，并恢复到状态 {latest_node.short_hash}。\n此操作不可逆。是否继续？"
-        if not _prompt_for_confirmation(prompt, default=False):
-            typer.secho("\n🚫 操作已取消。", fg=typer.colors.YELLOW, err=True)
-            raise typer.Abort()
+        if not force:
+            prompt = f"🚨 即将丢弃上述所有变更，并恢复到状态 {latest_node.short_hash}。\n此操作不可逆。是否继续？"
+            if not _prompt_for_confirmation(prompt, default=False):
+                typer.secho("\n🚫 操作已取消。", fg=typer.colors.YELLOW, err=True)
+                raise typer.Abort()
 
-    try:
-        engine.visit(target_tree_hash)
-        typer.secho(f"✅ 工作区已成功恢复到节点 {latest_node.short_hash}。", fg=typer.colors.GREEN, err=True)
-    except Exception as e:
-        typer.secho(f"❌ 恢复状态失败: {e}", fg=typer.colors.RED, err=True)
-        ctx.exit(1)
+        try:
+            engine.visit(target_tree_hash)
+            typer.secho(f"✅ 工作区已成功恢复到节点 {latest_node.short_hash}。", fg=typer.colors.GREEN, err=True)
+        except Exception as e:
+            typer.secho(f"❌ 恢复状态失败: {e}", fg=typer.colors.RED, err=True)
+            ctx.exit(1)
 
 
 @app.command()
@@ -347,50 +355,51 @@ def checkout(
     """
     将工作区恢复到指定的历史节点状态。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-    graph = engine.history_graph
+    with engine_context(work_dir) as engine:
+        graph = engine.history_graph
 
-    matches = [node for output_tree, node in graph.items() if output_tree.startswith(hash_prefix)]
-    if not matches:
-        typer.secho(
-            f"❌ 错误: 未找到 output_tree 哈希前缀为 '{hash_prefix}' 的历史节点。", fg=typer.colors.RED, err=True
-        )
-        ctx.exit(1)
-    if len(matches) > 1:
-        typer.secho(
-            f"❌ 错误: 哈希前缀 '{hash_prefix}' 不唯一，匹配到 {len(matches)} 个节点。", fg=typer.colors.RED, err=True
-        )
-        ctx.exit(1)
-    target_node = matches[0]
-    target_output_tree_hash = target_node.output_tree
+        matches = [node for output_tree, node in graph.items() if output_tree.startswith(hash_prefix)]
+        if not matches:
+            typer.secho(
+                f"❌ 错误: 未找到 output_tree 哈希前缀为 '{hash_prefix}' 的历史节点。", fg=typer.colors.RED, err=True
+            )
+            ctx.exit(1)
+        if len(matches) > 1:
+            typer.secho(
+                f"❌ 错误: 哈希前缀 '{hash_prefix}' 不唯一，匹配到 {len(matches)} 个节点。", fg=typer.colors.RED, err=True
+            )
+            ctx.exit(1)
+        target_node = matches[0]
+        target_output_tree_hash = target_node.output_tree
 
-    current_hash = engine.git_db.get_tree_hash()
-    if current_hash == target_output_tree_hash:
-        typer.secho(f"✅ 工作区已处于目标状态 ({target_node.short_hash})，无需操作。", fg=typer.colors.GREEN, err=True)
-        ctx.exit(0)
-
-    is_dirty = engine.current_node is None or engine.current_node.output_tree != current_hash
-    if is_dirty:
-        typer.secho("⚠️  检测到当前工作区存在未记录的变更，将自动创建捕获节点...", fg=typer.colors.YELLOW, err=True)
-        engine.capture_drift(current_hash)
-        typer.secho("✅ 变更已捕获。", fg=typer.colors.GREEN, err=True)
         current_hash = engine.git_db.get_tree_hash()
+        if current_hash == target_output_tree_hash:
+            typer.secho(f"✅ 工作区已处于目标状态 ({target_node.short_hash})，无需操作。", fg=typer.colors.GREEN, err=True)
+            ctx.exit(0)
 
-    diff_stat = engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
-    if diff_stat:
-        typer.secho("\n以下是将要发生的变更:", fg=typer.colors.YELLOW, err=True)
-        typer.secho("-" * 20, err=True)
-        typer.echo(diff_stat, err=True)
-        typer.secho("-" * 20, err=True)
+        is_dirty = engine.current_node is None or engine.current_node.output_tree != current_hash
+        if is_dirty:
+            typer.secho("⚠️  检测到当前工作区存在未记录的变更，将自动创建捕获节点...", fg=typer.colors.YELLOW, err=True)
+            engine.capture_drift(current_hash)
+            typer.secho("✅ 变更已捕获。", fg=typer.colors.GREEN, err=True)
+            current_hash = engine.git_db.get_tree_hash()
 
-    if not force:
-        prompt = f"🚨 即将重置工作区到状态 {target_node.short_hash} ({target_node.timestamp})。\n此操作会覆盖未提交的更改。是否继续？"
-        if not _prompt_for_confirmation(prompt, default=False):
-            typer.secho("\n🚫 操作已取消。", fg=typer.colors.YELLOW, err=True)
-            raise typer.Abort()
+        diff_stat = engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
+        if diff_stat:
+            typer.secho("\n以下是将要发生的变更:", fg=typer.colors.YELLOW, err=True)
+            typer.secho("-" * 20, err=True)
+            typer.echo(diff_stat, err=True)
+            typer.secho("-" * 20, err=True)
 
-    _execute_visit(ctx, engine, target_output_tree_hash, f"正在导航到节点: {target_node.short_hash}")
+        if not force:
+            prompt = (
+                f"🚨 即将重置工作区到状态 {target_node.short_hash} ({target_node.timestamp})。\n此操作会覆盖未提交的更改。是否继续？"
+            )
+            if not _prompt_for_confirmation(prompt, default=False):
+                typer.secho("\n🚫 操作已取消。", fg=typer.colors.YELLOW, err=True)
+                raise typer.Abort()
+
+        _execute_visit(ctx, engine, target_output_tree_hash, f"正在导航到节点: {target_node.short_hash}")
 
 
 # --- 结构化导航命令 ---
@@ -403,23 +412,22 @@ def undo(
     """
     [结构化导航] 向上移动到当前状态的父节点。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-    graph = engine.history_graph
-    current_node = _find_current_node(engine, graph)
-    if not current_node:
-        ctx.exit(1)
-    target_node = current_node
-    for i in range(count):
-        if not target_node.parent:
-            msg = f"已到达历史根节点 (移动了 {i} 步)。" if i > 0 else "已在历史根节点。"
-            typer.secho(f"✅ {msg}", fg=typer.colors.GREEN, err=True)
-            if target_node == current_node:
-                ctx.exit(0)
-            break
-        target_node = target_node.parent
+    with engine_context(work_dir) as engine:
+        graph = engine.history_graph
+        current_node = _find_current_node(engine, graph)
+        if not current_node:
+            ctx.exit(1)
+        target_node = current_node
+        for i in range(count):
+            if not target_node.parent:
+                msg = f"已到达历史根节点 (移动了 {i} 步)。" if i > 0 else "已在历史根节点。"
+                typer.secho(f"✅ {msg}", fg=typer.colors.GREEN, err=True)
+                if target_node == current_node:
+                    ctx.exit(0)
+                break
+            target_node = target_node.parent
 
-    _execute_visit(ctx, engine, target_node.output_tree, f"正在撤销到父节点: {target_node.short_hash}")
+        _execute_visit(ctx, engine, target_node.output_tree, f"正在撤销到父节点: {target_node.short_hash}")
 
 
 @app.command()
@@ -431,29 +439,28 @@ def redo(
     """
     [结构化导航] 向下移动到子节点 (默认最新)。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-    graph = engine.history_graph
-    current_node = _find_current_node(engine, graph)
-    if not current_node:
-        ctx.exit(1)
-    target_node = current_node
-    for i in range(count):
-        if not target_node.children:
-            msg = f"已到达分支末端 (移动了 {i} 步)。" if i > 0 else "已在分支末端。"
-            typer.secho(f"✅ {msg}", fg=typer.colors.GREEN, err=True)
-            if target_node == current_node:
-                ctx.exit(0)
-            break
-        target_node = target_node.children[-1]
-        if len(current_node.children) > 1:
-            typer.secho(
-                f"💡 当前节点有多个分支，已自动选择最新分支 -> {target_node.short_hash}",
-                fg=typer.colors.YELLOW,
-                err=True,
-            )
+    with engine_context(work_dir) as engine:
+        graph = engine.history_graph
+        current_node = _find_current_node(engine, graph)
+        if not current_node:
+            ctx.exit(1)
+        target_node = current_node
+        for i in range(count):
+            if not target_node.children:
+                msg = f"已到达分支末端 (移动了 {i} 步)。" if i > 0 else "已在分支末端。"
+                typer.secho(f"✅ {msg}", fg=typer.colors.GREEN, err=True)
+                if target_node == current_node:
+                    ctx.exit(0)
+                break
+            target_node = target_node.children[-1]
+            if len(current_node.children) > 1:
+                typer.secho(
+                    f"💡 当前节点有多个分支，已自动选择最新分支 -> {target_node.short_hash}",
+                    fg=typer.colors.YELLOW,
+                    err=True,
+                )
 
-    _execute_visit(ctx, engine, target_node.output_tree, f"正在重做到子节点: {target_node.short_hash}")
+        _execute_visit(ctx, engine, target_node.output_tree, f"正在重做到子节点: {target_node.short_hash}")
 
 
 @app.command()
@@ -464,25 +471,24 @@ def prev(
     """
     [结构化导航] 切换到上一个兄弟分支。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-    graph = engine.history_graph
-    current_node = _find_current_node(engine, graph)
-    if not current_node:
-        ctx.exit(1)
-    siblings = current_node.siblings
-    if len(siblings) <= 1:
-        typer.secho("✅ 当前节点没有兄弟分支。", fg=typer.colors.GREEN, err=True)
-        ctx.exit(0)
-    try:
-        idx = siblings.index(current_node)
-        if idx == 0:
-            typer.secho("✅ 已在最旧的兄弟分支。", fg=typer.colors.GREEN, err=True)
+    with engine_context(work_dir) as engine:
+        graph = engine.history_graph
+        current_node = _find_current_node(engine, graph)
+        if not current_node:
+            ctx.exit(1)
+        siblings = current_node.siblings
+        if len(siblings) <= 1:
+            typer.secho("✅ 当前节点没有兄弟分支。", fg=typer.colors.GREEN, err=True)
             ctx.exit(0)
-        target_node = siblings[idx - 1]
-        _execute_visit(ctx, engine, target_node.output_tree, f"正在切换到上一个兄弟节点: {target_node.short_hash}")
-    except ValueError:
-        pass
+        try:
+            idx = siblings.index(current_node)
+            if idx == 0:
+                typer.secho("✅ 已在最旧的兄弟分支。", fg=typer.colors.GREEN, err=True)
+                ctx.exit(0)
+            target_node = siblings[idx - 1]
+            _execute_visit(ctx, engine, target_node.output_tree, f"正在切换到上一个兄弟节点: {target_node.short_hash}")
+        except ValueError:
+            pass
 
 
 @app.command()
@@ -493,25 +499,24 @@ def next(
     """
     [结构化导航] 切换到下一个兄弟分支。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-    graph = engine.history_graph
-    current_node = _find_current_node(engine, graph)
-    if not current_node:
-        ctx.exit(1)
-    siblings = current_node.siblings
-    if len(siblings) <= 1:
-        typer.secho("✅ 当前节点没有兄弟分支。", fg=typer.colors.GREEN, err=True)
-        ctx.exit(0)
-    try:
-        idx = siblings.index(current_node)
-        if idx == len(siblings) - 1:
-            typer.secho("✅ 已在最新的兄弟分支。", fg=typer.colors.GREEN, err=True)
+    with engine_context(work_dir) as engine:
+        graph = engine.history_graph
+        current_node = _find_current_node(engine, graph)
+        if not current_node:
+            ctx.exit(1)
+        siblings = current_node.siblings
+        if len(siblings) <= 1:
+            typer.secho("✅ 当前节点没有兄弟分支。", fg=typer.colors.GREEN, err=True)
             ctx.exit(0)
-        target_node = siblings[idx + 1]
-        _execute_visit(ctx, engine, target_node.output_tree, f"正在切换到下一个兄弟节点: {target_node.short_hash}")
-    except ValueError:
-        pass
+        try:
+            idx = siblings.index(current_node)
+            if idx == len(siblings) - 1:
+                typer.secho("✅ 已在最新的兄弟分支。", fg=typer.colors.GREEN, err=True)
+                ctx.exit(0)
+            target_node = siblings[idx + 1]
+            _execute_visit(ctx, engine, target_node.output_tree, f"正在切换到下一个兄弟节点: {target_node.short_hash}")
+        except ValueError:
+            pass
 
 
 # --- 时序性导航命令 (新增) ---
@@ -525,18 +530,16 @@ def back(
     """
     [时序性导航] 后退：回到上一次访问的历史状态。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-
-    try:
-        result_hash = engine.back()
-        if result_hash:
-            typer.secho(f"✅ 已后退到状态: {result_hash[:7]}", fg=typer.colors.GREEN, err=True)
-        else:
-            typer.secho("⚠️  已到达访问历史的起点。", fg=typer.colors.YELLOW, err=True)
-    except Exception as e:
-        typer.secho(f"❌ 后退操作失败: {e}", fg=typer.colors.RED, err=True)
-        ctx.exit(1)
+    with engine_context(work_dir) as engine:
+        try:
+            result_hash = engine.back()
+            if result_hash:
+                typer.secho(f"✅ 已后退到状态: {result_hash[:7]}", fg=typer.colors.GREEN, err=True)
+            else:
+                typer.secho("⚠️  已到达访问历史的起点。", fg=typer.colors.YELLOW, err=True)
+        except Exception as e:
+            typer.secho(f"❌ 后退操作失败: {e}", fg=typer.colors.RED, err=True)
+            ctx.exit(1)
 
 
 @app.command()
@@ -547,18 +550,16 @@ def forward(
     """
     [时序性导航] 前进：撤销后退操作。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-
-    try:
-        result_hash = engine.forward()
-        if result_hash:
-            typer.secho(f"✅ 已前进到状态: {result_hash[:7]}", fg=typer.colors.GREEN, err=True)
-        else:
-            typer.secho("⚠️  已到达访问历史的终点。", fg=typer.colors.YELLOW, err=True)
-    except Exception as e:
-        typer.secho(f"❌ 前进操作失败: {e}", fg=typer.colors.RED, err=True)
-        ctx.exit(1)
+    with engine_context(work_dir) as engine:
+        try:
+            result_hash = engine.forward()
+            if result_hash:
+                typer.secho(f"✅ 已前进到状态: {result_hash[:7]}", fg=typer.colors.GREEN, err=True)
+            else:
+                typer.secho("⚠️  已到达访问历史的终点。", fg=typer.colors.YELLOW, err=True)
+        except Exception as e:
+            typer.secho(f"❌ 前进操作失败: {e}", fg=typer.colors.RED, err=True)
+            ctx.exit(1)
 
 
 @app.command()
@@ -573,22 +574,21 @@ def log(
     """
     显示 Quipu 历史图谱日志。
     """
-    setup_logging()
-    engine = create_engine(work_dir)
-    graph = engine.history_graph
+    with engine_context(work_dir) as engine:
+        graph = engine.history_graph
 
-    if not graph:
-        typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
-        raise typer.Exit(0)
-    nodes = sorted(graph.values(), key=lambda n: n.timestamp, reverse=True)
-    typer.secho("--- Quipu History Log ---", bold=True, err=True)
-    for node in nodes:
-        ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        color = typer.colors.CYAN if node.node_type == "plan" else typer.colors.MAGENTA
-        tag = f"[{node.node_type.upper()}]"
-        summary = node.summary  # Use the authoritative summary from the node object
-        typer.secho(f"{ts} {tag:<9} {node.short_hash}", fg=color, nl=False, err=True)
-        typer.echo(f" - {summary}", err=True)
+        if not graph:
+            typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
+            raise typer.Exit(0)
+        nodes = sorted(graph.values(), key=lambda n: n.timestamp, reverse=True)
+        typer.secho("--- Quipu History Log ---", bold=True, err=True)
+        for node in nodes:
+            ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            color = typer.colors.CYAN if node.node_type == "plan" else typer.colors.MAGENTA
+            tag = f"[{node.node_type.upper()}]"
+            summary = node.summary  # Use the authoritative summary from the node object
+            typer.secho(f"{ts} {tag:<9} {node.short_hash}", fg=color, nl=False, err=True)
+            typer.echo(f" - {summary}", err=True)
 
 
 @app.command(name="run")
@@ -689,11 +689,11 @@ def cache_sync(
     将 Git 历史增量同步到 SQLite 缓存。
     此操作在大多数命令执行时会自动触发。
     """
-    setup_logging()
     typer.secho("💧 正在执行增量数据补水...", fg=typer.colors.BLUE, err=True)
     try:
-        engine = create_engine(work_dir)
-        # create_engine 内部的 align() 已经触发了 sync()
+        with engine_context(work_dir):
+            # The context manager handles engine creation, alignment, and closing
+            pass
         typer.secho("✅ 数据同步完成。", fg=typer.colors.GREEN, err=True)
     except Exception as e:
         typer.secho(f"❌ 数据同步失败: {e}", fg=typer.colors.RED, err=True)
