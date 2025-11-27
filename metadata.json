@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "fix 修复 `quipu ui` 命令在启动时因表格列未初始化而导致的崩溃问题。", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764226894.8703682, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "fix+refactor 修复 TUI 分页边界及可达性高亮问题", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764228311.3864095, "duration_ms": 0}}
