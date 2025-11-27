@@ -29,9 +29,13 @@ class TestUiReachability:
         """
         node_root = QuipuNode("c_root", "root", "null", datetime(2023, 1, 1), Path("f_root"), "plan", summary="Root")
         node_a = QuipuNode("c_a", "a", "root", datetime(2023, 1, 2), Path("f_a"), "plan", summary="A")
-        node_b = QuipuNode("c_b", "b", "root", datetime(2023, 1, 3), Path("f_b"), "plan", summary="B") # Unrelated branch
+        node_b = QuipuNode(
+            "c_b", "b", "root", datetime(2023, 1, 3), Path("f_b"), "plan", summary="B"
+        )  # Unrelated branch
         node_curr = QuipuNode("c_curr", "curr", "a", datetime(2023, 1, 4), Path("f_curr"), "plan", summary="Current")
-        node_child = QuipuNode("c_child", "child", "curr", datetime(2023, 1, 5), Path("f_child"), "plan", summary="Child")
+        node_child = QuipuNode(
+            "c_child", "child", "curr", datetime(2023, 1, 5), Path("f_child"), "plan", summary="Child"
+        )
 
         ancestors = {"a", "root"}
         descendants = {"child"}

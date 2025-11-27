@@ -79,7 +79,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
         initial_page = self.view_model.calculate_initial_page()
         logger.debug(f"TUI: HEAD is on page {initial_page}. Loading...")
         self._load_page(initial_page)
-        
+
         # 强制将焦点给到表格，确保高亮可见且键盘可用
         table.focus()
 
@@ -235,18 +235,18 @@ class QuipuUiApp(App[Optional[UiResult]]):
             try:
                 row_index = table.get_row_index(row_key)
                 logger.debug(f"DEBUG: Row index found: {row_index}. Setting cursor.")
-                
+
                 # 1. 设置视觉光标
                 table.cursor_coordinate = Coordinate(row=row_index, column=0)
-                
+
                 # 2. 同步逻辑状态 (防止事件未触发)
                 self.current_selected_node = target_node
-                
+
                 # 3. 刷新关联视图
                 if self.is_split_mode:
                     self._update_content_view()
             except LookupError:
-                 # LookupError 捕获 RowKeyError 等
+                # LookupError 捕获 RowKeyError 等
                 logger.warning(f"DEBUG: Row key {row_key} not found in DataTable.")
 
         except Exception as e:

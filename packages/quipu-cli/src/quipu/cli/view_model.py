@@ -38,7 +38,7 @@ class GraphViewModel:
             # 后端直接计算祖先和后代，避免在前端加载整个图谱
             ancestors = self.reader.get_ancestor_output_trees(self.current_output_tree_hash)
             descendants = self.reader.get_descendant_output_trees(self.current_output_tree_hash)
-            
+
             # 合并祖先、后代和当前节点自身，形成完整的可达集合
             self.reachable_set = ancestors.union(descendants)
             self.reachable_set.add(self.current_output_tree_hash)
