@@ -1,137 +1,174 @@
-好的，我分析了你遇到的问题。屏幕闪烁后卡住且无法用 `Ctrl+C` 退出的现象，是一个典型的并发或资源管理错误的症状，尤其是在 `tui.py` (Textual) 和 `main.py` (Typer/Click) 交互时。
+好的，我将为你设计一个结构化的重构方案，将 `tests` 目录按照功能模块进行分组，以提高可管理性和可维护性。
 
-问题的核心原因有两个：
-
-1.  **跨线程数据库访问**: `main.py` 在启动 TUI 前调用了 `view_model.initialize()`，这在主线程中初始化了 SQLite 连接。随后，TUI 在自己的线程中通过 `_load_page` 再次尝试使用这个连接，导致了线程安全冲突，引发了死锁或崩溃。
-2.  **资源未释放**: `ui` 命令在执行完毕后，没有关闭 `Engine` 实例。这导致底层的 SQLite 连接等资源没有被释放，使得进程在 TUI 退出后依然“卡住”，无法响应中断信号。
-
-现在，我将生成一个修复计划来解决这些问题。
-
-## fix: 修复 UI 启动时因跨线程数据库访问导致的崩溃和资源未释放导致的挂起问题
-
-### 错误分析
-用户报告 `quipu ui` 命令无法正常启动。具体表现为屏幕短暂闪烁后，UI 未能显示，并且整个进程挂起，无法通过 `Ctrl+C` 中断。
-
-经过分析，定位到两个主要问题：
-1.  **线程不安全的数据库操作**：`main.py` 在主线程中对 `ViewModel` 进行了初始化 (`view_model.initialize()`)，这会建立一个 SQLite 连接。随后，`QuipuUiApp` 在其独立的 TUI 线程中再次尝试通过同一个 `ViewModel` 实例访问数据库。`sqlite3` 模块默认不允许跨线程共享连接对象，这种操作模式导致了底层死锁，使应用在启动的瞬间就崩溃或挂起。
-2.  **Engine 资源泄露**：`main.py` 中的 `ui` 命令函数在创建 `engine` 实例后，没有在任何路径上调用 `engine.close()`。当 TUI 退出后，未关闭的数据库连接等资源导致主进程无法正常终止，表现为卡死且无法响应 `Ctrl+C`。
+## refactor: 重构 tests 目录结构以实现模块化
 
 ### 用户需求
-修复 `quipu ui` 命令，使其能够稳定启动并显示历史图谱，并且在用户退出 UI 后，程序能够干净利落地终止。
+当前 `tests` 目录下的测试文件数量过多，呈现扁平化结构，导致难以快速定位特定模块的测试，增加了维护成本。需要将这些测试文件按照其对应的功能模块（Engine, Runtime, CLI, Integration）进行分组。
 
 ### 评论
-这是一个严重的用户体验问题，阻碍了核心的 TUI 功能。修复这个问题对于确保系统的可用性至关重要。此次修复将遵循“谁创建，谁管理”的资源生命周期原则，确保所有数据加载操作都在 TUI 的生命周期内完成。
+这是一个非常必要的重构。一个结构化的测试套件能够显著提升开发者体验 (DX)，使得代码库在未来更容易扩展和维护。将测试结构与源码结构对齐，是一种行业最佳实践。
 
 ### 目标
-1.  移除在 `main.py` 中对 `ViewModel` 的预初始化调用，确保所有数据库操作都在 TUI 线程内发生。
-2.  为 `ui` 命令中的 `engine` 实例添加 `try...finally` 块，确保无论 UI 如何退出，资源都能被正确释放。
+1.  在 `tests/` 目录下创建 `engine`, `runtime`, `cli`, `integration` 四个子目录。
+2.  将现有的测试文件移动到对应的新目录中。
+3.  对部分测试文件进行重命名，使其职责更清晰。
+4.  确保重构后，`pytest` 仍然能够发现并成功运行所有测试。
 
 ### 基本原理
-本次修复遵循了两个基本原理：
-1.  **并发安全**：将所有与 TUI 相关的数据加载和初始化操作都统一到 TUI 应用自身的生命周期方法中（如 `on_mount`），避免跨线程共享非线程安全的资源（如 `sqlite3.Connection`）。
-2.  **确定性资源管理 (Deterministic Resource Management)**：使用 `try...finally` 结构可以保证，无论 `try` 块中的代码是正常执行完毕还是抛出异常，`finally` 块中的清理代码（如 `engine.close()`）都一定会被执行。这是处理文件句柄、网络连接、数据库连接等资源的最佳实践。
+本次重构遵循**关注点分离 (Separation of Concerns)** 和 **与源码对齐 (Align with Source)** 的原则。
+1.  **`tests/engine/`**: 存放所有与 `quipu-engine` 强相关的测试，包括 `GitDB`、`Engine` 状态机、以及 `GitObject` 和 `SQLite` 存储后端的底层实现。
+2.  **`tests/runtime/`**: 存放所有与 `quipu-runtime` 相关的测试，包括指令解析器 (`Parser`)、指令执行器 (`Executor`) 以及所有 `acts` 插件。
+3.  **`tests/cli/`**: 存放所有与 `quipu-cli` 相关的测试，主要集中在用户界面（TUI, ViewModel）和顶层命令的逻辑。
+4.  **`tests/integration/`**: 存放跨越多个模块的端到端 (E2E) 测试，用于验证系统作为一个整体的行为是否正确。
+
+这种结构使得开发者在修改某个包（如 `quipu-engine`）时，可以轻松地在 `tests/engine/` 目录下找到所有相关的测试。
 
 ### 标签
-#intent/fix #flow/ready #priority/critical 
-#comp/cli #concept/ui #scope/ux 
-#ai/instruct
-#task/domain/ui #task/object/tui-startup #task/action/bug-fix
-#task/state/begin #task/status/active
+#intent/refine #flow/ready #priority/high #comp/tests #scope/dx #ai/brainstorm #task/domain/testing #task/object/directory-structure #task/action/refactor #task/state/begin
 
 ---
 
 ### Script
 
-#### Acts 1: 修复 CLI 入口 (`main.py`)
+#### Acts 1: 创建新的目录结构
 
-首先，我们将修改 `main.py`，移除在启动 TUI 之前的 `view_model.initialize()` 调用，并将整个 UI 运行流程包裹在 `try...finally` 块中以确保 `engine` 被关闭。
-
-~~~~~act
-patch_file packages/quipu-cli/src/quipu/cli/main.py
-~~~~~
-~~~~~python
-    # ViewModel 初始化时会快速检查节点总数
-    view_model.initialize()
-    if view_model.total_nodes == 0:
-        typer.secho("📜 历史记录为空，无需启动 UI。", fg=typer.colors.YELLOW, err=True)
-        ctx.exit(0)
-
-    # 注入 ViewModel 到 UI
-    app_instance = QuipuUiApp(view_model=view_model)
-    result = app_instance.run()
-
-    # 处理 UI 返回结果
-    if result:
-        action, data = result
-
-        if action == "checkout":
-            target_hash = data
-            # 移除 if target_hash in graph 检查，因为 graph 不再被加载
-            # 我们相信从 UI 返回的 hash 是有效的
-            typer.secho(f"\n> TUI 请求检出到: {target_hash[:7]}", err=True)
-            _execute_visit(ctx, engine, target_hash, f"正在导航到 TUI 选定节点: {target_hash[:7]}")
-
-        elif action == "dump":
-            # 直接将内容打印到 stdout，方便用户通过管道处理 (e.g. quipu ui | less)
-            print(data)
-            ctx.exit(0)
-~~~~~
-~~~~~python
-    # ViewModel 初始化时会快速检查节点总数
-    # view_model.initialize() # <--- 移除此处的预初始化，让 TUI 自己在其线程中完成
-    
-    engine_closed = False
-    try:
-        # ViewModel 初始化时会快速检查节点总数
-        view_model.initialize()
-        if view_model.total_nodes == 0:
-            typer.secho("📜 历史记录为空，无需启动 UI。", fg=typer.colors.YELLOW, err=True)
-            ctx.exit(0)
-
-        # 注入 ViewModel 到 UI
-        app_instance = QuipuUiApp(view_model=view_model)
-        result = app_instance.run()
-
-        # 处理 UI 返回结果
-        if result:
-            action, data = result
-
-            if action == "checkout":
-                target_hash = data
-                # 我们相信从 UI 返回的 hash 是有效的
-                typer.secho(f"\n> TUI 请求检出到: {target_hash[:7]}", err=True)
-                _execute_visit(ctx, engine, target_hash, f"正在导航到 TUI 选定节点: {target_hash[:7]}")
-
-            elif action == "dump":
-                # 直接将内容打印到 stdout，方便用户通过管道处理 (e.g. quipu ui | less)
-                print(data)
-                ctx.exit(0)
-                
-    finally:
-        if engine and not engine_closed:
-            engine.close()
-            engine_closed = True
-~~~~~
-
-#### Acts 2: 移除 TUI 中冗余的初始化调用
-
-由于我们在 `main.py` 中保留了 `view_model.initialize()` 的调用（但在 `try...finally` 块内），现在需要移除 `tui.py` 中冗余的调用，以确保初始化只发生一次。
+首先，我们在 `tests` 目录下创建新的子目录，用于存放分组后的测试文件。
 
 ~~~~~act
-patch_file packages/quipu-cli/src/quipu/cli/tui.py
+write_file
 ~~~~~
-~~~~~python
-    def on_mount(self) -> None:
-        """Initializes the view model and loads the first page of data."""
-        self.view_model.initialize()
-        self._load_page(1)
+~~~~~path
+tests/engine/.gitkeep
 ~~~~~
-~~~~~python
-    def on_mount(self) -> None:
-        """Loads the first page of data."""
-        # The ViewModel is now initialized in main.py before the app is run.
-        self._load_page(1)
+~~~~~content
+
 ~~~~~
+
+~~~~~act
+write_file
+~~~~~
+~~~~~path
+tests/runtime/.gitkeep
+~~~~~
+~~~~~content
+
+~~~~~
+
+~~~~~act
+write_file
+~~~~~
+~~~~~path
+tests/runtime/acts/.gitkeep
+~~~~~
+~~~~~content
+
+~~~~~
+
+~~~~~act
+write_file
+~~~~~
+~~~~~path
+tests/cli/.gitkeep
+~~~~~
+~~~~~content
+
+~~~~~
+
+~~~~~act
+write_file
+~~~~~
+~~~~~path
+tests/integration/.gitkeep
+~~~~~
+~~~~~content
+
+~~~~~
+
+#### Acts 2: 移动并重构测试文件
+
+接下来，我们将逐一移动并酌情重命名现有的测试文件。为了操作的原子性，这里使用 `run_command` 指令 `mv` 来执行。
+
+##### 移动 Engine 测试
+
+~~~~~act
+run_command
+~~~~~
+~~~~~bash
+mv tests/test_engine.py tests/engine/test_engine.py
+mv tests/test_engine_memory.py tests/engine/test_engine_memory.py
+mv tests/test_git_db.py tests/engine/test_git_db.py
+mv tests/test_head_and_root.py tests/engine/test_head_tracking.py
+mv tests/test_storage_reader.py tests/engine/test_git_reader.py
+mv tests/test_storage_writer.py tests/engine/test_git_writer.py
+mv tests/test_branching.py tests/engine/test_branching.py
+~~~~~
+
+##### 移动 SQLite 相关测试 (归入 Engine)
+
+~~~~~act
+run_command
+~~~~~
+~~~~~bash
+mkdir -p tests/engine/sqlite
+mv tests/test_sqlite_reader.py tests/engine/sqlite/test_reader.py
+mv tests/test_sqlite_reader_integrity.py tests/engine/sqlite/test_reader_integrity.py
+mv tests/test_sqlite_writer.py tests/engine/sqlite/test_writer.py
+mv tests/test_sqlite_writer_idempotency.py tests/engine/sqlite/test_writer_idempotency.py
+mv tests/test_hydration.py tests/engine/sqlite/test_hydrator.py
+~~~~~
+
+##### 移动 Runtime 测试
+
+~~~~~act
+run_command
+~~~~~
+~~~~~bash
+mv tests/test_ops.py tests/runtime/test_parser_and_basic_acts.py
+mv tests/test_arg_strategy.py tests/runtime/test_arg_strategy.py
+mv tests/test_auto_detect.py tests/runtime/test_parser_auto_detect.py
+mv tests/test_plugins.py tests/runtime/test_plugin_loader.py
+mv tests/test_plugin_resilience.py tests/runtime/test_plugin_resilience.py
+~~~~~
+
+##### 移动 Acts 插件测试 (归入 Runtime)
+
+~~~~~act
+run_command
+~~~~~
+~~~~~bash
+mv tests/test_check.py tests/runtime/acts/test_check.py
+mv tests/test_git.py tests/runtime/acts/test_git.py
+mv tests/test_read.py tests/runtime/acts/test_read.py
+~~~~~
+
+##### 移动 CLI 和 UI 测试
+
+~~~~~act
+run_command
+~~~~~
+~~~~~bash
+mv tests/test_ui_logic.py tests/cli/test_tui_logic.py
+mv tests/test_ui_reachability.py tests/cli/test_tui_reachability.py
+mv tests/test_view_model.py tests/cli/test_view_model.py
+mv tests/test_navigation.py tests/cli/test_navigation_commands.py
+~~~~~
+
+##### 移动集成测试
+
+~~~~~act
+run_command
+~~~~~
+~~~~~bash
+mv tests/test_integration_v2.py tests/integration/test_cli_workflow.py
+mv tests/test_storage_integration.py tests/integration/test_storage_selection.py
+mv tests/test_isolation.py tests/integration/test_workspace_isolation.py
+mv tests/test_root_invariance.py tests/integration/test_workspace_invariance.py
+mv tests/test_idempotent_node.py tests/integration/test_idempotent_node.py
+~~~~~
+
+#### Acts 3: 配置文件检查
+
+`pyproject.toml` 中的 `tool.pytest.ini_options` 已经配置了 `pythonpath`，可以正确找到 `src` 目录下的模块，因此本次文件移动**不需要**修改配置文件。`pytest` 会自动发现新路径下的 `test_*.py` 文件。
 
 ### 下一步建议
-在修复了启动问题后，我们可以继续完成原计划中的 `Quipu UI 性能优化与功能增强` 任务的剩余部分，例如实现私有数据显示和完善分页的边界反馈。
+执行完此计划后，可以运行 `pytest tests/` 来验证所有的测试是否都能被正确发现并成功运行。确认无误后，这标志着本次重构任务的完成。
