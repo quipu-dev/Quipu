@@ -2,3 +2,4 @@
 -e packages/quipu-engine
 -e packages/quipu-runtime
 -e packages/quipu-cli
+-e packages/quipu-common

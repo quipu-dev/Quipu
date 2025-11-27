@@ -15,6 +15,7 @@ DEV_DIR = ENVS_DIR / "dev"
 
 PACKAGES = [
     "packages/quipu-interfaces",
+    "packages/quipu-common",
     "packages/quipu-engine",
     "packages/quipu-runtime",
     "packages/quipu-cli",

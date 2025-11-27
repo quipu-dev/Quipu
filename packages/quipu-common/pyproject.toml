@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "quipu-engine"
+name = "quipu-common"
 version = "0.1.0"
 authors = [
   { name="doucx", email="doucxldh@gmail.com" },
 ]
-description = "The state and history engine for Quipu, powered by Git plumbing."
+description = "Common utilities and helpers for the Quipu ecosystem."
 requires-python = ">=3.8"
 license = { text = "Apache-2.0" }
 classifiers = [
@@ -16,15 +16,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "quipu-interfaces",
-    "quipu-common",
-    "pyyaml>=6.0",
-]
-
-[tool.uv.sources]
-quipu-interfaces = { workspace = true }
-quipu-common = { workspace = true }
+dependencies = []
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -20,6 +20,7 @@ dependencies = [
     "quipu-interfaces",
     "quipu-engine",
     "quipu-runtime",
+    "quipu-common",
     "typer>=0.9.0",
     "textual>=0.58.0",
 ]
@@ -28,6 +29,7 @@ dependencies = [
 quipu-interfaces = { workspace = true }
 quipu-engine = { workspace = true }
 quipu-runtime = { workspace = true }
+quipu-common = { workspace = true }
 
 [project.scripts]
 quipu = "quipu.cli.main:app"
