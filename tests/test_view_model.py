@@ -68,43 +68,39 @@ class TestGraphViewModel:
 
         vm.initialize()
 
-        assert vm.total_count == 10
+        assert vm.total_nodes == 10
         assert vm.ancestor_set == {"h3", "h2", "h1"}
-        assert vm.offset == 0
+        assert vm.current_page == 0
 
     def test_pagination_flow(self, sample_nodes):
         """测试分页加载逻辑是否正确。"""
         reader = MockHistoryReader(sample_nodes)
-        vm = GraphViewModel(reader, current_hash=None)
+        # 10 nodes, page_size=4 -> 3 pages
+        vm = GraphViewModel(reader, current_hash=None, page_size=4)
         vm.initialize()
 
-        # 初始状态
-        assert vm.has_more_data() is True
-        assert vm.offset == 0
+        assert vm.total_pages == 3
 
         # 加载第一页
-        page1 = vm.load_next_page(size=4)
+        page1 = vm.load_page(1)
         assert len(page1) == 4
         assert page1[0].output_tree == "h9"  # Newest
-        assert vm.offset == 4
-        assert vm.has_more_data() is True
+        assert vm.current_page == 1
 
         # 加载第二页
-        page2 = vm.load_next_page(size=4)
+        page2 = vm.load_page(2)
         assert len(page2) == 4
         assert page2[0].output_tree == "h5"
-        assert vm.offset == 8
-        assert vm.has_more_data() is True
+        assert vm.current_page == 2
 
         # 加载最后一页 (不完整)
-        page3 = vm.load_next_page(size=4)
+        page3 = vm.load_page(3)
         assert len(page3) == 2
         assert page3[0].output_tree == "h1"
-        assert vm.offset == 10
-        assert vm.has_more_data() is False
+        assert vm.current_page == 3
 
-        # 尝试再次加载
-        page4 = vm.load_next_page(size=4)
+        # 尝试加载越界页面
+        page4 = vm.load_page(4)
         assert len(page4) == 0
 
     def test_is_reachable(self, sample_nodes):
