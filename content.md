@@ -1,106 +1,43 @@
-好的，明白了。我将只更新 `tests/helpers.py` 文件，为 `InMemoryHistoryManager` 实现缺失的接口方法。
+好的。
 
-### fix(tests): 为 InMemoryHistoryManager 实现新接口
+### fix(tests): 修复因 HistoryReader 接口变更导致的测试失败
 
-### 错误分析
-`InMemoryHistoryManager` 未实现 `HistoryReader` 接口中新增的 `get_descendant_output_trees` 和 `get_node_position` 方法，导致依赖它的 `memory_engine` 相关测试全部失败。
+#### 评论
+本次提交修复了在 `HistoryReader` 接口中添加 `get_descendant_output_trees` 和 `get_node_position` 方法后，导致整个测试套件大面积失败的问题。
 
-### 用户需求
-修复 `tests/engine/test_engine_memory.py` 中的测试错误。
+#### 目标
+-   使所有测试用例恢复并通过。
 
-### 目标
-在 `InMemoryHistoryManager` 中添加 `get_descendant_output_trees` 和 `get_node_position` 方法的内存实现。
+#### 基本原理
+-   在测试使用的模拟类 `InMemoryHistoryManager` (用于 `engine` 测试) 和 `MockHistoryReader` (用于 `cli` 测试) 中，实现了新增的抽象方法。
+-   更新了部分 `cli` 测试用例的断言逻辑，以匹配新的双向可达性模型（祖先+后代）。
 
-### 标签
-#intent/fix #flow/ready #priority/critical #comp/tests #scope/dx #ai/instruct #task/domain/testing #task/object/test-suite #task/action/bug-fix #task/state/continue
+#### 标签
+#intent/fix #flow/done #priority/critical #comp/tests #scope/dx #ai/instruct #task/domain/testing #task/object/test-suite #task/action/bug-fix #task/state/end
 
 ---
 
 ### Script
 
-#### Acts 1: 更新 `tests/helpers.py`
+#### Acts 1: 提交测试修复
 
 ~~~~~act
-patch_file
+git_add
 tests/helpers.py
+tests/cli/test_view_model.py
+tests/cli/test_tui_reachability.py
 ~~~~~
-~~~~~python
-    def find_nodes(
-        self,
-        summary_regex: Optional[str] = None,
-        node_type: Optional[str] = None,
-        limit: int = 10,
-    ) -> List[QuipuNode]:
-        """
-        内存后端的节点查找实现，通过在内存中过滤所有节点来工作。
-        """
-        candidates = self.load_all_nodes()
-
-        if summary_regex:
-            try:
-                pattern = re.compile(summary_regex, re.IGNORECASE)
-                candidates = [node for node in candidates if pattern.search(node.summary)]
-            except re.error:
-                return []  # 在测试中，无效的正则表达式直接返回空列表
-
-        if node_type:
-            candidates = [node for node in candidates if node.node_type == node_type]
-
-        # 按时间戳降序排序
-        candidates.sort(key=lambda n: n.timestamp, reverse=True)
-
-        return candidates[:limit]
+~~~~~act
+git_commit
 ~~~~~
-~~~~~python
-    def find_nodes(
-        self,
-        summary_regex: Optional[str] = None,
-        node_type: Optional[str] = None,
-        limit: int = 10,
-    ) -> List[QuipuNode]:
-        """
-        内存后端的节点查找实现，通过在内存中过滤所有节点来工作。
-        """
-        candidates = self.load_all_nodes()
+~~~~~
+fix(tests): 修复因 HistoryReader 接口变更导致的测试失败
 
-        if summary_regex:
-            try:
-                pattern = re.compile(summary_regex, re.IGNORECASE)
-                candidates = [node for node in candidates if pattern.search(node.summary)]
-            except re.error:
-                return []  # 在测试中，无效的正则表达式直接返回空列表
+在 `HistoryReader` 接口中添加 `get_descendant_output_trees` 和
+`get_node_position` 两个抽象方法后，所有依赖该接口的测试模拟类
+（`InMemoryHistoryManager` 和 `MockHistoryReader`）都未能提供实现，
+导致 `TypeError` 和大面积测试失败。
 
-        if node_type:
-            candidates = [node for node in candidates if node.node_type == node_type]
-
-        # 按时间戳降序排序
-        candidates.sort(key=lambda n: n.timestamp, reverse=True)
-
-        return candidates[:limit]
-
-    def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        """内存实现：通过广度优先搜索遍历子节点。"""
-        descendants = set()
-        queue = []
-
-        if start_output_tree_hash in self.db.nodes:
-            queue.append(self.db.nodes[start_output_tree_hash])
-
-        while queue:
-            current_node = queue.pop(0)
-            for child in current_node.children:
-                c_hash = child.output_tree
-                if c_hash not in descendants:
-                    descendants.add(c_hash)
-                    if c_hash in self.db.nodes:
-                        queue.append(self.db.nodes[c_hash])
-        return descendants
-
-    def get_node_position(self, output_tree_hash: str) -> int:
-        """内存实现：排序并查找索引。"""
-        all_nodes = sorted(self.db.nodes.values(), key=lambda n: n.timestamp, reverse=True)
-        for i, node in enumerate(all_nodes):
-            if node.output_tree == output_tree_hash:
-                return i
-        return -1
+本次提交为这两个模拟类添加了相应的方法实现，并更新了受影响的
+测试用例的断言逻辑，以反映新的双向可达性模型。
 ~~~~~
