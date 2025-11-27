@@ -1,80 +1,68 @@
-## fix: 修复 TUI 光标定位方法调用错误
+好的。
 
-### 错误分析
-日志明确指出了问题所在：
-`AttributeError: 'DataTable' object has no attribute 'is_valid_row_key'. Did you mean: 'is_valid_row_index'?`
+我将创建一个 Git 提交来固化这些修复。
 
-我在之前的修改中使用了 `table.is_valid_row_key(row_key)`，这是一个不存在的方法。在 Textual 的 `DataTable` API 中，用于检查 key 是否有效的标准方法实际上是 `table.is_valid_row_index(table.get_row_index(key))`，或者更直接地，在调用 `get_row_index(key)` 时捕获 `KeyError` 异常（Textual 文档推荐的做法是假设 key 存在，不存在会抛异常）。
+### feat(cli, engine): 修复 UI 可达性分析及光标定位回归问题
 
-### 用户需求
-修复光标无法定位的 Bug。
+#### 评论
+本次提交解决了在实现双向可达性（祖先+后代）后引入的一系列 UI 回归问题，显著提升了 TUI 在历史导航中的稳定性和用户体验。
 
-### 目标
-修正 `_focus_current_node` 中错误的 API 调用。
+#### 目标
+-   修复 `quipu ui` 启动时光标不自动聚焦在 `HEAD` 节点的问题。
+-   修复当 `HEAD` 是旧节点时，图谱中出现不正确的强制连线（视觉穿插）的问题。
+-   确保 UI 在任何情况下都能正确渲染图谱并准确定位。
 
-### 基本原理
-将错误的 `is_valid_row_key` 检查替换为 `try-except KeyError` 结构，这更加 Pythonic 且符合 Textual 的设计模式。
+#### 基本原理
+1.  **双向可达性**:
+    -   在 `HistoryReader` 接口中增加了 `get_descendant_output_trees` 方法，与现有的 `get_ancestor_output_trees` 对应。
+    -   `ViewModel` 现在会合并祖先和后代集合，形成完整的“可达”分支，解决了从旧节点查看新节点时高亮不正确的问题。
 
-### 标签
-#intent/fix #flow/ready #priority/critical #comp/cli #scope/ux #ai/instruct #task/domain/ui #task/object/reachability #task/action/bug-fix #task/state/end
+2.  **精准页面定位**:
+    -   在 `HistoryReader` 接口中增加了 `get_node_position` 方法，用于查询节点在全局时间线上的排名。
+    -   UI 启动时，`ViewModel` 使用此方法计算出 `HEAD` 节点所在的正确页码，并直接加载该页面，解决了 `HEAD` 在后续页面时无法显示的问题。
+
+3.  **光标聚焦与渲染修复**:
+    -   移除了 TUI 渲染逻辑中导致视觉穿插的强制连线代码。
+    -   修正了 `DataTable` 中一个错误的 API 调用 (`is_valid_row_key`)。
+    -   恢复并强化了光标定位后的状态同步逻辑，确保节点被正确选中并高亮。
+
+#### 标签
+#intent/fix #flow/done #priority/critical #comp/cli #comp/engine #comp/interfaces #scope/ux #ai/instruct #task/domain/ui #task/object/reachability #task/action/bug-fix #task/state/end
 
 ---
 
 ### Script
 
-#### Acts 1: 修正 API 调用
+#### Acts 1: 提交变更
 
 ~~~~~act
-patch_file
+git_add
+packages/quipu-interfaces/src/quipu/core/storage.py
+packages/quipu-engine/src/quipu/core/git_object_storage.py
+packages/quipu-engine/src/quipu/core/sqlite_storage.py
+packages/quipu-cli/src/quipu/cli/view_model.py
 packages/quipu-cli/src/quipu/cli/tui.py
 ~~~~~
-~~~~~python
-        try:
-            row_key = str(target_node.filename)
-            logger.debug(f"DEBUG: Target row key: {row_key}")
-
-            if table.is_valid_row_key(row_key):
-                row_index = table.get_row_index(row_key)
-                logger.debug(f"DEBUG: Row index found: {row_index}. Setting cursor.")
-                
-                # 1. 设置视觉光标
-                table.cursor_coordinate = Coordinate(row=row_index, column=0)
-                
-                # 2. 同步逻辑状态 (防止事件未触发)
-                self.current_selected_node = target_node
-                
-                # 3. 刷新关联视图
-                if self.is_split_mode:
-                    self._update_content_view()
-            else:
-                logger.warning(f"DEBUG: Row key {row_key} is invalid in DataTable (maybe filtered?).")
-        except Exception as e:
-            logger.error(f"DEBUG: Failed to focus current node: {e}", exc_info=True)
+~~~~~act
+git_commit
 ~~~~~
-~~~~~python
-        try:
-            row_key = str(target_node.filename)
-            logger.debug(f"DEBUG: Target row key: {row_key}")
+~~~~~
+feat(cli, engine): 修复 UI 可达性分析及光标定位回归问题
 
-            # Textual 的 DataTable API 中，get_row_index 会在 key 不存在时抛出 KeyError
-            # 或者 RowKeyError，具体取决于版本，但 KeyError 是基类
-            try:
-                row_index = table.get_row_index(row_key)
-                logger.debug(f"DEBUG: Row index found: {row_index}. Setting cursor.")
-                
-                # 1. 设置视觉光标
-                table.cursor_coordinate = Coordinate(row=row_index, column=0)
-                
-                # 2. 同步逻辑状态 (防止事件未触发)
-                self.current_selected_node = target_node
-                
-                # 3. 刷新关联视图
-                if self.is_split_mode:
-                    self._update_content_view()
-            except LookupError:
-                 # LookupError 捕获 RowKeyError 等
-                logger.warning(f"DEBUG: Row key {row_key} not found in DataTable.")
+本次提交解决了在实现双向可达性（祖先+后代）后引入的一系列 UI 回归问题，显著提升了 TUI 在历史导航中的稳定性和用户体验。
 
-        except Exception as e:
-            logger.error(f"DEBUG: Failed to focus current node: {e}", exc_info=True)
+主要修复包括：
+
+1.  **双向可达性**:
+    -   在 `HistoryReader` 接口中增加了 `get_descendant_output_trees` 方法。
+    -   `ViewModel` 现在会合并祖先和后代集合，形成完整的“可达”分支。
+
+2.  **精准页面定位**:
+    -   在 `HistoryReader` 接口中增加了 `get_node_position` 方法，用于查询节点在全局时间线上的排名。
+    -   UI 启动时会计算并直接加载 `HEAD` 节点所在的正确页码。
+
+3.  **光标聚焦与渲染修复**:
+    -   移除了 TUI 渲染逻辑中导致视觉穿插的强制连线代码。
+    -   修正了 `DataTable` 中一个错误的 API 调用 (`is_valid_row_key`)，并替换为更稳健的 `try/except LookupError` 结构。
+    -   恢复并强化了光标定位后的状态同步逻辑，确保节点被正确选中并高亮。
 ~~~~~
