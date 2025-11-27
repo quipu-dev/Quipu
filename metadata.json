@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "test(engine): 验证 SQLite 写入器在幂等操作下的父子关系正确性", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764207953.7816002, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "refactor(engine)+test: 显式传递父节点以修复幂等操作的父子关系", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764208035.973851, "duration_ms": 0}}

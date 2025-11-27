@@ -1,148 +1,70 @@
-是的，**非常有必要**。
+好的，测试已经验证了我们的重构是成功的。现在，我将为你创建这次重构和测试的提交。
 
-之前的 `test_sqlite_reader_integrity.py` 是**防御性**测试（测试“如果数据坏了，读取器怎么办”），而我们需要一个**预防性**测试（测试“确保写入器不会把数据写坏”）。
-
-幂等操作导致父节点指向自己的问题是一个典型的**逻辑设计缺陷**，如果缺乏测试保护，未来很容易因为“代码清理”或“优化”而再次引入（例如，有人可能会觉得传递 `parent` 对象太麻烦，又改回 `get_commit_by_output_tree`）。
-
-## test(engine): 验证 SQLite 写入器在幂等操作下的父子关系正确性
+## refactor(engine)+test: 显式传递父节点以修复幂等操作的父子关系
 
 ### 错误分析
-在修复前，当连续创建两个具有相同 `output_tree` 的节点时，第二个节点在 SQLite 中的父节点会被错误地记录为它自己。
-我们需要验证修复后的逻辑：即使 `output_tree` 相同，第二个节点也应正确指向第一个节点。
+在 `quipu-engine` 的写入流程中，`SQLiteHistoryWriter` 依赖于通过 `output_tree` 哈希反查 Git 来确定父节点。这个机制在幂等操作（即 `input_tree == output_tree`）时会失效，因为 Git 中存在多个 Commit 指向同一个 Tree。这导致写入器错误地将新创建的节点记录为它自己的父节点，在数据库中形成自引用边，从而破坏了历史图谱的结构。
 
 ### 用户需求
-创建一个测试，模拟连续两次写入相同内容（幂等操作），并验证 SQLite `edges` 表中的父子关系是线性的（A -> B），而不是自引用的（B -> B）。
+为修复幂等操作 bug 的重构代码和新增的单元测试创建一个 Git 提交。
 
 ### 评论
-这个测试将直接验证 `GitObjectHistoryWriter` 和 `SQLiteHistoryWriter` 之间的 `parent` 传递机制是否工作正常。
+这是一个关键的架构级修复。通过将“隐式反查”改为“显式传递”，我们从根本上消除了数据流中的歧义性，确保了无论操作类型如何，历史图谱的父子关系都能被准确无误地记录下来。新增的单元测试将为这个核心逻辑提供长期的保障。
 
 ### 目标
-创建 `tests/test_sqlite_writer_idempotency.py`。
+将以下变更提交到版本历史中：
+1.  对 `packages/quipu-engine/src/quipu/core/git_object_storage.py` 的修改，使其在返回的 `QuipuNode` 中包含父节点引用。
+2.  对 `packages/quipu-engine/src/quipu/core/sqlite_storage.py` 的修改，使其使用传递来的父节点引用，而不是反查。
+3.  新增测试文件 `tests/test_sqlite_writer_idempotency.py`，用于验证此修复的正确性。
 
 ### 基本原理
-1.  初始化环境。
-2.  创建节点 1 (Commit A, Tree T)。
-3.  创建节点 2 (Commit B, Tree T)。
-4.  查询 SQLite `edges` 表，断言 Commit B 的 parent 是 Commit A。
+通过 `git add` 暂存所有相关文件，然后使用 `git commit` 将这些逻辑上关联的变更作为一个原子单元提交到版本库中。
 
 ### 标签
-#intent/tooling #flow/ready #priority/medium
-#comp/tests #comp/engine #scope/core
+#intent/refine #intent/tooling #flow/done #priority/high
+#comp/engine #comp/tests #concept/state #scope/core
 #ai/instruct
 #task/domain/storage
-#task/object/sqlite-backend
-#task/action/bug-fix
-#task/state/continue
+#task.object/sqlite-backend
+#task.action/bug-fix
+#task/state/end
 
 ---
 
 ### Script
 
-#### Acts 1: 创建幂等性写入测试
+#### Acts 1: 提交重构与测试
 
 ~~~~~act
-write_file
+git_add
 ~~~~~
-~~~~~path
+~~~~~text
+packages/quipu-engine/src/quipu/core/git_object_storage.py
+packages/quipu-engine/src/quipu/core/sqlite_storage.py
 tests/test_sqlite_writer_idempotency.py
 ~~~~~
-~~~~~python
-import pytest
-import time
-import subprocess
-from pathlib import Path
-from typing import Tuple
 
-from quipu.core.sqlite_storage import SQLiteHistoryWriter
-from quipu.core.git_object_storage import GitObjectHistoryWriter
-from quipu.core.sqlite_db import DatabaseManager
-from quipu.core.git_db import GitDB
+~~~~~act
+git_commit
+~~~~~
+~~~~~text
+refactor(engine)+test: 显式传递父节点以修复幂等操作的父子关系
 
+重构了 `quipu-engine` 的写入流程，以解决在幂等操作中父子关系记录错误的问题。
 
-@pytest.fixture
-def repo_with_sqlite_db(tmp_path):
-    """
-    创建一个包含初始化 Git 仓库和 SQLite 数据库的临时环境。
-    (从 test_sqlite_reader_integrity.py 复制并简化)
-    """
-    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Test User"], cwd=tmp_path, check=True)
+问题根源在于 `SQLiteHistoryWriter` 依赖 `output_tree` 反查父节点，
+当 `input_tree == output_tree` 时，此反查会错误地返回当前节点自身，
+导致在数据库中形成自引用边，破坏了历史图谱。
 
-    git_db = GitDB(tmp_path)
-    db_manager = DatabaseManager(tmp_path)
-    db_manager.init_schema()
+本次修改通过以下方式解决此问题：
+1. `GitObjectHistoryWriter` 现在会在返回的 `QuipuNode` 对象中显式地
+   附加一个包含父 Commit 哈希的 `parent` 引用。
+2. `SQLiteHistoryWriter` 被修改为直接使用这个传递来的 `parent`
+   引用来记录边关系，完全移除了不稳定的反查逻辑。
 
-    yield db_manager, git_db
-
-    db_manager.close()
-
-
-def test_writer_handles_idempotent_operations_correctly(repo_with_sqlite_db):
-    """
-    ## test: Verify parent-child linkage during idempotent operations.
-
-    When two consecutive nodes produce the exact same Output Tree Hash (idempotent operation),
-    the SQLite writer must ensure that the second node points to the first node as its parent,
-    rather than pointing to itself (self-loop) or getting confused by the identical tree hash.
-    """
-    db_manager, git_db = repo_with_sqlite_db
-    
-    # 1. Initialize the stack
-    git_writer = GitObjectHistoryWriter(git_db)
-    sqlite_writer = SQLiteHistoryWriter(git_writer, db_manager)
-
-    # 2. Get initial state (Genesis)
-    genesis_tree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-    
-    # 3. Create Node 1 (State A)
-    # Since we are not actually changing files in the workdir, we manually specify input/output trees.
-    # We simulate a "change" by creating a tree manually.
-    
-    # Create a dummy file blob
-    blob_hash = git_db.hash_object(b"some content")
-    # Create a tree containing that blob
-    tree_hash_a = git_db.mktree(f"100644 blob {blob_hash}\tfile.txt")
-    
-    node_1 = sqlite_writer.create_node(
-        node_type="plan",
-        input_tree=genesis_tree,
-        output_tree=tree_hash_a,
-        content="Plan 1",
-        summary_override="First Operation"
-    )
-    commit_1 = node_1.filename.name
-    
-    # 4. Create Node 2 (State A -> State A) - Idempotent!
-    # Input tree is Node 1's output. Output tree is STILL Node 1's output.
-    node_2 = sqlite_writer.create_node(
-        node_type="plan",
-        input_tree=tree_hash_a,
-        output_tree=tree_hash_a, # Same tree!
-        content="Plan 2 (Idempotent)",
-        summary_override="Second Operation (Idempotent)"
-    )
-    commit_2 = node_2.filename.name
-
-    assert commit_1 != commit_2, "Two distinct commits should be created even if trees are identical"
-
-    # 5. Verify edges in SQLite
-    conn = db_manager._get_conn()
-    cursor = conn.execute("SELECT parent_hash FROM edges WHERE child_hash = ?", (commit_2,))
-    row = cursor.fetchone()
-    
-    assert row is not None, "Edge for Node 2 should exist"
-    parent_hash_in_db = row[0]
-    
-    # 6. Assertions
-    assert parent_hash_in_db != commit_2, "CRITICAL: Node 2 should NOT be its own parent (Self-Loop detected!)"
-    assert parent_hash_in_db == commit_1, "Node 2 should point to Node 1 as parent"
-    
-    print(f"\nVerified: {commit_2[:7]} (parent: {parent_hash_in_db[:7]}) -> {commit_1[:7]}")
+新增了 `test_sqlite_writer_idempotency.py` 单元测试，专门用于
+验证在连续进行幂等操作时，父子链能够被正确地线性记录。
 ~~~~~
 
 ### 下一步建议
-
-执行测试：`pytest tests/test_sqlite_writer_idempotency.py`
-
-如果测试通过，我们就可以放心地提交这个重构了。
+这个关于 SQLite 存储后端的 bug 修复任务已经完成。现在 `engine` 层的稳定性和数据一致性得到了显著提升。我们可以放心地继续进行 `quipu ui` 的性能优化工作了。
