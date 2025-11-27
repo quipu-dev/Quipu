@@ -15,10 +15,12 @@ class MockHistoryReader(HistoryReader):
         self,
         nodes: List[QuipuNode],
         ancestors: Set[str] = None,
+        descendants: Set[str] = None,
         private_data: dict[str, str] = None,
     ):
         self._nodes = sorted(nodes, key=lambda n: n.timestamp, reverse=True)
         self._ancestors = ancestors or set()
+        self._descendants = descendants or set()
         self._private_data = private_data or {}
 
     def get_node_count(self) -> int:
@@ -29,6 +31,15 @@ class MockHistoryReader(HistoryReader):
 
     def get_ancestor_output_trees(self, start_output_tree_hash: str) -> Set[str]:
         return self._ancestors
+
+    def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:
+        return self._descendants
+
+    def get_node_position(self, output_tree_hash: str) -> int:
+        for i, node in enumerate(self._nodes):
+            if node.output_tree == output_tree_hash:
+                return i
+        return -1
 
     def get_private_data(self, node_commit_hash: str) -> Optional[str]:
         return self._private_data.get(node_commit_hash)
@@ -60,16 +71,19 @@ def sample_nodes():
 
 
 class TestGraphViewModel:
-    def test_initialization(self, sample_nodes):
-        """测试 ViewModel 初始化是否正确获取总数和可达性集合。"""
-        ancestors = {"h3", "h2", "h1"}
-        reader = MockHistoryReader(sample_nodes, ancestors=ancestors)
-        vm = GraphViewModel(reader, current_output_tree_hash="h3")
+    def test_initialization_and_reachability(self, sample_nodes):
+        """测试 ViewModel 初始化是否正确计算可达性集合。"""
+        ancestors = {"h2", "h1"}
+        descendants = {"h4", "h5"}
+        current_hash = "h3"
+        reader = MockHistoryReader(sample_nodes, ancestors=ancestors, descendants=descendants)
+        vm = GraphViewModel(reader, current_output_tree_hash=current_hash)
 
         vm.initialize()
 
         assert vm.total_nodes == 10
-        assert vm.ancestor_set == {"h3", "h2", "h1"}
+        expected_reachable = {"h1", "h2", "h3", "h4", "h5"}
+        assert vm.reachable_set == expected_reachable
         assert vm.current_page == 0
 
     def test_pagination_flow(self, sample_nodes):
@@ -105,13 +119,16 @@ class TestGraphViewModel:
 
     def test_is_reachable(self, sample_nodes):
         """测试可达性检查逻辑。"""
-        ancestors = {"h9", "h8"}  # current is h9, parent is h8
-        reader = MockHistoryReader(sample_nodes, ancestors=ancestors)
-        vm = GraphViewModel(reader, current_output_tree_hash="h9")
+        ancestors = {"h8"}
+        descendants = {"h10"}
+        current_hash = "h9"
+        reader = MockHistoryReader(sample_nodes, ancestors=ancestors, descendants=descendants)
+        vm = GraphViewModel(reader, current_output_tree_hash=current_hash)
         vm.initialize()
 
         assert vm.is_reachable("h9") is True  # Self
         assert vm.is_reachable("h8") is True  # Ancestor
+        assert vm.is_reachable("h10") is True  # Descendant
         assert vm.is_reachable("h1") is False  # Unreachable
 
     def test_is_reachable_no_current_hash(self, sample_nodes):

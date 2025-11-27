@@ -13,8 +13,8 @@ from .test_view_model import MockHistoryReader
 def view_model_factory():
     """A factory to create a GraphViewModel instance with mock data for tests."""
 
-    def _factory(nodes, current_hash=None, ancestors=None, private_data=None):
-        reader = MockHistoryReader(nodes, ancestors=ancestors, private_data=private_data)
+    def _factory(nodes, current_hash=None, ancestors=None, descendants=None, private_data=None):
+        reader = MockHistoryReader(nodes, ancestors=ancestors, descendants=descendants, private_data=private_data)
         vm = GraphViewModel(reader, current_output_tree_hash=current_hash)
         vm.initialize()
         return vm
@@ -29,20 +29,26 @@ class TestUiReachability:
         """
         node_root = QuipuNode("c_root", "root", "null", datetime(2023, 1, 1), Path("f_root"), "plan", summary="Root")
         node_a = QuipuNode("c_a", "a", "root", datetime(2023, 1, 2), Path("f_a"), "plan", summary="A")
-        node_b = QuipuNode("c_b", "b", "root", datetime(2023, 1, 3), Path("f_b"), "plan", summary="B")
+        node_b = QuipuNode("c_b", "b", "root", datetime(2023, 1, 3), Path("f_b"), "plan", summary="B") # Unrelated branch
         node_curr = QuipuNode("c_curr", "curr", "a", datetime(2023, 1, 4), Path("f_curr"), "plan", summary="Current")
+        node_child = QuipuNode("c_child", "child", "curr", datetime(2023, 1, 5), Path("f_child"), "plan", summary="Child")
 
-        ancestors = {"curr", "a", "root"}
+        ancestors = {"a", "root"}
+        descendants = {"child"}
         view_model = view_model_factory(
-            [node_root, node_a, node_b, node_curr], current_hash="curr", ancestors=ancestors
+            [node_root, node_a, node_b, node_curr, node_child],
+            current_hash="curr",
+            ancestors=ancestors,
+            descendants=descendants,
         )
         app = QuipuUiApp(work_dir=Path("."))
         app.view_model = view_model
 
-        assert app.view_model.is_reachable("curr") is True
-        assert app.view_model.is_reachable("a") is True
-        assert app.view_model.is_reachable("root") is True
-        assert app.view_model.is_reachable("b") is False
+        assert app.view_model.is_reachable("curr") is True  # Self
+        assert app.view_model.is_reachable("a") is True  # Ancestor
+        assert app.view_model.is_reachable("root") is True  # Ancestor
+        assert app.view_model.is_reachable("child") is True  # Descendant
+        assert app.view_model.is_reachable("b") is False  # Unreachable
 
     def test_filter_unreachable_nodes_in_populate(self, view_model_factory):
         """

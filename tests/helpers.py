@@ -203,3 +203,29 @@ class InMemoryHistoryManager(HistoryReader, HistoryWriter):
         candidates.sort(key=lambda n: n.timestamp, reverse=True)
 
         return candidates[:limit]
+
+    def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:
+        """内存实现：通过广度优先搜索遍历子节点。"""
+        descendants = set()
+        queue = []
+
+        if start_output_tree_hash in self.db.nodes:
+            queue.append(self.db.nodes[start_output_tree_hash])
+
+        while queue:
+            current_node = queue.pop(0)
+            for child in current_node.children:
+                c_hash = child.output_tree
+                if c_hash not in descendants:
+                    descendants.add(c_hash)
+                    if c_hash in self.db.nodes:
+                        queue.append(self.db.nodes[c_hash])
+        return descendants
+
+    def get_node_position(self, output_tree_hash: str) -> int:
+        """内存实现：排序并查找索引。"""
+        all_nodes = sorted(self.db.nodes.values(), key=lambda n: n.timestamp, reverse=True)
+        for i, node in enumerate(all_nodes):
+            if node.output_tree == output_tree_hash:
+                return i
+        return -1
