@@ -29,12 +29,7 @@
 我们将把所有修改过的文件添加到暂存区，并创建一个内容详尽的提交。
 
 ~~~~~act
-git_add
-tests/engine/test_engine_memory.py
-tests/cli/test_view_model.py
-packages/quipu-engine/src/quipu/core/git_object_storage.py
-tests/engine/test_git_db.py
-tests/helpers.py
+git_add tests/engine/test_engine_memory.py tests/cli/test_view_model.py packages/quipu-engine/src/quipu/core/git_object_storage.py tests/engine/test_git_db.py tests/helpers.py
 ~~~~~
 
 ~~~~~act
