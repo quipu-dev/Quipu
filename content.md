@@ -1,99 +1,37 @@
-Of course. It's crucial to validate our implementation with robust tests.
+你分析得非常到位。测试失败暴露了一个关键问题：**测试用例对 `summary` 字段内容的假设过于严格。**
 
-I will first correct a minor oversight in my previous implementation regarding the handling of empty history with the `--json` flag, and then I will add comprehensive tests to `test_query_commands.py`.
-
-## [WIP] fix+test: 添加 JSON 输出功能的测试用例
+## [WIP] fix(test): 修复测试用例对 `summary` 字段内容的假设过于严格
 
 ### 错误分析
-我之前为 `--json` 功能编写的实现代码中存在一个边缘情况处理不当的问题：当历史记录为空时，使用 `--json` 标志的命令会直接退出，导致 `stdout` 为空。一个空字符串不是有效的 JSON，这会破坏脚本的健壮性。正确的行为应该是输出一个空的 JSON 数组 (`[]`)。
+测试失败的根本原因在于，`engine.capture_drift()` 在生成节点摘要 (`summary`) 时，不仅仅使用了我们传入的 `message` (`"Node 1"` 或 `"Bugfix B"`)，它还会**自动追加一些上下文信息**（例如操作类型和文件变更摘要，如 `Capture: A f1`），以形成一个更具信息量的完整摘要。
+
+而我们的测试代码错误地假设了 `node.summary` 会与传入的 `message` **完全相等** (`==`)。当引擎的行为提供了更丰富的摘要时，这个严格的断言就失败了。
+
+这不是产品代码的 Bug，而是**测试代码的脆弱性 (brittleness)**。一个好的测试应该验证核心意图，而不是对实现的具体细节（如摘要的精确格式）进行过度拟合。
 
 ### 用户需求
-1.  修正 `query.py`，使其在历史记录为空时，`--json` 模式能正确输出 `[]`。
-2.  为 `test_query_commands.py` 添加新的测试用例，以全面覆盖 `--json` 功能，包括：
-    *   验证 JSON 输出的结构和内容是否正确。
-    *   验证在 JSON 模式下 `stderr` 是否干净。
-    *   验证在历史记录为空时，JSON 输出是否为 `[]`。
+修正 `test_query_commands.py` 中的测试用例，使其断言更加健壮，能够适应 `summary` 字段中包含额外上下文信息的情况。
 
 ### 评论
-测试是确保软件质量和未来可维护性的基石。通过为 `--json` 功能添加专门的测试，我们不仅能验证当前实现的正确性，还能防止未来的代码变更无意中破坏这个 API，从而保护了依赖此功能的自动化脚本。
+这是一个典型的测试重构场景。通过将严格的相等性检查 (`==`) 放宽为包含性检查 (`in`)，我们使测试既能验证核心信息的正确性，又不会因为未来对摘要格式的微小改进（例如添加时间戳或作者信息）而轻易失败，从而提升了测试套件的长期可维护性。
 
 ### 目标
-1.  使用 `patch_file` 修正 `query.py` 中处理空历史记录的逻辑。
-2.  使用 `write_file` 完整更新 `test_query_commands.py`，加入针对 `log --json` 和 `find --json` 的新测试，并覆盖其边缘情况。
+1.  修改 `test_log_json_output` 和 `test_find_json_output` 测试函数。
+2.  将其中对 `summary` 字段的断言从 `assert data[0]["summary"] == "..."` 修改为 `assert "..." in data[0]["summary"]`。
 
 ### 基本原理
-我们将首先修复代码，确保其行为的正确性。然后，在测试文件中，我们将利用 `typer.testing.CliRunner` 来捕获 `stdout` 和 `stderr`。对于 JSON 测试，我们将使用 Python 的 `json` 模块来解析 `stdout` 的内容，并对其数据结构、内容和长度进行断言，从而确保 API 的输出是可靠和可预测的。
+我们将采用更灵活的断言策略。我们真正关心的是用户提供的消息是否被成功记录在了摘要中，而不是摘要是否“只有”这个消息。因此，使用 Python 的 `in` 操作符来检查子字符串是否存在，是验证此核心需求的正确且健壮的方法。
 
 ### 标签
-#intent/tooling #flow/ready #priority/high #comp/cli #comp/tests #concept/ui #scope/api #scope/dx #ai/instruct #task/domain/cli #task/object/json-output #task/action/implementation #task/state/continue
+#intent/fix #flow/ready #priority/high #comp/tests #scope/dx #ai/instruct #task/domain/cli #task/object/json-output #task/action/implementation #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 修正 `query.py` 中空历史的 JSON 输出
+#### Acts 1: 修正 `test_query_commands.py` 中的断言逻辑
 
-我们先修正 `log` 和 `find` 命令在历史为空时的行为，确保它们输出一个空的 JSON 数组。
-
-~~~~~act
-patch_file
-packages/quipu-cli/src/quipu/cli/commands/query.py
-~~~~~
-~~~~~python
-            if not graph:
-                if not json_output:
-                    typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
-                raise typer.Exit(0)
-~~~~~
-~~~~~python
-            if not graph:
-                if json_output:
-                    typer.echo("[]")
-                else:
-                    typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
-                raise typer.Exit(0)
-~~~~~
-
-~~~~~act
-patch_file
-packages/quipu-cli/src/quipu/cli/commands/query.py
-~~~~~
-~~~~~python
-        with engine_context(work_dir) as engine:
-            if not engine.history_graph:
-                if not json_output:
-                    typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
-                ctx.exit(0)
-
-            nodes = engine.find_nodes(summary_regex=summary_regex, node_type=node_type, limit=limit)
-
-            if not nodes:
-                if not json_output:
-                    typer.secho("🤷 未找到符合条件的历史节点。", fg=typer.colors.YELLOW, err=True)
-                ctx.exit(0)
-~~~~~
-~~~~~python
-        with engine_context(work_dir) as engine:
-            if not engine.history_graph:
-                if json_output:
-                    typer.echo("[]")
-                else:
-                    typer.secho("📜 历史记录为空。", fg=typer.colors.YELLOW, err=True)
-                ctx.exit(0)
-
-            nodes = engine.find_nodes(summary_regex=summary_regex, node_type=node_type, limit=limit)
-
-            if not nodes:
-                if json_output:
-                    typer.echo("[]")
-                else:
-                    typer.secho("🤷 未找到符合条件的历史节点。", fg=typer.colors.YELLOW, err=True)
-                ctx.exit(0)
-~~~~~
-
-#### Acts 2: 增强 `test_query_commands.py`
-
-现在我们用新的内容覆盖测试文件，加入对 JSON 功能的完整验证。
+我们将使用 `write_file` 来更新整个测试文件，以确保其内容完全正确。
 
 ~~~~~act
 write_file
@@ -150,7 +88,7 @@ def test_log_json_output(runner, quipu_workspace):
     data = json.loads(result.stdout)
     assert isinstance(data, list)
     assert len(data) == 1
-    assert data[0]["summary"] == "Node 1"
+    assert "Node 1" in data[0]["summary"]  # Use 'in' for robust check
     assert "output_tree" in data[0]
     assert "short_hash" in data[0]
     assert "parent" not in data[0]  # Check for excluded field
@@ -168,7 +106,7 @@ def test_find_json_output(runner, quipu_workspace):
     data = json.loads(result.stdout)
     assert isinstance(data, list)
     assert len(data) == 1
-    assert data[0]["summary"] == "Bugfix B"
+    assert "Bugfix B" in data[0]["summary"]  # Use 'in' for robust check
 
 
 def test_log_json_empty(runner, quipu_workspace):
@@ -180,6 +118,4 @@ def test_log_json_empty(runner, quipu_workspace):
 ~~~~~
 
 ### 下一步建议
-我们已经成功地为 `--json` 功能添加了实现和测试。现在这个宏观任务已经完成，是时候将所有相关的变更提交到版本控制中了。
-
-如果你同意，我将生成一个 `[COMMIT]` 计划来结束这个“实现 JSON 输出”的宏观任务。
+我们已经修复了测试用例。现在，请重新运行测试以确认所有问题都已解决。如果测试通过，我将为你生成最终的 `[COMMIT]` 计划，将这个功能及其健壮的测试一同提交。
