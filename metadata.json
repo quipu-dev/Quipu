@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[COMMIT] feat(cli): implement robust `quipu show` command for node inspection", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764324136.4993923, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] fix: 优化 TUI 内容视图的加载性能，解决滚动卡顿问题", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764324684.8607273, "duration_ms": 0}}
