@@ -1,106 +1,53 @@
-好的，我将生成更新测试用例的计划。
+好的，我们已经完成了代码修改和测试验证。现在是时候将这个改进作为一个完整的逻辑单元提交了。
 
-## [WIP] test: 更新查询命令测试以验证 stdout 和 stderr 分离
+我将生成一个 `[COMMIT]` 计划，其中包含 `git add` 和 `git commit` 指令，并提供下一步的建议。
+
+## [COMMIT] fix(cli): 将 log 和 find 命令的数据输出重定向到 stdout
 
 ### 用户需求
-根据上一步的代码修改，需要更新 `tests/cli/test_query_commands.py` 文件中的测试用例。新的测试必须能够区分标准输出 (`stdout`) 和标准错误 (`stderr`)，以验证 `log` 和 `find` 命令现在是否将数据正确输出到 `stdout`，同时将元信息保留在 `stderr`。
+`quipu log` 和 `quipu find` 命令需要将其核心数据结果输出到标准输出 (`stdout`)，而不是标准错误 (`stderr`)，以便能与 `grep` 等标准的 Unix 管道工具配合使用。
 
 ### 评论
-更新测试是确保软件质量的关键步骤。这些修改将使我们的测试套件更加精确和健壮，能够捕获与输出流相关的回归错误，并正式确认 CLI 工具的行为符合预期。
+这是一个基础但关键的 CLI 设计改进，它遵循了 Unix 哲学，使得 Quipu 工具链能更好地融入自动化脚本和命令行工作流，显著提升了开发者和用户的体验。
 
 ### 目标
-1.  重写 `tests/cli/test_query_commands.py` 文件。
-2.  在 `test_log_output` 中，断言元信息在 `stderr` 中，而节点数据在 `stdout` 中。
-3.  在 `test_find_command` 中，同样断言元信息在 `stderr` 中，而匹配到的节点数据在 `stdout` 中。
+1.  已将 `query.py` 中 `log` 和 `find_command` 函数里负责打印节点数据的 `typer.echo` 调用中的 `err=True` 参数移除。
+2.  已更新 `tests/cli/test_query_commands.py` 以验证 `stdout` 和 `stderr` 的输出分离。
+3.  创建一个 Git 提交，将此项改进持久化。
 
 ### 基本原理
-通过使用 `typer.testing.CliRunner`，我们可以检查 `result.stdout` 和 `result.stderr` 属性。我们将修改测试断言，从之前只检查 `result.stderr` 改为分别检查这两个输出流，从而精确验证命令的输出行为是否符合 Unix 管道规范。
+通过区分数据输出和元信息/日志输出，并将它们分别定向到 `stdout` 和 `stderr`，我们使得 Quipu CLI 成为一个“行为良好”的命令行公民。当 `stdout` 被重定向到管道时，Typer 会自动剥离颜色代码，确保下游工具接收到的是纯净的文本数据。
 
 ### 标签
-#intent/tooling #flow/ready #priority/high #comp/tests #concept/ui #scope/dx #ai/instruct #task/state/continue
+#intent/fix #flow/ready #priority/medium #comp/cli #comp/tests #concept/ui #scope/ux #scope/dx #ai/instruct #task/domain/cli #task/object/output-streams #task/action/refactor #task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 重写查询命令的测试文件
+#### Acts 1: 提交变更
 
-我们将用包含新断言逻辑的完整内容覆盖现有的测试文件，以确保测试的准确性。
+现在，我们将修改后的文件添加到 Git 暂存区，并创建一个内容详尽的提交。
 
 ~~~~~act
-write_file
+git_add
+packages/quipu-cli/src/quipu/cli/commands/query.py
 tests/cli/test_query_commands.py
 ~~~~~
-~~~~~python
-from quipu.cli.main import app
 
+~~~~~act
+git_commit
+~~~~~
+~~~~~text
+fix(cli): redirect log and find data output to stdout
 
-def test_log_empty(runner, quipu_workspace):
-    work_dir, _, _ = quipu_workspace
-    result = runner.invoke(app, ["log", "-w", str(work_dir)])
-    assert result.exit_code == 0
-    assert "历史记录为空" in result.stderr
+Redirects the data output of 'quipu log' and 'quipu find' to stdout, while keeping metadata and progress on stderr.
 
+Previously, all output was sent to stderr, preventing the use of standard shell pipelines with tools like 'grep', 'awk', or 'less'. This change aligns the CLI's behavior with standard Unix practices.
 
-def test_log_output(runner, quipu_workspace):
-    work_dir, _, engine = quipu_workspace
-
-    # 创建一些历史
-    (work_dir / "f1").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 1")
-
-    (work_dir / "f2").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 2")
-
-    result = runner.invoke(app, ["log", "-w", str(work_dir)])
-    assert result.exit_code == 0
-
-    # 验证元数据在 stderr
-    assert "--- Quipu History Log ---" in result.stderr
-
-    # 验证数据在 stdout
-    assert "Node 1" in result.stdout
-    assert "Node 2" in result.stdout
-    assert "[CAPTURE]" in result.stdout
-
-    # 验证数据不在 stderr
-    assert "Node 1" not in result.stderr
-
-
-def test_find_command(runner, quipu_workspace):
-    work_dir, _, engine = quipu_workspace
-
-    (work_dir / "f1").touch()
-    capture_node = engine.capture_drift(engine.git_db.get_tree_hash(), message="Fix bug")
-    hash_v1 = capture_node.output_tree
-
-    (work_dir / "f2").touch()
-    hash_v2 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(
-        input_tree=hash_v1,
-        output_tree=hash_v2,
-        plan_content="content",
-        summary_override="Implement feature",
-    )
-
-    # 查找 "Fix"
-    result = runner.invoke(app, ["find", "-s", "Fix", "-w", str(work_dir)])
-    assert "--- 查找结果 ---" in result.stderr
-    assert "Fix bug" in result.stdout
-    assert "Implement feature" not in result.stdout
-    assert "Fix bug" not in result.stderr
-
-    # 查找类型 "plan"
-    result_type = runner.invoke(app, ["find", "-t", "plan", "-w", str(work_dir)])
-    assert "--- 查找结果 ---" in result_type.stderr
-    assert "Implement feature" in result_type.stdout
-    assert "Fix bug" not in result_type.stdout
-    assert "Implement feature" not in result_type.stderr
+Now, only informational headers (e.g., "--- 查找结果 ---") are sent to stderr, while the actual node data is sent to stdout, making the commands composable and script-friendly.
 ~~~~~
 
 ### 下一步建议
-我们已经成功地：
-1.  修复了 `query.py` 中的输出流问题。
-2.  更新了测试用例以验证该修复。
-
-现在，这个逻辑单元已经完整，是时候将其作为一个 `[COMMIT]` 提交到版本控制中了。如果你同意，我将生成一个包含 `git add` 和 `git commit` 指令的最终计划。
+- **全面审查**: 可以审查一下其他命令（例如 `axon --list-acts`）的输出行为，确保它们也遵循了 `stdout` (数据) / `stderr` (元信息) 的分离原则。
+- **格式化输出**: 考虑为 `log` 和 `find` 命令增加一个 `--format` 选项，允许用户自定义输出格式 (例如，仅输出哈希，或输出为 JSON)，这将进一步增强其在脚本中的应用能力。
