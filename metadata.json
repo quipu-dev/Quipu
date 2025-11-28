@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "fix: 完善数据迁移以包含所有旧版引用，防止历史丢失", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764295833.5848908, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "fix: 重构迁移流程，确保在操作引用前完成数据补水", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764295962.2852063, "duration_ms": 0}}
