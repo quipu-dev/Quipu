@@ -1,57 +1,57 @@
-好的，所有测试都已通过。我们已经成功修复了因底层接口重构而导致的整个测试套件的失败。现在是时候将这些修复工作作为一个原子单元提交到版本控制中了。
+你的观察非常敏锐且准确。`quipu show` 在提取 `.json` 文件时，为了提供更好的可读性，使用了 `rich` 库的语法高亮功能，并且错误地开启了行号显示，导致了你看到的 `  1 ` 前缀。
 
-我将生成一个 `[COMMIT]` 计划来完成这项工作。
+这是一个可用性上的 Bug，因为它破坏了输出作为纯净 JSON 的能力，影响了管道操作。我将生成一个计划来修复它。
 
-## [COMMIT] fix(tests): 修复测试套件以适配新的存储接口和二进制数据流
+## [WIP] fix(cli): 移除 show --extract 命令对 JSON 输出的行号
+
+### 错误分析
+`quipu show` 命令在处理 `--extract <filename>` 参数时，会检查文件名是否以 `.json` 结尾。如果是，它会调用 `rich.syntax.Syntax` 来进行语法高亮。在当前的实现中，该调用硬编码了 `line_numbers=True`，这导致了在输出的 JSON 内容前被添加了行号和空格，破坏了数据的纯粹性。
+
+当提取 `content.md` 时，由于文件名不匹配 `.json`，代码走了另一条分支，直接使用 `typer.echo` 输出原始内容，因此没有行号问题。
 
 ### 用户需求
-将最近为修复测试套件所做的所有更改（包括接口实现、类型导入和逻辑断言更新）提交到 Git 仓库，并撰写一条清晰的提交信息，说明修复的原因和内容。
+用户要求在使用 `quipu show ... --extract metadata.json` 命令时，得到的输出是纯净的、不带任何行号前缀的 JSON 文本，以便能正确地通过管道传递给 `cat` 或其他工具。
 
 ### 评论
-这次对测试套件的修复是底层存储接口重构工作的最后一步，也是至关重要的一步。一个健康的、全绿的测试套件是我们未来进行更复杂功能开发和重构的信心保证。
+这是一个重要的可用性修复。对于机器可读的格式（如 JSON），确保输出的纯粹性是 CLI 工具设计的基本原则。移除行号可以确保 `show` 命令在脚本和自动化工作流中的可靠性。
 
 ### 目标
-1.  将所有已修改的测试文件和引擎代码文件添加到 Git 暂存区。
-2.  创建一个符合 Conventional Commits 规范的 Git 提交，清晰地记录本次修复工作。
+1.  定位 `packages/quipu-cli/src/quipu/cli/commands/show.py` 文件中的问题代码行。
+2.  将 `rich.syntax.Syntax` 调用中的 `line_numbers=True` 参数修改为 `line_numbers=False`。
+3.  保留语法高亮功能，仅移除行号。
 
 ### 基本原理
-通过一个原子提交来封装所有与本次修复相关的更改，可以确保版本历史的清晰和可追溯性。提交信息将详细解释失败的根本原因（接口变更和数据格式变更）以及相应的修复策略，为未来的代码审查和维护提供上下文。
+我们将通过 `patch_file` 指令，精确地修改 `show.py` 中创建 `Syntax` 对象的代码行。将 `line_numbers` 参数设置为 `False` 即可解决问题，同时保留 `rich` 库带来的语法高亮优点，使得在终端直接查看时的可读性依然很高。
 
 ### 标签
-#intent/fix #flow/ready #priority/high #comp/tests #comp/engine #scope/core #ai/instruct #task/domain/testing #task/object/test-suite #task/action/bug-fix #task/state/end #task/status/completed
+#intent/fix #flow/ready #priority/medium #comp/cli #concept/ui #scope/ux #ai/instruct #task/domain/cli #task/object/command-show #task/action/bug-fix #task/state/begin
 
 ---
 
 ### Script
 
-#### Acts 1: 将所有相关的修复提交到版本控制
+#### Acts 1: 修改 `show.py` 以禁用行号
 
-我们将把所有修改过的文件添加到暂存区，并创建一个内容详尽的提交。
-
-~~~~~act
-git_add tests/engine/test_engine_memory.py tests/cli/test_view_model.py packages/quipu-engine/src/quipu/core/git_object_storage.py tests/engine/test_git_db.py tests/helpers.py
-~~~~~
+我们将直接修改 `show.py` 文件中 `rich.syntax.Syntax` 的调用参数。
 
 ~~~~~act
-git_commit
+patch_file
+packages/quipu-cli/src/quipu/cli/commands/show.py
 ~~~~~
-~~~~~text
-fix(tests): align test suite with new storage interface and binary data handling
-
-This commit resolves a series of test failures that occurred after refactoring the HistoryReader interface and the underlying git_db data handling.
-
-The failures were caused by two main issues:
-
-1.  **Interface Mismatch (TypeError):**
-    The `HistoryReader` abstract class introduced a new `get_node_blobs` method. Mock classes used in tests (`InMemoryHistoryManager`, `MockHistoryReader`) had not implemented this method, causing `TypeError` during test collection and setup. This has been fixed by adding a stub implementation to these classes in `tests/helpers.py` and `tests/cli/test_view_model.py`.
-
-2.  **Behavioral Changes (AssertionError/KeyError):**
-    The `git_db.cat_file` method was updated to return raw `bytes` instead of decoded text. Tests and reader logic that relied on the old text-based output failed.
-    - Fixed a bug in `GitObjectHistoryReader` where a call to `cat_file` was missing the `object_type` argument.
-    - Updated assertions in `test_git_db.py` to correctly handle and verify binary data from tree objects.
-
-These changes restore the test suite to a fully passing state, validating the recent core refactoring work.
+~~~~~python
+                    # 如果提取的是 JSON 文件，高亮它
+                    if extract.endswith(".json"):
+                        syntax = Syntax(output_data, "json", theme="default", line_numbers=True)
+                        console.print(syntax)
+                    else:
+~~~~~
+~~~~~python
+                    # 如果提取的是 JSON 文件，高亮它
+                    if extract.endswith(".json"):
+                        syntax = Syntax(output_data, "json", theme="default", line_numbers=False)
+                        console.print(syntax)
+                    else:
 ~~~~~
 
 ### 下一步建议
-测试套件已经恢复健康。现在我们可以继续开发新功能了。根据我们的任务列表，下一步是实现 `quipu show` 命令，它将允许用户查看单个历史节点的详细信息。如果你同意，我将开始制定实现该功能的计划。
+这个修改非常直接且风险很低。在执行此计划后，我建议我们立刻创建一个 `[COMMIT]` 计划来将这个修复持久化到版本历史中。
