@@ -33,8 +33,8 @@ def register(app: typer.Typer):
                 color = typer.colors.CYAN if node.node_type == "plan" else typer.colors.MAGENTA
                 tag = f"[{node.node_type.upper()}]"
                 summary = node.summary
-                typer.secho(f"{ts} {tag:<9} {node.short_hash}", fg=color, nl=False, err=True)
-                typer.echo(f" - {summary}", err=True)
+                typer.secho(f"{ts} {tag:<9} {node.short_hash}", fg=color, nl=False)
+                typer.echo(f" - {summary}")
 
     @app.command(name="find")
     def find_command(
@@ -65,5 +65,5 @@ def register(app: typer.Typer):
                 ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 color = typer.colors.CYAN if node.node_type == "plan" else typer.colors.MAGENTA
                 tag = f"[{node.node_type.upper()}]"
-                typer.secho(f"{ts} {tag:<9} {node.output_tree}", fg=color, nl=False, err=True)
-                typer.echo(f" - {node.summary}", err=True)
+                typer.secho(f"{ts} {tag:<9} {node.output_tree}", fg=color, nl=False)
+                typer.echo(f" - {node.summary}")

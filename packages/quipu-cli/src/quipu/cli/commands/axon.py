@@ -80,8 +80,8 @@ def register(app: typer.Typer):
                 doc = acts[name]
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
-                typer.secho(f"🔹 {name}", fg=typer.colors.CYAN, bold=True, err=True)
-                typer.echo(f"{indented_doc}\n", err=True)
+                typer.secho(f"🔹 {name}", fg=typer.colors.CYAN, bold=True)
+                typer.echo(f"{indented_doc}\n")
             ctx.exit(0)
 
         # 5. 获取输入内容 (文件 或 STDIN 或 默认文件)
