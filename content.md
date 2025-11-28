@@ -1,81 +1,93 @@
-好的，这个优化建议非常好。
+你发现了一个非常关键的错误，这个 traceback 非常有价值。
 
-当前 TUI 在滚动时会有一个短暂的延迟，因为它会等待一个防抖计时器结束后再渲染完整的 Markdown 内容。在等待期间，它只显示节点的摘要。你的建议是在这个“加载中”的阶段，直接用纯文本显示节点的主要内容，因为纯文本渲染几乎没有性能开销，可以提供即时的反馈，极大地提升滚动时的流畅感。
+### 错误分析
+你的分析完全正确。问题出在我上一次的修改中：
 
-我将生成一个计划来实现这个改动。
+1.  `tui.py` 中的 `Static` 组件 (`content-placeholder`) 默认会尝试解析和渲染 [Rich markup](https://rich.readthedocs.io/en/latest/markup.html) 语法（例如 `[bold]`, `[red]`, `[/red]` 等）。
+2.  我直接将 `node.content` 的原始字符串（即 `plan.md` 文件的内容）传递给了 `Static` 组件的 `update` 方法。
+3.  当 `node.content` 恰好包含了不完整或格式错误的 Rich markup 标签时（比如 traceback 中显示的 `[/{color}]`，它没有匹配的起始标签），`Static` 组件的渲染引擎就会失败，并抛出 `MarkupError`。
+4.  这在快速滚动时尤其容易发生，因为显示的 `content` 只是文件的一部分，很容易截断一个完整的标签对。
 
-## [WIP] feat: 在 TUI 滚动时即时显示纯文本内容以提升性能
+### 解决方案
+解决方案是，在将 `node.content` 传递给 `Static` 组件之前，必须显式地“转义” (escape) 其中的所有特殊字符，告诉渲染引擎“把这些都当作纯文本处理，不要解析任何标签”。
+
+`rich` 库为此提供了一个专用的辅助函数：`rich.markup.escape`。
+
+我将生成一个计划来应用这个修复。
+
+## [WIP] fix: 修复 TUI 预览因未转义 markup 导致的崩溃问题
+
+### 错误分析
+在 `tui.py` 中，用于快速预览的 `Static` 组件 (`content-placeholder`) 在尝试渲染 `QuipuNode` 的原始 `.content` 时发生崩溃。原因是 `.content` 可能包含不完整的 Rich markup 标签片段（如 `[/{color}]`），而 `Static` 组件默认会尝试解析这些标签。当遇到一个没有匹配起始标签的闭合标签时，Textual 的渲染引擎会抛出 `MarkupError`，导致 TUI 崩溃。
 
 ### 用户需求
-在 TUI 的历史视图中，当用户快速上下滚动时，右侧的内容预览面板响应迟钝。为了改善体验，希望在滚动期间（即最终的 Markdown 渲染完成前），预览面板能立即显示节点的纯文本内容，而不是只显示摘要或“加载中”的提示。
+TUI 在快速滚动时，应能在预览面板中稳定地显示节点的纯文本内容，即使这些内容包含了会被渲染引擎误解析的特殊字符（如 `[` 和 `]`）。
 
 ### 评论
-这是一个非常有效的交互优化。它利用了纯文本渲染速度极快的特点，在用户滚动时提供了即时的内容预览，而在用户停止滚动后，再进行消耗性能的 Markdown 格式化渲染。这创造了一种流畅且响应迅速的用户体验。
+这是一个关键的健壮性修复。通过对输入内容进行转义，我们能确保 UI 的稳定性，防止因 Plan 文件内容中的特殊字符组合而导致意外崩溃，从而提升了用户体验的可靠性。
 
 ### 目标
-1.  修改 `quipu-cli` 包中的 `tui.py` 文件。
-2.  调整 `_update_loading_preview` 方法的逻辑。
-3.  使其在“加载中”状态下，优先从 `QuipuNode` 对象中获取已加载的 `content` 字段，并将其作为纯文本显示在预览面板中。
-4.  如果 `content` 字段不可用，则回退到显示摘要的旧行为。
+1.  在 `packages/quipu-cli/src/quipu/cli/tui.py` 文件的顶部导入 `rich.markup.escape` 函数。
+2.  在 `_update_loading_preview` 方法中，使用 `escape()` 函数包裹 `node.content`，然后再将其传递给 `placeholder_widget.update()`。
 
 ### 基本原理
-`QuipuNode` 对象在通过分页加载时，其 `.content` 属性（即计划的公共内容）已经被填充。这意味着在 TUI 中，当光标移动到一个新的节点上时，其核心内容是立即可用的，无需额外的 I/O 操作。
-
-当前的性能瓶颈在于 Textual 的 `Markdown` 组件渲染复杂的 Markdown 文本。而 `Static` 组件渲染纯文本则非常快。
-
-我们将利用这一点，修改 UI 的状态机：在 `LOADING` 状态（用户正在滚动时触发）下，我们将节点的 `.content` 字符串直接传递给一个 `Static` 组件进行显示。当滚动停止，防抖计时器结束后，UI 进入 `SHOWING_CONTENT` 状态，此时再调用 `Markdown` 组件来渲染完整的内容（包括私有数据），实现最终的精美排版。
+`rich.markup.escape` 函数会将字符串中所有可能被 Rich/Textual 解释为 markup 的特殊字符（主要是 `[`）转换为它们的字面量表示（`\[`）。这样，当 `Static` 组件接收到这个被转义后的字符串时，它会将其视为纯文本，直接显示出来，而不会尝试进行任何 markup 解析，从而从根本上避免了 `MarkupError` 的发生。
 
 ### 标签
-#intent/refine #flow/ready #priority/high #comp/cli #concept/ui #scope/ux #ai/instruct #task/domain/ui #task/object/tui-performance #task/action/optimization #task/state/begin
+#intent/fix #flow/ready #priority/critical #comp/cli #concept/ui #scope/ux #ai/instruct #task/domain/ui #task/object/tui-performance #task/action/optimization #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 更新 TUI 的加载预览逻辑
+#### Acts 1: 导入转义函数并修复更新逻辑
 
-我们将修改 `_update_loading_preview` 函数，使其在快速滚动时能够即时显示节点的纯文本内容。
+我们将首先在 `tui.py` 文件顶部添加必要的 `import` 语句，然后修改 `_update_loading_preview` 方法来使用它。
 
 ~~~~~act
 patch_file
 packages/quipu-cli/src/quipu/cli/tui.py
 ~~~~~
 ~~~~~python
-    def _update_loading_preview(self):
-        """A lightweight method to only update header/placeholder text."""
-        node = self.view_model.get_selected_node()
-        if not node:
-            return
+import sys
+import logging
+from enum import Enum, auto
+from pathlib import Path
+from typing import List, Optional
 
-        # Update header and placeholder text
-        self.query_one("#content-header", Static).update(f"[{node.node_type.upper()}] {node.short_hash} - {node.timestamp}")
-        placeholder_widget = self.query_one("#content-placeholder", Static)
-        if node.summary:
-            placeholder_widget.update(f"### {node.summary}\n\n---\n*Loading full content...*")
-        else:
-            placeholder_widget.update("*Loading...*")
+from textual.app import App, ComposeResult
 ~~~~~
 ~~~~~python
-    def _update_loading_preview(self):
-        """A lightweight method to only update header/placeholder text."""
-        node = self.view_model.get_selected_node()
-        if not node:
-            return
+import sys
+import logging
+from enum import Enum, auto
+from pathlib import Path
+from typing import List, Optional
 
-        # Update header and placeholder text
-        self.query_one("#content-header", Static).update(f"[{node.node_type.upper()}] {node.short_hash} - {node.timestamp}")
-        placeholder_widget = self.query_one("#content-placeholder", Static)
+from rich.markup import escape
+from textual.app import App, ComposeResult
+~~~~~
 
+~~~~~act
+patch_file
+packages/quipu-cli/src/quipu/cli/tui.py
+~~~~~
+~~~~~python
         # Prioritize showing the raw public content if it's already loaded in the node object.
         # This provides a very fast preview while scrolling.
         if node.content and node.content.strip():
             placeholder_widget.update(node.content)
         # Fallback to summary if content isn't loaded or is empty.
         elif node.summary:
-            placeholder_widget.update(f"### {node.summary}\n\n---\n*Loading full content...*")
-        else:
-            placeholder_widget.update("*Loading...*")
+~~~~~
+~~~~~python
+        # Prioritize showing the raw public content if it's already loaded in the node object.
+        # This provides a very fast preview while scrolling.
+        if node.content and node.content.strip():
+            placeholder_widget.update(escape(node.content))
+        # Fallback to summary if content isn't loaded or is empty.
+        elif node.summary:
 ~~~~~
 
 ### 下一步建议
-代码修改已完成。现在，你可以运行 `qd ui` 来亲自体验一下滚动性能的提升。确认无误后，我们可以为这个功能改进编写一个测试，或者直接创建一个 `[COMMIT]` 计划将其合并到主线历史中。
+这个修复应该能彻底解决崩溃问题。请再次运行 `qd ui` 并尝试快速滚动，验证 TUI 是否保持稳定。如果一切正常，我们可以将这个系列的功能改进合并为一个 `[COMMIT]`。
