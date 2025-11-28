@@ -1,57 +1,47 @@
-好的，这个测试失败是完全符合预期的。我们刚刚更改了默认配置，而这个测试用例是用来验证旧的默认值的。
+好的，我们将把刚才的 `chore` 和 `fix` 两个步骤合并为一个原子性的 Git 提交。
 
-现在，我们来更新这个测试用例，使其与新的默认设置保持一致。
-
-## fix: 更新配置测试用例以匹配新的默认后端
-
-### 错误分析
-在之前的任务中，我们将 `quipu-engine` 的默认存储后端从 `"git_object"` 更改为了 `"sqlite"`。`tests/engine/test_config.py` 中的 `test_config_get_defaults` 函数有一个断言，它硬编码地检查默认值是否为 `"git_object"`。由于代码已经更新，这个测试现在理应失败。这不是一个代码逻辑错误，而是一个过时的测试用例。
+## commit: 将默认存储后端切换为 SQLite
 
 ### 用户需求
-用户需要修复失败的测试，使测试套件能够顺利通过。
+用户要求将 `quipu` 的默认存储后端从 `git_object` 更改为 `sqlite`，因为后者现在已经足够稳定和高效，并提交这些更改。
 
 ### 评论
-这是一个典型的“代码变更后同步更新测试”的场景。修复很简单，只需将测试中的期望值从旧的默认值更新为新的默认值即可。
+这是一个合理的请求。将默认值更改为 `sqlite` 可以为新用户提供开箱即用的最佳性能。相关的测试用例也已同步更新，以确保代码库的一致性。
 
 ### 目标
-修改 `tests/engine/test_config.py` 文件，将 `test_config_get_defaults` 函数中的断言 `assert config.get("storage.type") == "git_object"` 更新为 `assert config.get("storage.type") == "sqlite"`。
+1.  将 `packages/quipu-engine/src/quipu/core/config.py` 和 `tests/engine/test_config.py` 两个文件的修改添加到 Git 暂存区。
+2.  创建一个 Git 提交，清晰地描述本次变更的目的和内容。
 
 ### 基本原理
-测试用例必须准确反映其所测试的代码的预期行为。当代码的预期行为（如此处的默认值）发生变化时，测试用例也必须相应地进行调整，以确保它验证的是当前正确的逻辑。
+通过 `git_add` 指令将相关文件暂存，然后使用 `git_commit` 指令创建一个包含类型、主题和详细说明的提交。这确保了版本历史的清晰和可追溯性。
 
 ### 标签
-#intent/fix #flow/ready #priority/critical #comp/tests #comp/engine #concept/config #scope/dx #ai/instruct #task/domain/testing #task/object/config-test #task/action/fix #task/state/begin #task/state/end #task/status/completed
+#intent/tooling #flow/ready #priority/medium #comp/engine #comp/tests #concept/config #scope/dx #ai/instruct
 
 ---
 
 ### Script
 
-#### Acts 1: 更新测试用例断言
+#### Acts 1: 暂存文件并提交
 
-我们将修改 `tests/engine/test_config.py` 中失败的断言行。
+我们将暂存已修改的配置文件和测试文件，并创建一个符合规范的 Git 提交。
 
 ~~~~~act
-patch_file
+git_add
+packages/quipu-engine/src/quipu/core/config.py
 tests/engine/test_config.py
 ~~~~~
-~~~~~python
-    """Test that default values are returned when no config file exists."""
-    config = ConfigManager(work_dir)
 
-    # Test accessing a nested default value
-    assert config.get("storage.type") == "git_object"
-    # Test a non-existent key with a fallback
-    assert config.get("nonexistent.key", "fallback") == "fallback"
+~~~~~act
+git_commit
 ~~~~~
-~~~~~python
-    """Test that default values are returned when no config file exists."""
-    config = ConfigManager(work_dir)
+~~~~~
+chore: Change default storage backend to SQLite
 
-    # Test accessing a nested default value
-    assert config.get("storage.type") == "sqlite"
-    # Test a non-existent key with a fallback
-    assert config.get("nonexistent.key", "fallback") == "fallback"
+Updates the default configuration to use the `sqlite` backend instead of `git_object`. The SQLite implementation is now stable and offers significantly better performance for history operations, making it a better default choice for new users.
+
+This change also includes updating the corresponding unit test in `test_config.py` to assert the new default value, ensuring the test suite remains consistent with the codebase.
 ~~~~~
 
 ### 下一步建议
-测试用例已修复。现在可以重新运行 `pytest tests/engine/test_config.py` 来验证问题是否已解决。
+代码已提交。我们可以继续进行下一个开发任务。
