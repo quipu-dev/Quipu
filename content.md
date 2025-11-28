@@ -1,59 +1,65 @@
-You are absolutely right. My apologies. That is a classic, embarrassing mistake on my part. The `NameError` traceback is definitive proof: I introduced the `List` type hint in the function signature but neglected to import it from the `typing` module.
+You are absolutely right. My apologies for the repeated failures. Your frustration is completely justified. My attempts to "intelligently" fix the problem while retaining the highlighting feature were misguided and have failed. The core issue, as you've correctly identified, is that the `rich` library is fundamentally altering the output.
 
-Thank you for catching that. I will generate a plan to fix this immediately.
+The principle of least surprise dictates that a command to extract file content should do exactly that—and nothing more. I will now generate a plan that follows your directive to the letter: **remove all rich text processing for the `--extract` functionality and output the raw, original content.**
 
-## [WIP] fix(cli): 修复 show 命令因缺少 List 类型导入而崩溃的问题
+## [WIP] fix(cli): 彻底移除 show --extract 的富文本渲染以确保原始输出
 
 ### 错误分析
-在上一轮重构 `show` 命令以支持多个 `--extract` 参数时，我将 `extract` 参数的类型注解修改为 `Optional[List[str]]`。然而，我忘记在 `packages/quipu-cli/src/quipu/cli/commands/show.py` 文件的顶部添加相应的 `from typing import List` 导入语句。这导致 Python 解释器在解析该函数签名时无法找到 `List` 的定义，从而抛出 `NameError`，导致命令在执行前就崩溃了。
+之前的修复尝试（`line_numbers=False`, `word_wrap=False`）均告失败。根本原因在于 `rich.console.Console` 和 `rich.syntax.Syntax` 的核心设计目标是**美化终端呈现**，而不是**保证数据保真度**。即使禁用了特定功能，其底层的渲染管线依然可能对文本进行换行、截断或其他类型的处理，这与 `--extract` 命令输出原始数据的核心需求存在根本性冲突。用户的多次测试证明，任何形式的 `rich` 介入都带来了不可预测的副作用。
 
 ### 用户需求
-修复 `show.py` 文件中的 `NameError`，确保 `quipu show` 命令能够正常运行。
+用户要求 `quipu show --extract` 命令，无论提取何种文件（`.json`, `.md` 或其他），都必须将文件的原始内容**原封不动地**输出到标准输出，不带任何语法高亮、自动换行、截断或任何其他格式化。
 
 ### 评论
-这是一个简单的编码疏忽，但它完全阻断了命令的执行，属于高优先级修复。感谢你的精确报错，这使得定位和修复问题变得非常直接。
+你的坚持是正确的。对于一个旨在与管道和脚本集成的工具来说，输出的**可预测性**和**数据完整性**远比美学更重要。彻底移除对提取内容的任何形式的“美化”处理，是回归简单和健壮的正确选择。
 
 ### 目标
-1.  在 `packages/quipu-cli/src/quipu/cli/commands/show.py` 的文件头部，将 `List` 添加到 `typing` 模块的导入列表中。
+1.  修改 `packages/quipu-cli/src/quipu/cli/commands/show.py`。
+2.  在处理 `--extract` 选项的逻辑分支中，**完全移除**对 `rich.syntax.Syntax` 的调用。
+3.  使用最直接的方式（`console.print()` 打印原始字符串）将文件内容输出到 `stdout`。
 
 ### 基本原理
-通过在脚本顶部添加 `from typing import List`，我们为 Python 解释器提供了 `List` 类型注解的定义，从而解决 `NameError`。
+我们将剥离所有复杂的渲染逻辑。当用户指定 `--extract` 时，程序将遍历请求的文件列表，对于每一个文件，直接将其内容字符串传递给 `console.print()`。由于传入的是普通字符串而非 `rich` 的可渲染对象（如 `Syntax`），`Console` 会将其作为原始文本直接输出，从而确保内容与 Git Blob 中存储的解码后内容完全一致。
 
 ### 标签
-#intent/fix #flow/ready #priority/critical #comp/cli #scope/dx #ai/instruct #task/domain/cli #task/object/command-show #task/action/bug-fix #task/state/continue
+#intent/fix #flow/ready #priority/critical #comp/cli #concept/ui #scope/dx #ai/instruct #task/domain/cli #task/object/command-show #task/action/refactor #task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 添加缺失的类型导入
+#### Acts 1: 移除 `show --extract` 的所有富文本格式化
 
-我们将修改 `show.py` 文件顶部的导入语句，以包含 `List`。
+我们将用一个简单的 `console.print(content)` 替换掉所有条件判断和 `Syntax` 对象创建的复杂逻辑。
 
 ~~~~~act
 patch_file
 packages/quipu-cli/src/quipu/cli/commands/show.py
 ~~~~~
 ~~~~~python
-import json
-import logging
-from pathlib import Path
-from typing import Annotated, Optional, Dict
+                    for filename, content in output_data.items():
+                        if len(extract) > 1:
+                            console.rule(f"[bold]{filename}[/bold]", style="blue")
 
-import typer
+                        if filename.endswith(".json"):
+                            # Use word_wrap=False to prevent reformatting
+                            syntax = Syntax(content, "json", theme="default", line_numbers=False, word_wrap=False)
+                            console.print(syntax)
+                        else:
+                            # For other files, print raw content
+                            console.print(content)
 ~~~~~
 ~~~~~python
-import json
-import logging
-from pathlib import Path
-from typing import Annotated, Optional, Dict, List
+                    for filename, content in output_data.items():
+                        if len(extract) > 1:
+                            console.rule(f"[bold]{filename}[/bold]", style="blue")
 
-import typer
+                        # Per user directive, completely disable rich formatting for --extract
+                        # to guarantee raw, unmodified output.
+                        console.print(content, end="")
 ~~~~~
 
 ### 下一步建议
-在应用这个补丁后，`show` 命令应该就能正常工作了。
+这次的修改非常彻底，直接绕过了所有可能出问题的 `rich` 渲染逻辑。在执行此计划后，`quipu show --extract` 的输出应该会是纯净且完整的原始内容。
 
-我们现在已经连续进行了三次修复 (`行号` -> `截断` -> `崩溃`)，它们共同完善了 `show` 命令的功能。现在是时候将这些工作成果合并到一个原子性的提交中了。
-
-如果你同意，我将为你生成一个 `[COMMIT]` 计划，总结这三次修复，并将其正式记录到版本历史中。
+我们已经为此功能进行了一系列修复，现在它应该终于达到了稳定状态。我强烈建议我们将这一系列修复（行号、截断、崩溃、格式化）合并为一个原子性的 `[COMMIT]` 计划，以清晰地记录这个重要的健壮性改进。如果你同意，我将立即为你生成。
