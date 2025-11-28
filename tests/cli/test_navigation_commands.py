@@ -128,31 +128,22 @@ class TestNavigationEngine:
 
 class TestNavigationCLI:
     @pytest.fixture
-    def cli_workspace(self, tmp_path):
-        ws = tmp_path / "cli_ws"
-        ws.mkdir()
-        subprocess.run(["git", "init"], cwd=ws, check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=ws, check=True)
-        subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=ws, check=True)
-
-        git_db = GitDB(ws)
-        reader = GitObjectHistoryReader(git_db)
-        writer = GitObjectHistoryWriter(git_db)
-        engine = Engine(ws, db=git_db, reader=reader, writer=writer)
+    def populated_workspace(self, quipu_workspace):
+        ws, _, engine = quipu_workspace
 
         (ws / "a.txt").write_text("A")
         hash_a = engine.git_db.get_tree_hash()
-        engine.create_plan_node("_" * 40, hash_a, "State A")
+        engine.create_plan_node(input_tree="_" * 40, output_tree=hash_a, plan_content="Plan A", summary_override="State A")
 
         (ws / "b.txt").write_text("B")
         (ws / "a.txt").unlink()
         hash_b = engine.git_db.get_tree_hash()
-        engine.create_plan_node(hash_a, hash_b, "State B")
+        engine.create_plan_node(input_tree=hash_a, output_tree=hash_b, plan_content="Plan B", summary_override="State B")
 
         return ws, hash_a, hash_b
 
-    def test_cli_back_forward_flow(self, runner, cli_workspace):
-        workspace, hash_a, hash_b = cli_workspace
+    def test_cli_back_forward_flow(self, runner, populated_workspace):
+        workspace, hash_a, hash_b = populated_workspace
 
         # Initial state is B. Let's checkout to A.
         runner.invoke(app, ["checkout", hash_a[:7], "-w", str(workspace), "-f"])
@@ -173,8 +164,8 @@ class TestNavigationCLI:
         assert (workspace / "a.txt").exists()
         assert not (workspace / "b.txt").exists()
 
-    def test_cli_boundary_messages(self, runner, cli_workspace):
-        workspace, hash_a, hash_b = cli_workspace
+    def test_cli_boundary_messages(self, runner, populated_workspace):
+        workspace, hash_a, hash_b = populated_workspace
 
         # Go to a known state
         runner.invoke(app, ["checkout", hash_a[:7], "-w", str(workspace), "-f"])

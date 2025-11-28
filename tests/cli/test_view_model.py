@@ -140,6 +140,25 @@ class TestGraphViewModel:
         assert vm.is_reachable("h9") is True
         assert vm.is_reachable("h1") is True
 
+    def test_calculate_initial_page_not_found(self, sample_nodes):
+        """测试当 HEAD 节点在历史中找不到时，应回退到第一页。"""
+        reader = MockHistoryReader(sample_nodes)
+        vm = GraphViewModel(reader, current_output_tree_hash="unknown_hash")
+        vm.initialize()
+        
+        # MockReader 在找不到 output_tree 时 get_node_position 返回 -1
+        assert vm.calculate_initial_page() == 1
+
+    def test_select_node_by_key_missing(self, sample_nodes):
+        """测试选择不存在的 key。"""
+        reader = MockHistoryReader(sample_nodes)
+        vm = GraphViewModel(reader, current_output_tree_hash=None)
+        vm.load_page(1)
+        
+        selected = vm.select_node_by_key("non_existent_path")
+        assert selected is None
+        assert vm.get_selected_node() is None
+
     def test_get_content_bundle(self):
         """测试公共和私有内容的格式化逻辑。"""
         node_both = QuipuNode(
