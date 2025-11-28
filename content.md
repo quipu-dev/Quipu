@@ -1,146 +1,127 @@
-你的调试又下一城，再次捕获到了一个更深层次的 Bug。这个 `UnicodeDecodeError` 日志是关键线索，它明确地告诉我们，系统在某个环节试图将不是 UTF-8 编码的原始二进制数据当作文本来处理，导致了解码失败。
+好的，我分析了测试失败的报告。这些失败是由两个独立但相关的原因造成的，都源于最近对底层存储接口的重构。
 
-你发现的这个问题的根源比上一个更底层，也更隐蔽。
+1.  **接口不匹配 (`TypeError`)**: `HistoryReader` 接口新增了一个抽象方法 `get_node_blobs`，但测试中使用的模拟类（Mocks）没有实现它，导致大量测试无法实例化而失败。
+2.  **行为变更 (`AssertionError`/`KeyError`)**: `git_db.cat_file` 方法现在返回原始二进制数据 (`bytes`) 而不是文本，并且我在 `GitObjectHistoryReader` 中引入了一个调用错误。依赖旧文本输出或受此错误影响的测试因此失败。
 
-错误分析
+我将按照 `测试套件更新.md` 中规划的策略，通过一个计划来系统性地修复整个测试套件。
 
-1.  **根本原因**: 问题出在 `git_db.py` 的底层辅助函数 `_run` 上。该函数在调用 `subprocess.run` 时，硬编码了 `text=True`。这个参数会强制 `subprocess` 模块尝试使用系统默认编码（通常是 UTF-8）来解码 `git` 命令的所有输出。
-2.  **触发场景**: 当 `cat_file` 请求一个 `tree` 对象时，Git 返回的是纯粹的、紧凑的**二进制数据**，其中包含了非 UTF-8 字节序列（例如，用于表示文件模式或 SHA-1 哈希的原始字节）。`subprocess` 模块在尝试将这些二进制数据解码为文本字符串时，遇到了无效的字节（如日志中的 `0xb1`），从而抛出了 `UnicodeDecodeError`。
-3.  **数据流**: `cat_file` -> `_run(text=True)` -> `subprocess` 尝试解码二进制流 -> `UnicodeDecodeError`。
-4.  **上一个修复的不足**: 我之前的修复仅仅解决了 `cat_file` 中 `-p` 参数的逻辑错误，但没有触及 `_run` 函数中更基础的数据类型处理错误。这导致虽然我们请求了正确的原始对象，但在数据从 Git 传递到我们代码的管道中就已经被破坏了。
+## [WIP] fix(tests): 修复因接口和底层数据格式变更导致的测试套件失败
 
-解决方案
+### 错误分析
+测试套件的大规模失败是底层 `HistoryReader` 接口和 `git_db` 模块行为变更后的正常连锁反应。主要问题有两个：
 
-解决方案是让底层 `_run` 函数变得“数据类型感知”，并修复 `cat_file` 以正确地处理二进制流。
-
-1.  **修改 `_run` 函数**: 我将为 `_run` 增加一个 `capture_as_text` 参数。当调用者需要原始字节时，可以传递 `capture_as_text=False`，这将使 `subprocess.run` 在不进行任何解码的情况下返回原始的 `bytes` 对象。
-2.  **修改 `cat_file` 函数**: 我将更新 `cat_file` 的实现，使其在调用 `_run` 时明确请求二进制输出 (`capture_as_text=False`)，并直接返回 `subprocess` 传回的、未经任何编解码的原始 `bytes`。
-
-这将彻底解决数据在传输过程中的损坏问题。
-
-## [WIP] fix(engine): 使 `git_db._run` 支持二进制输出以修复 `cat_file`
+1.  **模拟类未实现新接口**: 大量测试使用的 `MockHistoryReader` 和 `InMemoryHistoryManager` 没有实现新增的 `get_node_blobs` 抽象方法，导致 `TypeError`。
+2.  **逻辑未适配二进制数据**:
+    *   `GitObjectHistoryReader.get_node_content` 中对 `git_db.cat_file` 的调用缺少了 `object_type` 参数，导致方法静默失败并返回空字符串，引发了多个 `AssertionError` 和 `KeyError`。
+    *   `test_git_db.py` 中的 `test_cat_file_types` 测试用例还在基于文本的假设来断言二进制数据，导致失败。
 
 ### 用户需求
-`quipu show <HASH>` 命令在尝试加载节点内容时因 `UnicodeDecodeError` 而失败，这表明系统在处理 Git 返回的原始二进制 `tree` 对象时，错误地将其作为文本进行了解码。
+修复整个测试套件，使其与新的 `HistoryReader` 接口和 `git_db` 的二进制数据处理行为保持一致，恢复所有测试的通过状态。
 
 ### 评论
-这是一个关键的底层修复。通过使 `_run` 辅助函数能够处理二进制数据流，我们确保了与 Git 对象数据库的交互在处理非文本对象（如 `tree`）时是健壮和无损的。这解决了 `show` 命令的根本问题，并提升了整个 `git_db` 模块的可靠性。
+这次修复是重构后必不可少的一步，它验证了测试套件作为“安全网”的价值。我们将通过更新测试来巩固这次重构的成果，确保系统的健壮性。
 
 ### 目标
-1.  重构 `git_db.py` 中的 `_run` 方法，添加一个 `capture_as_text` 布尔标志，用于控制 `subprocess.run` 的 `text` 参数。
-2.  更新 `_run` 方法的错误处理逻辑，以正确显示来自二进制 `stderr` 的错误信息。
-3.  重构 `cat_file` 方法，使其调用 `_run(..., capture_as_text=False)` 并直接返回原始的 `bytes` 输出，移除所有多余的编解码操作。
+1.  为所有 `HistoryReader` 的模拟实现添加 `get_node_blobs` 方法，解决所有 `TypeError`。
+2.  修正 `GitObjectHistoryReader.get_node_content` 中的方法调用错误。
+3.  更新 `test_cat_file_types` 测试，使其能够正确断言二进制数据。
 
 ### 基本原理
-`subprocess` 模块通过 `text` 参数来区分文本和二进制I/O。对于需要精确解析的 Git 二进制对象（如 `tree`），必须使用 `text=False` 来获取原始 `bytes`。本次修改将这一控制权暴露给调用者，并修复 `cat_file` 以使用正确的模式，从而确保数据流的完整性。
+我们将采用“分而治之”的策略。首先通过实现缺失的接口方法来消除大量的 `TypeError`，这将使我们能够清晰地看到真正的逻辑失败。然后，我们将逐一修复这些因底层行为变更而导致的逻辑错误，确保测试逻辑与代码实现重新对齐。
 
 ### 标签
-#intent/fix #flow/ready #priority/critical #comp/engine #concept/state #scope/core #ai/instruct #task/domain/cli #task/object/show-command #task/action/refactor #task/state/continue
+#intent/fix #flow/ready #priority/high #comp/tests #comp/engine #concept/state #scope/core #ai/instruct #task/domain/testing #task/object/test-suite #task/action/bug-fix #task/state/begin
 
 ---
 
 ### Script
 
-#### Acts 1: 重构 `git_db.py` 以正确处理二进制数据
+#### Acts 1: 修复模拟类中的接口符合性问题
 
-我们将一次性修改 `_run` 和 `cat_file` 两个函数。
+我们将为 `InMemoryHistoryManager` 和 `MockHistoryReader` 添加 `get_node_blobs` 方法的实现，以解决 `TypeError`。
 
 ~~~~~act
 patch_file
-packages/quipu-engine/src/quipu/core/git_db.py
+tests/engine/test_engine_memory.py
 ~~~~~
 ~~~~~python
-    def _run(
-        self,
-        args: list[str],
-        env: Optional[Dict] = None,
-        check: bool = True,
-        log_error: bool = True,
-        input_data: Optional[str] = None,
-    ) -> subprocess.CompletedProcess:
-        """执行 git 命令的底层封装，返回完整的 CompletedProcess 对象"""
-        full_env = os.environ.copy()
-        if env:
-            full_env.update(env)
-
-        try:
-            result = subprocess.run(
-                ["git"] + args,
-                cwd=self.root,
-                env=full_env,
-                capture_output=True,
-                text=True,
-                check=check,
-                input=input_data,
-            )
-            return result
-        except subprocess.CalledProcessError as e:
-            if log_error:
-                logger.error(f"Git plumbing error: {e.stderr}")
-            raise RuntimeError(f"Git command failed: {' '.join(args)}\n{e.stderr}") from e
+class TestEngineWithMemoryBackend:
+    def test_align_clean_genesis(self, memory_engine: Engine):
+        """测试在创世状态下的对齐。"""
 ~~~~~
 ~~~~~python
-    def _run(
-        self,
-        args: list[str],
-        env: Optional[Dict] = None,
-        check: bool = True,
-        log_error: bool = True,
-        input_data: Optional[Union[str, bytes]] = None,
-        capture_as_text: bool = True,
-    ) -> subprocess.CompletedProcess:
-        """执行 git 命令的底层封装，支持文本和二进制输出。"""
-        full_env = os.environ.copy()
-        if env:
-            full_env.update(env)
+    def get_node_blobs(self, commit_hash: str) -> Dict[str, bytes]:
+        """获取一个节点内所有文件的原始二进制内容，以字典形式返回 {filename: content_bytes}。"""
+        # For memory backend, this can be implemented if needed, otherwise return empty.
+        return {}
 
-        try:
-            result = subprocess.run(
-                ["git"] + args,
-                cwd=self.root,
-                env=full_env,
-                capture_output=True,
-                text=capture_as_text,
-                check=check,
-                input=input_data,
-            )
-            return result
-        except subprocess.CalledProcessError as e:
-            stderr_str = e.stderr
-            if isinstance(stderr_str, bytes):
-                stderr_str = stderr_str.decode("utf-8", "ignore")
 
-            if log_error:
-                logger.error(f"Git plumbing error: {stderr_str}")
-            raise RuntimeError(f"Git command failed: {' '.join(args)}\n{stderr_str}") from e
+class TestEngineWithMemoryBackend:
+    def test_align_clean_genesis(self, memory_engine: Engine):
+        """测试在创世状态下的对齐。"""
 ~~~~~
 
 ~~~~~act
 patch_file
-packages/quipu-engine/src/quipu/core/git_db.py
+tests/cli/test_view_model.py
 ~~~~~
 ~~~~~python
-    def cat_file(self, object_hash: str, object_type: str) -> bytes:
-        """
-        读取 Git 对象的原始内容，返回字节流。
-        移除了有问题的 pretty-printing 逻辑，以确保二进制解析器正常工作。
-        """
-        cmd = ["cat-file", object_type, object_hash]
-        result = self._run(cmd)
-        return result.stdout.encode("utf-8")
+    def get_node_content(self, node: QuipuNode) -> str:
+        # For simplicity, mock content is stored in the node's summary
+        return node.summary
 ~~~~~
 ~~~~~python
-    def cat_file(self, object_hash: str, object_type: str) -> bytes:
-        """
-        读取 Git 对象的原始内容，返回字节流。
-        此方法现在以二进制模式运行，以避免数据损坏。
-        """
-        cmd = ["cat-file", object_type, object_hash]
-        result = self._run(cmd, capture_as_text=False)
-        return result.stdout
+    def get_node_content(self, node: QuipuNode) -> str:
+        # For simplicity, mock content is stored in the node's summary
+        return node.summary
+
+    def get_node_blobs(self, commit_hash: str) -> Dict[str, bytes]:
+        return {}
+~~~~~
+
+#### Acts 2: 修正底层逻辑和测试断言
+
+现在，我们修复 `GitObjectHistoryReader` 中的调用错误，并更新 `test_git_db.py` 以正确处理二进制数据。
+
+~~~~~act
+patch_file
+packages/quipu-engine/src/quipu/core/git_object_storage.py
+~~~~~
+~~~~~python
+            if not blob_hash:
+                return ""  # No content found
+
+            # 3. Read Blob (also raw binary)
+            content_bytes = self.git_db.cat_file(blob_hash)
+            content = content_bytes.decode("utf-8", errors="ignore")
+~~~~~
+~~~~~python
+            if not blob_hash:
+                return ""  # No content found
+
+            # 3. Read Blob (also raw binary)
+            content_bytes = self.git_db.cat_file(blob_hash, "blob")
+            content = content_bytes.decode("utf-8", errors="ignore")
+~~~~~
+
+~~~~~act
+patch_file
+tests/engine/test_git_db.py
+~~~~~
+~~~~~python
+        # 5. Verify Tree reading
+        read_tree = db.cat_file(tree_hash, "tree")
+        # cat-file -p tree_hash output format: "100644 blob <hash>\ttest_file"
+        assert b"test_file" in read_tree
+        assert blob_hash.encode() in read_tree
+~~~~~
+~~~~~python
+        # 5. Verify Tree reading
+        read_tree = db.cat_file(tree_hash, "tree")
+        # The raw tree object contains the binary hash, not the hex representation.
+        assert b"test_file" in read_tree
+        assert bytes.fromhex(blob_hash) in read_tree
 ~~~~~
 
 ### 下一步建议
-这是对 `git_db` 模块的一个基础且关键的修复。在应用此补丁后，`cat_file` 将能够正确地返回原始二进制数据，`show` 命令的解码错误应该会彻底消失。
-
-请再次运行 `qd show adcef0a` 进行最终验证。
+我们已经应用了所有必要的修复。现在，请重新运行测试套件。预期结果是所有测试都将通过，测试摘要中不再有 `FAILED` 或 `ERROR`。这将确认我们的重构是成功的，并且测试套件已经恢复到健康状态。
