@@ -59,9 +59,7 @@ def register(app: typer.Typer):
         try:
             git_db = GitDB(sync_dir)
 
-            typer.secho(f"⬆️  正在向 '{remote}' 推送你的本地历史...", fg=typer.colors.BLUE, err=True)
-            git_db.push_quipu_refs(remote, final_user_id)
-
+            # --- Stage 1: Fetch ---
             subscriptions = config.get("sync.subscriptions", [])
             target_ids_to_fetch = set(subscriptions)
             target_ids_to_fetch.add(final_user_id)
@@ -73,7 +71,16 @@ def register(app: typer.Typer):
                 for target_id in sorted(list(target_ids_to_fetch)):
                     git_db.fetch_quipu_refs(remote, target_id)
 
-            typer.secho("\n✅ Quipu 引用同步完成。", fg=typer.colors.GREEN, err=True)
+            # --- Stage 2: Reconcile ---
+            typer.secho(f"🤝 正在将远程历史与本地进行调和...", fg=typer.colors.BLUE, err=True)
+            git_db.reconcile_local_with_remote(remote, final_user_id)
+
+            # --- Stage 3: Push ---
+            typer.secho(f"⬆️  正在向 '{remote}' 推送合并后的本地历史...", fg=typer.colors.BLUE, err=True)
+            git_db.push_quipu_refs(remote, final_user_id)
+
+
+            typer.secho("\n✅ Quipu 双向同步完成。", fg=typer.colors.GREEN, err=True)
             typer.secho("\n💡 提示: 运行 `quipu cache sync` 来更新本地数据库和 UI 视图。", fg=typer.colors.YELLOW, err=True)
 
         except RuntimeError as e:

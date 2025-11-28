@@ -89,17 +89,12 @@ class TestSyncWorkflow:
         """
         remote_path, user_a_path, user_b_path = sync_test_environment
         user_a_id = get_user_id_from_email("user.a@example.com")
-        user_b_id = get_user_id_from_email("user.b@example.com")
-
+        
         # --- Step 1: User A creates more history (Node 2) ---
-        # This ensures User A has a history chain: Node 1 -> Node 2.
-        # Node 1 is an ancestor (non-head), which is critical for testing the ownership propagation bug.
         (user_a_path / "plan2.md").write_text("~~~~~act\necho 'world'\n~~~~~")
         runner.invoke(app, ["run", str(user_a_path / "plan2.md"), "--work-dir", str(user_a_path), "-y"])
         
         # Capture User A's commit hashes for verification later
-        # We expect 2 quipu commits.
-        # NOTE: Must use --all because Quipu commits are not on the master branch.
         user_a_commits = run_git_command(
             user_a_path,
             ["log", "--all", "--format=%H", "--grep=X-Quipu-Output-Tree"]
@@ -118,7 +113,6 @@ class TestSyncWorkflow:
         with open(config_path_b, "r") as f:
             config_b = yaml.safe_load(f)
         config_b["sync"]["subscriptions"] = [user_a_id]
-        # Explicitly enable SQLite storage
         if "storage" not in config_b:
             config_b["storage"] = {}
         config_b["storage"]["type"] = "sqlite"
@@ -128,6 +122,7 @@ class TestSyncWorkflow:
         # --- Step 3: User B Syncs (Fetch) ---
         sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_b_path), "--remote", "origin"])
         assert sync_result.exit_code == 0
+        # Should pull self + User A
         assert f"拉取 2 个用户的历史" in sync_result.stderr
 
         # Verify local mirror ref in User B's repo
@@ -146,9 +141,6 @@ class TestSyncWorkflow:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # Check ownership for User A's commits
-        # We check ALL commits from User A, including the ancestor (Node 1).
-        # If the bug existed, Node 1 would likely be assigned to User B (local user fallback).
         for commit_hash in user_a_commits:
             cursor.execute("SELECT owner_id FROM nodes WHERE commit_hash = ?", (commit_hash,))
             row = cursor.fetchone()
@@ -173,28 +165,29 @@ class TestSyncWorkflow:
 
         assert refs_after_1 == refs_after_2
 
-    def test_pruning_on_push(self, sync_test_environment):
+    def test_push_safety_no_prune(self, sync_test_environment):
         """
-        Tests that deleting a local head and syncing prunes the remote ref.
+        Tests that deleting a local head and syncing DOES NOT prune the remote ref.
+        This validates the non-destructive behavior of the new sync protocol.
         """
         remote_path, user_a_path, _ = sync_test_environment
         user_a_id = get_user_id_from_email("user.a@example.com")
 
         # Create two new nodes
         (user_a_path / "plan3.md").write_text("~~~~~act\necho 'plan3'\n~~~~~")
-        (user_a_path / "plan4.md").write_text("~~~~~act\necho 'plan4'\n~~~~~")
         runner.invoke(app, ["run", str(user_a_path / "plan3.md"), "--work-dir", str(user_a_path), "-y"])
-        runner.invoke(app, ["run", str(user_a_path / "plan4.md"), "--work-dir", str(user_a_path), "-y"])
-
+        
+        # Sync to ensure remote has it
         runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
         remote_refs_before = run_git_command(remote_path, ["for-each-ref", f"refs/quipu/users/{user_a_id}"])
-        num_refs_before = len(remote_refs_before.splitlines())
+        assert "plan3" in str(run_git_command(user_a_path, ["log", "--all"])) # Verify creation
         
-        # Find a ref to delete locally
+        # Identify a ref to delete locally
         local_quipu_refs = run_git_command(
             user_a_path, ["for-each-ref", "--format=%(refname)", "refs/quipu/local/heads"]
         ).splitlines()
         ref_to_delete = local_quipu_refs[0]
+        ref_hash = ref_to_delete.split("/")[-1]
 
         # Delete it locally
         run_git_command(user_a_path, ["update-ref", "-d", ref_to_delete])
@@ -203,9 +196,48 @@ class TestSyncWorkflow:
         sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
         assert sync_result.exit_code == 0
 
-        # Verify it's gone from remote
+        # Verify it is STILL present on remote (Safety Check)
         remote_refs_after = run_git_command(remote_path, ["for-each-ref", f"refs/quipu/users/{user_a_id}"])
-        num_refs_after = len(remote_refs_after.splitlines())
+        
+        # With prune enabled, this assertion would fail.
+        # With prune disabled, this must pass.
+        assert ref_hash in remote_refs_after
 
-        assert num_refs_after == num_refs_before - 1
-        assert ref_to_delete.split("/")[-1] not in remote_refs_after
+    def test_multi_device_reconciliation(self, sync_test_environment):
+        """
+        Tests the "Fetch -> Reconcile -> Push" flow.
+        Simulates User A working on two devices.
+        Device 2 creates Node X.
+        Device 1 syncs -> Should fetch Node X and promote it to local head.
+        """
+        remote_path, user_a_path, _ = sync_test_environment
+        
+        # 1. Setup Device 2 for User A
+        base_dir = user_a_path.parent
+        user_a_device2_path = base_dir / "user_a_device2"
+        run_git_command(base_dir, ["clone", str(remote_path), str(user_a_device2_path)])
+        run_git_command(user_a_device2_path, ["config", "user.name", "User A"])
+        run_git_command(user_a_device2_path, ["config", "user.email", "user.a@example.com"])
+
+        # Onboard Device 2
+        runner.invoke(app, ["sync", "--work-dir", str(user_a_device2_path), "--remote", "origin"])
+
+        # 2. Device 2 creates a unique node
+        (user_a_device2_path / "device2.md").write_text("~~~~~act\necho 'from device 2'\n~~~~~")
+        runner.invoke(app, ["run", str(user_a_device2_path / "device2.md"), "--work-dir", str(user_a_device2_path), "-y"])
+        
+        # Get the hash
+        d2_commits = run_git_command(user_a_device2_path, ["log", "--all", "--format=%H", "--grep=X-Quipu-Output-Tree"]).splitlines()
+        d2_new_hash = d2_commits[0]
+
+        # Device 2 Pushes
+        runner.invoke(app, ["sync", "--work-dir", str(user_a_device2_path), "--remote", "origin"])
+
+        # 3. Device 1 Syncs
+        # Expectation: Device 1 should pull Device 2's work and show it in local heads
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
+        assert sync_result.exit_code == 0
+        
+        # Verify Device 1 has the commit in LOCAL heads
+        d1_local_refs = run_git_command(user_a_path, ["for-each-ref", "refs/quipu/local/heads"])
+        assert d2_new_hash in d1_local_refs

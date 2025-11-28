@@ -404,7 +404,8 @@ class GitDB:
         """
         refspec = f"refs/quipu/local/heads/*:refs/quipu/users/{user_id}/heads/*"
         logger.info(f"🚀 Pushing Quipu history to {remote} for user {user_id}...")
-        self._run(["push", remote, "--prune", refspec])
+        # 移除了 --prune 选项，使推送操作变为非破坏性。
+        self._run(["push", remote, refspec])
 
     def fetch_quipu_refs(self, remote: str, user_id: str):
         """
@@ -414,3 +415,35 @@ class GitDB:
         refspec = f"refs/quipu/users/{user_id}/heads/*:refs/quipu/remotes/{remote}/{user_id}/heads/*"
         logger.info(f"🔍 Fetching Quipu history from {remote} for user {user_id}...")
         self._run(["fetch", remote, "--prune", refspec])
+
+    def reconcile_local_with_remote(self, remote: str, user_id: str):
+        """
+        将远程拉取下来的历史 (remotes) 与本地历史 (local) 进行调和。
+        这是一个安全的操作，只会添加本地不存在的远程引用。
+        """
+        remote_heads_prefix = f"refs/quipu/remotes/{remote}/{user_id}/heads/"
+        remote_heads = self.get_all_ref_heads(remote_heads_prefix)
+        if not remote_heads:
+            logger.debug("No remote refs found to reconcile.")
+            return
+
+        reconciled_count = 0
+        for commit_hash, remote_ref in remote_heads:
+            # e.g., remote_ref = refs/quipu/remotes/origin/user/heads/abc...
+            #       local_ref should be refs/quipu/local/heads/abc...
+            local_ref_suffix = remote_ref.replace(remote_heads_prefix, "")
+            local_ref = f"refs/quipu/local/heads/{local_ref_suffix}"
+
+            # 使用 rev-parse 检查本地 ref 是否已存在
+            # 如果本地已经存在，我们假设它是最新的或用户有意为之，不做任何操作
+            check_res = self._run(["rev-parse", "--verify", local_ref], check=False, log_error=False)
+            if check_res.returncode != 0:
+                # 本地不存在此 ref，从远程镜像创建它
+                self.update_ref(local_ref, commit_hash)
+                reconciled_count += 1
+                logger.info(f"🤝 Reconciled: Added new history branch -> {commit_hash[:7]}")
+
+        if reconciled_count > 0:
+            logger.info(f"✅ Reconciliation complete. Added {reconciled_count} new history branches from remote.")
+        else:
+            logger.debug("✅ Local history is already up-to-date with remote.")
