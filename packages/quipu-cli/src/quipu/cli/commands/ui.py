@@ -22,6 +22,7 @@ def register(app: typer.Typer):
                 "--work-dir", "-w", help="操作执行的根目录（工作区）", file_okay=False, dir_okay=True, resolve_path=True
             ),
         ] = DEFAULT_WORK_DIR,
+        raw: Annotated[bool, typer.Option("--raw", help="默认以纯文本模式启动，禁用 Markdown 渲染。")] = False,
     ):
         """
         以交互式 TUI 模式显示 Quipu 历史图谱。
@@ -46,7 +47,7 @@ def register(app: typer.Typer):
         finally:
             temp_engine.close()
 
-        app_instance = QuipuUiApp(work_dir=work_dir)
+        app_instance = QuipuUiApp(work_dir=work_dir, initial_raw_mode=raw)
         result = app_instance.run()
 
         if result:

@@ -1,5 +1,6 @@
 import sys
 import logging
+from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional
 
@@ -9,6 +10,7 @@ from textual.containers import Horizontal, Vertical
 from textual.binding import Binding
 from textual.coordinate import Coordinate
 from textual import on
+from textual.timer import Timer
 
 from quipu.core.models import QuipuNode
 from quipu.core.state_machine import Engine
@@ -22,6 +24,12 @@ logger = logging.getLogger(__name__)
 UiResult = tuple[str, str]
 
 
+class ContentViewSate(Enum):
+    HIDDEN = auto()
+    LOADING = auto()
+    SHOWING_CONTENT = auto()
+
+
 class QuipuUiApp(App[Optional[UiResult]]):
     CSS_PATH = "tui.css"
     TITLE = "Quipu History Explorer"
@@ -31,6 +39,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
         Binding("c", "checkout_node", "检出节点"),
         Binding("enter", "checkout_node", "检出节点"),
         Binding("v", "toggle_view", "切换内容视图"),
+        Binding("m", "toggle_markdown", "切换 Markdown 渲染"),
         Binding("p", "dump_content", "输出内容(stdout)"),
         Binding("t", "toggle_hidden", "显隐非关联分支"),
         Binding("k", "move_up", "上移", show=False),
@@ -43,13 +52,17 @@ class QuipuUiApp(App[Optional[UiResult]]):
         Binding("right", "next_page", "下一页"),
     ]
 
-    def __init__(self, work_dir: Path):
+    def __init__(self, work_dir: Path, initial_raw_mode: bool = False):
         super().__init__()
         self.work_dir = work_dir
         self.engine: Optional[Engine] = None
         self.view_model: Optional[GraphViewModel] = None
-        # is_split_mode 是纯视图状态，保留在 App 中
-        self.is_split_mode = False
+        
+        # --- State Machine ---
+        self.content_view_state = ContentViewSate.HIDDEN
+        self.update_timer: Optional[Timer] = None
+        self.debounce_delay_seconds: float = 0.15
+        self.markdown_enabled = not initial_raw_mode
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -57,6 +70,10 @@ class QuipuUiApp(App[Optional[UiResult]]):
             yield DataTable(id="history-table", cursor_type="row", zebra_stripes=False)
             with Vertical(id="content-view"):
                 yield Static("Node Content", id="content-header")
+                # Add a lightweight placeholder that we can update quickly.
+                # It's used for both fast-scrolling and the "raw" text mode.
+                yield Static("", id="content-placeholder", markup=False)
+                # The expensive Markdown widget
                 yield Markdown("", id="content-body")
         yield Footer()
 
@@ -88,7 +105,8 @@ class QuipuUiApp(App[Optional[UiResult]]):
 
     def _update_header(self):
         """Centralized method to update the app's title and sub_title."""
-        self.sub_title = f"Page {self.view_model.current_page} / {self.view_model.total_pages}"
+        mode = "Markdown" if self.markdown_enabled else "Raw Text"
+        self.sub_title = f"Page {self.view_model.current_page} / {self.view_model.total_pages} | View: {mode} (m)"
 
     def _load_page(self, page_number: int) -> None:
         """Loads and displays a specific page of nodes."""
@@ -113,12 +131,17 @@ class QuipuUiApp(App[Optional[UiResult]]):
         self.view_model.toggle_unreachable()
         self._refresh_table()
 
-    def action_toggle_view(self) -> None:
-        self.is_split_mode = not self.is_split_mode
-        container = self.query_one("#main-container")
-        container.set_class(self.is_split_mode, "split-mode")
-        if self.is_split_mode:
-            self._update_content_view()
+    def action_toggle_markdown(self) -> None:
+        """Toggles the rendering mode between Markdown and raw text."""
+        self.markdown_enabled = not self.markdown_enabled
+        self._update_header()
+        # If the content view is already showing, force a re-render with the new mode.
+        if self.content_view_state == ContentViewSate.SHOWING_CONTENT:
+            self._set_state(ContentViewSate.SHOWING_CONTENT)
+        elif self.content_view_state == ContentViewSate.LOADING:
+            # If it's loading, let the timer finish and it will naturally pick up the new mode.
+            pass
+
 
     def action_checkout_node(self) -> None:
         selected_node = self.view_model.get_selected_node()
@@ -240,12 +263,14 @@ class QuipuUiApp(App[Optional[UiResult]]):
                 # 1. 设置视觉光标
                 table.cursor_coordinate = Coordinate(row=row_index, column=0)
 
-                # 2. 同步逻辑状态 (防止事件未触发)
+                # 2. Sync data model state
                 self.view_model.select_node_by_key(row_key)
+                
+                # 3. Force-update the header on initial load, regardless of view mode.
+                # The state machine will handle the rest of the UI.
+                header = self.query_one("#content-header", Static)
+                header.update(f"[{target_node.node_type.upper()}] {target_node.short_hash} - {target_node.timestamp}")
 
-                # 3. 刷新关联视图
-                if self.is_split_mode:
-                    self._update_content_view()
             except LookupError:
                 # LookupError 捕获 RowKeyError 等
                 logger.warning(f"DEBUG: Row key {row_key} not found in DataTable.")
@@ -253,20 +278,103 @@ class QuipuUiApp(App[Optional[UiResult]]):
         except Exception as e:
             logger.error(f"DEBUG: Failed to focus current node: {e}", exc_info=True)
 
-    @on(DataTable.RowHighlighted)
-    def on_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
-        row_key = event.row_key.value
-        if row_key:
-            self.view_model.select_node_by_key(row_key)
-            if self.is_split_mode:
-                self._update_content_view()
-
-    def _update_content_view(self):
+    def _update_loading_preview(self):
+        """A lightweight method to only update header/placeholder text."""
         node = self.view_model.get_selected_node()
         if not node:
             return
-        header = self.query_one("#content-header", Static)
-        header.update(f"[{node.node_type.upper()}] {node.short_hash} - {node.timestamp}")
-        content = self.view_model.get_content_bundle(node)
-        markdown = self.query_one("#content-body", Markdown)
-        markdown.update(content)
+
+        # Update header and placeholder text
+        self.query_one("#content-header", Static).update(f"[{node.node_type.upper()}] {node.short_hash} - {node.timestamp}")
+        
+        # Always get the full content bundle for consistent information display.
+        # The Static widget is in markup=False mode, so it's fast and safe.
+        content_bundle = self.view_model.get_content_bundle(node)
+        self.query_one("#content-placeholder", Static).update(content_bundle)
+        
+
+    def _set_state(self, new_state: ContentViewSate):
+        # Allow re-entering SHOWING_CONTENT to force a re-render after toggling markdown
+        if self.content_view_state == new_state and new_state != ContentViewSate.SHOWING_CONTENT:
+            return
+
+        self.content_view_state = new_state
+        
+        container = self.query_one("#main-container")
+        placeholder_widget = self.query_one("#content-placeholder", Static)
+        markdown_widget = self.query_one("#content-body", Markdown)
+        
+        if self.update_timer:
+            self.update_timer.stop()
+
+        match new_state:
+            case ContentViewSate.HIDDEN:
+                container.set_class(False, "split-mode")
+
+            case ContentViewSate.LOADING:
+                container.set_class(True, "split-mode")
+                
+                # Perform lightweight text updates
+                self._update_loading_preview()
+                
+                # Perform heavy, one-time visibility setup
+                placeholder_widget.display = True
+                markdown_widget.display = False
+                markdown_widget.update("") # Prevent ghosting
+
+                # Start timer for next state transition
+                self.update_timer = self.set_timer(self.debounce_delay_seconds, self._on_timer_finished)
+
+            case ContentViewSate.SHOWING_CONTENT:
+                container.set_class(True, "split-mode")
+                node = self.view_model.get_selected_node()
+                
+                if node:
+                    content = self.view_model.get_content_bundle(node)
+                    # Update header
+                    self.query_one("#content-header", Static).update(f"[{node.node_type.upper()}] {node.short_hash} - {node.timestamp}")
+
+                    if self.markdown_enabled:
+                        markdown_widget.update(content)
+                        placeholder_widget.display = False
+                        markdown_widget.display = True
+                    else:
+                        placeholder_widget.update(content)
+                        placeholder_widget.display = True
+                        markdown_widget.display = False
+                
+    @on(DataTable.RowHighlighted)
+    def on_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        # 1. Update data model
+        if event.row_key.value:
+            self.view_model.select_node_by_key(event.row_key.value)
+        
+        # 2. Handle UI updates based on current state
+        if self.update_timer:
+            self.update_timer.stop()
+
+        if self.content_view_state == ContentViewSate.HIDDEN:
+            return # Do nothing if panel is closed
+        
+        elif self.content_view_state == ContentViewSate.SHOWING_CONTENT:
+            # Transition from showing content to loading
+            self._set_state(ContentViewSate.LOADING)
+        
+        elif self.content_view_state == ContentViewSate.LOADING:
+            # Already loading, just do a lightweight update and restart timer
+            self._update_loading_preview()
+            self.update_timer = self.set_timer(self.debounce_delay_seconds, self._on_timer_finished)
+
+    def _on_timer_finished(self) -> None:
+        """Callback for the debounce timer."""
+        # The timer finished, so we are ready to show content
+        self._set_state(ContentViewSate.SHOWING_CONTENT)
+    
+    def action_toggle_view(self) -> None:
+        """Handles the 'v' key press to toggle the content view."""
+        if self.content_view_state == ContentViewSate.HIDDEN:
+            # If a node is selected, transition to loading, otherwise do nothing
+            if self.view_model.get_selected_node():
+                self._set_state(ContentViewSate.LOADING)
+        else:
+            self._set_state(ContentViewSate.HIDDEN)

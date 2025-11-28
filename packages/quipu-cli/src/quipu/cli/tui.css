@@ -1,50 +1,42 @@
-Header {
-    dock: top;
-}
-
-Footer {
-    dock: bottom;
-}
-
+/* Base layout for the main container */
 #main-container {
-    /* The main container will now automatically fill the space
-       between the docked header and footer. */
-    width: 100%;
+    layout: horizontal;
 }
 
-DataTable {
-    height: 100%;
-    background: $surface;
-    border: none;
+/* The history table should take up all available space by default */
+#history-table {
+    width: 1fr;
 }
 
-/* Split Mode Styles */
-.split-mode #history-table {
-    width: 50%;
-}
-
+/* The content view is hidden by default */
 #content-view {
-    display: none; /* 默认隐藏右侧内容区 */
-    width: 50%;
+    display: none;
+    width: 0;
     height: 100%;
-    border-left: solid $primary;
-    background: $surface;
+    border-left: solid $accent;
+    /* THE FIX PART 1: Enable vertical scrolling when content overflows */
+    overflow-y: scroll;
 }
 
-.split-mode #content-view {
+/* When in split mode, the content view becomes visible */
+#main-container.split-mode > #content-view {
     display: block;
+    width: 1fr; /* Takes up 50% of the space with the table */
+}
+
+/*
+ * THE FIX PART 2:
+ * This ensures the Static placeholder widget reports its full content height,
+ * which will trigger the overflow on its parent container.
+ */
+#content-placeholder {
+    width: 100%;
+    height: auto;
 }
 
 #content-header {
-    height: 1;
-    background: $primary;
-    color: $text;
     text-align: center;
     text-style: bold;
-}
-
-#content-body {
-    height: 1fr;
-    padding: 1;
-    overflow-y: auto;
+    padding: 0 1;
+    background: $surface-lighten-1;
 }
