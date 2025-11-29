@@ -82,12 +82,19 @@ def _generate_navbar(
         ancestor = ancestor.parent
 
     # 2. 上一分支点 (↓)
+    # Find the nearest ancestor that is a branch point.
     ancestor = current_node.parent
+    found_branch_point = None
     while ancestor:
         if len(ancestor.children) > 1 and ancestor.commit_hash in exported_hashes_set:
-            nav_links.append(f"> ↓ [上一分支点]({filename_map[ancestor.commit_hash]})")
+            found_branch_point = ancestor
             break
         ancestor = ancestor.parent
+    
+    # Add the link only if a branch point was found AND it's not the direct parent
+    # (to avoid a redundant link).
+    if found_branch_point and current_node.parent and found_branch_point.commit_hash != current_node.parent.commit_hash:
+        nav_links.append(f"> ↓ [上一分支点]({filename_map[found_branch_point.commit_hash]})")
 
     # 3. 父节点 (←)
     if current_node.parent and current_node.parent.commit_hash in exported_hashes_set:

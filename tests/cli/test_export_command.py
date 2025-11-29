@@ -129,6 +129,7 @@ def test_export_navbar_logic(runner, populated_history):
     content = summary_node_file.read_text()
     # n4 is a summary node, but its ancestors are not. So it should not have a summary link.
     assert "↑ [总结节点]" not in content
+    # It is on a linear path, but its grandparent is a branch point, so the link SHOULD exist.
     assert "↓ [上一分支点]" in content
     assert "Branch_Point" in content # Check it links to the correct file
 
@@ -168,3 +169,71 @@ def test_export_edge_cases(runner, quipu_workspace):
     result = runner.invoke(app, ["export", "-w", str(work_dir), "--since", "2099-01-01 00:00"])
     assert result.exit_code == 0
     assert "未找到符合条件的节点" in result.stderr
+
+
+@pytest.fixture
+def complex_history_for_nav(engine_instance: Engine):
+    """
+    Creates a history to test contextual navbar links for the 'previous branch point'.
+    History:
+    - n0 (root)
+      - n1 (Branch Point)
+        - n2a (Branch A, has a sibling)
+        - n2b (Branch B, has a sibling)
+          - n3 (Linear on B, has NO sibling)
+    """
+    engine = engine_instance
+    ws = engine.root_dir
+
+    # n0 (Root)
+    (ws / "f").write_text("v0")
+    h0 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(EMPTY_TREE_HASH, h0, "plan 0", summary_override="Root")
+
+    # n1 (Branch Point)
+    (ws / "f").write_text("v1")
+    h1 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h0, h1, "plan 1", summary_override="Branch_Point")
+
+    # n2a (Node with sibling)
+    engine.visit(h1)
+    (ws / "a").touch()
+    h2a = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h1, h2a, "plan 2a", summary_override="Node_With_Sibling")
+
+    # n2b (Another node with sibling)
+    engine.visit(h1)
+    (ws / "b").touch()
+    h2b = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h1, h2b, "plan 2b", summary_override="Another_Node_With_Sibling")
+
+    # n3 (Node without sibling, linear continuation)
+    engine.visit(h2b)
+    (ws / "c").touch()
+    h3 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h2b, h3, "plan 3", summary_override="Node_Without_Sibling")
+
+    return engine
+
+
+def test_export_navbar_contextual_branch_link(runner, complex_history_for_nav):
+    """Tests that the 'previous branch point' link only appears for nodes that have siblings."""
+    engine = complex_history_for_nav
+    output_dir = engine.root_dir / ".quipu" / "test_export_nav"
+    runner.invoke(app, ["export", "-w", str(engine.root_dir), "-o", str(output_dir)])
+
+    files = {f.name: f for f in output_dir.glob("*.md")}
+
+    # Case 1: Node WITH a sibling.
+    # Its parent is the branch point, so the link should NOT be created to avoid redundancy.
+    node_with_sibling_file = next(f for name, f in files.items() if "Node_With_Sibling" in name)
+    content_with_sibling = node_with_sibling_file.read_text()
+    assert "↓ [上一分支点]" not in content_with_sibling
+    assert "← [父节点]" in content_with_sibling # It has a parent link to the branch point.
+
+    # Case 2: Node WITHOUT a sibling.
+    # It SHOULD have a link to the more distant branch point.
+    node_without_sibling_file = next(f for name, f in files.items() if "Node_Without_Sibling" in name)
+    content_without_sibling = node_without_sibling_file.read_text()
+    assert "↓ [上一分支点]" in content_without_sibling
+    assert "Branch_Point" in content_without_sibling
