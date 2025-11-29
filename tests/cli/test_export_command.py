@@ -146,7 +146,9 @@ def test_export_zip(runner, populated_history):
         ("child", "→ [子节点]", "↑ [总结节点]"),
     ],
 )
-def test_export_hide_link_type(runner, history_for_all_links, link_type_to_hide, text_not_expected, text_still_expected):
+def test_export_hide_link_type(
+    runner, history_for_all_links, link_type_to_hide, text_not_expected, text_still_expected
+):
     """验证 --hide-link-type 选项能成功禁用特定类型的链接。"""
     engine = history_for_all_links
     output_dir = engine.root_dir / ".quipu" / "test_export_hide_links"
@@ -168,8 +170,15 @@ def test_export_hide_multiple_link_types(runner, history_for_all_links):
     result = runner.invoke(
         app,
         [
-            "export", "-w", str(engine.root_dir), "-o", str(output_dir),
-            "--hide-link-type", "summary", "--hide-link-type", "child",
+            "export",
+            "-w",
+            str(engine.root_dir),
+            "-o",
+            str(output_dir),
+            "--hide-link-type",
+            "summary",
+            "--hide-link-type",
+            "child",
         ],
     )
     assert result.exit_code == 0, result.stderr

@@ -253,7 +253,7 @@ class Engine:
             if node.output_tree == current_hash:
                 found_node = node
                 break
-        
+
         if found_node:
             self.current_node = found_node
             logger.info(f"✅ 状态对齐：当前工作区匹配节点 {self.current_node.short_hash}")

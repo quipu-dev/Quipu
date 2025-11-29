@@ -69,7 +69,7 @@ def register(app: typer.Typer):
                     if node.output_tree == target_tree_hash:
                         latest_node = node
                         break
-            
+
             if not latest_node:
                 latest_node = max(graph.values(), key=lambda n: n.timestamp)
                 target_tree_hash = latest_node.output_tree
