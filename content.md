@@ -1,82 +1,68 @@
-非常敏锐的观察。
+好的，所有测试已通过，功能已完成。现在我们将把这些变更作为一个完整的单元进行提交。
 
-**错误分析**:
-测试失败的原因不在于 `pull-only` 的逻辑有误，而在于测试用例本身的**设置步骤顺序**出了问题。
-
-```python
-# User B creates a node but doesn't push
-node_b = create_node(user_b_path, "node_from_b_local")  # <--- 1. 这里创建了节点
-
-# [FIX] User B must subscribe to User A to be able to pull their changes.
-runner.invoke(app, ["sync", "--work-dir", str(user_b_path)])  # <--- 2. 这里为了初始化用户身份运行了 sync
-```
-
-默认的 `sync` 命令使用的是 `BIDIRECTIONAL`（双向）模式。因此，步骤 2 不仅初始化了用户 ID，还顺便把步骤 1 中创建的 `node_b` 推送到了远程。
-这导致后续的断言 `assert node_b not in remote_refs` 必然失败，因为节点在测试的主要动作（pull-only sync）开始之前就已经在远程了。
-
-**解决方案**:
-调整测试步骤的顺序：先进行 Onboard（此时没有新节点，Push 为空操作），然后再创建 `node_b`，最后执行 `pull-only` 测试。
-
-## [WIP] test: 修正 test_pull_only_mode 中初始化顺序导致的意外推送
-
-### 错误分析
-测试 `test_pull_only_mode` 在准备阶段调用了默认的 `sync` 命令来初始化 User B 的身份配置。然而，在此之前 `node_b` 已经被创建。由于默认 `sync` 包含推送操作，导致 `node_b` 在测试核心逻辑（`pull-only`）执行前就被推送到远程，从而导致后续“远程不应包含该节点”的断言失败。
+## [COMMIT] feat(cli): 实现多种 sync 模式以支持灵活的协作工作流
 
 ### 用户需求
-确保测试环境的设置步骤不会产生副作用（如意外推送数据），从而准确验证 `pull-only` 模式的行为。
+为了适应不同的协作场景，`quipu sync` 命令需要提供比默认双向同步更精细的控制。具体需求包括：
+1.  **单向推送 (`push-only`)**: 仅将本地变更推送到远程，用于备份或单向发布。
+2.  **单向拉取 (`pull-only`)**: 仅从远程拉取并调和变更，不推送本地节点，用于只读订阅或在推送前审查。
+3.  **强制推送 (`push-force`)**: 强制用本地 `local/heads` 覆盖远程用户目录，用于修复错误或重置远程历史。
+4.  **拉取并修剪 (`pull-prune`)**: 在拉取后，删除本地那些在远程镜像中已不存在的引用，保持本地与远程的严格一致。
 
 ### 评论
-这是一个典型的测试逻辑缺陷，修正顺序即可解决。
+这个功能是 Quipu 协作能力的一次重大升级。它将 `sync` 从一个单一用途的工具转变为一个灵活的、适应多种开发哲学的工作流引擎，无论是个人备份、团队协作还是中心化管理，都能提供支持。
 
 ### 目标
-在 `tests/integration/test_sync_modes.py` 中调整 `test_pull_only_mode` 的执行顺序：Onboard -> Create Node -> Pull-Only Sync。
+1.  在 `quipu sync` 命令中添加 `--mode` 选项，支持 `bidirectional`, `push-only`, `pull-only`, `push-force`, `pull-prune` 五种模式。
+2.  在 `git_db.py` 中为 `push_quipu_refs` 添加 `force` 参数，并实现 `prune_local_from_remote` 方法。
+3.  在 `remote.py` 中使用 `match` 语句分派不同的同步逻辑。
+4.  创建了新的集成测试文件 `test_sync_modes.py`，对每种模式的正确行为进行了验证。
+5.  修复了 `test_sync_workflow.py` 中因所有权传播逻辑变更而导致的测试失败。
 
 ### 基本原理
-通过在创建任何历史节点之前运行一次 `sync`，我们可以完成用户 ID 的生成和配置文件的初始化，而不会产生任何实质性的 Git 推送。这样就保证了 `node_b` 仅存在于本地，为验证 `pull-only` 不会推送它提供了干净的初始状态。
+通过引入一个 `SyncMode` 枚举和命令分派器，我们将复杂的同步逻辑分解为一系列原子化的 Git 操作（`fetch`, `reconcile`, `push`, `prune`）。每种模式只是这些原子操作的不同组合，这使得代码清晰、可维护且易于扩展。测试套件确保了这些组合在模拟的真实多用户环境下行为正确。
 
 ### 标签
-#intent/fix #flow/ready #priority/medium #comp/tests #concept/sync #scope/core #ai/instruct #task/domain/testing #task/object/sync-test #task/action/refactor #task/state/begin
+#intent/build #flow/ready #priority/high #comp/cli #comp/engine #concept/sync #scope/api #ai/instruct #task/domain/cli #task/object/sync-command #task/action/enhancement #task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 调整测试步骤顺序
+#### Acts 1: 暂存并提交所有相关变更
+
+我们将所有已修改和新增的文件添加到暂存区，并创建一个内容详尽的提交来记录这项功能的完成。
 
 ~~~~~act
-patch_file
+git_add
+packages/quipu-cli/src/quipu/cli/commands/remote.py
+packages/quipu-engine/src/quipu/engine/git_db.py
+tests/integration/test_sync_workflow.py
 tests/integration/test_sync_modes.py
 ~~~~~
-~~~~~python
-        # User A creates a node and pushes
-        node_a = create_node(user_a_path, "node_from_a_for_pull")
-        runner.invoke(app, ["sync", "--work-dir", str(user_a_path)])
 
-        # User B creates a node but doesn't push
-        node_b = create_node(user_b_path, "node_from_b_local")
-
-        # [FIX] User B must subscribe to User A to be able to pull their changes.
-        runner.invoke(app, ["sync", "--work-dir", str(user_b_path)])  # Onboard B first
-        config_path_b = user_b_path / ".quipu" / "config.yml"
-        with open(config_path_b, "r") as f:
-            config_b = yaml.safe_load(f)
+~~~~~act
+git_commit
 ~~~~~
-~~~~~python
-        # User A creates a node and pushes
-        node_a = create_node(user_a_path, "node_from_a_for_pull")
-        runner.invoke(app, ["sync", "--work-dir", str(user_a_path)])
+~~~~~text
+feat(cli): implement multiple sync modes for flexible workflows
 
-        # [FIX] User B must subscribe to User A to be able to pull their changes.
-        # Onboard B first (before creating local nodes to avoid accidental push)
-        runner.invoke(app, ["sync", "--work-dir", str(user_b_path)])
-        
-        # User B creates a node but doesn't push
-        node_b = create_node(user_b_path, "node_from_b_local")
+Introduces a `--mode` option to the `quipu sync` command, enabling granular control over the synchronization process. This completes the "add multiple sync modes" task.
 
-        config_path_b = user_b_path / ".quipu" / "config.yml"
-        with open(config_path_b, "r") as f:
-            config_b = yaml.safe_load(f)
+The following modes are now supported:
+- `bidirectional` (default): Fetches, reconciles, and pushes.
+- `push-only`: Pushes local changes without fetching remote updates. Ideal for backups or one-way publishing.
+- `pull-only`: Fetches and reconciles remote changes without pushing local nodes. Useful for read-only subscriptions.
+- `push-force`: Force-pushes local heads, overwriting the user's remote namespace. Allows for history rewriting and correction.
+- `pull-prune`: After fetching, prunes local heads that no longer exist on the remote mirror. Enforces strict consistency with the remote.
+
+This is implemented by:
+1.  Adding a `SyncMode` Enum and a dispatcher in `remote.py`.
+2.  Enhancing `GitDB` with `force` capabilities for push operations and a new `prune_local_from_remote` method.
+3.  Creating a dedicated integration test suite, `test_sync_modes.py`, to validate the behavior of each mode in a multi-user environment.
+4.  Fixing related tests in `test_sync_workflow.py` to align with updated ownership propagation logic.
 ~~~~~
 
 ### 下一步建议
-运行测试 `pytest tests/integration/test_sync_modes.py`。
+- **文档更新**: 更新项目的 `README.md` 或相关文档，向用户介绍新的 `sync` 模式及其使用场景。
+- **UI 集成**: 可以在 `quipu ui` 中考虑添加一个界面，让用户可以方便地管理订阅列表和查看不同协作者的历史分支。
