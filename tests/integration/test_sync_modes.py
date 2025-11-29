@@ -30,7 +30,7 @@ def create_node(work_dir: Path, content: str) -> str:
     plan_title = f"Plan for {content}"
     plan_file = work_dir / f"{content}.md"
     plan_file.write_text(f"# {plan_title}\n\n~~~~~act\necho '{content}'\n~~~~~")
-    
+
     result = runner.invoke(app, ["run", str(plan_file), "--work-dir", str(work_dir), "-y"])
     assert result.exit_code == 0
 
@@ -51,9 +51,7 @@ def create_node(work_dir: Path, content: str) -> str:
         if plan_title in msg:
             return head
 
-    raise AssertionError(
-        f"Could not identify Plan node among {len(new_heads)} new heads: {new_heads}"
-    )
+    raise AssertionError(f"Could not identify Plan node among {len(new_heads)} new heads: {new_heads}")
 
 
 class TestSyncModes:
@@ -97,7 +95,7 @@ class TestSyncModes:
         # [FIX] User B must subscribe to User A to be able to pull their changes.
         # Onboard B first (before creating local nodes to avoid accidental push)
         runner.invoke(app, ["sync", "--work-dir", str(user_b_path)])
-        
+
         # User B creates a node but doesn't push
         node_b = create_node(user_b_path, "node_from_b_local")
 
