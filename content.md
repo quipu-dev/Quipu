@@ -1,55 +1,60 @@
-好的，测试通过。我们已经成功地将健壮性测试覆盖到了所有核心的交互式命令。
+## [COMMIT] style: 使用 ruff 格式化全库代码
 
-现在，我将生成一个 `[COMMIT]` 计划，将这项重要的改进固化到项目的历史记录中。
-
-## [COMMIT] test(cli): 将不友好路径测试扩展至 discard 和 checkout
+### 错误分析
+无（这是一个主动的代码维护操作）。
 
 ### 用户需求
-将为 `quipu run` 命令建立的“不友好路径”测试模式（用户取消和非交互式环境）扩展到 `quipu discard` 和 `quipu checkout` 命令，以确保整个 CLI 工具链在这些场景下行为一致且安全。
+使用 `ruff` 工具对当前项目的所有代码进行格式化，并将变更提交到版本控制系统。
 
 ### 评论
-这是一项系统性的健壮性增强。通过确保所有具有潜在破坏性的交互式命令都遵循相同的安全中止逻辑，我们极大地提升了 Quipu CLI 的可靠性和用户信任度。这标志着我们“全面审查测试套件”任务的完成。
+这是一个标准的维护任务。保持代码风格的一致性对于项目的长期可维护性至关重要。将格式化操作作为一个独立的提交进行，可以避免污染包含逻辑变更的提交。
 
 ### 目标
-1.  已在 `test_unfriendly_paths.py` 中添加了一个共享的 `dirty_workspace` fixture，用于提供一个包含历史和变更的通用测试环境。
-2.  已成功为 `quipu discard` 命令添加了“用户取消”和“非交互式环境”两个测试用例。
-3.  已成功为 `quipu checkout` 命令添加了两个功能相同的测试用例。
-4.  通过一个 Git 提交，将这些测试的改进持久化。
+1.  在项目根目录下运行 `ruff format .`。
+2.  将所有变更的文件添加到 Git 暂存区。
+3.  创建一个提交以固化格式化变更。
 
 ### 基本原理
-我们利用 `pytest` 的 fixture 机制创建了一个可复用的、包含多阶段历史的工作区，简化了测试设置。通过复用 `monkeypatch` 技术来精确模拟 `click.getchar()` 在不同场景下的行为，我们确保了测试的可靠性和确定性。断言逻辑验证了命令的退出码、stderr 输出和文件系统状态，确保操作在被中止时没有产生任何副作用。
+`ruff` 是项目中配置的 Python 代码格式化工具（在 `pyproject.toml` 中定义）。通过 `run_command` 调用它不仅速度快，而且能确保应用的是项目定义的配置。
 
 ### 标签
-#intent/tooling #flow/ready #priority/high #comp/cli #comp/tests #concept/navigation #scope/dx #ai/instruct #task/domain/testing #task/object/unfriendly-paths #task/action/implementation #task/state/end #task/status/completed
+#intent/tune #flow/ready #priority/low
+#comp/build #concept/tooling #scope/dx
+#ai/instruct
+#task/domain/maintenance #task/object/code-style #task/action/format
+#task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 提交测试变更
+#### Acts 1: 执行格式化并提交
 
-现在，我们将修改后的测试文件添加到 Git 暂存区，并创建一个内容详尽的提交。
+首先运行 ruff 进行格式化，然后将变更加入暂存区并提交。
+
+~~~~~act
+run_command
+~~~~~
+~~~~~command
+.envs/dev/bin/ruff format .
+~~~~~
 
 ~~~~~act
 git_add
-tests/cli/test_unfriendly_paths.py
+~~~~~
+~~~~~files
+.
 ~~~~~
 
 ~~~~~act
 git_commit
 ~~~~~
-~~~~~text
-test(cli): extend unfriendly path tests to discard and checkout
+~~~~~message
+style: format code with ruff
 
-Extends the robust testing pattern for "unfriendly paths" (user cancellation and non-interactive environments) to the `discard` and `checkout` commands.
-
-This ensures that all critical interactive commands that can alter the file system behave consistently and safely when user confirmation is denied or unavailable.
-
-A shared `dirty_workspace` fixture has been added to streamline the setup for these tests. The `monkeypatch` approach is used to simulate `click.getchar()` behavior, verifying that operations are cleanly aborted without side effects.
+Applies standard code formatting across the entire repository using `ruff format .`.
 ~~~~~
 
 ### 下一步建议
-我们已经成功完成了对核心交互命令的“不友好路径”测试覆盖任务。
-
-- **任务完成**: 我们可以认为“全面审查现有的测试套件，为所有涉及用户输入或文件系统交互的命令，补充‘不友好路径’测试用例”这项任务已经完成。
-- **未来方向**: 我们可以继续审查代码库，寻找其他可以提升健壮性或测试覆盖率的领域。
+- **CI 检查**: 确保 CI 流程中包含 `ruff format --check` 步骤，以防止未来引入未格式化的代码。
+- **Pre-commit**: 考虑配置 `pre-commit` 钩子，在每次提交前自动运行此检查。
