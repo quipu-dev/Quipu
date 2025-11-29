@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] fix: 修复 `unfriendly_paths` 测试用例以对齐 MessageBus", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764415421.9563613, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] fix: 修正 `test_unfriendly_paths.py` 中的 ImportError", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764415505.51315, "duration_ms": 0}}

@@ -1,42 +1,39 @@
-分析正确。测试失败暴露了两个问题：
+分析正确。
 
-1.  `test_unfriendly_paths.py` 中缺少 `unittest.mock` 的导入，导致了 `NameError`。
-2.  该测试文件中 `discard` 和 `checkout` 命令的测试用例没有随着 `MessageBus` 的重构而更新。它们仍在检查旧的、硬编码的 `stderr` 字符串，而不是验证 `bus` 的语义调用。
+这是一个典型的 `ImportError`，它暴露了我上一步计划中的一个疏忽。`unittest.mock` 模块本身并不导出一个名为 `mock` 的对象供我们导入；`mock` 是 `unittest` 下的一个模块。当我们需要使用 `mock.ANY` 或 `mock.MagicMock` 时，正确的导入方式是 `from unittest import mock`。然而，更符合 Python 风格且更简洁的做法是直接导入我们需要的具体对象，例如 `MagicMock` 和 `ANY`。
 
-我将生成一个计划来一次性修复这些问题，使测试套件恢复健康状态，并确保我们的重构是正确的。
+我之前生成的代码错误地混合了两种方式，导致了 `ImportError`。我将立即修正这个问题。
 
-## [WIP] fix: 修复 `unfriendly_paths` 测试用例以对齐 MessageBus
+## [WIP] fix: 修正 `test_unfriendly_paths.py` 中的 ImportError
 
 ### 错误分析
-测试套件的失败是由于 `test_unfriendly_paths.py` 文件没有与 `MessageBus` 的重构完全同步。具体来说：
-1.  **`NameError`**: 文件中使用了 `MagicMock` 和 `mock`，但没有从 `unittest.mock` 中导入它们。
-2.  **`AssertionError`**: `discard` 和 `checkout` 命令的用户取消测试，仍在断言旧的、已被移除的硬编码字符串 (如 "操作已取消")。在 `MessageBus` 重构后，这些命令现在应该通过调用 `bus.warning("common.prompt.cancel")` 来发出取消信号，而测试用例需要反映这一变化。
+测试执行失败，原因为 `ImportError: cannot import name 'mock' from 'unittest.mock'`。这是因为在 `tests/cli/test_unfriendly_paths.py` 文件中，使用了错误的导入语句 `from unittest.mock import MagicMock, mock`。
+
+正确的做法是直接从 `unittest.mock` 导入需要使用的 `MagicMock` 和 `ANY` 对象。
 
 ### 用户需求
-修正 `tests/cli/test_unfriendly_paths.py` 文件，使其：
-1.  正确导入 `MagicMock` 和 `mock`。
-2.  更新所有 `discard` 和 `checkout` 的不友好路径测试，使用 `monkeypatch` 注入一个 `mock_bus`，并断言正确的 `bus` 方法被调用，而不是检查 `result.stderr` 的内容。
+修正 `tests/cli/test_unfriendly_paths.py` 文件中的导入语句和相关的代码，解决 `ImportError`，使测试套件能够正常运行。
 
 ### 评论
-这是一个典型的“测试债务”清理工作。在大型重构过程中，确保测试与实现同步至关重要。这次修复将使我们的测试套件更加健壮，因为它将彻底摆脱对 UI 呈现细节的依赖，转而专注于验证核心业务逻辑的意图。
+这是一个简单的编码错误，但它阻断了我们的开发流程。立即修复它是恢复测试套件健康、继续进行重构任务的必要步骤。
 
 ### 目标
-1.  向 `test_unfriendly_paths.py` 添加 `from unittest.mock import MagicMock, mock`。
-2.  重写 `test_discard_*` 和 `test_checkout_*` 测试函数，以 `mock_bus` 为断言目标。
+1.  修改 `test_unfriendly_paths.py` 中的导入语句为 `from unittest.mock import MagicMock, ANY`。
+2.  将代码中所有对 `mock.ANY` 的引用修改为 `ANY`。
 
 ### 基本原理
-通过使用 `pytest` 的 `monkeypatch` fixture，我们可以动态地替换 `quipu.cli.commands.workspace.bus` 和 `quipu.cli.commands.navigation.bus` 为一个 `MagicMock` 实例。这样，当 CLI 命令运行时，所有对 `bus` 的调用都会被这个 mock 对象记录下来。测试的最后一步就是检查这个 mock 对象是否以我们预期的方式被调用了（例如，`mock_bus.warning.assert_called_once_with("common.prompt.cancel")`），从而验证了代码的正确行为。
+遵循 Python 标准库的导入规范。直接导入所需的类和常量，而不是试图导入模块本身作为命名空间（除非使用 `from unittest import mock` 这种形式）。
 
 ### 标签
-#intent/fix #flow/ready #priority/high #comp/tests #scope/core #ai/instruct #task/domain/testing #task/object/test-suite #task/action/bug-fix #task/state/continue #task/status/active
+#intent/fix #flow/ready #priority/critical #comp/tests #scope/dx #ai/instruct #task/domain/testing #task/object/test-suite #task/action/bug-fix #task/state/continue #task/status/active
 
 ---
 
 ### Script
 
-#### Acts 1: 修复 `test_unfriendly_paths.py`
+#### Acts 1: 修正 `test_unfriendly_paths.py`
 
-我们将用一个 `write_file` 操作完整地重写这个测试文件，以确保所有问题都被修正。
+我将使用 `write_file` 完整地重写该文件，以确保所有导入和引用都得到正确修正。
 
 ```````act
 write_file
@@ -46,7 +43,7 @@ tests/cli/test_unfriendly_paths.py
 import pytest
 import click
 from typer.testing import CliRunner
-from unittest.mock import MagicMock, mock
+from unittest.mock import MagicMock, ANY
 
 from quipu.cli.main import app
 from quipu.engine.state_machine import Engine
@@ -109,7 +106,7 @@ echo "Should not run" > {output_file.name}
     result = runner.invoke(app, ["run", "-w", str(work_dir)], input=plan_content)
 
     assert result.exit_code == 2
-    mock_bus.warning.assert_called_once_with("run.error.cancelled", error=mock.ANY)
+    mock_bus.warning.assert_called_once_with("run.error.cancelled", error=ANY)
     assert not output_file.exists()
 
 
@@ -139,7 +136,7 @@ echo "Should not run" > {output_file.name}
     result = runner.invoke(app, ["run", "-w", str(work_dir)], input=plan_content)
 
     assert result.exit_code == 2
-    mock_bus.warning.assert_called_once_with("run.error.cancelled", error=mock.ANY)
+    mock_bus.warning.assert_called_once_with("run.error.cancelled", error=ANY)
     assert not output_file.exists()
 
 
@@ -220,6 +217,4 @@ def test_checkout_in_non_interactive_env(runner: CliRunner, dirty_workspace, mon
 ```````
 
 ### 下一步建议
-测试已修复，`run` 和 `axon` 命令也已成功迁移。`MessageBus` 重构任务已进入最后阶段。
-
-下一步，我们将处理剩余的独立功能命令：**`remote`、`export` 和 `ui`**。完成它们之后，整个 `quipu-cli` 将实现完全的输出解耦。
+测试障碍已清除。我们现在可以安全地回到主线上，继续执行重构计划的第七阶段：迁移最后一批独立功能命令 (`remote`, `export`, `ui`) 到 `MessageBus`。
