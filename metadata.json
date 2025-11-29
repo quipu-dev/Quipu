@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[COMMIT] refactor(core): split core namespace into engine, runtime, and interfaces", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764393717.3812592, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] style: 使用 ruff 格式化全库代码", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764393797.798098, "duration_ms": 0}}

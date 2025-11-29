@@ -1,61 +1,60 @@
-Excellent. With the tests passing, we can now confidently commit this major architectural refactoring. The file tree confirms that the directories have been correctly renamed and the new structure is in place.
+## [COMMIT] style: 使用 ruff 格式化全库代码
 
-I will now generate the final `[COMMIT]` plan to persist these changes into the version history.
-
-## [COMMIT] refactor(core): split core namespace into engine, runtime, and interfaces
+### 错误分析
+无（这是一个主动的代码维护操作）。
 
 ### 用户需求
-将 `quipu.core` 命名空间重构的成功结果（包括目录重命名和 `import` 语句更新）作为一个原子性的、有良好文档记录的变更提交到 Git 仓库。
+使用 `ruff` 工具对当前项目的所有代码进行格式化，并将变更提交到版本控制系统。
 
 ### 评论
-这是一个里程碑式的重构。它消除了 `quipu.core` 这一模糊的命名空间，使得项目的物理代码结构与逻辑架构（Engine/Runtime/Interfaces）完全对齐。这将极大地提升代码库的可读性、可维护性，并为未来的功能开发奠定更坚实的基础。
+这是一个标准的维护任务。保持代码风格的一致性对于项目的长期可维护性至关重要。将格式化操作作为一个独立的提交进行，可以避免污染包含逻辑变更的提交。
 
 ### 目标
-1.  将所有因重构而产生的变更（文件修改和目录移动）添加到 Git 暂存区。
-2.  创建一个清晰、详尽的 Git Commit，永久记录此次架构演进。
+1.  在项目根目录下运行 `ruff format .`。
+2.  将所有变更的文件添加到 Git 暂存区。
+3.  创建一个提交以固化格式化变更。
 
 ### 基本原理
-通过创建一个单一、完整的提交，我们确保了 Git 历史的干净和可追溯性。任何开发者在未来 `git blame` 或 `git log` 时，都能立刻理解这个大规模变更的意图和范围，而不是看到一系列零散的、无上下文的修改。
+`ruff` 是项目中配置的 Python 代码格式化工具（在 `pyproject.toml` 中定义）。通过 `run_command` 调用它不仅速度快，而且能确保应用的是项目定义的配置。
 
 ### 标签
-#intent/refactor #flow/ready #priority/high #comp/engine #comp/runtime #comp/interfaces #comp/tests #scope/core #ai/instruct #task/domain/storage #task/object/namespace #task/action/refactor #task/state/end #task/status/completed
+#intent/tune #flow/ready #priority/low
+#comp/build #concept/tooling #scope/dx
+#ai/instruct
+#task/domain/maintenance #task/object/code-style #task/action/format
+#task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 提交命名空间重构
+#### Acts 1: 执行格式化并提交
 
-我们将暂存所有变更，并使用一条遵循 Conventional Commits 规范的提交信息来创建提交。
+首先运行 ruff 进行格式化，然后将变更加入暂存区并提交。
+
+~~~~~act
+run_command
+~~~~~
+~~~~~command
+.envs/dev/bin/ruff format .
+~~~~~
 
 ~~~~~act
 git_add
+~~~~~
+~~~~~files
 .
 ~~~~~
 
 ~~~~~act
 git_commit
 ~~~~~
-~~~~~text
-refactor(core): split core namespace into engine, runtime, and interfaces
+~~~~~message
+style: format code with ruff
 
-This major refactoring aligns the physical code structure with the project's logical architecture by splitting the ambiguous `quipu.core` namespace.
-
-Previously, modules from different logical layers (engine, runtime, interfaces) shared the same `quipu.core` namespace, obscuring their boundaries and responsibilities.
-
-This change introduces three distinct and semantically meaningful namespaces:
-- `quipu.engine`: For state management, history, and Git plumbing.
-- `quipu.runtime`: For stateless parsing and execution of plans.
-- `quipu.interfaces`: for shared data models, exceptions, and abstract base classes.
-
-The refactoring was performed atomically via an automated script, which:
-1. Renamed the `core` directory within `quipu-engine`, `quipu-runtime`, and `quipu-interfaces` packages to `engine`, `runtime`, and `interfaces` respectively.
-2. Updated all `from quipu.core...` import statements across the entire codebase (`packages/` and `tests/`) to point to their new locations.
-
-This greatly improves code clarity, maintainability, and enforces stronger module separation.
+Applies standard code formatting across the entire repository using `ruff format .`.
 ~~~~~
 
 ### 下一步建议
-本次核心架构重构已经完成并提交。现在，我们可以：
-1.  继续开发新的功能，享受更清晰的架构带来的便利。
-2.  审视 `pyproject.toml` 中的依赖关系，看是否有可以进一步解耦和优化的空间。
+- **CI 检查**: 确保 CI 流程中包含 `ruff format --check` 步骤，以防止未来引入未格式化的代码。
+- **Pre-commit**: 考虑配置 `pre-commit` 钩子，在每次提交前自动运行此检查。
