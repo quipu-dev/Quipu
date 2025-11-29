@@ -2,16 +2,16 @@ import inspect
 import logging
 import sys
 from pathlib import Path
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 import typer
-import click
 from quipu.acts import register_core_acts
 from quipu.interfaces.exceptions import ExecutionError
 from quipu.runtime.executor import Executor
 from quipu.runtime.parser import detect_best_parser, get_parser
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
+from ..controller import confirmation_handler_for_executor
 from ..logger_config import setup_logging
 from ..plugin_manager import PluginManager
 
@@ -43,36 +43,12 @@ def register(app: typer.Typer):
         setup_logging()
         logger.debug(f"axon started with file={file}, work_dir={work_dir}, parser={parser_name}, yolo={yolo}")
 
-        # 1. 配置执行器的 UI 确认回调
-        def typer_confirmation_handler(diff_lines: List[str], prompt: str) -> bool:
-            typer.echo("\n🔍 变更预览:")
-            for line in diff_lines:
-                if line.startswith("+"):
-                    typer.secho(line.strip("\n"), fg=typer.colors.GREEN)
-                elif line.startswith("-"):
-                    typer.secho(line.strip("\n"), fg=typer.colors.RED)
-                elif line.startswith("^"):
-                    typer.secho(line.strip("\n"), fg=typer.colors.BLUE)
-                else:
-                    typer.echo(line.strip("\n"))
-            typer.echo("", err=True)
-
-            typer.secho(f"{prompt} [Y/n]: ", nl=False, err=True)
-            try:
-                char = click.getchar(echo=False)
-                click.echo(char, err=True)
-                return char.lower() != "n"
-            except (OSError, EOFError):
-                click.echo(" (non-interactive)", err=True)
-                logger.warning("无法在当前环境中获取用户确认，操作已跳过。")
-                return False
-
-        # 2. 初始化无状态 Executor
+        # 1. 初始化无状态 Executor, 复用 controller 中的标准确认处理器
         # 注意：这里不初始化 Engine，因此没有历史记录功能
         executor = Executor(
             root_dir=work_dir,
             yolo=yolo,
-            confirmation_handler=typer_confirmation_handler,
+            confirmation_handler=confirmation_handler_for_executor,
         )
         register_core_acts(executor)
 

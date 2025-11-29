@@ -13,7 +13,7 @@ def populated_history(engine_instance: Engine):
     创建一个包含分支、总结节点的通用历史记录用于测试。
     History:
     - n0 (root) -> n1 -> n2 (branch point) -> n3a (branch A) -> n4 (summary)
-                                          \-> n3b (branch B)
+                                          \\-> n3b (branch B)
     """
     engine = engine_instance
     ws = engine.root_dir

@@ -10,6 +10,7 @@ import yaml
 
 from .helpers import engine_context
 from ..config import DEFAULT_WORK_DIR
+from ..ui_utils import prompt_for_confirmation
 from quipu.interfaces.models import QuipuNode
 from quipu.engine.state_machine import Engine
 
@@ -180,8 +181,10 @@ def register(app: typer.Typer):
                 typer.secho("🤷 未找到符合条件的节点。", fg=typer.colors.YELLOW, err=True); ctx.exit(0)
 
             if output_dir.exists() and any(output_dir.iterdir()):
-                if not typer.confirm(f"⚠️ 目录 '{output_dir}' 非空，是否清空并继续?", abort=True):
-                    return
+                prompt = f"⚠️ 目录 '{output_dir}' 非空，是否清空并继续?"
+                if not prompt_for_confirmation(prompt, default=False):
+                    typer.secho("🚫 操作已取消。", fg=typer.colors.YELLOW, err=True)
+                    raise typer.Abort()
                 shutil.rmtree(output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
             typer.secho(f"🚀 正在导出 {len(nodes_to_export)} 个节点到 '{output_dir}'...", fg=typer.colors.BLUE, err=True)
