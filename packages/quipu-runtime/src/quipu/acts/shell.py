@@ -1,7 +1,7 @@
 import subprocess
 import logging
 from typing import List
-from quipu.core.types import ActContext, Executor
+from quipu.interfaces.types import ActContext, Executor
 
 logger = logging.getLogger(__name__)
 

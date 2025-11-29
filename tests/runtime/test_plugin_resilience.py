@@ -2,8 +2,8 @@ import pytest
 import logging
 from pathlib import Path
 
-from quipu.core.executor import Executor
-from quipu.core.plugin_loader import load_plugins
+from quipu.runtime.executor import Executor
+from quipu.runtime.plugin_loader import load_plugins
 
 
 class TestPluginResilience:

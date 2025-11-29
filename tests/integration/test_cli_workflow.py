@@ -4,7 +4,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 from quipu.cli.controller import run_quipu, QuipuResult
 from quipu.cli.main import app
-from quipu.core.executor import Executor
+from quipu.runtime.executor import Executor
 from quipu.acts.basic import register as register_basic
 
 # --- Fixtures ---

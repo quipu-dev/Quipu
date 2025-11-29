@@ -6,9 +6,9 @@ from typing import Annotated, List, Optional
 
 import typer
 from quipu.acts import register_core_acts
-from quipu.core.exceptions import ExecutionError
-from quipu.core.executor import Executor
-from quipu.core.parser import detect_best_parser, get_parser
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.runtime.executor import Executor
+from quipu.runtime.parser import detect_best_parser, get_parser
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
 from ..logger_config import setup_logging

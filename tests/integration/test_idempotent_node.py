@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from quipu.core.state_machine import Engine
+from quipu.engine.state_machine import Engine
 from quipu.cli.controller import run_quipu
 from quipu.cli.controller import run_quipu
 

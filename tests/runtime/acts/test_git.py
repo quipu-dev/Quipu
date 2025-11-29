@@ -2,7 +2,7 @@ import pytest
 import subprocess
 import shutil
 from pathlib import Path
-from quipu.core.executor import Executor
+from quipu.runtime.executor import Executor
 from quipu.acts.git import register as register_git_acts
 
 

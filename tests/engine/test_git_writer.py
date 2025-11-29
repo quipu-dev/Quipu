@@ -4,8 +4,8 @@ import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from quipu.core.git_db import GitDB
-from quipu.core.git_object_storage import GitObjectHistoryWriter
+from quipu.engine.git_db import GitDB
+from quipu.engine.git_object_storage import GitObjectHistoryWriter
 
 
 @pytest.fixture

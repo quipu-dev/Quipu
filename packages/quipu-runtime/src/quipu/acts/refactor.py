@@ -1,7 +1,7 @@
 import shutil
 from typing import List
 import logging
-from quipu.core.types import ActContext, Executor
+from quipu.interfaces.types import ActContext, Executor
 
 logger = logging.getLogger(__name__)
 

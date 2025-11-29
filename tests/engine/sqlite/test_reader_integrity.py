@@ -4,10 +4,10 @@ import subprocess
 from pathlib import Path
 from typing import List
 
-from quipu.core.models import QuipuNode
-from quipu.core.sqlite_storage import SQLiteHistoryReader
-from quipu.core.sqlite_db import DatabaseManager
-from quipu.core.git_db import GitDB
+from quipu.interfaces.models import QuipuNode
+from quipu.engine.sqlite_storage import SQLiteHistoryReader
+from quipu.engine.sqlite_db import DatabaseManager
+from quipu.engine.git_db import GitDB
 
 
 @pytest.fixture

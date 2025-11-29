@@ -5,9 +5,9 @@ import time
 from pathlib import Path
 from typing import List
 
-from quipu.core.git_db import GitDB
-from quipu.core.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.core.models import QuipuNode
+from quipu.engine.git_db import GitDB
+from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from quipu.interfaces.models import QuipuNode
 
 
 @pytest.fixture

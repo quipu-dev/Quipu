@@ -12,8 +12,8 @@ from textual.coordinate import Coordinate
 from textual import on
 from textual.timer import Timer
 
-from quipu.core.models import QuipuNode
-from quipu.core.state_machine import Engine
+from quipu.interfaces.models import QuipuNode
+from quipu.engine.state_machine import Engine
 from .view_model import GraphViewModel
 from .factory import create_engine
 

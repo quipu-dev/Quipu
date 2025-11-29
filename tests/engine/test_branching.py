@@ -1,7 +1,7 @@
 import pytest
 import subprocess
-from quipu.core.git_db import GitDB
-from quipu.core.git_object_storage import GitObjectHistoryWriter, GitObjectHistoryReader
+from quipu.engine.git_db import GitDB
+from quipu.engine.git_object_storage import GitObjectHistoryWriter, GitObjectHistoryReader
 
 
 @pytest.fixture

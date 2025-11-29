@@ -4,8 +4,8 @@ from typing import Annotated, Optional
 
 import typer
 from quipu.common.identity import get_user_id_from_email
-from quipu.core.config import ConfigManager
-from quipu.core.git_db import GitDB
+from quipu.engine.config import ConfigManager
+from quipu.engine.git_db import GitDB
 
 from ..config import DEFAULT_WORK_DIR
 from ..logger_config import setup_logging

@@ -3,8 +3,8 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Optional, Set, Any, Dict
 
-from quipu.core.models import QuipuNode
-from quipu.core.storage import HistoryReader
+from quipu.interfaces.models import QuipuNode
+from quipu.interfaces.storage import HistoryReader
 from quipu.cli.view_model import GraphViewModel
 
 

@@ -5,8 +5,8 @@ from typing import Dict, Generator, Optional
 
 import click
 import typer
-from quipu.core.models import QuipuNode
-from quipu.core.state_machine import Engine
+from quipu.interfaces.models import QuipuNode
+from quipu.engine.state_machine import Engine
 
 from ..factory import create_engine
 from ..logger_config import setup_logging

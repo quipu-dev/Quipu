@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import List
 import typer
 
-from quipu.core.exceptions import ExecutionError as CoreExecutionError
-from quipu.core.executor import Executor
-from quipu.core.parser import detect_best_parser, get_parser
-from quipu.core.result import QuipuResult
-from quipu.core.state_machine import Engine
+from quipu.interfaces.exceptions import ExecutionError as CoreExecutionError
+from quipu.runtime.executor import Executor
+from quipu.runtime.parser import detect_best_parser, get_parser
+from quipu.interfaces.result import QuipuResult
+from quipu.engine.state_machine import Engine
 from quipu.acts import register_core_acts
 from .factory import create_engine
 from .plugin_manager import PluginManager

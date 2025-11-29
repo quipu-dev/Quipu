@@ -8,7 +8,7 @@ import typer
 
 from .helpers import engine_context
 from ..config import DEFAULT_WORK_DIR
-from quipu.core.models import QuipuNode
+from quipu.interfaces.models import QuipuNode
 
 
 def _nodes_to_json_str(nodes: List[QuipuNode]) -> str:

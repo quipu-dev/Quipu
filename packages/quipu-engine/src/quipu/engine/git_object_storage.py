@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 import importlib.metadata
 
-from quipu.core.git_db import GitDB
-from quipu.core.models import QuipuNode
-from quipu.core.storage import HistoryReader, HistoryWriter
+from quipu.engine.git_db import GitDB
+from quipu.interfaces.models import QuipuNode
+from quipu.interfaces.storage import HistoryReader, HistoryWriter
 
 logger = logging.getLogger(__name__)
 

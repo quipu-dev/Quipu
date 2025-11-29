@@ -4,10 +4,10 @@ import subprocess
 from pathlib import Path
 from typing import Tuple
 
-from quipu.core.sqlite_storage import SQLiteHistoryWriter
-from quipu.core.git_object_storage import GitObjectHistoryWriter
-from quipu.core.sqlite_db import DatabaseManager
-from quipu.core.git_db import GitDB
+from quipu.engine.sqlite_storage import SQLiteHistoryWriter
+from quipu.engine.git_object_storage import GitObjectHistoryWriter
+from quipu.engine.sqlite_db import DatabaseManager
+from quipu.engine.git_db import GitDB
 
 
 @pytest.fixture

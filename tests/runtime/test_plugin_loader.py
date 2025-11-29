@@ -1,8 +1,8 @@
 import pytest
 import sys
 from pathlib import Path
-from quipu.core.executor import Executor
-from quipu.core.plugin_loader import load_plugins
+from quipu.runtime.executor import Executor
+from quipu.runtime.plugin_loader import load_plugins
 from quipu.cli.utils import find_git_repository_root  # 从 utils 导入辅助函数
 
 

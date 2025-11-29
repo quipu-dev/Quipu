@@ -3,7 +3,7 @@ import subprocess
 from pathlib import Path
 
 from quipu.cli.controller import run_quipu
-from quipu.core.sqlite_db import DatabaseManager
+from quipu.engine.sqlite_db import DatabaseManager
 
 PLAN_A = """
 ```act

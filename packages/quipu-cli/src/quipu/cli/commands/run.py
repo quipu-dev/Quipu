@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
-from quipu.core.executor import Executor
+from quipu.runtime.executor import Executor
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
 from ..controller import run_quipu

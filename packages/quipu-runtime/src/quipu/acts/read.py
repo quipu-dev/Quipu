@@ -6,8 +6,8 @@ import argparse
 from pathlib import Path
 from typing import List
 import logging
-from quipu.core.types import ActContext, Executor
-from quipu.core.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext, Executor
+from quipu.interfaces.exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
 

@@ -2,16 +2,16 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from quipu.core.state_machine import Engine
-from quipu.core.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.core.git_db import GitDB
-from quipu.core.config import ConfigManager
+from quipu.engine.state_machine import Engine
+from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from quipu.engine.git_db import GitDB
+from quipu.engine.config import ConfigManager
 from .utils import find_git_repository_root
 
 # 迟延导入以避免循环依赖
 try:
-    from quipu.core.sqlite_db import DatabaseManager
-    from quipu.core.sqlite_storage import SQLiteHistoryWriter, SQLiteHistoryReader
+    from quipu.engine.sqlite_db import DatabaseManager
+    from quipu.engine.sqlite_storage import SQLiteHistoryWriter, SQLiteHistoryReader
 except ImportError:
     DatabaseManager = None
     SQLiteHistoryWriter = None

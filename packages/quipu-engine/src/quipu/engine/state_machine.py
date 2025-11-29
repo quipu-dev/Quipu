@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from quipu.common.identity import get_user_id_from_email
-from quipu.core.models import QuipuNode
-from quipu.core.storage import HistoryReader, HistoryWriter
+from quipu.interfaces.models import QuipuNode
+from quipu.interfaces.storage import HistoryReader, HistoryWriter
 
 from .config import ConfigManager
 from .git_db import GitDB

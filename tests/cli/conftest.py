@@ -3,9 +3,9 @@ import subprocess
 from pathlib import Path
 from typer.testing import CliRunner
 
-from quipu.core.state_machine import Engine
-from quipu.core.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.core.git_db import GitDB
+from quipu.engine.state_machine import Engine
+from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from quipu.engine.git_db import GitDB
 
 
 @pytest.fixture

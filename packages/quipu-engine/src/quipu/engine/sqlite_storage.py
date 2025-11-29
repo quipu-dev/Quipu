@@ -5,9 +5,9 @@ from typing import Any, List, Dict, Optional, Set
 from datetime import datetime
 from pathlib import Path
 
-from quipu.core.models import QuipuNode
-from quipu.core.storage import HistoryReader, HistoryWriter
-from quipu.core.git_object_storage import GitObjectHistoryWriter, GitObjectHistoryReader
+from quipu.interfaces.models import QuipuNode
+from quipu.interfaces.storage import HistoryReader, HistoryWriter
+from quipu.engine.git_object_storage import GitObjectHistoryWriter, GitObjectHistoryReader
 from .sqlite_db import DatabaseManager
 from .git_db import GitDB
 

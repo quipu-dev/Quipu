@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Callable
 import shlex
 
-from quipu.core.types import Statement, ActFunction, ActContext
-from quipu.core.exceptions import ExecutionError
+from quipu.interfaces.types import Statement, ActFunction, ActContext
+from quipu.interfaces.exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
 

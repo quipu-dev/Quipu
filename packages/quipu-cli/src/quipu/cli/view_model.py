@@ -1,8 +1,8 @@
 import math
 from typing import Dict, List, Optional, Set
 
-from quipu.core.models import QuipuNode
-from quipu.core.storage import HistoryReader
+from quipu.interfaces.models import QuipuNode
+from quipu.interfaces.storage import HistoryReader
 
 
 class GraphViewModel:
