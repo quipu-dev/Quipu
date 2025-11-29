@@ -21,3 +21,6 @@ dependencies = []
 [tool.setuptools.packages.find]
 where = ["src"]
 namespaces = true
+
+[tool.setuptools.package-data]
+"quipu.common" = ["locales/zh/*.json"]
