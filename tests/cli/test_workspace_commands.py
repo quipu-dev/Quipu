@@ -65,6 +65,8 @@ def test_discard_interactive_abort(runner, quipu_workspace):
     assert result.exit_code == 1
     assert "操作已取消" in result.stderr
     assert (work_dir / "file.txt").read_text() == "v2"
+
+
 def test_discard_interactive_with_piped_input_abort(runner, quipu_workspace):
     """
     验证在管道输入模式下，discard 命令能正确接收交互式输入 'n' 并中止操作。
