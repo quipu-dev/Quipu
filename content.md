@@ -1,126 +1,54 @@
-分析正确。
+好的，我们已经完成了修复，现在将这些变更作为一个原子提交固化到版本历史中。
 
-这是一个典型的 Python 包分发问题。当你通过 `pip install`（或 `uv pip install`）安装一个项目时，构建工具 (`setuptools`) 默认只会打包 `.py` 文件。像 `locales/` 这样的数据目录，以及里面的 `.json` 文件，被认为是“非代码文件”，因此在构建 `wheel` 文件时被忽略了。
-
-当你在 `~/.quipu_app/` 中运行安装好的程序时，它的代码位于 `.../site-packages/quipu/...`，但 `locales` 目录并未被复制到那里，导致 `find_locales_dir` 函数（它从当前文件位置向上查找）失败。
-
-解决方案是双重的：
-1.  **物理上**将 `locales` 目录移动到它逻辑上所属的包 (`quipu-common`) 的源文件树中。
-2.  **配置上**告知 `setuptools` 在构建时将这个数据目录包含进去。
-
-我将生成一个计划来执行这个修复。
-
-## [WIP] fix(common): 正确打包国际化语言文件以供安装后使用
-
-### 错误分析
-用户在运行通过 `install_quipu.py` 安装的 `quipu` 程序时，遇到了 `Could not find the 'locales' directory` 的错误。
-
-根本原因是 `quipu-common` 包在构建时没有包含 `locales` 这个数据目录。`setuptools` 默认不打包非 Python 文件。此外，`locales` 目录位于项目根目录，处于任何一个独立包的源码树之外，这使得标准的打包工具无法找到它。`find_locales_dir` 函数的向上查找逻辑也只在 monorepo 开发环境中有效，在安装到 `site-packages` 后便会失效。
+## [COMMIT] fix(common): 正确打包国际化语言文件以供分发
 
 ### 用户需求
-确保通过 `install_quipu.py` 或任何 `pip install` 方式安装的 `quipu` 程序能够找到并加载其语言文件，从而正常显示所有用户界面文本。
+将修复打包问题的相关代码变更提交到版本库，确保 `quipu-common` 包在安装后能够包含并找到其 `locales` 语言文件。
 
 ### 评论
-这是一个关键的修复，它解决了让 Quipu 成为一个可独立分发应用程序的核心障碍。通过将数据文件与使用它的代码进行绑定，并正确配置打包元数据，我们确保了应用在任何环境下都能自洽地运行。
+这是一个关键的修复，它解决了使 Quipu 成为一个可独立分发应用程序的核心障碍。通过将数据文件与使用它的代码进行绑定，并正确配置打包元数据，我们确保了应用在任何环境下都能自洽地运行。
 
 ### 目标
-1.  将项目根目录的 `locales` 文件夹移动到 `quipu-common` 包的源文件内部，具体路径为 `packages/quipu-common/src/quipu/common/locales`。
-2.  修改 `packages/quipu-common/pyproject.toml` 文件，使用 `[tool.setuptools.package-data]` 指令来确保 `locales` 目录及其内容被包含在最终分发的 `wheel` 文件中。
-3.  重构 `packages/quipu-common/src/quipu/common/messaging/messages.py` 中的 `find_locales_dir` 函数，使其直接查找与自身相对的路径，而不是向上遍历文件系统。这使得查找逻辑在开发环境和安装环境中都能稳定工作。
+1.  已将 `locales` 目录从项目根目录移动到 `packages/quipu-common/src/quipu/common/` 内部。
+2.  已更新 `packages/quipu-common/pyproject.toml` 以包含 `locales` 目录作为 `package_data`。
+3.  已重构 `find_locales_dir` 函数以使用可靠的相对路径查找。
+4.  将以上所有变更创建一个 Git 提交。
 
 ### 基本原理
-Python 打包的最佳实践是将数据文件放置在包的内部，并使用 `package_data` 或 `include_package_data` 选项进行声明。通过将 `locales` 目录变成 `quipu.common` 包的一部分，并更新查找逻辑为相对路径查找，我们创建了一个健壮且可移植的解决方案，不再依赖于项目的外部目录结构。
+遵循 Python 打包的最佳实践，我们将非代码的数据文件（`locales/*.json`）置于其所属的包（`quipu.common`）内部，并通过 `pyproject.toml` 中的 `tool.setuptools.package-data` 指令明确声明，以确保 `setuptools` 在构建 `wheel` 文件时将其包含在内。同时，将文件查找逻辑修改为相对路径查找，使其在开发环境和最终用户的安装环境中都能稳定工作。
 
 ### 标签
-#intent/fix #flow/ready #priority/critical #comp/common #comp/build #concept/config #scope/core #ai/instruct #task/domain/build #task/object/packaging #task/action/bug-fix #task/state/begin
+#intent/fix #flow/ready #priority/critical #comp/common #comp/build #concept/config #scope/core #ai/instruct #task/domain/build #task/object/packaging #task/action/bug-fix #task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 移动 `locales` 目录并更新打包配置
+#### Acts 1: 提交打包修复
 
-我们将执行目录移动，然后修改 `quipu-common` 的 `pyproject.toml` 以包含这些新的数据文件。
+我们将把所有相关的修改（文件移动、`toml` 配置更新、代码重构）添加到 Git 暂存区，并创建一个内容详尽的提交。
 
 ~~~~~act
-move_file
+git_add
 locales
+packages/quipu-common/pyproject.toml
+packages/quipu-common/src/quipu/common/messaging/messages.py
 packages/quipu-common/src/quipu/common/locales
 ~~~~~
 
 ~~~~~act
-patch_file
-packages/quipu-common/pyproject.toml
+git_commit
 ~~~~~
-~~~~~toml
-[tool.setuptools.packages.find]
-where = ["src"]
-namespaces = true
-~~~~~
-~~~~~toml
-[tool.setuptools.packages.find]
-where = ["src"]
-namespaces = true
+~~~~~text
+fix(common): correctly package localization files for distribution
 
-[tool.setuptools.package-data]
-"quipu.common" = ["locales/zh/*.json"]
-~~~~~
+Moves the `locales` directory from the project root into the `quipu.common` package source and updates the build configuration to include it as package data. This resolves a critical issue where the installed application could not find its language files.
 
-#### Acts 2: 简化并固化 `find_locales_dir` 的查找逻辑
-
-现在 `locales` 目录的位置是确定的，我们可以极大地简化查找函数，使其更可靠。
-
-~~~~~act
-patch_file
-packages/quipu-common/src/quipu/common/messaging/messages.py
-~~~~~
-~~~~~python
-def find_locales_dir() -> Path | None:
-    """
-    Find the 'locales' directory, searching upwards from this file.
-    This allows finding the directory both in development (monorepo root)
-    and in installed environments (site-packages).
-    """
-    current = Path(__file__).resolve()
-    # In a monorepo dev setup, it's at the project root.
-    for parent in [current] + list(current.parents):
-        locales_path = parent / "locales"
-        if locales_path.is_dir():
-            logger.debug(f"Found locales directory at: {locales_path}")
-            return locales_path
-
-    logger.warning("Could not find the 'locales' directory.")
-    return None
-~~~~~
-~~~~~python
-def find_locales_dir() -> Path | None:
-    """
-    Find the 'locales' directory located relative to this file.
-    This is robust for both development and installed package environments.
-    """
-    try:
-        # The 'locales' directory is now part of the quipu.common package data
-        locales_path = Path(__file__).parent.parent / "locales"
-        if locales_path.is_dir():
-            logger.debug(f"Found locales directory at: {locales_path}")
-            return locales_path
-    except Exception as e:
-        logger.error(f"Error finding locales directory: {e}")
-
-    logger.warning("Could not find the 'locales' directory.")
-    return None
+The fix involves three key changes:
+1.  **File Structure**: The `locales` directory is now located at `packages/quipu-common/src/quipu/common/locales`, making it part of the package itself.
+2.  **Packaging**: `packages/quipu-common/pyproject.toml` is updated with `[tool.setuptools.package-data]` to ensure the `locales/**/*.json` files are included in the built wheel.
+3.  **Lookup Logic**: The `find_locales_dir` function in `messages.py` is refactored to use a robust, relative path lookup, which works correctly in both development (editable install) and production (site-packages) environments.
 ~~~~~
 
 ### 下一步建议
-我们已经完成了代码和结构的修改。现在，你需要重新安装 Quipu 来验证修复是否生效。
-
-1.  **运行安装脚本**:
-    ```bash
-    ./install_quipu.py
-    ```
-2.  **验证**: 再次运行之前的命令，并确认错误消息不再出现。
-    ```bash
-    /home/doucx/.quipu_app/bin/quipu ui
-    ```
-
-如果一切正常，我们就可以提交这个修复。
+现在修复已经提交，你可以运行 `qpromote` 命令来用最新的、已修复的代码重建你的稳定版 `qs` 环境。之后，你可以再次运行 `qs ui` 来最终确认问题已在稳定版中得到解决。
