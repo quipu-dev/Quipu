@@ -1,6 +1,10 @@
 import pytest
 import subprocess
 from pathlib import Path
+import pytest
+import subprocess
+from pathlib import Path
+from unittest.mock import MagicMock
 from quipu.engine.git_db import GitDB
 
 
@@ -190,6 +194,19 @@ class TestGitDBPlumbing:
         assert (git_repo / "common.txt").exists()
         assert not (git_repo / "file2.txt").exists(), "file2.txt should have been cleaned"
         assert (quipu_dir / "preserve.me").exists(), ".quipu directory should be preserved"
+
+    def test_checkout_tree_messaging(self, git_repo: Path, db: GitDB, monkeypatch):
+        """Verify checkout_tree emits correct messages via the bus."""
+        mock_bus = MagicMock()
+        monkeypatch.setattr("quipu.engine.git_db.bus", mock_bus)
+
+        (git_repo / "file1.txt").write_text("v1")
+        hash_a = db.get_tree_hash()
+
+        db.checkout_tree(hash_a)
+
+        mock_bus.info.assert_called_once_with("engine.git.info.checkoutStarted", short_hash=hash_a[:7])
+        mock_bus.success.assert_called_once_with("engine.git.success.checkoutComplete")
 
     def test_get_diff_name_status(self, git_repo: Path, db: GitDB):
         """Test the file status diffing functionality."""

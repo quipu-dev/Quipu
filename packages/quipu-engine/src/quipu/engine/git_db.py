@@ -2,6 +2,7 @@ import os
 import subprocess
 import logging
 import shutil
+from quipu.common.messaging import bus
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple, Union
 from contextlib import contextmanager
@@ -81,7 +82,7 @@ class GitDB:
             try:
                 shutil.copy2(user_index_path, index_path)
             except OSError as e:
-                logger.warning(f"无法复制用户索引进行预热: {e}")
+                bus.warning("engine.git.warning.copyIndexFailed", error=str(e))
 
         # 定义隔离的环境变量
         env = {"GIT_INDEX_FILE": str(index_path)}
@@ -228,7 +229,7 @@ class GitDB:
         将工作区强制重置为目标 Tree 的状态。
         这是一个底层方法，上层应确保工作区的未提交更改已被处理。
         """
-        logger.info(f"Executing hard checkout to tree: {tree_hash[:7]}")
+        bus.info("engine.git.info.checkoutStarted", short_hash=tree_hash[:7])
 
         # 1. 使用 read-tree 更新索引，这是一个安全的操作
         self._run(["read-tree", tree_hash])
@@ -242,7 +243,7 @@ class GitDB:
         # -e .quipu: 排除 .quipu 目录，防止自毁
         self._run(["clean", "-df", "-e", ".quipu"])
 
-        logger.info("✅ Workspace reset to target state.")
+        bus.success("engine.git.success.checkoutComplete")
 
     def cat_file(self, object_hash: str, object_type: str) -> bytes:
         """
@@ -426,7 +427,7 @@ class GitDB:
         """
         refspec = f"refs/quipu/local/heads/*:refs/quipu/users/{user_id}/heads/*"
         action = "Force-pushing" if force else "Pushing"
-        logger.info(f"🚀 {action} Quipu history to {remote} for user {user_id}...")
+        bus.info("engine.git.info.pushing", action=action, remote=remote, user_id=user_id)
 
         cmd = ["push", remote, refspec]
         if force:
@@ -439,7 +440,7 @@ class GitDB:
         遵循 QDPS v1.1 规范。
         """
         refspec = f"refs/quipu/users/{user_id}/heads/*:refs/quipu/remotes/{remote}/{user_id}/heads/*"
-        logger.info(f"🔍 Fetching Quipu history from {remote} for user {user_id}...")
+        bus.info("engine.git.info.fetching", remote=remote, user_id=user_id)
         self._run(["fetch", remote, "--prune", refspec])
 
     def reconcile_local_with_remote(self, remote: str, user_id: str):
@@ -467,10 +468,10 @@ class GitDB:
                 # 本地不存在此 ref，从远程镜像创建它
                 self.update_ref(local_ref, commit_hash)
                 reconciled_count += 1
-                logger.info(f"🤝 Reconciled: Added new history branch -> {commit_hash[:7]}")
+                bus.info("engine.git.info.reconciledNewBranch", short_hash=commit_hash[:7])
 
         if reconciled_count > 0:
-            logger.info(f"✅ Reconciliation complete. Added {reconciled_count} new history branches from remote.")
+            bus.success("engine.git.success.reconciliationComplete", count=reconciled_count)
         else:
             logger.debug("✅ Local history is already up-to-date with remote.")
 
@@ -495,7 +496,7 @@ class GitDB:
             local_ref_to_delete = local_prefix + ref_suffix
             self.delete_ref(local_ref_to_delete)
             deleted_count += 1
-            logger.info(f"🗑️  Pruned local ref: {local_ref_to_delete}")
+            bus.info("engine.git.info.prunedRef", ref=local_ref_to_delete)
 
         if deleted_count > 0:
-            logger.info(f"✅ Pruning complete. Removed {deleted_count} stale local refs.")
+            bus.success("engine.git.success.pruningComplete", count=deleted_count)
