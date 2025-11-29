@@ -26,6 +26,8 @@ build-backend = "hatchling.build"
 [tool.ruff]
 line-length = 120
 target-version = "py38"
+
+[tool.ruff.lint]
 select = ["E", "F", "I"] # Pycodestyle Errors, Pyflakes, isort
 
 [tool.ruff.format]
