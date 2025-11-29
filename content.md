@@ -1,700 +1,437 @@
-好的，我将根据你的需求为 `quipu sync` 命令添加多种同步模式。
+好的，我理解了。现有测试 `test_collaboration_subscribe_and_fetch` 因为 `sync` 命令的输出文本更新而失败，我们需要修复它。同时，为了确保新添加的多种同步模式的健壮性，我将创建一个新的测试文件来专门测试这些模式。
 
-这个功能将极大地增强 Quipu 在不同协作场景下的灵活性，允许用户根据需要选择是进行双向同步、单向推送还是单向拉取。
+我将复用 `test_sync_workflow.py` 中已有的 `sync_test_environment` fixture，因为它为我们提供了测试所需的、包含远程仓库和多个用户工作区的理想环境。
 
-我将通过以下步骤实现：
-1.  在 `quipu-cli` 中为 `sync` 命令添加一个新的 `--mode` 选项，并使用 `Enum` 来定义可选的模式。
-2.  在 `quipu-engine` 的 `GitDB` 模块中增强 `push` 功能，以支持强制推送，并添加一个新的 `prune` 功能，用于清理本地多余的分支。
-3.  重构 `remote.py` 中的 `sync` 命令逻辑，使其根据选择的模式调用 `GitDB` 中不同的底层操作组合。
+## [WIP] test: 为新的 `sync` 模式添加集成测试并修复现有测试
 
-## [WIP] feat(cli): 为 `sync` 命令添加多种同步模式
+### 错误分析
+在 `[WIP] feat(cli): 为 sync 命令添加多种同步模式` 的修改中，`sync` 命令的日志输出格式被更新了。旧的测试用例 `test_collaboration_subscribe_and_fetch` 仍然在断言一个过时的、笼统的日志消息 (`拉取 2 个用户的历史`)，而新的实现会为每个同步阶段（拉取、调和、推送）打印更精细的日志。这导致了 `AssertionError`。
 
 ### 用户需求
-当前的 `quipu sync` 命令只支持双向同步。需要扩展其功能，以支持以下几种单向同步模式：
-1.  **强制推送 (push-force)**: 将本地历史完全覆盖到远程，删除远程存在但本地不存在的分支。
-2.  **增量推送 (push-only)**: 仅将本地的新增历史推送到远程，不拉取远程变更。
-3.  **强制拉取 (pull-prune)**: 以远程为准，拉取历史并删除本地多余的分支。
-4.  **增量拉取 (pull-only)**: 仅拉取远程的新增历史，不推送本地变更。
+1.  修复 `tests/integration/test_sync_workflow.py` 中因 `sync` 命令输出变更而失败的测试用例。
+2.  创建一个新的测试文件 `tests/integration/test_sync_modes.py`，为 `push-force`, `push-only`, `pull-prune`, `pull-only` 等新模式添加专门的集成测试，以验证其行为的正确性。
 
 ### 评论
-这是一个关键的功能增强。它将 `sync` 命令从一个单一用途的工具转变为一个灵活的数据同步瑞士军刀，能够适应从个人备份、团队协作到中央仓库强制更新等多种不同的工作流。
+修复现有测试并为新功能补充全面的集成测试是确保软件质量的关键步骤。通过模拟真实的多用户协作场景，我们可以验证每种同步模式是否都准确地实现了其设计意图，例如数据是否被正确推送、拉取或修剪，从而防止在未来的重构中引入回归错误。
 
 ### 目标
-1.  在 `quipu-engine` 的 `git_db.py` 中，为 `push_quipu_refs` 方法添加 `force` 选项。
-2.  在 `git_db.py` 中，实现一个新的 `prune_local_from_remote` 方法，用于清理本地多余的历史分支。
-3.  在 `quipu-cli` 的 `remote.py` 中，定义一个 `SyncMode` 枚举类，包含 `bidirectional`, `push-force`, `push-only`, `pull-prune`, `pull-only` 五种模式。
-4.  修改 `sync` 命令的函数签名，添加 `--mode` 选项，默认为 `bidirectional`。
-5.  重构 `sync` 命令的执行逻辑，使用 `match` 语句根据所选模式编排不同的 Git 操作序列。
+1.  修改 `test_sync_workflow.py`，更新其中的断言，使其与 `sync` 命令新的、更细化的日志输出保持一致。
+2.  创建一个新的 `tests/integration/test_sync_modes.py` 文件。
+3.  在新文件中，为每一种单向同步模式编写至少一个测试用例，覆盖其核心逻辑。
 
 ### 基本原理
-我们将把 `sync` 的核心逻辑分解为四个原子操作：`fetch` (拉取)、`reconcile` (调和)、`push` (推送) 和 `prune` (修剪)。`GitDB` 类将负责实现这些原子操作。CLI 层的 `sync` 命令则作为一个调度器，根据用户通过 `--mode` 选项选择的策略，以不同的顺序和组合来调用这些原子操作，从而实现灵活多样的同步模式。使用 `Enum` 和 `Typer` 的 `Option` 可以确保接口的清晰性和类型安全。
+我们将利用 `typer.testing.CliRunner` 来调用 `quipu sync` 命令，并传入不同的 `--mode` 参数。测试的核心是通过 `git` 命令检查 `refs` 在本地和远程仓库中的状态变化。例如，在测试 `push-force` 时，我们会验证远程仓库中多余的 `ref` 是否被成功删除；在测试 `pull-prune` 时，我们会验证本地工作区中多余的 `ref` 是否被成功修剪。这种基于最终状态的断言方法可以确保我们的测试是健壮和可靠的。
 
 ### 标签
-#intent/build #flow/ready #priority/high #comp/cli #comp/engine #concept/sync #scope/api #scope/ux #ai/instruct #task/domain/sync #task/object/sync-modes #task/action/implementation #task/state/begin
+#intent/tooling #flow/ready #priority/high #comp/tests #concept/sync #scope/core #ai/instruct #task/domain/sync #task/object/sync-modes #task/action/implementation #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 增强 `GitDB` 以支持新操作
+#### Acts 1: 修复现有集成测试
 
-首先，我们需要修改 `git_db.py`，为 `push` 操作添加强制覆盖能力，并实现一个新的本地修剪方法。
+首先，我们修复 `test_sync_workflow.py` 中过时的断言。
 
 ~~~~~act
 write_file
-packages/quipu-engine/src/quipu/engine/git_db.py
+tests/integration/test_sync_workflow.py
 ~~~~~
 ~~~~~python
-import os
-import subprocess
-import logging
-import shutil
-from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Union
-from contextlib import contextmanager
-from quipu.interfaces.exceptions import ExecutionError
-
-logger = logging.getLogger(__name__)
-
-
-class GitDB:
-    """
-    Quipu 的 Git 底层接口 (Plumbing Interface)。
-    负责与 Git 对象数据库交互，维护 Shadow Index 和 Refs。
-    """
-
-    def __init__(self, root_dir: Path):
-        if not shutil.which("git"):
-            raise ExecutionError("未找到 'git' 命令。请安装 Git 并确保它在系统的 PATH 中。")
-
-        self.root = root_dir.resolve()
-        self.quipu_dir = self.root / ".quipu"
-        self._ensure_git_repo()
-
-    def _ensure_git_repo(self):
-        """确保目标是一个 Git 仓库"""
-        if not (self.root / ".git").is_dir():
-            # 这是一个关键的前置条件检查
-            raise ExecutionError(f"工作目录 '{self.root}' 不是一个有效的 Git 仓库。请先运行 'git init'。")
-
-    def _run(
-        self,
-        args: list[str],
-        env: Optional[Dict] = None,
-        check: bool = True,
-        log_error: bool = True,
-        input_data: Optional[Union[str, bytes]] = None,
-        capture_as_text: bool = True,
-    ) -> subprocess.CompletedProcess:
-        """执行 git 命令的底层封装，支持文本和二进制输出。"""
-        full_env = os.environ.copy()
-        if env:
-            full_env.update(env)
-
-        try:
-            result = subprocess.run(
-                ["git"] + args,
-                cwd=self.root,
-                env=full_env,
-                capture_output=True,
-                text=capture_as_text,
-                check=check,
-                input=input_data,
-            )
-            return result
-        except subprocess.CalledProcessError as e:
-            stderr_str = e.stderr
-            if isinstance(stderr_str, bytes):
-                stderr_str = stderr_str.decode("utf-8", "ignore")
-
-            if log_error:
-                logger.error(f"Git plumbing error: {stderr_str}")
-            raise RuntimeError(f"Git command failed: {' '.join(args)}\n{stderr_str}") from e
-
-    @contextmanager
-    def shadow_index(self):
-        """
-        上下文管理器：创建一个隔离的 Shadow Index。
-        在此上下文内的操作不会污染用户的 .git/index。
-        """
-        index_path = self.quipu_dir / "tmp_index"
-        self.quipu_dir.mkdir(exist_ok=True)
-
-        # --- 性能优化：通过复制用户的索引来“预热”影子索引 ---
-        # 这避免了从零开始扫描整个仓库的巨大开销。
-        # 后续的 `git add -A` 只需要处理未暂存的变更。
-        user_index_path = self.root / ".git" / "index"
-        if user_index_path.exists():
-            try:
-                shutil.copy2(user_index_path, index_path)
-            except OSError as e:
-                logger.warning(f"无法复制用户索引进行预热: {e}")
-
-        # 定义隔离的环境变量
-        env = {"GIT_INDEX_FILE": str(index_path)}
-
-        try:
-            yield env
-        finally:
-            # 无论成功失败，必须清理临时索引文件
-            if index_path.exists():
-                try:
-                    index_path.unlink()
-                except OSError:
-                    logger.warning(f"Failed to cleanup shadow index: {index_path}")
-
-    def get_tree_hash(self) -> str:
-        """
-        计算当前工作区的 Tree Hash (Snapshot)。
-        实现 'State is Truth' 的核心。
-        """
-        with self.shadow_index() as env:
-            # 阶段 1: 更新索引以匹配工作区。
-            # 由于 shadow_index 上下文已经通过复制预热了索引，
-            # 此处的 `git add -A` 只会处理少量未暂存的变更，速度非常快。
-            self._run(["add", "-A", "--ignore-errors"], env=env)
-
-            # 阶段 2: 显式移除 .quipu 目录作为安全网。
-            self._run(["rm", "--cached", "-r", ".quipu"], env=env, check=False)
-
-            # 阶段 3: 将最终的纯净索引写入对象库，返回 Tree Hash。
-            result = self._run(["write-tree"], env=env)
-            return result.stdout.strip()
-
-    def hash_object(self, content_bytes: bytes, object_type: str = "blob") -> str:
-        """
-        将内容写入 Git 对象数据库并返回对象哈希。
-        """
-        try:
-            result = subprocess.run(
-                ["git", "hash-object", "-w", "-t", object_type, "--stdin"],
-                cwd=self.root,
-                input=content_bytes,
-                capture_output=True,
-                check=True,
-            )
-            return result.stdout.decode("utf-8").strip()
-        except subprocess.CalledProcessError as e:
-            stderr_str = e.stderr.decode("utf-8") if e.stderr else "No stderr"
-            logger.error(f"Git hash-object failed: {stderr_str}")
-            raise RuntimeError(f"Git command failed: hash-object\n{stderr_str}") from e
-
-    def mktree(self, tree_descriptor: str) -> str:
-        """
-        从描述符创建 tree 对象并返回其哈希。
-        """
-        result = self._run(["mktree"], input_data=tree_descriptor)
-        return result.stdout.strip()
-
-    def commit_tree(self, tree_hash: str, parent_hashes: Optional[List[str]], message: str) -> str:
-        """
-        创建一个 commit 对象并返回其哈希。
-        """
-        cmd = ["commit-tree", tree_hash]
-        if parent_hashes:
-            for p in parent_hashes:
-                cmd.extend(["-p", p])
-
-        result = self._run(cmd, input_data=message)
-        return result.stdout.strip()
-
-    def update_ref(self, ref_name: str, commit_hash: str):
-        """
-        更新引用 (如 refs/quipu/history)。
-        防止 Commit 被 GC 回收。
-        """
-        self._run(["update-ref", ref_name, commit_hash])
-
-    def delete_ref(self, ref_name: str):
-        """删除指定的引用"""
-        self._run(["update-ref", "-d", ref_name], check=False)
-
-    def get_commit_by_output_tree(self, tree_hash: str) -> Optional[str]:
-        """
-        根据 Trailer 中的 X-Quipu-Output-Tree 查找对应的 Commit Hash。
-        用于在创建新节点时定位语义上的父节点。
-        """
-        # 使用 grep 搜索所有 refs/quipu/ 下的记录
-        # 注意：这假设 Output Tree 是唯一的，这在大概率上是成立的，
-        # 且即使有重复（如 merge），找到任意一个作为父节点通常也是可接受的起点。
-        cmd = ["log", "--all", f"--grep=X-Quipu-Output-Tree: {tree_hash}", "--format=%H", "-n", "1"]
-        res = self._run(cmd, check=False)
-        if res.returncode == 0 and res.stdout.strip():
-            return res.stdout.strip()
-        return None
-
-    def get_head_commit(self) -> Optional[str]:
-        """获取当前工作区 HEAD 的 Commit Hash"""
-        try:
-            result = self._run(["rev-parse", "HEAD"])
-            return result.stdout.strip()
-        except RuntimeError:
-            return None  # 可能是空仓库
-
-    def is_ancestor(self, ancestor: str, descendant: str) -> bool:
-        """
-        判断两个 Commit 是否具有血统关系。
-        用于解决 'Lost Time' 问题。
-        """
-        # merge-base --is-ancestor A B 返回 0 表示真，1 表示假
-        # 我们在这里直接调用 subprocess，因为我们关心返回码而不是输出
-        result = self._run(
-            ["merge-base", "--is-ancestor", ancestor, descendant],
-            check=False,  # 必须禁用 check，否则非 0 退出码会抛异常
-            log_error=False,  # 我们不认为这是一个错误
-        )
-        return result.returncode == 0
-
-    def get_diff_stat(self, old_tree: str, new_tree: str, count=30) -> str:
-        """
-        获取两个 Tree 之间的差异统计 (Human Readable)。
-        默认限制输出为最多 30 行，以避免在有大量文件变更时生成过大的摘要。
-        """
-        # 使用 --stat=<width>,<name-width>,<count> 格式
-        # 我们不关心 width，所以留空，只设置 count
-        result = self._run(["diff-tree", f"--stat=,,{count}", old_tree, new_tree])
-        return result.stdout.strip()
-
-    def get_diff_name_status(self, old_tree: str, new_tree: str) -> List[Tuple[str, str]]:
-        """
-        获取两个 Tree 之间的文件变更状态列表 (M, A, D, etc.)。
-        """
-        result = self._run(["diff-tree", "--name-status", "--no-commit-id", "-r", old_tree, new_tree])
-        changes = []
-        for line in result.stdout.strip().splitlines():
-            if not line:
-                continue
-            parts = line.split("\t", 1)
-            if len(parts) == 2:
-                status, path = parts
-                changes.append((status, path))
-        return changes
-
-    def checkout_tree(self, tree_hash: str):
-        """
-        将工作区强制重置为目标 Tree 的状态。
-        这是一个底层方法，上层应确保工作区的未提交更改已被处理。
-        """
-        logger.info(f"Executing hard checkout to tree: {tree_hash[:7]}")
-
-        # 1. 使用 read-tree 更新索引，这是一个安全的操作
-        self._run(["read-tree", tree_hash])
-
-        # 2. 从更新后的索引检出文件，-a (all) -f (force)
-        self._run(["checkout-index", "-a", "-f"])
-
-        # 3. 清理工作区中多余的文件和目录
-        # -d: 目录, -f: 强制
-        # 移除了 -x 参数，以尊重 .gitignore 规则
-        # -e .quipu: 排除 .quipu 目录，防止自毁
-        self._run(["clean", "-df", "-e", ".quipu"])
-
-        logger.info("✅ Workspace reset to target state.")
-
-    def cat_file(self, object_hash: str, object_type: str) -> bytes:
-        """
-        读取 Git 对象的原始内容，返回字节流。
-        此方法现在以二进制模式运行，以避免数据损坏。
-        """
-        cmd = ["cat-file", object_type, object_hash]
-        result = self._run(cmd, capture_as_text=False)
-        return result.stdout
-
-    def get_blobs_from_tree(self, tree_hash: str) -> Dict[str, bytes]:
-        """解析一个 Tree 对象，并返回其包含的所有 blob 文件的 {filename: content_bytes} 字典。"""
-        # 1. 获取 Tree 的内容
-        tree_content_bytes = self.cat_file(tree_hash, "tree")
-        tree_content = tree_content_bytes.decode("utf-8", "ignore")
-
-        # 2. 解析 Tree 内容以获取 blob 哈希
-        # 格式: <mode> <type> <hash>\t<filename>
-        blob_info = {}
-        for line in tree_content.strip().splitlines():
-            parts = line.split()
-            if len(parts) == 4 and parts[1] == "blob":
-                blob_hash, filename = parts[2], parts[3]
-                blob_info[filename] = blob_hash
-
-        if not blob_info:
-            return {}
-
-        # 3. 批量获取所有 blob 的内容
-        return self.batch_cat_file(list(blob_info.values()))
-
-    def batch_cat_file(self, object_hashes: List[str]) -> Dict[str, bytes]:
-        """
-        批量读取 Git 对象。
-        解决 N+1 查询性能问题。
-
-        Args:
-            object_hashes: 需要读取的对象哈希列表 (可以重复，内部会自动去重)
-
-        Returns:
-            Dict[hash, content_bytes]: 哈希到内容的映射。
-            如果对象不存在，则不会出现在返回字典中。
-        """
-        if not object_hashes:
-            return {}
-
-        # Deduplicate
-        unique_hashes = list(set(object_hashes))
-
-        # Prepare input: <hash>\n
-        input_str = "\n".join(unique_hashes) + "\n"
-
-        results = {}
-
-        try:
-            # git cat-file --batch format:
-            # <hash> <type> <size>\n
-            # <content>\n
-            with subprocess.Popen(
-                ["git", "cat-file", "--batch"],
-                cwd=self.root,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                # bufsize=0 is often recommended for binary streams but careful buffering is usually fine
-            ) as proc:
-                # Write requests and close stdin to signal EOF
-                if proc.stdin:
-                    proc.stdin.write(input_str.encode("utf-8"))
-                    proc.stdin.close()
-
-                if not proc.stdout:
-                    return {}
-
-                while True:
-                    # Read header line
-                    header_line = proc.stdout.readline()
-                    if not header_line:
-                        break
-
-                    header_parts = header_line.strip().split()
-                    if not header_parts:
-                        continue
-
-                    obj_hash_bytes = header_parts[0]
-                    obj_hash = obj_hash_bytes.decode("utf-8")
-
-                    # Check for missing object: "<hash> missing"
-                    if len(header_parts) == 2 and header_parts[1] == b"missing":
-                        continue
-
-                    if len(header_parts) < 3:
-                        logger.warning(f"Unexpected git cat-file header: {header_line}")
-                        continue
-
-                    # size is at index 2
-                    try:
-                        size = int(header_parts[2])
-                    except ValueError:
-                        logger.warning(f"Invalid size in header: {header_line}")
-                        continue
-
-                    # Read content bytes + trailing newline
-                    content = proc.stdout.read(size)
-                    proc.stdout.read(1)  # Consume the trailing LF
-
-                    results[obj_hash] = content
-
-        except Exception as e:
-            logger.error(f"Batch cat-file failed: {e}")
-            raise RuntimeError(f"Git batch operation failed: {e}") from e
-
-        return results
-
-    def get_all_ref_heads(self, prefix: str) -> List[Tuple[str, str]]:
-        """
-        查找指定前缀下的所有 ref heads。
-        返回 (commit_hash, ref_name) 元组列表。
-        """
-        res = self._run(["for-each-ref", f"--format=%(objectname) %(refname)", prefix], check=False)
-        if res.returncode != 0 or not res.stdout.strip():
-            return []
-
-        results = []
-        for line in res.stdout.strip().splitlines():
-            parts = line.split(" ", 1)
-            if len(parts) == 2:
-                results.append((parts[0], parts[1]))
-        return results
-
-    def has_quipu_ref(self) -> bool:
-        """检查是否存在任何 'refs/quipu/' 引用，用于判断存储格式。"""
-        # We use show-ref and check the exit code. Exit 0 if refs exist, 1 otherwise.
-        res = self._run(["show-ref", "--verify", "--quiet", "refs/quipu/"], check=False, log_error=False)
-        return res.returncode == 0
-
-    def log_ref(self, ref_names: Union[str, List[str]]) -> List[Dict[str, str]]:
-        """获取指定引用的日志，并解析为结构化数据列表。"""
-        # A unique delimiter that's unlikely to appear in commit messages
-        DELIMITER = "---QUIPU-LOG-ENTRY---"
-        # Format: H=hash, P=parent, T=tree, ct=commit_timestamp, B=body
-        log_format = f"%H%n%P%n%T%n%ct%n%B{DELIMITER}"
-
-        if isinstance(ref_names, str):
-            refs_to_log = [ref_names]
-        else:
-            refs_to_log = ref_names
-
-        if not refs_to_log:
-            return []
-
-        # Git log on multiple refs will automatically show the union of their histories without duplicates.
-        cmd = ["log", f"--format={log_format}"] + refs_to_log
-        res = self._run(cmd, check=False, log_error=False)
-
-        if res.returncode != 0:
-            return []
-
-        entries = res.stdout.strip().split(DELIMITER)
-        parsed_logs = []
-        for entry in entries:
-            if not entry.strip():
-                continue
-
-            parts = entry.strip().split("\n", 4)
-            if len(parts) >= 4:
-                parsed_logs.append(
-                    {
-                        "hash": parts[0],
-                        "parent": parts[1],
-                        "tree": parts[2],
-                        "timestamp": parts[3],
-                        "body": parts[4] if len(parts) > 4 else "",
-                    }
-                )
-        return parsed_logs
-
-    def push_quipu_refs(self, remote: str, user_id: str, force: bool = False):
-        """
-        将本地 Quipu heads 推送到远程用户专属的命名空间。
-        遵循 QDPS v1.1 规范。
-        """
-        refspec = f"refs/quipu/local/heads/*:refs/quipu/users/{user_id}/heads/*"
-        action = "Force-pushing" if force else "Pushing"
-        logger.info(f"🚀 {action} Quipu history to {remote} for user {user_id}...")
-
-        cmd = ["push", remote, refspec]
-        if force:
-            cmd.append("--force")
-        self._run(cmd)
-
-    def fetch_quipu_refs(self, remote: str, user_id: str):
-        """
-        从远程用户专属命名空间拉取 Quipu heads 到本地镜像。
-        遵循 QDPS v1.1 规范。
-        """
-        refspec = f"refs/quipu/users/{user_id}/heads/*:refs/quipu/remotes/{remote}/{user_id}/heads/*"
-        logger.info(f"🔍 Fetching Quipu history from {remote} for user {user_id}...")
-        self._run(["fetch", remote, "--prune", refspec])
-
-    def reconcile_local_with_remote(self, remote: str, user_id: str):
-        """
-        将远程拉取下来的历史 (remotes) 与本地历史 (local) 进行调和。
-        这是一个安全的操作，只会添加本地不存在的远程引用。
-        """
-        remote_heads_prefix = f"refs/quipu/remotes/{remote}/{user_id}/heads/"
-        remote_heads = self.get_all_ref_heads(remote_heads_prefix)
-        if not remote_heads:
-            logger.debug("No remote refs found to reconcile.")
-            return
-
-        reconciled_count = 0
-        for commit_hash, remote_ref in remote_heads:
-            # e.g., remote_ref = refs/quipu/remotes/origin/user/heads/abc...
-            #       local_ref should be refs/quipu/local/heads/abc...
-            local_ref_suffix = remote_ref.replace(remote_heads_prefix, "")
-            local_ref = f"refs/quipu/local/heads/{local_ref_suffix}"
-
-            # 使用 rev-parse 检查本地 ref 是否已存在
-            # 如果本地已经存在，我们假设它是最新的或用户有意为之，不做任何操作
-            check_res = self._run(["rev-parse", "--verify", local_ref], check=False, log_error=False)
-            if check_res.returncode != 0:
-                # 本地不存在此 ref，从远程镜像创建它
-                self.update_ref(local_ref, commit_hash)
-                reconciled_count += 1
-                logger.info(f"🤝 Reconciled: Added new history branch -> {commit_hash[:7]}")
-
-        if reconciled_count > 0:
-            logger.info(f"✅ Reconciliation complete. Added {reconciled_count} new history branches from remote.")
-        else:
-            logger.debug("✅ Local history is already up-to-date with remote.")
-
-    def prune_local_from_remote(self, remote: str, user_id: str):
-        """
-        用远程镜像修剪本地历史。
-        删除本地存在但远程镜像中已不存在的 'local/heads'。
-        """
-        local_prefix = "refs/quipu/local/heads/"
-        remote_prefix = f"refs/quipu/remotes/{remote}/{user_id}/heads/"
-
-        local_heads = {ref.replace(local_prefix, "") for _, ref in self.get_all_ref_heads(local_prefix)}
-        remote_heads = {ref.replace(remote_prefix, "") for _, ref in self.get_all_ref_heads(remote_prefix)}
-
-        to_delete = local_heads - remote_heads
-        if not to_delete:
-            logger.debug("✅ No local refs to prune.")
-            return
-
-        deleted_count = 0
-        for ref_suffix in to_delete:
-            local_ref_to_delete = local_prefix + ref_suffix
-            self.delete_ref(local_ref_to_delete)
-            deleted_count += 1
-            logger.info(f"🗑️  Pruned local ref: {local_ref_to_delete}")
-
-        if deleted_count > 0:
-            logger.info(f"✅ Pruning complete. Removed {deleted_count} stale local refs.")
-~~~~~
-
-#### Acts 2: 在 CLI 中实现多种同步模式
-
-现在，我们将重构 `remote.py`，引入新的 `--mode` 选项，并根据模式调度不同的 `GitDB` 操作。
-
-~~~~~act
-write_file
-packages/quipu-cli/src/quipu/cli/commands/remote.py
-~~~~~
-~~~~~python
+import pytest
 import subprocess
 from pathlib import Path
-from typing import Annotated, Optional
-from enum import Enum
+from typer.testing import CliRunner
+import yaml
+import sqlite3
 
-import typer
+from quipu.cli.main import app
 from quipu.common.identity import get_user_id_from_email
-from quipu.engine.config import ConfigManager
-from quipu.engine.git_db import GitDB
 
-from ..config import DEFAULT_WORK_DIR
-from ..logger_config import setup_logging
-from ..utils import find_git_repository_root
+runner = CliRunner()
 
 
-class SyncMode(str, Enum):
-    BIDIRECTIONAL = "bidirectional"
-    PUSH_FORCE = "push-force"
-    PUSH_ONLY = "push-only"
-    PULL_PRUNE = "pull-prune"
-    PULL_ONLY = "pull-only"
+def run_git_command(cwd: Path, args: list[str], check: bool = True) -> str:
+    """Helper to run a git command and return stdout."""
+    result = subprocess.run(["git"] + args, cwd=cwd, capture_output=True, text=True, check=check)
+    return result.stdout.strip()
 
 
-def register(app: typer.Typer):
-    @app.command()
-    def sync(
-        ctx: typer.Context,
-        work_dir: Annotated[
-            Path,
-            typer.Option(
-                "--work-dir", "-w", help="操作执行的根目录（工作区）", file_okay=False, dir_okay=True, resolve_path=True
-            ),
-        ] = DEFAULT_WORK_DIR,
-        remote_option: Annotated[
-            Optional[str], typer.Option("--remote", "-r", help="Git 远程仓库的名称 (覆盖配置文件)。")
-        ] = None,
-        mode: Annotated[
-            SyncMode,
-            typer.Option(
-                "--mode",
-                "-m",
-                help="同步模式: 'bidirectional' (默认), 'push-force', 'push-only', 'pull-prune', 'pull-only'",
-                case_sensitive=False,
-            ),
-        ] = SyncMode.BIDIRECTIONAL,
-    ):
+@pytest.fixture(scope="module")
+def sync_test_environment(tmp_path_factory):
+    """
+    Sets up a full sync test environment:
+    1. A bare remote repository.
+    2. Two user workspaces cloned from the remote.
+    """
+    base_dir = tmp_path_factory.mktemp("sync_tests")
+    remote_path = base_dir / "remote.git"
+    user_a_path = base_dir / "user_a"
+    user_b_path = base_dir / "user_b"
+
+    # 1. Create bare remote
+    run_git_command(base_dir, ["init", "--bare", str(remote_path)])
+
+    # 2. Clone for User A
+    run_git_command(base_dir, ["clone", str(remote_path), str(user_a_path)])
+    run_git_command(user_a_path, ["config", "user.name", "User A"])
+    run_git_command(user_a_path, ["config", "user.email", "user.a@example.com"])
+
+    # 3. Clone for User B
+    run_git_command(base_dir, ["clone", str(remote_path), str(user_b_path)])
+    run_git_command(user_b_path, ["config", "user.name", "User B"])
+    run_git_command(user_b_path, ["config", "user.email", "user.b@example.com"])
+
+    # Add a dummy file to avoid issues with initial empty commits
+    (user_a_path / "README.md").write_text("Initial commit")
+    run_git_command(user_a_path, ["add", "README.md"])
+    run_git_command(user_a_path, ["commit", "-m", "Initial commit"])
+    run_git_command(user_a_path, ["push", "origin", "master"])
+    run_git_command(user_b_path, ["pull"])
+
+    return remote_path, user_a_path, user_b_path
+
+
+class TestSyncWorkflow:
+    def test_onboarding_and_first_push(self, sync_test_environment):
         """
-        与远程仓库同步 Quipu 历史图谱。
+        Tests the onboarding flow (user_id creation) and the first push of Quipu refs.
         """
-        setup_logging()
-        sync_dir = find_git_repository_root(work_dir) or work_dir
-        config = ConfigManager(sync_dir)
-        remote = remote_option or config.get("sync.remote_name", "origin")
+        remote_path, user_a_path, _ = sync_test_environment
+        user_a_id = get_user_id_from_email("user.a@example.com")
 
-        final_user_id = config.get("sync.user_id")
-        if not final_user_id:
-            typer.secho("🤝 首次使用 sync 功能，正在自动配置用户身份...", fg=typer.colors.BLUE, err=True)
-            try:
-                result = subprocess.run(
-                    ["git", "config", "user.email"], cwd=sync_dir, capture_output=True, text=True, check=True
-                )
-                email = result.stdout.strip()
-                if not email:
-                    raise ValueError("Git user.email is empty.")
+        # Create a Quipu node for User A
+        (user_a_path / "plan.md").write_text("~~~~~act\necho 'hello'\n~~~~~")
+        result = runner.invoke(app, ["run", str(user_a_path / "plan.md"), "--work-dir", str(user_a_path), "-y"])
+        assert result.exit_code == 0
 
-                final_user_id = get_user_id_from_email(email)
-                config.set("sync.user_id", final_user_id)
-                config.save()
-                typer.secho(
-                    f"✅ 已根据你的 Git 邮箱 '{email}' 生成并保存用户 ID: {final_user_id}",
-                    fg=typer.colors.GREEN,
-                    err=True,
-                )
+        # Run sync for the first time
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
+        assert sync_result.exit_code == 0
+        assert "首次使用 sync 功能" in sync_result.stderr
+        assert f"生成并保存用户 ID: {user_a_id}" in sync_result.stderr
 
-            except (subprocess.CalledProcessError, ValueError, FileNotFoundError):
-                typer.secho("❌ 错误：无法获取你的 Git 用户邮箱。", fg=typer.colors.RED, err=True)
-                typer.secho("💡 请先运行以下命令进行设置:", fg=typer.colors.YELLOW, err=True)
-                typer.echo('  git config --global user.email "you@example.com"')
-                ctx.exit(1)
+        # Verify config file
+        config_path = user_a_path / ".quipu" / "config.yml"
+        assert config_path.exists()
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+        assert config["sync"]["user_id"] == user_a_id
 
-        try:
-            git_db = GitDB(sync_dir)
-            subscriptions = config.get("sync.subscriptions", [])
-            target_ids_to_fetch = set(subscriptions)
-            target_ids_to_fetch.add(final_user_id)
+        # Verify remote refs
+        remote_refs = run_git_command(remote_path, ["for-each-ref", "--format=%(refname)"])
+        assert f"refs/quipu/users/{user_a_id}/heads/" in remote_refs
 
-            typer.secho(f"⚙️  模式: {mode.value}", fg=typer.colors.YELLOW, err=True)
+    def test_collaboration_subscribe_and_fetch(self, sync_test_environment):
+        """
+        Tests that User B can subscribe to and fetch User A's history.
+        AND verifies that ownership is correctly propagated to all ancestor nodes during hydration.
+        """
+        remote_path, user_a_path, user_b_path = sync_test_environment
+        user_a_id = get_user_id_from_email("user.a@example.com")
 
-            # --- Operation Dispatch based on Mode ---
-            match mode:
-                case SyncMode.BIDIRECTIONAL:
-                    typer.secho("⬇️  正在拉取...", fg=typer.colors.BLUE, err=True)
-                    for target_id in sorted(list(target_ids_to_fetch)):
-                        git_db.fetch_quipu_refs(remote, target_id)
-                    typer.secho("🤝 正在调和...", fg=typer.colors.BLUE, err=True)
-                    git_db.reconcile_local_with_remote(remote, final_user_id)
-                    typer.secho("⬆️  正在推送...", fg=typer.colors.BLUE, err=True)
-                    git_db.push_quipu_refs(remote, final_user_id)
-                    typer.secho("\n✅ Quipu 双向同步完成。", fg=typer.colors.GREEN, err=True)
+        # --- Step 1: User A creates more history (Node 2) ---
+        (user_a_path / "plan2.md").write_text("~~~~~act\necho 'world'\n~~~~~")
+        runner.invoke(app, ["run", str(user_a_path / "plan2.md"), "--work-dir", str(user_a_path), "-y"])
 
-                case SyncMode.PULL_ONLY:
-                    typer.secho("⬇️  正在拉取...", fg=typer.colors.BLUE, err=True)
-                    for target_id in sorted(list(target_ids_to_fetch)):
-                        git_db.fetch_quipu_refs(remote, target_id)
-                    typer.secho("🤝 正在调和...", fg=typer.colors.BLUE, err=True)
-                    git_db.reconcile_local_with_remote(remote, final_user_id)
-                    typer.secho("\n✅ Quipu 拉取同步完成。", fg=typer.colors.GREEN, err=True)
+        # Capture User A's commit hashes for verification later
+        user_a_commits = run_git_command(
+            user_a_path, ["log", "--all", "--format=%H", "--grep=X-Quipu-Output-Tree"]
+        ).splitlines()
+        assert len(user_a_commits) >= 2, "User A should have at least 2 Quipu nodes"
 
-                case SyncMode.PULL_PRUNE:
-                    typer.secho("⬇️  正在拉取 (带修剪)...", fg=typer.colors.BLUE, err=True)
-                    for target_id in sorted(list(target_ids_to_fetch)):
-                        git_db.fetch_quipu_refs(remote, target_id)
-                    typer.secho("🤝 正在调和...", fg=typer.colors.BLUE, err=True)
-                    git_db.reconcile_local_with_remote(remote, final_user_id)
-                    typer.secho("🗑️  正在修剪本地...", fg=typer.colors.BLUE, err=True)
-                    git_db.prune_local_from_remote(remote, final_user_id)
-                    typer.secho("\n✅ Quipu 拉取同步 (带修剪) 完成。", fg=typer.colors.GREEN, err=True)
+        # User A pushes again
+        runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
 
-                case SyncMode.PUSH_ONLY:
-                    typer.secho("⬆️  正在推送...", fg=typer.colors.BLUE, err=True)
-                    git_db.push_quipu_refs(remote, final_user_id, force=False)
-                    typer.secho("\n✅ Quipu 推送同步完成。", fg=typer.colors.GREEN, err=True)
+        # --- Step 2: User B setup ---
+        # User B onboards
+        runner.invoke(app, ["sync", "--work-dir", str(user_b_path), "--remote", "origin"])
 
-                case SyncMode.PUSH_FORCE:
-                    typer.secho("⬆️  正在强制推送...", fg=typer.colors.RED, bold=True, err=True)
-                    git_db.push_quipu_refs(remote, final_user_id, force=True)
-                    typer.secho("\n✅ Quipu 强制推送完成。", fg=typer.colors.GREEN, err=True)
+        # User B subscribes to User A
+        config_path_b = user_b_path / ".quipu" / "config.yml"
+        with open(config_path_b, "r") as f:
+            config_b = yaml.safe_load(f)
+        config_b["sync"]["subscriptions"] = [user_a_id]
+        if "storage" not in config_b:
+            config_b["storage"] = {}
+        config_b["storage"]["type"] = "sqlite"
+        with open(config_path_b, "w") as f:
+            yaml.dump(config_b, f)
 
-            typer.secho(
-                "\n💡 提示: 运行 `quipu cache sync` 来更新本地数据库和 UI 视图。", fg=typer.colors.YELLOW, err=True
+        # --- Step 3: User B Syncs (Fetch) ---
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_b_path), "--remote", "origin"])
+        assert sync_result.exit_code == 0
+        # [FIX] Updated assertion to match new, more granular output
+        assert "⬇️  正在拉取..." in sync_result.stderr
+        assert "🤝 正在调和..." in sync_result.stderr
+
+        # Verify local mirror ref in User B's repo
+        local_refs_b = run_git_command(user_b_path, ["for-each-ref", "--format=%(refname)"])
+        assert f"refs/quipu/remotes/origin/{user_a_id}/heads/" in local_refs_b
+
+        # --- Step 4: Verify Hydration Integrity ---
+        # Run cache sync to populate SQLite
+        cache_sync_result = runner.invoke(app, ["cache", "sync", "--work-dir", str(user_b_path)])
+        assert cache_sync_result.exit_code == 0
+
+        db_path_b = user_b_path / ".quipu" / "history.sqlite"
+        assert db_path_b.exists()
+
+        conn = sqlite3.connect(db_path_b)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        for commit_hash in user_a_commits:
+            cursor.execute("SELECT owner_id FROM nodes WHERE commit_hash = ?", (commit_hash,))
+            row = cursor.fetchone()
+            assert row is not None, f"Commit {commit_hash} not found in DB"
+            assert row["owner_id"] == user_a_id, (
+                f"Incorrect owner for commit {commit_hash}. Expected {user_a_id}, got {row['owner_id']}"
             )
 
-        except RuntimeError as e:
-            typer.secho(f"\n❌ 同步操作失败: {e}", fg=typer.colors.RED, err=True)
-            ctx.exit(1)
+        conn.close()
+
+    def test_sync_is_idempotent(self, sync_test_environment):
+        """
+        Tests that running sync multiple times doesn't change state or cause errors.
+        """
+        _, user_a_path, _ = sync_test_environment
+        result1 = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
+        assert result1.exit_code == 0
+        refs_after_1 = run_git_command(user_a_path, ["for-each-ref"])
+
+        result2 = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
+        assert result2.exit_code == 0
+        refs_after_2 = run_git_command(user_a_path, ["for-each-ref"])
+
+        assert refs_after_1 == refs_after_2
+
+    def test_push_safety_no_prune(self, sync_test_environment):
+        """
+        Tests that deleting a local head and syncing DOES NOT prune the remote ref.
+        This validates the non-destructive behavior of the new sync protocol.
+        """
+        remote_path, user_a_path, _ = sync_test_environment
+        user_a_id = get_user_id_from_email("user.a@example.com")
+
+        # Create two new nodes
+        (user_a_path / "plan3.md").write_text("~~~~~act\necho 'plan3'\n~~~~~")
+        runner.invoke(app, ["run", str(user_a_path / "plan3.md"), "--work-dir", str(user_a_path), "-y"])
+
+        # Sync to ensure remote has it
+        runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
+        remote_refs_before = run_git_command(remote_path, ["for-each-ref", f"refs/quipu/users/{user_a_id}"])
+        assert "plan3" in str(run_git_command(user_a_path, ["log", "--all"]))  # Verify creation
+
+        # Identify a ref to delete locally
+        local_quipu_refs = run_git_command(
+            user_a_path, ["for-each-ref", "--format=%(refname)", "refs/quipu/local/heads"]
+        ).splitlines()
+        ref_to_delete = local_quipu_refs[0]
+        ref_hash = ref_to_delete.split("/")[-1]
+
+        # Delete it locally
+        run_git_command(user_a_path, ["update-ref", "-d", ref_to_delete])
+
+        # Sync again
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
+        assert sync_result.exit_code == 0
+
+        # Verify it is STILL present on remote (Safety Check)
+        remote_refs_after = run_git_command(remote_path, ["for-each-ref", f"refs/quipu/users/{user_a_id}"])
+
+        # With prune enabled, this assertion would fail.
+        # With prune disabled, this must pass.
+        assert ref_hash in remote_refs_after
+
+    def test_multi_device_reconciliation(self, sync_test_environment):
+        """
+        Tests the "Fetch -> Reconcile -> Push" flow.
+        Simulates User A working on two devices.
+        Device 2 creates Node X.
+        Device 1 syncs -> Should fetch Node X and promote it to local head.
+        """
+        remote_path, user_a_path, _ = sync_test_environment
+
+        # 1. Setup Device 2 for User A
+        base_dir = user_a_path.parent
+        user_a_device2_path = base_dir / "user_a_device2"
+        run_git_command(base_dir, ["clone", str(remote_path), str(user_a_device2_path)])
+        run_git_command(user_a_device2_path, ["config", "user.name", "User A"])
+        run_git_command(user_a_device2_path, ["config", "user.email", "user.a@example.com"])
+
+        # Onboard Device 2
+        runner.invoke(app, ["sync", "--work-dir", str(user_a_device2_path), "--remote", "origin"])
+
+        # 2. Device 2 creates a unique node
+        (user_a_device2_path / "device2.md").write_text("~~~~~act\necho 'from device 2'\n~~~~~")
+        runner.invoke(
+            app, ["run", str(user_a_device2_path / "device2.md"), "--work-dir", str(user_a_device2_path), "-y"]
+        )
+
+        # Get the hash
+        d2_commits = run_git_command(
+            user_a_device2_path, ["log", "--all", "--format=%H", "--grep=X-Quipu-Output-Tree"]
+        ).splitlines()
+        d2_new_hash = d2_commits[0]
+
+        # Device 2 Pushes
+        runner.invoke(app, ["sync", "--work-dir", str(user_a_device2_path), "--remote", "origin"])
+
+        # 3. Device 1 Syncs
+        # Expectation: Device 1 should pull Device 2's work and show it in local heads
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--remote", "origin"])
+        assert sync_result.exit_code == 0
+
+        # Verify Device 1 has the commit in LOCAL heads
+        d1_local_refs = run_git_command(user_a_path, ["for-each-ref", "refs/quipu/local/heads"])
+        assert d2_new_hash in d1_local_refs
+~~~~~
+
+#### Acts 2: 添加新的同步模式集成测试
+
+现在，我们创建一个新文件来专门测试所有同步模式。
+
+~~~~~act
+write_file
+tests/integration/test_sync_modes.py
+~~~~~
+~~~~~python
+import pytest
+import subprocess
+from pathlib import Path
+from typer.testing import CliRunner
+
+from quipu.cli.main import app
+from quipu.common.identity import get_user_id_from_email
+
+# Reuse the runner and helpers from the existing test file
+from .test_sync_workflow import run_git_command, sync_test_environment
+
+runner = CliRunner()
+
+
+def create_node(work_dir: Path, content: str) -> str:
+    """Helper to create a node and return its commit hash."""
+    plan_file = work_dir / f"{content}.md"
+    plan_file.write_text(f"~~~~~act\necho '{content}'\n~~~~~")
+    result = runner.invoke(app, ["run", str(plan_file), "--work-dir", str(work_dir), "-y"])
+    assert result.exit_code == 0
+    # Find the latest quipu commit hash
+    commit_hash = run_git_command(work_dir, ["log", "-1", "--all", "--format=%H", "--grep=X-Quipu-Output-Tree"])
+    return commit_hash
+
+
+class TestSyncModes:
+    def test_push_only_mode(self, sync_test_environment):
+        """User A pushes, but does not pull User B's changes."""
+        remote_path, user_a_path, user_b_path = sync_test_environment
+        user_a_id = get_user_id_from_email("user.a@example.com")
+        user_b_id = get_user_id_from_email("user.b@example.com")
+
+        # User B creates a node and pushes it
+        node_b = create_node(user_b_path, "node_from_b")
+        runner.invoke(app, ["sync", "--work-dir", str(user_b_path)])
+
+        # User A creates a node
+        node_a = create_node(user_a_path, "node_from_a")
+
+        # User A syncs with push-only
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--mode", "push-only"])
+        assert sync_result.exit_code == 0
+        assert "⬆️  正在推送..." in sync_result.stderr
+        assert "⬇️" not in sync_result.stderr  # Should not fetch
+
+        # Verify remote has User A's node
+        remote_refs = run_git_command(remote_path, ["for-each-ref"])
+        assert f"refs/quipu/users/{user_a_id}/heads/{node_a}" in remote_refs
+
+        # Verify User A's local repo DOES NOT have User B's node
+        local_refs_a = run_git_command(user_a_path, ["for-each-ref"])
+        assert f"refs/quipu/remotes/origin/{user_b_id}/heads/{node_b}" not in local_refs_a
+
+    def test_pull_only_mode(self, sync_test_environment):
+        """User B pulls User A's changes, but does not push its own."""
+        remote_path, user_a_path, user_b_path = sync_test_environment
+        user_a_id = get_user_id_from_email("user.a@example.com")
+
+        # User A creates a node and pushes
+        node_a = create_node(user_a_path, "node_from_a_for_pull")
+        runner.invoke(app, ["sync", "--work-dir", str(user_a_path)])
+
+        # User B creates a node but doesn't push
+        node_b = create_node(user_b_path, "node_from_b_local")
+
+        # User B syncs with pull-only
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_b_path), "--mode", "pull-only"])
+        assert sync_result.exit_code == 0
+        assert "⬇️  正在拉取..." in sync_result.stderr
+        assert "⬆️" not in sync_result.stderr  # Should not push
+
+        # Verify User B's local repo HAS User A's node (in remotes and local)
+        local_refs_b = run_git_command(user_b_path, ["for-each-ref"])
+        assert f"refs/quipu/remotes/origin/{user_a_id}/heads/{node_a}" in local_refs_b
+        assert f"refs/quipu/local/heads/{node_a}" in local_refs_b
+
+        # Verify remote DOES NOT have User B's node
+        remote_refs = run_git_command(remote_path, ["for-each-ref"])
+        assert f"{node_b}" not in remote_refs
+
+    def test_push_force_mode(self, sync_test_environment):
+        """User A force-pushes, deleting a stale ref on the remote."""
+        remote_path, user_a_path, _ = sync_test_environment
+        user_a_id = get_user_id_from_email("user.a@example.com")
+
+        # User A creates two nodes and pushes
+        node1 = create_node(user_a_path, "node_to_keep")
+        node2_stale = create_node(user_a_path, "node_to_delete")
+        runner.invoke(app, ["sync", "--work-dir", str(user_a_path)])
+
+        # Verify both exist on remote
+        remote_refs = run_git_command(remote_path, ["for-each-ref"])
+        assert node1 in remote_refs
+        assert node2_stale in remote_refs
+
+        # User A deletes one ref locally
+        run_git_command(user_a_path, ["update-ref", "-d", f"refs/quipu/local/heads/{node2_stale}"])
+
+        # User A syncs with push-force
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_a_path), "--mode", "push-force"])
+        assert sync_result.exit_code == 0
+        assert "⬆️  正在强制推送..." in sync_result.stderr
+
+        # Verify stale node is GONE from remote, but keep node is still there
+        remote_refs_after = run_git_command(remote_path, ["for-each-ref"])
+        assert node1 in remote_refs_after
+        assert node2_stale not in remote_refs_after
+
+    def test_pull_prune_mode(self, sync_test_environment):
+        """User B has a stale local ref that should be pruned after pulling."""
+        remote_path, user_a_path, user_b_path = sync_test_environment
+        user_b_id = get_user_id_from_email("user.b@example.com")
+
+        # User B creates two nodes and pushes
+        node1_b = create_node(user_b_path, "b_node_to_keep")
+        node2_b_stale = create_node(user_b_path, "b_node_to_delete")
+        runner.invoke(app, ["sync", "--work-dir", str(user_b_path)])
+
+        # Now, on another device (simulated by remote), the stale ref is deleted
+        run_git_command(remote_path, ["update-ref", "-d", f"refs/quipu/users/{user_b_id}/heads/{node2_b_stale}"])
+
+        # User B syncs with pull-prune
+        sync_result = runner.invoke(app, ["sync", "--work-dir", str(user_b_path), "--mode", "pull-prune"])
+        assert sync_result.exit_code == 0
+        assert "🗑️  正在修剪本地..." in sync_result.stderr
+
+        # Verify stale node is GONE from User B's local heads, but keep node is still there
+        local_refs_b = run_git_command(user_b_path, ["for-each-ref", "refs/quipu/local/heads"])
+        assert node1_b in local_refs_b
+        assert node2_b_stale not in local_refs_b
 ~~~~~
 
 ### 下一步建议
-我们已经完成了核心功能的实现。现在最关键的步骤是确保其正确性和健壮性：
-1.  **添加集成测试**: 创建一个新的测试文件 `tests/integration/test_sync_modes.py`，为每一种新的同步模式编写测试用例。这需要设置一个本地的 "bare" Git 仓库作为远程仓库，并仔细验证每种模式下 `refs` 的变化是否符合预期。
-2.  **更新文档**: 在项目的 `README.md` 或相关文档中，详细说明 `quipu sync` 命令新增的 `--mode` 选项及其不同模式的用途和适用场景。
+我们已经成功地为新的 `sync` 模式添加了全面的集成测试，并修复了现有的测试套件。这大大增强了我们对同步功能正确性的信心。
+
+下一步，我们可以：
+- **提交变更**: 将这些测试文件和之前的功能代码作为一个完整的 `[COMMIT]` 提交。
+- **更新文档**: 更新 `README.md` 或相关用户文档，详细说明 `quipu sync --mode` 的不同选项及其适用场景。
