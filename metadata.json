@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] style: 修复 ruff 报告的 linting 错误 (修正版)", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764479797.5072353, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] refactor(tests): 集中化集成测试的 Fixture 与辅助函数", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764480086.8761194, "duration_ms": 0}}
