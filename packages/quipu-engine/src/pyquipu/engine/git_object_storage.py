@@ -458,7 +458,13 @@ class GitObjectHistoryWriter(HistoryWriter):
         content_blob_hash = self.git_db.hash_object(content_md_bytes)
 
         # 使用 100444 权限 (只读文件)
-        tree_descriptor = f"100444 blob {meta_blob_hash}\tmetadata.json\n100444 blob {content_blob_hash}\tcontent.md"
+        # 关键修复：建立强引用！将 output_tree 作为名为 'snapshot' 的子目录挂载。
+        # 这确保了 Git 的 GC 不会回收工作区快照，且 sync 时能同步实际内容。
+        tree_descriptor = (
+            f"100444 blob {meta_blob_hash}\tmetadata.json\n"
+            f"100444 blob {content_blob_hash}\tcontent.md\n"
+            f"040000 tree {output_tree}\tsnapshot"
+        )
         tree_hash = self.git_db.mktree(tree_descriptor)
 
         # 1. 确定父节点 (Topological Parent)

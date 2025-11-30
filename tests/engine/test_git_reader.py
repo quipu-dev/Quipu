@@ -151,8 +151,16 @@ class TestGitObjectHistoryReader:
 
         h0 = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
+        # Helper to create a valid tree object in the ODB
+        def make_valid_tree(content: bytes) -> str:
+            blob = git_db.hash_object(content)
+            return git_db.mktree(f"100644 blob {blob}\tfile")
+
+        tree_a = make_valid_tree(b"state_a")
+        tree_c = make_valid_tree(b"state_c")
+
         # 1. Create a valid node A
-        node_a = writer.create_node("plan", h0, "a" * 40, "A", start_time=1000)
+        node_a = writer.create_node("plan", h0, tree_a, "A", start_time=1000)
 
         # 2. Manually create a corrupted commit B, parented to A
         empty_tree = git_db.mktree("")
@@ -164,7 +172,7 @@ class TestGitObjectHistoryReader:
         # but whose topological parent in Git is the bad commit B.
         # The writer will link C to A based on input_tree. The reader must correctly
         # parse this graph despite the corrupted intermediary.
-        writer.create_node("plan", node_a.output_tree, "c" * 40, "C", start_time=3000)
+        writer.create_node("plan", node_a.output_tree, tree_c, "C", start_time=3000)
 
         nodes = reader.load_all_nodes()
 
