@@ -1,60 +1,95 @@
-好的，我们已经通过一系列的 `[WIP]` 节点成功重构了集成测试的结构，解决了 `ruff` 报告的所有静态分析错误。
+好的，针对 `tests/` 目录下的 lint 错误，我将创建一个修复计划。
 
-现在，是时候将这些改进作为一个逻辑单元提交到版本历史中了。我将生成一个 `[COMMIT]` 计划来完成这项任务。
+这些错误主要是未使用的导入 (`F401`)、重复定义 (`F811`) 和导入排序 (`I001`) 问题。
 
-## [COMMIT] refactor(tests): 集中化 Fixture 以解决 ruff F811 错误
+## [WIP] fix(tests): 修复集成测试中的 lint 错误
+
+### 错误分析
+`ruff` 扫描报告了 `tests/integration/conftest.py` 和 `tests/integration/test_sync_workflow.py` 中的多个代码质量问题：
+1.  **未使用的导入**: `subprocess`, `pathlib.Path`, `pytest` 被导入但未在代码中使用。
+2.  **重复定义**: `CliRunner` 被导入了两次。
+3.  **导入排序**: 导入块未格式化。
 
 ### 用户需求
-需要将最近为修复 `ruff` 静态分析错误而进行的测试代码重构工作，作为一个原子提交，固化到项目的版本历史中。
+清理 `tests/` 目录下的代码，移除未使用的导入，修复重复定义，并整理导入顺序，以通过 CI 的 lint 检查。
 
 ### 评论
-这次重构是提升开发者体验 (DX) 和代码库健康度的关键一步。通过遵循 `pytest` 的最佳实践来组织共享的 `fixture` 和辅助函数，我们不仅解决了恼人的 `F811` (重定义) 错误，还显著提高了测试套件的可维护性和清晰度。
+这是一个常规的代码清理任务 (`chore`/`fix`)，有助于保持测试代码的整洁和可维护性，避免误导开发者。
 
 ### 目标
-1.  将新创建的 `tests/integration/conftest.py` 和 `tests/integration/helpers.py` 文件添加到版本控制。
-2.  将修改后的 `tests/integration/test_sync_workflow.py` 和 `tests/integration/test_sync_modes.py` 文件添加到版本控制。
-3.  创建一个符合 Conventional Commits 规范的 Git 提交，清晰地记录此次重构的目的和成果。
+1.  清理 `tests/integration/conftest.py` 中的未使用导入。
+2.  清理并重组 `tests/integration/test_sync_workflow.py` 中的导入块。
 
 ### 基本原理
-`pytest` 的 `fixture` 发现机制会自动加载所有 `conftest.py` 文件中的 `fixture`，使其对测试文件全局可用，无需显式导入。这次重构利用了这一核心机制，将 `sync_test_environment` fixture 迁移到了 `tests/integration/conftest.py`。这从根本上解决了 `ruff` 报告的 `F811` "重定义未使用名称" 的问题，因为 `fixture` 不再污染模块的命名空间，而是由 `pytest` 运行时注入。
+根据 `ruff` 的报告精确删除多余代码。不涉及逻辑变更。
 
 ### 标签
-#intent/refine #flow/ready #priority/high #comp/tests #scope/dx #ai/instruct #task/domain/testing #task/object/test-fixtures #task/action/refactor #task/state/end #task/status/completed
+#intent/fix #intent/tune #flow/ready #priority/medium #comp/tests #scope/dx #ai/instruct #task/domain/testing #task/object/linter #task/action/fix #task/state/begin
 
 ---
 
 ### Script
 
-#### Acts 1: 提交重构后的测试文件
+#### Acts 1: 清理 `tests/integration/conftest.py`
 
-我们将把所有与本次重构相关的新文件和修改过的文件添加到 Git 暂存区，并创建一个内容详尽的提交。
+移除未使用的 `subprocess` 和 `pathlib.Path`。
 
 ~~~~~act
-git_add
-~~~~~
-~~~~~text
+patch_file
 tests/integration/conftest.py
-tests/integration/helpers.py
-tests/integration/test_sync_workflow.py
-tests/integration/test_sync_modes.py
 ~~~~~
+~~~~~python
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from .helpers import run_git_command
+~~~~~
+~~~~~python
+import pytest
+
+from .helpers import run_git_command
+~~~~~
+
+#### Acts 2: 清理 `tests/integration/test_sync_workflow.py`
+
+移除未使用的 `sqlite3` (虽然 ruff 没报这个，但根据上下文检查它似乎被用到了 `conn = sqlite3.connect`，所以保留), `subprocess`, `Path`, `pytest`。移除重复的 `CliRunner`。整理导入顺序。
 
 ~~~~~act
-git_commit
+patch_file
+tests/integration/test_sync_workflow.py
 ~~~~~
-~~~~~text
-refactor(tests): Centralize fixtures to resolve ruff F811 errors
+~~~~~python
+import sqlite3
+import subprocess
+from pathlib import Path
 
-Refactors the integration test suite to align with pytest best practices for sharing fixtures and helpers. This resolves a series of ruff `F811` (redefinition of unused name) errors.
+import pytest
+import yaml
+from pyquipu.cli.main import app
+from pyquipu.common.identity import get_user_id_from_email
+from typer.testing import CliRunner
 
-Key changes:
--   Moved the `sync_test_environment` fixture from `test_sync_workflow.py` to the newly created `tests/integration/conftest.py`. This allows pytest to discover and inject the fixture automatically without requiring explicit imports in test files.
--   Extracted the `run_git_command` helper function into a new shared `tests/integration/helpers.py` file.
--   Updated `test_sync_workflow.py` and `test_sync_modes.py` to rely on the centralized fixture and helper, removing the problematic imports.
+from typer.testing import CliRunner
 
-This change improves the structure and maintainability of the test suite and ensures compatibility with stricter static analysis tools.
+from .helpers import run_git_command
+
+runner = CliRunner()
+~~~~~
+~~~~~python
+import sqlite3
+
+import yaml
+from pyquipu.cli.main import app
+from pyquipu.common.identity import get_user_id_from_email
+from typer.testing import CliRunner
+
+from .helpers import run_git_command
+
+runner = CliRunner()
 ~~~~~
 
 ### 下一步建议
-- **CI 验证**: 推送此提交后，应密切关注 CI 工作流的运行结果，确保所有测试在干净的环境中依然能够通过。
-- **全局审查**: 可以在整个 `tests/` 目录中进行一次审查，看看是否还有其他可以被中心化到顶层或模块级 `conftest.py` 中的 `fixture`，以进一步提升测试代码的一致性。
+- 运行 `ruff check tests/` 验证修复结果。
+- 如果涉及逻辑变更或重构，考虑运行相关测试用例确保无回归。
