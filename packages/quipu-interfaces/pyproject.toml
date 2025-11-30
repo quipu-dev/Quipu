@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Core interfaces and data models for the Quipu ecosystem."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 classifiers = [
     "Programming Language :: Python :: 3",
