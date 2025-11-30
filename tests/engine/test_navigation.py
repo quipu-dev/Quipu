@@ -1,4 +1,3 @@
-
 import pytest
 from pyquipu.engine.state_machine import Engine
 
