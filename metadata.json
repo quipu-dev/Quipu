@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] style: 修复 ruff 报告的 linting 错误 (修正版)", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764479797.5072353, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] fix(tests): 修复 test_sync_modes.py 中的 ruff 静态分析错误", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1764479941.9355974, "duration_ms": 0}}
