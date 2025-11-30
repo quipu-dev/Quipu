@@ -1,52 +1,78 @@
-好的，我们已经成功地应用了补丁。现在，我将创建一个 `[COMMIT]` 计划，将这些修复工作作为一个原子化的、完整的单元提交到版本控制中。
+## [COMMIT] style: 使用 ruff 格式化并检查全库代码
 
-## [COMMIT] fix(tests): 为集成测试中的临时 Git 仓库配置身份
+### 错误分析
+无（这是一个主动的代码维护和质量保证操作）。
 
 ### 用户需求
-将刚才为修复 CI 环境中 `Author identity unknown` 错误而做的修改，正式提交到 Git 仓库中。
+使用 `ruff` 工具对当前项目的所有代码进行格式化，然后运行 Linter 检查。只有在 Linter 检查通过的情况下，才将所有变更提交到版本控制系统。
 
 ### 评论
-这是一个关键的健壮性修复。通过在测试设置中显式配置 Git 用户身份，我们确保了测试套件的确定性和可移植性，使其不再依赖于运行环境的全局配置。这能有效防止 CI/CD 流程中出现类似的意外失败，是提升项目开发体验的重要一步。
+这是一个标准的、健壮的维护任务。它将代码风格统一和代码质量检查合并为一个原子操作。通过在提交前强制执行 Linter 检查，可以确保进入版本历史的代码不仅格式统一，而且没有明显的语法或逻辑错误，极大地提升了代码库的健康度。
 
 ### 目标
-1.  将所有被修改的集成测试文件（`test_cli_workflow.py`, `test_idempotent_node.py`, `test_workspace_invariance.py`, `test_workspace_isolation.py`）添加到 Git 暂存区。
-2.  创建一个清晰、符合 Conventional Commits 规范的 Git 提交，记录此次修复。
+1.  在项目根目录下运行 `ruff format .` 来自动修复格式问题。
+2.  接着运行 `ruff check .` 来捕获任何剩余的 Linter 错误。
+3.  **如果检查失败，则中止操作，不创建提交。**
+4.  如果检查通过，则将所有变更的文件添加到 Git 暂存区。
+5.  创建一个提交以固化格式化和修正后的变更。
 
 ### 基本原理
-我们通过在每个 `git init` 之后添加 `git config` 命令，为测试中使用的临时 Git 仓库提供了必要的作者信息。这解决了 Quipu 引擎在调用底层 `git commit-tree` 命令时因缺少用户身份而失败的问题。本次提交将把这一解决方案固化到代码库中。
+此计划利用了 `run_command` 指令的执行特性：当被调用的命令返回非零退出码时，它会抛出异常并终止整个计划的执行。我们将 `ruff check .` 放置在 `git_commit` 之前，使其成为一个“质量门禁”。只有当 `ruff check .` 成功（退出码为 0），执行流程才能继续到后面的 `git_add` 和 `git_commit` 步骤。
 
 ### 标签
-#intent/fix #flow/ready #priority/high #comp/tests #concept/state #scope/dx #ai/instruct #task/domain/testing #task/object/ci-stability #task/action/bug-fix #task/state/end #task/status/completed
+#intent/tune #flow/ready #priority/low
+#comp/build #concept/tooling #scope/dx
+#ai/instruct
+#task/domain/maintenance #task/object/code-style #task/action/format
+#task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 将修复文件暂存并提交
+#### Acts 1: 格式化代码
 
-我们将把所有相关的测试文件添加到暂存区，并创建一个内容详尽的提交来记录这次修复。
+首先，我们运行格式化程序来自动修正所有样式问题。
+
+~~~~~act
+run_command
+~~~~~
+~~~~~command
+.envs/dev/bin/ruff format .
+~~~~~
+
+#### Acts 2: 检查代码质量 (Linter)
+
+接下来，我们运行 Linter 检查。**如果此命令检测到任何错误并失败，整个计划将在此处中止，不会执行后续的提交操作。**
+
+~~~~~act
+run_command
+~~~~~
+~~~~~command
+.envs/dev/bin/ruff check .
+~~~~~
+
+#### Acts 3: 暂存并提交变更
+
+只有在上述所有检查都通过后，才会执行以下操作，将所有变更暂存并提交。
 
 ~~~~~act
 git_add
-tests/integration/test_cli_workflow.py
-tests/integration/test_idempotent_node.py
-tests/integration/test_workspace_invariance.py
-tests/integration/test_workspace_isolation.py
+~~~~~
+~~~~~files
+.
 ~~~~~
 
 ~~~~~act
 git_commit
 ~~~~~
-~~~~~text
-fix(tests): configure git identity for integration tests
+~~~~~message
+style: format code with ruff
 
-Ensures that temporary Git repositories created during integration tests are configured with a default user name and email.
-
-This resolves a class of failures that occurred in clean CI environments where no global Git identity was configured, causing the underlying `git commit-tree` command used by the Quipu engine to fail with an "Author identity unknown" error.
-
-By explicitly setting a local Git identity after `git init` in all relevant test fixtures and setups, we make the test suite more robust, portable, and decoupled from the execution environment.
+Applies standard code formatting across the entire repository using `ruff format .`.
+Also ensures all linter checks pass before committing.
 ~~~~~
 
 ### 下一步建议
-- **运行完整测试套件**: 建议在本地运行一次完整的 `pytest`，确保修复没有引入任何回归问题。
-- **推送至远程**: 提交后，可以将此变更推送到远程仓库，以在真实的 CI/CD 流程中验证修复的有效性。
+- **CI 检查**: 确保 CI 流程中包含 `ruff format --check` 和 `ruff check .` 步骤，以防止未来引入未格式化或不合格的代码。
+- **Pre-commit**: 考虑配置 `pre-commit` 钩子，在每次提交前自动运行这些检查，为开发者提供更即时的反馈。
