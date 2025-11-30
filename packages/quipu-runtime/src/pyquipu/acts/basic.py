@@ -93,7 +93,9 @@ def _patch_file(ctx: ActContext, args: List[str]):
     """
     if len(args) < 3:
         ctx.fail(
-            bus.get("acts.error.missingArgs", act_name="patch_file", count=3, signature="[path, old_string, new_string]")
+            bus.get(
+                "acts.error.missingArgs", act_name="patch_file", count=3, signature="[path, old_string, new_string]"
+            )
         )
 
     raw_path, old_str, new_str = args[0], args[1], args[2]

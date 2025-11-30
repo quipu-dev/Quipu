@@ -12,10 +12,10 @@ def mock_runtime_bus(monkeypatch):
     自动 patch 所有 runtime 模块中导入的 'bus' 实例。
     """
     m_bus = MagicMock()
-    
+
     # 关键修改：让 bus.get 返回传入的 msg_id，方便测试断言语义
     m_bus.get.side_effect = lambda msg_id, **kwargs: msg_id
-    
+
     patch_targets = [
         "pyquipu.runtime.executor.bus",
         "pyquipu.runtime.plugin_loader.bus",

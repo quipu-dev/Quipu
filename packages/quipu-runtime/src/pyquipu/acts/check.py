@@ -22,7 +22,9 @@ def _check_files_exist(ctx: ActContext, args: List[str]):
     说明: 检查当前工作区内是否存在指定的文件。文件名通过换行符分隔。
     """
     if len(args) < 1:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="check_files_exist", count=1, signature="[file_list_string]"))
+        ctx.fail(
+            bus.get("acts.error.missingArgs", act_name="check_files_exist", count=1, signature="[file_list_string]")
+        )
 
     raw_files = args[0].strip().split("\n")
     missing_files = []

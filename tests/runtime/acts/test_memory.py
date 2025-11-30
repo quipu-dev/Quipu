@@ -37,6 +37,6 @@ class TestMemoryActs:
 
         func, _, _ = executor._acts["log_thought"]
         ctx = ActContext(executor)
-        
+
         with pytest.raises(ExecutionError, match="acts.memory.error.writeFailed"):
             func(ctx, ["content"])

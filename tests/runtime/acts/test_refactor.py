@@ -24,7 +24,9 @@ class TestRefactorActs:
         assert not src.exists()
         assert dest.exists()
         assert dest.read_text() == "content"
-        mock_runtime_bus.success.assert_called_with("acts.refactor.success.moved", source="old.txt", destination="new.txt")
+        mock_runtime_bus.success.assert_called_with(
+            "acts.refactor.success.moved", source="old.txt", destination="new.txt"
+        )
 
     def test_move_file_src_not_found(self, executor: Executor):
         func, _, _ = executor._acts["move_file"]
