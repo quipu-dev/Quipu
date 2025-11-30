@@ -1,189 +1,141 @@
-好的，我理解了。这是一个非常好的改进，它强制要求计划的编写者（AI）明确其操作目标，消除了歧义，使 `act` 的行为更加健壮和可预测。
+## [WIP] fix: 修正 `run --list-acts` 未加载插件的问题
 
-我们将修改 `versioning.py` 插件，将可选的 `--package` 标志改为一个强制性的位置参数。我们将使用一个特殊的标识符 `.` 来代表项目根目录。
+### 错误分析
+`quipu run --list-acts` 命令的实现存在缺陷。它在初始化 `Executor` 后仅注册了核心 `act` (`register_core_acts`)，但并未调用 `PluginManager` 来加载项目本地或用户全局的外部插件。这导致 `-l` 的输出不完整，遗漏了所有通过插件机制添加的 `act`。
 
-## [WIP] refactor: 强制 versioning 插件使用位置参数指定目标
+相比之下，`quipu axon --list-acts` 的实现是正确的，它在列出 `act` 之前会调用 `PluginManager().load_from_sources(executor, work_dir)`。
 
 ### 用户需求
-修改 `versioning.py` 插件中的 `bump_version` 和 `set_version` `act`，将原来可选的 `--package` 标志参数改为一个强制性的位置参数。AI 必须明确提供要操作的目标（具体的包名或代表根目录的 `.`），不能有任何默认行为。
+修复 `quipu run --list-acts` 命令，使其能够正确地发现并列出所有可用的 `act`，包括核心 `act` 和所有通过插件加载的 `act`。
 
 ### 评论
-这是一个关键的健壮性改进。通过移除可选参数和默认值，我们强制 AI 在生成计划时必须显式声明其意图，这大大降低了因上下文理解错误而意外修改了错误 `pyproject.toml` 文件的风险。
+这是一个重要的开发者体验 (DX) 修复。`--list-acts` 是一个关键的自省功能，它的不一致性会给用户带来困惑。统一 `run` 和 `axon` 在此功能上的行为，可以确保工具的可靠性和可预测性。
 
 ### 目标
-1.  修改 `bump_version` 和 `set_version` 函数中的 `argparse` 定义，移除 `--package` 标志，并添加一个名为 `package_target` 的位置参数。
-2.  更新 `_get_target_path` 辅助函数，使其能够处理新的 `package_target` 参数，并将 `.` 解析为根 `pyproject.toml` 的路径。
-3.  更新 `act` 的文档字符串，以反映新的参数签名。
+1.  修改 `packages/quipu-cli/src/pyquipu/cli/commands/run.py` 文件。
+2.  在 `run_command` 函数处理 `--list-acts` 的逻辑块中，加入对 `PluginManager` 的调用。
 
 ### 基本原理
-我们将利用 `argparse` 对位置参数的内置支持。通过将参数定义为没有 `--` 前缀的字符串，`argparse` 会自动将其视为必需的参数。我们将约定 `.` 作为指向项目根目录的特殊值，这在命令行工具中是一种常见且直观的模式。所有其他值都将被视为 `packages/` 目录下的一个子包名。
+我们将把 `axon.py` 中处理插件加载和列出的逻辑范式，完整地复制到 `run.py` 中。这确保了无论用户通过哪个命令查询可用操作，都能得到一致且完整的结果。
 
 ### 标签
-#intent/refine #flow/ready #priority/high #comp/runtime #concept/executor #scope/dx #ai/instruct #task/domain/tooling #task/object/version-plugin #task/action/refactor #task/state/continue
+#intent/fix #flow/ready #priority/medium #comp/cli #concept/executor #scope/dx #ai/instruct #task/domain/cli #task/object/act-listing #task/action/bug-fix #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 更新 `versioning.py` 插件
+#### Acts 1: 修复 `run.py` 中的 `list_acts` 逻辑
 
-我们将使用 `write_file` 覆盖现有的插件文件，以确保应用完整的修改。
+我们将使用 `patch_file` 来替换 `run.py` 中不完整的逻辑块。
 
 ~~~~~act
-write_file
+patch_file
 ~~~~~
 ~~~~~path
-.quipu/acts/versioning.py
+packages/quipu-cli/src/pyquipu/cli/commands/run.py
 ~~~~~
 ~~~~~python
-import argparse
-import re
-from typing import List
+        setup_logging()
+        if list_acts:
+            executor = Executor(root_dir=Path("."), yolo=True)
+            from pyquipu.acts import register_core_acts
 
-from pyquipu.common.messaging import bus
-from pyquipu.interfaces.exceptions import ExecutionError
-from pyquipu.interfaces.types import ActContext, Executor
+            register_core_acts(executor)
+            bus.info("run.listActs.ui.header")
+            acts = executor.get_registered_acts()
+            for name in sorted(acts.keys()):
+                doc = acts[name]
+                clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
+                indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
+                bus.info("run.listActs.ui.actItem", name=name)
+                bus.data(f"{indented_doc}\n")
+            ctx.exit(0)
+~~~~~
+~~~~~python
+        setup_logging()
+        if list_acts:
+            from pyquipu.acts import register_core_acts
+            from ..plugin_manager import PluginManager
 
+            executor = Executor(root_dir=work_dir, yolo=True)
+            register_core_acts(executor)
+            PluginManager().load_from_sources(executor, work_dir)
 
-class SafeArgumentParser(argparse.ArgumentParser):
-    """覆盖 ArgumentParser 以抛出 ExecutionError。"""
-
-    def error(self, message):
-        raise ExecutionError(f"参数解析错误: {message}")
-
-    def exit(self, status=0, message=None):
-        if message:
-            raise ExecutionError(message)
-
-
-def register(executor: Executor):
-    """注册版本管理相关的操作"""
-    executor.register("bump_version", _bump_version, arg_mode="exclusive")
-    executor.register("set_version", _set_version, arg_mode="exclusive")
-
-
-def _get_target_path(ctx: ActContext, package_target: str) -> str:
-    """根据目标字符串确定 pyproject.toml 的路径"""
-    if package_target == ".":
-        return "pyproject.toml"
-    return f"packages/{package_target}/pyproject.toml"
-
-
-def _update_version_in_file(ctx: ActContext, raw_path: str, new_version: str):
-    """读取、更新并写回 toml 文件中的版本号"""
-    target_path = ctx.resolve_path(raw_path)
-    if not target_path.exists():
-        ctx.fail(f"文件未找到: {raw_path}")
-
-    try:
-        content = target_path.read_text("utf-8")
-    except Exception as e:
-        ctx.fail(f"读取文件失败: {raw_path} ({e})")
-
-    version_pattern = re.compile(r"^(version\s*=\s*[\"']).*([\"'])$", re.MULTILINE)
-    if not version_pattern.search(content):
-        ctx.fail(f"在 {raw_path} 中未找到 'version = \"...\"' 行")
-
-    old_version_match = re.search(r'version\s*=\s*["\'](.*)["\']', content, re.MULTILINE)
-    old_version = old_version_match.group(1) if old_version_match else "N/A"
-
-    new_content = version_pattern.sub(rf"\g<1>{new_version}\g<2>", content, count=1)
-
-    if new_content == content:
-        bus.info(f"版本号已是 {new_version}，无需修改。")
-        return
-
-    ctx.request_confirmation(target_path, content, new_content)
-
-    try:
-        target_path.write_text(new_content, "utf-8")
-        bus.success(f"✅ [版本] {raw_path} 版本已从 {old_version} 更新为: {new_version}")
-    except Exception as e:
-        ctx.fail(f"写入文件失败: {raw_path} ({e})")
-
-
-def _bump_version(ctx: ActContext, args: List[str]):
-    """
-    Act: bump_version
-    Args: <part> <package_target>
-    说明: 升级 pyproject.toml 的版本号。
-    part: 'major', 'minor', 'patch' 之一。
-    package_target: 目标包名 (例如 'quipu-cli') 或 '.' (代表根项目)。
-    """
-    parser = SafeArgumentParser(prog="bump_version", add_help=False)
-    parser.add_argument("part", choices=["major", "minor", "patch"], help="要增加的版本部分")
-    parser.add_argument("package_target", help="目标包名或 '.' (根项目)")
-
-    try:
-        parsed_args = parser.parse_args(args)
-    except ExecutionError as e:
-        ctx.fail(str(e))
-
-    raw_path = _get_target_path(ctx, parsed_args.package_target)
-    target_path = ctx.resolve_path(raw_path)
-
-    if not target_path.exists():
-        ctx.fail(f"文件未找到: {raw_path}")
-
-    content = target_path.read_text("utf-8")
-    version_pattern = re.compile(r'^version\s*=\s*["\'](\d+)\.(\d+)\.(\d+)["\']', re.MULTILINE)
-    match = version_pattern.search(content)
-
-    if not match:
-        ctx.fail(f"在 {raw_path} 中未找到有效的 semver 版本号 (例如 version = \"1.2.3\")")
-
-    major, minor, patch = map(int, match.groups())
-
-    if parsed_args.part == "major":
-        major += 1
-        minor = 0
-        patch = 0
-    elif parsed_args.part == "minor":
-        minor += 1
-        patch = 0
-    elif parsed_args.part == "patch":
-        patch += 1
-
-    new_version = f"{major}.{minor}.{patch}"
-    _update_version_in_file(ctx, raw_path, new_version)
-
-
-def _set_version(ctx: ActContext, args: List[str]):
-    """
-    Act: set_version
-    Args: <version> <package_target>
-    说明: 直接设置 pyproject.toml 的版本号。
-    version: 新的版本号字符串 (例如 '1.2.3')。
-    package_target: 目标包名 (例如 'quipu-cli') 或 '.' (代表根项目)。
-    """
-    parser = SafeArgumentParser(prog="set_version", add_help=False)
-    parser.add_argument("version", help="要设置的完整版本号")
-    parser.add_argument("package_target", help="目标包名或 '.' (根项目)")
-    try:
-        parsed_args = parser.parse_args(args)
-    except ExecutionError as e:
-        ctx.fail(str(e))
-
-    raw_path = _get_target_path(ctx, parsed_args.package_target)
-    _update_version_in_file(ctx, raw_path, parsed_args.version)
+            bus.info("run.listActs.ui.header")
+            acts = executor.get_registered_acts()
+            for name in sorted(acts.keys()):
+                doc = acts[name]
+                clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
+                indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
+                bus.info("run.listActs.ui.actItem", name=name)
+                bus.data(f"{indented_doc}\n")
+            ctx.exit(0)
 ~~~~~
 
 ### 下一步建议
-插件已经更新。现在，`act` 的调用方式变得更加严格和清晰。
+1.  **测试修复**: 在 `dev` 环境 (`qd`) 中运行 `qd run -l`，确认 `bump_version` 和 `set_version` 现在已经出现在列表中。
+2.  **提交变更**: 如果测试通过，你可以创建一个 `[COMMIT]` 计划来将这个修复持久化。
 
-**新的用法示例**:
-````markdown
-### 更新项目版本
+---
 
-#### Acts 1: 升级 quipu-cli 的 patch 版本
-~~~~~act
-bump_version patch quipu-cli
-~~~~~
+分析得很好。这是一个非常经典的场景，问题不在于你新创建的插件，而在于**调用它的工具链**。
 
-#### Acts 2: 设置根项目的版本为 1.0.0
-~~~~~act
-set_version 1.0.0 .
-~~~~~
-````
+### 根本原因
 
-如果尝试调用 `bump_version patch` 而不提供第二个参数，`act` 将会因参数不足而失败，这完全符合你的要求。
+`quipu run --list-acts` 命令的实现中存在一个**缺陷**：它在列出 `act` 时，**只加载并显示了核心 `act`，而没有调用插件管理器来加载外部插件**（例如你刚刚创建的 `versioning.py`）。
+
+与此同时，`quipu axon --list-acts` 的实现是**正确**的，它会先加载核心 `act`，然后再加载所有插件，最后再列出完整的 `act` 列表。
+
+### 代码分析
+
+我们可以通过对比两个命令的源代码来清晰地看到这一点：
+
+1.  **有缺陷的实现 (`packages/quipu-cli/src/pyquipu/cli/commands/run.py`)**:
+    ```python
+    # ... inside run_command ...
+    if list_acts:
+        executor = Executor(root_dir=Path("."), yolo=True)
+        from pyquipu.acts import register_core_acts
+
+        register_core_acts(executor) # <--- 只注册了核心 acts
+        bus.info("run.listActs.ui.header")
+        acts = executor.get_registered_acts() # <--- 直接获取列表，没有加载插件
+        # ... a for loop to print acts ...
+        ctx.exit(0)
+    ```
+    如上所示，这段代码在 `register_core_acts` 之后，直接就去获取和打印 `act` 列表了，完全遗漏了加载插件的步骤。
+
+2.  **正确的实现 (`packages/quipu-cli/src/pyquipu/cli/commands/axon.py`)**:
+    ```python
+    # ... inside axon_command ...
+    executor = Executor(
+        root_dir=work_dir,
+        yolo=yolo,
+        confirmation_handler=confirmation_handler_for_executor,
+    )
+    register_core_acts(executor)
+
+    # 3. 加载插件
+    # PluginManager 会尝试查找 Git 根目录加载项目级插件...
+    PluginManager().load_from_sources(executor, work_dir) # <--- 正确地调用了插件管理器
+
+    # 4. 处理 --list-acts
+    if list_acts:
+        bus.info("axon.listActs.ui.header")
+        acts = executor.get_registered_acts() # <--- 在加载插件后获取列表
+        # ... a for loop to print acts ...
+        ctx.exit(0)
+    ```
+    `axon` 的实现遵循了正确的“注册核心 -> 加载插件 -> 列出”的顺序。
+
+### 环境验证
+
+这个分析导出了一个可以直接验证的推论：如果你运行 `qs axon -l`，你应该能看到你新创建的 `bump_version` 和 `set_version` 命令。插件加载器 (`PluginManager`) 是根据当前工作目录 (`.`) 来查找 `.quipu/acts` 的，所以即使是 `qs` (稳定版) 也能找到你本地的插件。
+
+请试着运行 `qs axon -l`，它应该会列出所有 `act`。
+
+### 解决方案
+
+我们需要修复 `run.py` 中 `--list-acts` 的逻辑，使其与 `axon.py` 的行为保持一致。
+
