@@ -1,7 +1,7 @@
-import pytest
 import subprocess
 from pathlib import Path
 
+import pytest
 from pyquipu.cli.controller import run_quipu
 from pyquipu.engine.sqlite_db import DatabaseManager
 

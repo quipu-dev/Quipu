@@ -1,10 +1,10 @@
-import pytest
 import subprocess
 from pathlib import Path
 
-from pyquipu.engine.state_machine import Engine
-from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+import pytest
 from pyquipu.engine.git_db import GitDB
+from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from pyquipu.engine.state_machine import Engine
 from typer.testing import CliRunner
 
 

@@ -1,7 +1,8 @@
+import logging
 import os
 from pathlib import Path
 from typing import List
-import logging
+
 from pyquipu.common.messaging import bus
 from pyquipu.interfaces.types import ActContext, Executor
 
@@ -36,7 +37,7 @@ def _check_files_exist(ctx: ActContext, args: List[str]):
             missing_files.append(clean_path)
 
     if missing_files:
-        msg = f"❌ [Check] 以下文件在工作区中未找到:\n" + "\n".join(f"  - {f}" for f in missing_files)
+        msg = "❌ [Check] 以下文件在工作区中未找到:\n" + "\n".join(f"  - {f}" for f in missing_files)
         ctx.fail(msg)
 
     bus.success("acts.check.success.filesExist")

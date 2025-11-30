@@ -1,7 +1,5 @@
-import pytest
 from pathlib import Path
-from pyquipu.engine.state_machine import Engine
-from pyquipu.cli.controller import run_quipu
+
 from pyquipu.cli.controller import run_quipu
 
 

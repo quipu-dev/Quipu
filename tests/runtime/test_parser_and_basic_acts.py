@@ -1,8 +1,9 @@
-import pytest
 from pathlib import Path
-from pyquipu.runtime.parser import BacktickParser, TildeParser, get_parser
-from pyquipu.runtime.executor import Executor, ExecutionError
+
+import pytest
 from pyquipu.interfaces.types import ActContext
+from pyquipu.runtime.executor import ExecutionError, Executor
+from pyquipu.runtime.parser import BacktickParser, TildeParser, get_parser
 
 
 class TestParser:

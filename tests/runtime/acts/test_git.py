@@ -1,9 +1,10 @@
-import pytest
-import subprocess
 import shutil
+import subprocess
 from pathlib import Path
-from pyquipu.runtime.executor import Executor
+
+import pytest
 from pyquipu.acts.git import register as register_git_acts
+from pyquipu.runtime.executor import Executor
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="Git 命令未找到，跳过 Git 测试")

@@ -1,9 +1,8 @@
+
 import pytest
-import os
-from pathlib import Path
-from pyquipu.engine.state_machine import Engine
 from pyquipu.cli.utils import find_git_repository_root
 from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from pyquipu.engine.state_machine import Engine
 
 
 class TestHeadTracking:

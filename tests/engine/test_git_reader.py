@@ -1,13 +1,10 @@
 import json
-import pytest
 import subprocess
 import time
-from pathlib import Path
-from typing import List
 
+import pytest
 from pyquipu.engine.git_db import GitDB
 from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from pyquipu.interfaces.models import QuipuNode
 
 
 @pytest.fixture
@@ -85,7 +82,7 @@ class TestGitObjectHistoryReader:
         h0 = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
         (repo / "base").touch()
         hash_a = git_db.get_tree_hash()
-        node_a = writer.create_node("plan", h0, hash_a, "Plan A", start_time=1000)
+        writer.create_node("plan", h0, hash_a, "Plan A", start_time=1000)
         time.sleep(0.01)
 
         # Create branch B from A

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
+import argparse
 import shutil
 import subprocess
 import sys
-import argparse
 import tempfile
-import os
 from pathlib import Path
 
 # 配置

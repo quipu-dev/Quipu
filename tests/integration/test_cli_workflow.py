@@ -1,12 +1,10 @@
-import pytest
 import logging
-from pathlib import Path
-from typer.testing import CliRunner
-from pyquipu.cli.controller import run_quipu, QuipuResult
+
+import pytest
+from pyquipu.cli.controller import run_quipu
 from pyquipu.cli.main import app
 from pyquipu.interfaces.exceptions import ExecutionError
-from pyquipu.runtime.executor import Executor
-from pyquipu.acts.basic import register as register_basic
+from typer.testing import CliRunner
 
 # --- Fixtures ---
 

@@ -1,12 +1,12 @@
-import pytest
 import subprocess
 import time
 from pathlib import Path
 
+import pytest
 from pyquipu.engine.git_db import GitDB
-from pyquipu.engine.sqlite_db import DatabaseManager
-from pyquipu.engine.hydrator import Hydrator
 from pyquipu.engine.git_object_storage import GitObjectHistoryWriter
+from pyquipu.engine.hydrator import Hydrator
+from pyquipu.engine.sqlite_db import DatabaseManager
 from pyquipu.engine.sqlite_storage import SQLiteHistoryReader
 
 
@@ -44,11 +44,11 @@ class TestSQLiteHistoryReader:
         # 1. 在 Git 中创建两个节点
         (repo / "a.txt").touch()
         hash_a = git_db.get_tree_hash()
-        node_a_git = git_writer.create_node("plan", "4b825dc642cb6eb9a060e54bf8d69288fbee4904", hash_a, "Content A")
+        git_writer.create_node("plan", "4b825dc642cb6eb9a060e54bf8d69288fbee4904", hash_a, "Content A")
 
         (repo / "b.txt").touch()
         hash_b = git_db.get_tree_hash()
-        node_b_git = git_writer.create_node("plan", hash_a, hash_b, "Content B")
+        git_writer.create_node("plan", hash_a, hash_b, "Content B")
 
         # 2. 补水到数据库
         hydrator.sync("test-user")

@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
+from pyquipu.common.messaging import bus
 from pyquipu.runtime.executor import Executor
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
 from ..controller import run_quipu
 from ..logger_config import setup_logging
-from pyquipu.common.messaging import bus
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def register(app: typer.Typer):
     def run_command(
         ctx: typer.Context,
         file: Annotated[
-            Optional[Path], typer.Argument(help=f"包含 Markdown 指令的文件路径。", resolve_path=True)
+            Optional[Path], typer.Argument(help="包含 Markdown 指令的文件路径。", resolve_path=True)
         ] = None,
         work_dir: Annotated[
             Path,
@@ -28,7 +28,7 @@ def register(app: typer.Typer):
                 "--work-dir", "-w", help="操作执行的根目录（工作区）", file_okay=False, dir_okay=True, resolve_path=True
             ),
         ] = DEFAULT_WORK_DIR,
-        parser_name: Annotated[str, typer.Option("--parser", "-p", help=f"选择解析器语法。默认为 'auto'。")] = "auto",
+        parser_name: Annotated[str, typer.Option("--parser", "-p", help="选择解析器语法。默认为 'auto'。")] = "auto",
         yolo: Annotated[
             bool, typer.Option("--yolo", "-y", help="跳过所有确认步骤，直接执行 (You Only Look Once)。")
         ] = False,

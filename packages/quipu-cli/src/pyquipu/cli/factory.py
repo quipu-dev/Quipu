@@ -1,17 +1,17 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
-from pyquipu.engine.state_machine import Engine
-from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from pyquipu.engine.git_db import GitDB
 from pyquipu.engine.config import ConfigManager
+from pyquipu.engine.git_db import GitDB
+from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from pyquipu.engine.state_machine import Engine
+
 from .utils import find_git_repository_root
 
 # 迟延导入以避免循环依赖
 try:
     from pyquipu.engine.sqlite_db import DatabaseManager
-    from pyquipu.engine.sqlite_storage import SQLiteHistoryWriter, SQLiteHistoryReader
+    from pyquipu.engine.sqlite_storage import SQLiteHistoryReader, SQLiteHistoryWriter
 except ImportError:
     DatabaseManager = None
     SQLiteHistoryWriter = None

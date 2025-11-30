@@ -1,3 +1,4 @@
+import importlib.metadata
 import json
 import logging
 import os
@@ -7,7 +8,6 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
-import importlib.metadata
 
 from pyquipu.engine.git_db import GitDB
 from pyquipu.interfaces.models import QuipuNode

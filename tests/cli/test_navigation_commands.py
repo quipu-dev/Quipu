@@ -1,5 +1,6 @@
+from unittest.mock import ANY, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, ANY
 from pyquipu.cli.main import app
 
 

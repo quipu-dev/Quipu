@@ -1,8 +1,7 @@
-import pytest
-import logging
 from pathlib import Path
 from unittest.mock import ANY
 
+import pytest
 from pyquipu.runtime.executor import Executor
 from pyquipu.runtime.plugin_loader import load_plugins
 

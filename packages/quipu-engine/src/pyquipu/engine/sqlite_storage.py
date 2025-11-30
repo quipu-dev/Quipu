@@ -1,15 +1,16 @@
 import json
 import logging
 import sqlite3
-from typing import Any, List, Dict, Optional, Set
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
+from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from pyquipu.interfaces.models import QuipuNode
 from pyquipu.interfaces.storage import HistoryReader, HistoryWriter
-from pyquipu.engine.git_object_storage import GitObjectHistoryWriter, GitObjectHistoryReader
-from .sqlite_db import DatabaseManager
+
 from .git_db import GitDB
+from .sqlite_db import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
@@ -427,8 +428,9 @@ class SQLiteHistoryWriter(HistoryWriter):
             owner_id = kwargs.get("owner_id", "unknown-local-user")
             self.db_manager.execute_write(
                 """
-                INSERT OR REPLACE INTO nodes 
-                (commit_hash, owner_id, output_tree, node_type, timestamp, summary, generator_id, meta_json, plan_md_cache)
+                INSERT OR REPLACE INTO nodes
+                (commit_hash, owner_id, output_tree, node_type, timestamp, summary,
+                 generator_id, meta_json, plan_md_cache)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (

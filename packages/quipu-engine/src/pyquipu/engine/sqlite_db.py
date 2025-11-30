@@ -1,7 +1,7 @@
-import sqlite3
 import logging
+import sqlite3
 from pathlib import Path
-from typing import Optional, Any, Set, List, Tuple
+from typing import List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 

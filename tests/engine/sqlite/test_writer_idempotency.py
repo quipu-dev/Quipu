@@ -1,13 +1,10 @@
-import pytest
-import time
 import subprocess
-from pathlib import Path
-from typing import Tuple
 
-from pyquipu.engine.sqlite_storage import SQLiteHistoryWriter
+import pytest
+from pyquipu.engine.git_db import GitDB
 from pyquipu.engine.git_object_storage import GitObjectHistoryWriter
 from pyquipu.engine.sqlite_db import DatabaseManager
-from pyquipu.engine.git_db import GitDB
+from pyquipu.engine.sqlite_storage import SQLiteHistoryWriter
 
 
 @pytest.fixture

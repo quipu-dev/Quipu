@@ -1,6 +1,6 @@
-import pytest
 import subprocess
-from pathlib import Path
+
+import pytest
 from pyquipu.cli.controller import run_quipu
 
 

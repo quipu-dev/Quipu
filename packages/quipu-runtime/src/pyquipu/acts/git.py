@@ -1,7 +1,8 @@
-import subprocess
 import logging
 import os
+import subprocess
 from typing import List
+
 from pyquipu.common.messaging import bus
 from pyquipu.interfaces.types import ActContext, Executor
 

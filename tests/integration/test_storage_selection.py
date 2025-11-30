@@ -1,9 +1,9 @@
-import pytest
 import subprocess
 from pathlib import Path
-from typer.testing import CliRunner
 
+import pytest
 from pyquipu.cli.main import app
+from typer.testing import CliRunner
 
 # A simple plan that creates one file
 PLAN_A = """

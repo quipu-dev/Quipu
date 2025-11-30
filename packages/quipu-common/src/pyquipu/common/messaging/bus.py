@@ -1,7 +1,6 @@
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, Protocol, Optional
+from typing import Any, Dict, Optional, Protocol
 
 from .messages import find_locales_dir
 

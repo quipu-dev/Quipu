@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 import dataclasses
-from pathlib import Path
-from typing import Optional, List, Dict  # <-- 引入 List
 from datetime import datetime
+from pathlib import Path
+from typing import List, Optional  # <-- 引入 List
 
 
 @dataclasses.dataclass

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Any, Optional, Set, Dict
-import re
+from typing import Any, Dict, List, Optional, Set
+
 from .models import QuipuNode
 
 

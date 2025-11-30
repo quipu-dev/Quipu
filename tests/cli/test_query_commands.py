@@ -1,5 +1,6 @@
 import json
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
+
 from pyquipu.cli.main import app
 
 
@@ -19,9 +20,9 @@ def test_log_output(runner, quipu_workspace, monkeypatch):
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
     (work_dir / "f1").touch()
-    node1 = engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 1")
+    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 1")
     (work_dir / "f2").touch()
-    node2 = engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 2")
+    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 2")
 
     result = runner.invoke(app, ["log", "-w", str(work_dir)])
     assert result.exit_code == 0

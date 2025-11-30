@@ -1,7 +1,7 @@
-import click
-import typer
 from typing import List, Optional
 
+import click
+import typer
 from pyquipu.common.messaging import bus
 
 

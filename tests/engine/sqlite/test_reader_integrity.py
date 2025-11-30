@@ -1,13 +1,12 @@
-import pytest
-import time
 import subprocess
-from pathlib import Path
+import time
 from typing import List
 
-from pyquipu.interfaces.models import QuipuNode
-from pyquipu.engine.sqlite_storage import SQLiteHistoryReader
-from pyquipu.engine.sqlite_db import DatabaseManager
+import pytest
 from pyquipu.engine.git_db import GitDB
+from pyquipu.engine.sqlite_db import DatabaseManager
+from pyquipu.engine.sqlite_storage import SQLiteHistoryReader
+from pyquipu.interfaces.models import QuipuNode
 
 
 @pytest.fixture
@@ -90,7 +89,10 @@ def test_load_all_nodes_handles_self_referencing_edge(repo_with_sqlite_db):
     with conn:
         conn.execute(
             """
-            INSERT INTO nodes (commit_hash, output_tree, node_type, timestamp, summary, generator_id, meta_json, plan_md_cache)
+            INSERT INTO nodes (
+                commit_hash, output_tree, node_type, timestamp, summary,
+                generator_id, meta_json, plan_md_cache
+            )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (commit_hash, output_tree, "capture", time.time(), "Corrupted Self-Loop Node", "manual", "{}", None),

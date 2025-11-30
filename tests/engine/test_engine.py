@@ -1,10 +1,7 @@
-import pytest
 import subprocess
-from pathlib import Path
-from datetime import datetime
+
+import pytest
 from pyquipu.engine.state_machine import Engine
-from pyquipu.engine.git_db import GitDB
-from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 
 
 def test_align_orphan_state(engine_instance: Engine):
@@ -73,12 +70,13 @@ class TestEngineFindNodes:
         Populates an engine instance with a linear history using shared test helpers.
         History: (Genesis) -> Plan -> Capture -> Plan
         """
-        from tests.helpers import (
-            create_plan_node_with_change,
-            create_capture_node_with_change,
-            EMPTY_TREE_HASH,
-        )
         import time
+
+        from tests.helpers import (
+            EMPTY_TREE_HASH,
+            create_capture_node_with_change,
+            create_plan_node_with_change,
+        )
 
         engine = engine_instance
         parent = EMPTY_TREE_HASH

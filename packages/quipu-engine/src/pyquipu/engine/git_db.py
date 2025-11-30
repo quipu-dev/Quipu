@@ -1,11 +1,12 @@
-import os
-import subprocess
 import logging
+import os
 import shutil
-from pyquipu.common.messaging import bus
-from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Union
+import subprocess
 from contextlib import contextmanager
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
+from pyquipu.common.messaging import bus
 from pyquipu.interfaces.exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
@@ -362,7 +363,7 @@ class GitDB:
         查找指定前缀下的所有 ref heads。
         返回 (commit_hash, ref_name) 元组列表。
         """
-        res = self._run(["for-each-ref", f"--format=%(objectname) %(refname)", prefix], check=False)
+        res = self._run(["for-each-ref", "--format=%(objectname) %(refname)", prefix], check=False)
         if res.returncode != 0 or not res.stdout.strip():
             return []
 

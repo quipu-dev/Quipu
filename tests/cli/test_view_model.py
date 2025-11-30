@@ -1,11 +1,11 @@
-import pytest
-from pathlib import Path
 from datetime import datetime
-from typing import List, Optional, Set, Any, Dict
+from pathlib import Path
+from typing import Dict, List, Optional, Set
 
+import pytest
+from pyquipu.cli.view_model import GraphViewModel
 from pyquipu.interfaces.models import QuipuNode
 from pyquipu.interfaces.storage import HistoryReader
-from pyquipu.cli.view_model import GraphViewModel
 
 
 class MockHistoryReader(HistoryReader):

@@ -1,6 +1,7 @@
 import re
 from abc import ABC, abstractmethod
-from typing import List, Type
+from typing import List
+
 from pyquipu.interfaces.types import Statement
 
 

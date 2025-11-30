@@ -1,8 +1,9 @@
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
-from pyquipu.runtime.executor import Executor
+
+import pytest
 from pyquipu.acts.basic import register as register_basic_acts
+from pyquipu.runtime.executor import Executor
 
 
 @pytest.fixture(autouse=True)

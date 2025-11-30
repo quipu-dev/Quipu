@@ -1,10 +1,8 @@
-import pytest
-import subprocess
-from pathlib import Path
-import pytest
 import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 from pyquipu.engine.git_db import GitDB
 
 

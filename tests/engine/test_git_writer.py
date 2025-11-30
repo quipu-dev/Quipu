@@ -1,9 +1,8 @@
 import json
-import pytest
 import subprocess
-from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
 from pyquipu.engine.git_db import GitDB
 from pyquipu.engine.git_object_storage import GitObjectHistoryWriter
 
@@ -88,7 +87,7 @@ class TestGitObjectHistoryWriterIntegration:
 
         # 3.2 检查 Commit 内容
         commit_data = subprocess.check_output(["git", "cat-file", "-p", commit_hash], cwd=repo_path, text=True)
-        assert f"tree " in commit_data
+        assert "tree " in commit_data
         assert "feat: Initial implementation" in commit_data
         assert f"X-Quipu-Output-Tree: {output_tree}" in commit_data
 

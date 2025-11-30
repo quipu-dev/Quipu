@@ -1,10 +1,11 @@
-import pytest
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
-from pyquipu.interfaces.models import QuipuNode
+import pytest
 from pyquipu.cli.tui import QuipuUiApp
 from pyquipu.cli.view_model import GraphViewModel
+from pyquipu.interfaces.models import QuipuNode
+
 from .test_view_model import MockHistoryReader
 
 

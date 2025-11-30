@@ -1,8 +1,10 @@
 import logging
+
 import typer
-from .commands import axon, cache, navigation, query, remote, run, ui, workspace, show, export
-from .rendering import TyperRenderer
 from pyquipu.common.messaging import bus
+
+from .commands import axon, cache, export, navigation, query, remote, run, show, ui, workspace
+from .rendering import TyperRenderer
 
 # --- Global Setup ---
 # Inject the CLI-specific renderer into the common message bus instance.

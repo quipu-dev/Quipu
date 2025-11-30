@@ -1,7 +1,8 @@
-import pytest
 import subprocess
+
+import pytest
 from pyquipu.engine.git_db import GitDB
-from pyquipu.engine.git_object_storage import GitObjectHistoryWriter, GitObjectHistoryReader
+from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 
 
 @pytest.fixture

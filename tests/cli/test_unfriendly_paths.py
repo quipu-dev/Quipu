@@ -1,10 +1,9 @@
-import pytest
-import click
-from typer.testing import CliRunner
-from unittest.mock import MagicMock, ANY, call
+from unittest.mock import ANY, MagicMock, call
 
+import click
+import pytest
 from pyquipu.cli.main import app
-from pyquipu.engine.state_machine import Engine
+from typer.testing import CliRunner
 
 
 @pytest.fixture

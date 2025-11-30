@@ -1,10 +1,10 @@
-import pytest
 import zipfile
-from pathlib import Path
-from unittest.mock import MagicMock, ANY
+from unittest.mock import ANY, MagicMock
 
+import pytest
 from pyquipu.cli.main import app
 from pyquipu.engine.state_machine import Engine
+
 from tests.helpers import EMPTY_TREE_HASH
 
 

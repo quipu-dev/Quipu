@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from pyquipu.cli.main import app
 
 

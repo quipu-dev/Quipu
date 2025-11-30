@@ -1,6 +1,7 @@
+import logging
 import shutil
 from typing import List
-import logging
+
 from pyquipu.common.messaging import bus
 from pyquipu.interfaces.types import ActContext, Executor
 
@@ -29,7 +30,7 @@ def _move_file(ctx: ActContext, args: List[str]):
         ctx.fail(f"源文件不存在: {src_raw}")
 
     msg = f"Move: {src_raw} -> {dest_raw}"
-    ctx.request_confirmation(src_path, f"Source Exists", msg)
+    ctx.request_confirmation(src_path, "Source Exists", msg)
 
     try:
         dest_path.parent.mkdir(parents=True, exist_ok=True)

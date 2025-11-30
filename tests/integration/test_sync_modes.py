@@ -1,13 +1,10 @@
-import pytest
-import subprocess
 from pathlib import Path
-from typer.testing import CliRunner
 
 from pyquipu.cli.main import app
 from pyquipu.common.identity import get_user_id_from_email
+from typer.testing import CliRunner
 
-# Reuse the runner and helpers from the existing test file
-from .test_sync_workflow import run_git_command, sync_test_environment  # noqa: F401, sync_test_environment  # noqa: F401, sync_test_environment
+from .helpers import run_git_command
 
 runner = CliRunner()
 
@@ -125,7 +122,6 @@ class TestSyncModes:
     def test_push_force_mode(self, sync_test_environment):
         """User A force-pushes, deleting a stale ref on the remote."""
         remote_path, user_a_path, _ = sync_test_environment
-        user_a_id = get_user_id_from_email("user.a@example.com")
 
         # User A creates two nodes and pushes
         node1 = create_node(user_a_path, "node_to_keep")

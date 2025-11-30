@@ -1,21 +1,20 @@
-import sys
 import logging
 from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional
 
-from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, DataTable, Markdown, Static
-from textual.containers import Horizontal, Vertical
-from textual.binding import Binding
-from textual.coordinate import Coordinate
-from textual import on
-from textual.timer import Timer
-
-from pyquipu.interfaces.models import QuipuNode
 from pyquipu.engine.state_machine import Engine
-from .view_model import GraphViewModel
+from pyquipu.interfaces.models import QuipuNode
+from textual import on
+from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.containers import Horizontal, Vertical
+from textual.coordinate import Coordinate
+from textual.timer import Timer
+from textual.widgets import DataTable, Footer, Header, Markdown, Static
+
 from .factory import create_engine
+from .view_model import GraphViewModel
 
 logger = logging.getLogger(__name__)
 

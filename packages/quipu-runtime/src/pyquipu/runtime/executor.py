@@ -1,12 +1,12 @@
-import logging
 import difflib
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Callable
+import logging
 import shlex
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 from pyquipu.common.messaging import bus
-from pyquipu.interfaces.types import Statement, ActFunction, ActContext
 from pyquipu.interfaces.exceptions import ExecutionError, OperationCancelledError
+from pyquipu.interfaces.types import ActContext, ActFunction, Statement
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +177,8 @@ class Executor:
                     final_args = inline_args
                     if block_contexts:
                         logger.debug(
-                            f"ℹ️  [{act_name} - Exclusive] Inline args detected, ignoring {len(block_contexts)} subsequent Block(s)."
+                            f"ℹ️  [{act_name} - Exclusive] Inline args detected,"
+                            f" ignoring {len(block_contexts)} subsequent Block(s)."
                         )
                 else:
                     final_args = block_contexts

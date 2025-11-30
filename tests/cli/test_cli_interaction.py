@@ -1,7 +1,7 @@
-import pytest
-from typer.testing import CliRunner
 from unittest.mock import MagicMock
+
 from pyquipu.cli.main import app
+from typer.testing import CliRunner
 
 
 def test_run_command_with_piped_input_and_confirmation(runner: CliRunner, quipu_workspace, monkeypatch):

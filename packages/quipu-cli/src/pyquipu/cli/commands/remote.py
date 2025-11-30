@@ -1,17 +1,17 @@
 import subprocess
+from enum import Enum
 from pathlib import Path
 from typing import Annotated, Optional
-from enum import Enum
 
 import typer
 from pyquipu.common.identity import get_user_id_from_email
+from pyquipu.common.messaging import bus
 from pyquipu.engine.config import ConfigManager
 from pyquipu.engine.git_db import GitDB
 
 from ..config import DEFAULT_WORK_DIR
 from ..logger_config import setup_logging
 from ..utils import find_git_repository_root
-from pyquipu.common.messaging import bus
 
 
 class SyncMode(str, Enum):

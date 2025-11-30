@@ -303,7 +303,8 @@ class Engine:
             last_node = max(self.history_graph.values(), key=lambda node: node.timestamp)
             input_hash = last_node.output_tree
             logger.warning(
-                f"⚠️  HEAD 指针 '{head_tree_hash[:7] if head_tree_hash else 'N/A'}' 无效或丢失，自动回退到最新历史节点: {input_hash[:7]}"
+                f"⚠️  HEAD 指针 '{head_tree_hash[:7] if head_tree_hash else 'N/A'}' 无效或丢失，"
+                f"自动回退到最新历史节点: {input_hash[:7]}"
             )
 
         diff_summary = self.git_db.get_diff_stat(input_hash, current_hash)

@@ -1,3 +1,3 @@
-from .bus import bus, MessageBus
+from .bus import MessageBus, bus
 
 __all__ = ["bus", "MessageBus"]

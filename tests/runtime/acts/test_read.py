@@ -1,10 +1,10 @@
-import pytest
 import shutil
-import logging
 from pathlib import Path
-from pyquipu.runtime.executor import Executor, ExecutionError
+
+import pytest
 from pyquipu.acts.read import register as register_read_acts
 from pyquipu.interfaces.types import ActContext
+from pyquipu.runtime.executor import ExecutionError, Executor
 
 
 class TestReadActs:
