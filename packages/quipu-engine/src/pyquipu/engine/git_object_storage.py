@@ -462,7 +462,11 @@ class GitObjectHistoryWriter(HistoryWriter):
         tree_hash = self.git_db.mktree(tree_descriptor)
 
         # 1. 确定父节点 (Topological Parent)
-        parent_commit = self.git_db.get_commit_by_output_tree(input_tree)
+        # 优先使用 Engine 提供的确切父节点，仅在未提供时回退到 Tree 反查
+        parent_commit = kwargs.get("parent_commit_hash")
+        if not parent_commit:
+            parent_commit = self.git_db.get_commit_by_output_tree(input_tree)
+            
         parents = [parent_commit] if parent_commit else None
 
         if not parent_commit and input_tree != "4b825dc642cb6eb9a060e54bf8d69288fbee4904":
