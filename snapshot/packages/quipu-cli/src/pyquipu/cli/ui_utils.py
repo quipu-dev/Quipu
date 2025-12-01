@@ -3,6 +3,17 @@ from typing import List, Optional
 import click
 import typer
 from pyquipu.common.messaging import bus
+from pyquipu.interfaces.exceptions import OperationCancelledError
+
+
+def confirmation_handler_for_cli(diff_lines: List[str], prompt: str) -> bool:
+    """
+    Adapter for the Executor's confirmation handler contract, specific to the CLI.
+    """
+    confirmed = prompt_for_confirmation(prompt=prompt, diff_lines=diff_lines, default=True)
+    if not confirmed:
+        raise OperationCancelledError("User cancelled the operation.")
+    return True
 
 
 def prompt_for_confirmation(prompt: str, diff_lines: Optional[List[str]] = None, default: bool = False) -> bool:

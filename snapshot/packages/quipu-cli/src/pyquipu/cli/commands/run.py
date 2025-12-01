@@ -14,17 +14,7 @@ from typing import List
 from pyquipu.application.controller import QuipuApplication
 from pyquipu.interfaces.exceptions import OperationCancelledError, ExecutionError as CoreExecutionError
 from pyquipu.interfaces.result import QuipuResult
-from ..ui_utils import prompt_for_confirmation
-
-
-def confirmation_handler_for_cli(diff_lines: List[str], prompt: str) -> bool:
-    """
-    Adapter for the Executor's confirmation handler contract, specific to the CLI.
-    """
-    confirmed = prompt_for_confirmation(prompt=prompt, diff_lines=diff_lines, default=True)
-    if not confirmed:
-        raise OperationCancelledError("User cancelled the operation.")
-    return True
+from ..ui_utils import confirmation_handler_for_cli
 
 
 def run_quipu(content: str, work_dir: Path, parser_name: str = "auto", yolo: bool = False) -> QuipuResult:
