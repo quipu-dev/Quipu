@@ -204,7 +204,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
     ) -> list[str]:
         merging_indices = [i for i, h in enumerate(tracks) if h == node.output_tree]
         try:
-            col_idx = tracks.index(None) if not merging_indices else merging_indices[0]
+            col_idx = tracks.index(None) if not merging_indices else merging_indices
         except ValueError:
             col_idx = len(tracks)
         while len(tracks) <= col_idx:
@@ -243,7 +243,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
         matching = [n for n in self.view_model.current_page_nodes if n.output_tree == current_output_tree_hash]
         logger.debug(f"DEBUG: Found {len(matching)} matching nodes in current page map.")
 
-        target_node = matching[0] if matching else None
+        target_node = matching if matching else None
         if not target_node:
             logger.debug("DEBUG: Target node not found in current page.")
             return
