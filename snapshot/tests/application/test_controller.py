@@ -1,6 +1,5 @@
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 from pyquipu.application.controller import run_quipu
 from pyquipu.interfaces.exceptions import ExecutionError
 

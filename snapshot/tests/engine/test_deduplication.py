@@ -1,4 +1,5 @@
 from pyquipu.engine.state_machine import Engine
+
 from tests.helpers import EMPTY_TREE_HASH
 
 
