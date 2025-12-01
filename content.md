@@ -1,78 +1,97 @@
-## [COMMIT] style: 使用 ruff 格式化并检查全库代码
-
-### 错误分析
-无（这是一个主动的代码维护和质量保证操作）。
+## [WIP] feat: 创建 pyquipu-application 包基础设施
 
 ### 用户需求
-使用 `ruff` 工具对当前项目的所有代码进行格式化，然后运行 Linter 检查。只有在 Linter 检查通过的情况下，才将所有变更提交到版本控制系统。
-
-### 评论
-这是一个标准的、健壮的维护任务。它将代码风格统一和代码质量检查合并为一个原子操作。通过在提交前强制执行 Linter 检查，可以确保进入版本历史的代码不仅格式统一，而且没有明显的语法或逻辑错误，极大地提升了代码库的健康度。
+为了实现核心业务逻辑与 CLI 表现层的解耦，并为未来的 Web API 提供支持，需要创建一个名为 `pyquipu-application` 的新包。
 
 ### 目标
-1.  在项目根目录下运行 `ruff format .` 来自动修复格式问题。
-2.  接着运行 `ruff check .` 来捕获任何剩余的 Linter 错误。
-3.  **如果检查失败，则中止操作，不创建提交。**
-4.  如果检查通过，则将所有变更的文件添加到 Git 暂存区。
-5.  创建一个提交以固化格式化和修正后的变更。
+1.  在 `packages/` 下创建标准的 Python 包目录结构 `quipu-application`。
+2.  创建 `pyproject.toml` 配置文件，声明其对 `engine`, `runtime`, `interfaces`, `common` 的依赖。
+3.  将新包注册到开发环境配置 (`dev-requirements.txt`) 中。
 
 ### 基本原理
-此计划利用了 `run_command` 指令的执行特性：当被调用的命令返回非零退出码时，它会抛出异常并终止整个计划的执行。我们将 `ruff check .` 放置在 `git_commit` 之前，使其成为一个“质量门禁”。只有当 `ruff check .` 成功（退出码为 0），执行流程才能继续到后面的 `git_add` 和 `git_commit` 步骤。
+我们将遵循 Monorepo 中现有的包命名和结构规范。
+- 目录名：`packages/quipu-application` (保持与 `quipu-cli` 等一致)。
+- 包名：`pyquipu-application` (在 `pyproject.toml` 中定义)。
+- 依赖管理：利用 `uv` 的 workspace 功能管理本地依赖。
+
+这将为第二阶段的代码迁移提供物理载体。
 
 ### 标签
-#intent/tune #flow/ready #priority/low
-#comp/build #concept/tooling #scope/dx
-#ai/instruct
-#task/domain/maintenance #task/object/code-style #task/action/format
-#task/state/end #task/status/completed
+#intent/architect #flow/ready #priority/high #comp/build #task/domain/core #task/object/package-structure #task/action/creation #task/state/begin
 
 ---
 
 ### Script
 
-#### Acts 1: 格式化代码
+#### Acts 1: 创建目录结构与配置文件
 
-首先，我们运行格式化程序来自动修正所有样式问题。
-
-~~~~~act
-run_command
-~~~~~
-~~~~~command
-.envs/dev/bin/ruff format .
-~~~~~
-
-#### Acts 2: 检查代码质量 (Linter)
-
-接下来，我们运行 Linter 检查。**如果此命令检测到任何错误并失败，整个计划将在此处中止，不会执行后续的提交操作。**
+我们首先创建目录树，然后写入包配置文件，最后更新开发环境依赖列表。
 
 ~~~~~act
 run_command
-~~~~~
-~~~~~command
-.envs/dev/bin/ruff check .
-~~~~~
-
-#### Acts 3: 暂存并提交变更
-
-只有在上述所有检查都通过后，才会执行以下操作，将所有变更暂存并提交。
-
-~~~~~act
-git_add
-~~~~~
-~~~~~files
-.
+mkdir -p packages/quipu-application/src/pyquipu/application
 ~~~~~
 
 ~~~~~act
-git_commit
+write_file packages/quipu-application/src/pyquipu/application/__init__.py
 ~~~~~
-~~~~~message
-style: format code with ruff
+~~~~~python
+# pyquipu-application package
+~~~~~
 
-Applies standard code formatting across the entire repository using `ruff format .`.
-Also ensures all linter checks pass before committing.
+~~~~~act
+write_file packages/quipu-application/pyproject.toml
+~~~~~
+~~~~~toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyquipu-application"
+version = "0.1.0"
+authors = [
+  { name="doucx", email="doucxldh@gmail.com" },
+]
+description = "Core application logic for Quipu, orchestrating engine and runtime."
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pyquipu-interfaces",
+    "pyquipu-engine",
+    "pyquipu-runtime",
+    "pyquipu-common",
+]
+
+[tool.uv.sources]
+pyquipu-interfaces = { workspace = true }
+pyquipu-engine = { workspace = true }
+pyquipu-runtime = { workspace = true }
+pyquipu-common = { workspace = true }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = true
+~~~~~
+
+~~~~~act
+patch_file dev-requirements.txt
+~~~~~
+~~~~~text
+-e packages/pyquipu-cli
+-e packages/pyquipu-common
+~~~~~
+~~~~~text
+-e packages/pyquipu-cli
+-e packages/pyquipu-common
+-e packages/quipu-application
 ~~~~~
 
 ### 下一步建议
-- **CI 检查**: 确保 CI 流程中包含 `ruff format --check` 和 `ruff check .` 步骤，以防止未来引入未格式化或不合格的代码。
-- **Pre-commit**: 考虑配置 `pre-commit` 钩子，在每次提交前自动运行这些检查，为开发者提供更即时的反馈。
+基础设施建立完成后，请运行 `quipu run` 执行此计划。
+执行完毕后，我们将进入 **阶段二：迁移与解耦**，开始将 `controller.py` 等核心文件从 CLI 移动到新包中。
