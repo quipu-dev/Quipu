@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from pyquipu.cli.controller import run_quipu
+from pyquipu.application.controller import run_quipu
 from pyquipu.engine.sqlite_db import DatabaseManager
 
 PLAN_A = """
@@ -52,7 +52,9 @@ class TestSQLiteWriterIntegration:
         get_all_heads_cmd = ["git", "for-each-ref", "--format=%(objectname)", "refs/quipu/local/heads/"]
 
         # --- Action 1: Create first node ---
-        result_a = run_quipu(PLAN_A, work_dir=sqlite_workspace, yolo=True)
+        result_a = run_quipu(
+            PLAN_A, work_dir=sqlite_workspace, yolo=True, confirmation_handler=lambda *a: True
+        )
         assert result_a.success, f"run_quipu failed on Plan A: {result_a.message}"
 
         # Get the state after the first run
@@ -63,7 +65,9 @@ class TestSQLiteWriterIntegration:
         commit_hash_a = heads_after_a.pop()
 
         # --- Action 2: Create second node, which should be a child of the first ---
-        result_b = run_quipu(PLAN_B, work_dir=sqlite_workspace, yolo=True)
+        result_b = run_quipu(
+            PLAN_B, work_dir=sqlite_workspace, yolo=True, confirmation_handler=lambda *a: True
+        )
         assert result_b.success, f"run_quipu failed on Plan B: {result_b.message}"
 
         # Get the state after the second run and find the new commit

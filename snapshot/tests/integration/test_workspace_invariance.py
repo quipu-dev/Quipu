@@ -1,7 +1,7 @@
 import subprocess
 
 import pytest
-from pyquipu.cli.controller import run_quipu
+from pyquipu.application.controller import run_quipu
 
 
 @pytest.fixture
@@ -66,6 +66,7 @@ class TestRootInvariance:
             content=plan_content,
             work_dir=subdir,  # <--- 从子目录运行
             yolo=True,
+            confirmation_handler=lambda *a: True,
         )
 
         # 1. 验证操作的正确性
@@ -79,7 +80,7 @@ class TestRootInvariance:
         assert expected_file.read_text("utf-8") == "Success from subdir"
 
         # 2. 验证 Engine 状态记录的正确性 (后端无关)
-        from pyquipu.cli.factory import create_engine
+        from pyquipu.application.factory import create_engine
 
         engine = create_engine(project_root)
         nodes = engine.reader.load_all_nodes()

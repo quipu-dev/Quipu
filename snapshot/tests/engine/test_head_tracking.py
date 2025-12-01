@@ -1,5 +1,5 @@
 import pytest
-from pyquipu.cli.utils import find_git_repository_root
+from pyquipu.application.utils import find_git_repository_root
 from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from pyquipu.engine.state_machine import Engine
 

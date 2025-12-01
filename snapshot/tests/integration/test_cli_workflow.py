@@ -1,7 +1,7 @@
 import logging
 
 import pytest
-from pyquipu.cli.controller import run_quipu
+from pyquipu.application.controller import run_quipu
 from pyquipu.cli.main import app
 from pyquipu.interfaces.exceptions import ExecutionError
 from typer.testing import CliRunner
@@ -47,7 +47,7 @@ def workspace(tmp_path):
 class TestController:
     def test_run_quipu_success(self, workspace):
         """测试正常执行流程"""
-        from pyquipu.cli.factory import create_engine
+        from pyquipu.application.factory import create_engine
 
         plan = """
 ```act
@@ -60,7 +60,9 @@ hello.txt
 Hello Quipu
 ```
 """
-        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
+        result = run_quipu(
+            content=plan, work_dir=workspace, yolo=True, confirmation_handler=lambda *a: True
+        )
 
         assert result.success is True
         assert result.exit_code == 0
@@ -85,7 +87,9 @@ ghost.txt
 boo
 ```
 """
-        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
+        result = run_quipu(
+            content=plan, work_dir=workspace, yolo=True, confirmation_handler=lambda *a: True
+        )
 
         assert result.success is False
         assert result.exit_code == 1
@@ -97,7 +101,9 @@ boo
         """测试无有效指令"""
         plan = "Just some text, no acts."
 
-        result = run_quipu(content=plan, work_dir=workspace, yolo=True)
+        result = run_quipu(
+            content=plan, work_dir=workspace, yolo=True, confirmation_handler=lambda *a: True
+        )
 
         assert result.success is True  # No failure, just nothing to do
         assert result.exit_code == 0
@@ -199,7 +205,9 @@ class TestCheckoutCLI:
 
         # State A: Create a.txt
         plan_a = "```act\nwrite_file a.txt\n```\n```content\nState A\n```"
-        run_quipu(content=plan_a, work_dir=workspace, yolo=True)
+        run_quipu(
+            content=plan_a, work_dir=workspace, yolo=True, confirmation_handler=lambda *a: True
+        )
 
         engine_after_a = create_engine(workspace)
         nodes_after_a = sorted(engine_after_a.reader.load_all_nodes(), key=lambda n: n.timestamp)
@@ -209,7 +217,9 @@ class TestCheckoutCLI:
         # Manually create State B by removing a.txt and adding b.txt
         (workspace / "a.txt").unlink()
         plan_b = "```act\nwrite_file b.txt\n```\n```content\nState B\n```"
-        run_quipu(content=plan_b, work_dir=workspace, yolo=True)
+        run_quipu(
+            content=plan_b, work_dir=workspace, yolo=True, confirmation_handler=lambda *a: True
+        )
 
         engine_after_b = create_engine(workspace)
         nodes_after_b = sorted(engine_after_b.reader.load_all_nodes(), key=lambda n: n.timestamp)
@@ -238,7 +248,7 @@ class TestCheckoutCLI:
 
     def test_cli_checkout_with_safety_capture(self, populated_workspace):
         """Test that a dirty state is captured before checkout."""
-        from pyquipu.cli.factory import create_engine
+        from pyquipu.application.factory import create_engine
 
         workspace, hash_a, hash_b = populated_workspace
 
