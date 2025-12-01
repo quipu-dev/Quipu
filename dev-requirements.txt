@@ -3,3 +3,4 @@
 -e packages/pyquipu-runtime
 -e packages/pyquipu-cli
 -e packages/pyquipu-common
+-e packages/quipu-application

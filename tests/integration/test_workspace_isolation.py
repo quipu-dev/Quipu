@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from pyquipu.cli.controller import run_quipu
+from pyquipu.application.controller import run_quipu
 
 
 @pytest.fixture
@@ -54,7 +54,9 @@ isolation test
 """
 
         # 关键：调用 run_quipu，将 work_dir 设置为没有 .git 的子目录
-        result = run_quipu(content=plan_content, work_dir=work_dir, yolo=True)
+        result = run_quipu(
+            content=plan_content, work_dir=work_dir, yolo=True, confirmation_handler=lambda *a: True
+        )
 
         # --- Assertions ---
 

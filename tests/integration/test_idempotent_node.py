@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pyquipu.cli.controller import run_quipu
+from pyquipu.application.controller import run_quipu
 
 
 class TestIdempotentNode:
@@ -17,10 +17,10 @@ class TestIdempotentNode:
 
         # 2. 先执行一个会产生变更的操作 (State A)
         plan_1 = "```act\nwrite_file a.txt\n```\n```content\nA\n```"
-        run_quipu(plan_1, workspace, yolo=True)
+        run_quipu(plan_1, workspace, yolo=True, confirmation_handler=lambda *a: True)
 
         # 使用正确的 Engine 设置来验证
-        from pyquipu.cli.factory import create_engine
+        from pyquipu.application.factory import create_engine
 
         engine1 = create_engine(workspace)
         nodes1 = engine1.reader.load_all_nodes()
@@ -28,7 +28,7 @@ class TestIdempotentNode:
 
         # 3. 执行一个无变更的操作 (State A -> State A)
         plan_2 = "```act\nread_file a.txt\n```"
-        result = run_quipu(plan_2, workspace, yolo=True)
+        result = run_quipu(plan_2, workspace, yolo=True, confirmation_handler=lambda *a: True)
 
         assert result.success is True
 
