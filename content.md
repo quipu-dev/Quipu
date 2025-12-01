@@ -1,7 +1,7 @@
 ## [WIP] feat: 创建 pyquipu-application 包基础设施
 
 ### 用户需求
-为了实现核心业务逻辑与 CLI 表现层的解耦，并为未来的 Web API 提供支持，需要创建一个名为 `pyquipu-application` 的新包。
+为了实现核心业务逻辑与 CLI 表现层的物理解耦，并为未来的 Web API 提供共享的业务逻辑层，需要创建一个名为 `pyquipu-application` 的新包。
 
 ### 目标
 1.  在 `packages/` 下创建标准的 Python 包目录结构 `quipu-application`。
@@ -9,12 +9,12 @@
 3.  将新包注册到开发环境配置 (`dev-requirements.txt`) 中。
 
 ### 基本原理
-我们将遵循 Monorepo 中现有的包命名和结构规范。
-- 目录名：`packages/quipu-application` (保持与 `quipu-cli` 等一致)。
-- 包名：`pyquipu-application` (在 `pyproject.toml` 中定义)。
-- 依赖管理：利用 `uv` 的 workspace 功能管理本地依赖。
+我们将遵循 Monorepo 中现有的包命名和结构规范：
+*   **目录名**: `packages/quipu-application` (保持与 `quipu-cli`, `quipu-engine` 等同级目录命名一致)。
+*   **包名**: `pyquipu-application` (在 `pyproject.toml` 中定义，与 PyPI 命名空间保持一致)。
+*   **依赖管理**: 利用 `uv` 的 workspace 功能管理本地依赖，确保 `application` 层可以调用下层模块。
 
-这将为第二阶段的代码迁移提供物理载体。
+这一步是架构重构的基石，为后续将 `Controller` 和 `Factory` 从 CLI 迁移出来提供物理载体。
 
 ### 标签
 #intent/architect #flow/ready #priority/high #comp/build #task/domain/core #task/object/package-structure #task/action/creation #task/state/begin
@@ -80,18 +80,13 @@ namespaces = true
 ~~~~~
 
 ~~~~~act
-patch_file dev-requirements.txt
+append_file dev-requirements.txt
 ~~~~~
 ~~~~~text
--e packages/pyquipu-cli
--e packages/pyquipu-common
-~~~~~
-~~~~~text
--e packages/pyquipu-cli
--e packages/pyquipu-common
+
 -e packages/quipu-application
 ~~~~~
 
 ### 下一步建议
 基础设施建立完成后，请运行 `quipu run` 执行此计划。
-执行完毕后，我们将进入 **阶段二：迁移与解耦**，开始将 `controller.py` 等核心文件从 CLI 移动到新包中。
+执行完毕后，我们将进入 **阶段二：迁移与解耦**，开始将 `controller.py` 等核心文件从 CLI 移动到新包中，并进行必要的代码调整以切断对 CLI UI 的直接依赖。
