@@ -1,50 +1,124 @@
-好的，我们已经完成了代码修改。现在我将生成一个 `[COMMIT]` 计划，将对 `run_command` 的修正和配套测试固化到版本历史中。
+好的，我理解你的需求。当前 Quipu 的 Markdown 解析器在识别代码块语言时，只支持纯字母数字和下划线 (`\w`)。这导致 `python.old` 这样的语言标识符无法被正确识别，从而无法将其内容作为指令的参数 (context)。
 
-## [COMMIT] fix(runtime): 改进 run_command 以支持多行脚本
+为了支持包含点 (`.`) 或连字符 (`-`) 的语言标识符，我们需要修改 `RegexBlockParser` 中的正则表达式，使其能更灵活地匹配语言名称。
 
-### 用户需求
-修正 `run_command` 的行为，使其能够将多行脚本作为单个命令正确执行，而不是将所有行错误地拼接成一个单行命令。
+### **受影响的核心组件分析**
 
-### 评论
-这个修复是提升 `quipu-runtime` 健壮性和易用性的重要步骤。它确保了用户可以直接在 Markdown 块中提供标准的多行 shell 脚本，例如用于复杂的 `mv` 或 `cp` 序列。
-
-### 目标
-1.  已将 `pyquipu/acts/shell.py` 中 `_run_command` 的参数连接符从空格 (` `) 更改为换行符 (`\n`)。
-2.  已更新 `pyquipu/tests/runtime/acts/test_shell.py`，增加了对多行脚本执行和指令块隔离性的测试。
-3.  创建一个 Git 提交，将此项改进持久化。
-
-### 基本原理
-通过在 `_run_command` 中使用换行符连接参数 (`"\n".join(args)`)，我们确保了即使解析器将多行脚本分割成了多个参数（或一个参数中包含多行），它们也能被重新构造为一个逻辑正确的 shell 脚本。Shell 在执行时会逐行处理这些命令。
-
-### 标签
-#intent/fix #flow/ready #priority/medium #comp/runtime #concept/executor #scope/ux #ai/instruct #task/domain/runtime #task/object/acts #task/action/refinement #task/state/end #task/status/completed
+1.  **`packages/quipu-runtime/src/pyquipu/runtime/parser.py`**: 这里定义了 `RegexBlockParser`，其 `start_pattern` 正则表达式需要更新以支持新的语言标识符格式。
+2.  **`tests/runtime/test_parser_and_basic_acts.py`**: 需要添加新的测试用例，以验证对 `python.old` 等扩展语言标识符的正确解析。
 
 ---
 
-### Script
+### **分步实施操作列表**
 
-#### Acts 1: 提交变更
+#### **第 1 步：修改 `RegexBlockParser` 的 `start_pattern`**
 
-现在，我们将修改后的文件添加到 Git 暂存区，并创建一个内容详尽的提交。
+我们将扩展语言标识符的匹配规则，使其能包含点 (`.`) 和连字符 (`-`)，这是许多语言及其变体常用的命名约定。
 
-~~~~~act
-git_add
-packages/quipu-runtime/src/pyquipu/acts/shell.py
-tests/runtime/acts/test_shell.py
-~~~~~
+1.  **打开文件**: `packages/quipu-runtime/src/pyquipu/runtime/parser.py`
+2.  **定位代码**: 找到 `RegexBlockParser` 类的 `__init__` 方法中的 `self.start_pattern` 定义。
+    ```python
+    # packages/quipu-runtime/src/pyquipu/runtime/parser.py
 
-~~~~~act
-git_commit
-~~~~~
-~~~~~text
-fix(runtime): Improve run_command to support multi-line scripts
+    class RegexBlockParser(BaseParser):
+        def __init__(self, fence_char: str):
+            self.fence_char = fence_char
+            # 原始代码: (\w*)
+            self.start_pattern = re.compile(rf"^({re.escape(fence_char)}{{3,}})(\w*)\s*$", re.MULTILINE)
+    ```
+3.  **修改为**: 将 `(\w*)` 更改为 `([\w_.-]*)`。这将允许语言标识符包含字母、数字、下划线、点和连字符。
+    ```python
+    # packages/quipu-runtime/src/pyquipu/runtime/parser.py
 
-The internal implementation of `run_command` was incorrectly joining block-style arguments using a space (`" ".join(args)`). This corrupted multi-line scripts, as each line passed from the parser block was treated as a separate argument, which were then glued together with spaces.
+    class RegexBlockParser(BaseParser):
+        def __init__(self, fence_char: str):
+            self.fence_char = fence_char
+            # 修改后: ([\w_.-]*)
+            self.start_pattern = re.compile(rf"^({re.escape(fence_char)}{{3,}})([\w_.-]*)\s*$", re.MULTILINE)
+    ```
 
-Changed the joining mechanism to use a newline (`"\n".join(args)`).
+#### **第 2 步：添加测试用例**
 
-This allows users to pass complex multi-line shell scripts (e.g., chained `mv` commands or multi-line `if` statements) directly within a content block, significantly enhancing the utility and UX of the act.
-~~~~~
+为确保修改正确且没有引入回归问题，我们将添加一个专门的测试用例来验证对扩展语言标识符的解析。
 
-### 下一步建议
-核心的 `run_command` 功能现在更加健壮。建议进行全局测试，验证所有其他 Acts（如 `git_commit`、`write_file` 等）是否仍然能正确处理多块输入。此外，下一步可以考虑继续处理 [吞噬代码块检测.md](current_prompts/00_当前/吞噬代码块检测.md) 中提出的通用问题，以确保 Act 参数的界限始终清晰。
+1.  **打开文件**: `tests/runtime/test_parser_and_basic_acts.py`
+2.  **在 `TestParser` 类中添加新测试方法**:
+    ```python
+    # tests/runtime/test_parser_and_basic_acts.py
+
+    class TestParser:
+        # ... 现有测试方法 ...
+
+        def test_extended_lang_identifiers(self):
+            """测试解析器是否能正确识别并捕获带有 . 或 - 的语言标识符的块内容。"""
+            md = """
+```act
+echo
+```
+```python.old
+# This is some old Python code
+print("Hello from old version")
+```
+```python-new
+# This is some new Python code
+print("Hello from new version")
+```
+"""
+            parser = BacktickParser()
+            stmts = parser.parse(md)
+
+            assert len(stmts) == 1
+            assert stmts[0]["act"] == "echo"
+            assert len(stmts[0]["contexts"]) == 2
+
+            # 验证第一个上下文块的内容
+            expected_old_code = "# This is some old Python code\nprint(\"Hello from old version\")"
+            assert stmts[0]["contexts"][0].strip() == expected_old_code.strip()
+
+            # 验证第二个上下文块的内容
+            expected_new_code = "# This is some new Python code\nprint(\"Hello from new version\")"
+            assert stmts[0]["contexts"][1].strip() == expected_new_code.strip()
+
+        def test_extended_lang_identifiers_tilde(self):
+            """测试 tilde 解析器是否也能处理带有 . 或 - 的语言标识符。"""
+            md = """
+~~~act
+echo
+~~~
+~~~yaml.config
+key: value
+version: 1.0
+~~~
+"""
+            parser = TildeParser()
+            stmts = parser.parse(md)
+
+            assert len(stmts) == 1
+            assert stmts[0]["act"] == "echo"
+            assert len(stmts[0]["contexts"]) == 1
+
+            expected_yaml = "key: value\nversion: 1.0"
+            assert stmts[0]["contexts"][0].strip() == expected_yaml.strip()
+
+    ```
+
+#### **第 3 步：更新文档 (可选，但推荐)**
+
+虽然对于 `act` 指令本身不需要使用 `act.old` 这样的格式，但为了提高文档的完整性，可以在 `QUIPU_ACT_PROTO.md` 中提及代码块语言标识符支持的字符范围。
+
+1.  **打开文件**: `docs/02_PROMPTS/20_Quipu开发/QUIPU_ACT_PROTO.md`
+2.  **在“围栏语法 (Deep Fencing)”部分或“最佳实践”部分添加说明**:
+    ```markdown
+    ### 1. 围栏语法 (Deep Fencing)
+
+    为了防止你的输出中包含的代码块（通常使用 3 个反引号）与 Quipu 指令冲突，并确保解析稳定：
+
+    *   **符号选择**：必须优先使用波浪号 `~` 作为围栏符。
+    *   **长度规定**：围栏长度**必须从 5 个字符开始**（即 `~~~~~`）。
+    *   **语言标识符**: 现在支持在语言标识符中使用点 `.` 和连字符 `-` (例如 `python.old`, `json-patch`)。
+    *   **结构**：操作由“动作块”开始，紧随后续的“参数块”。
+    ```
+
+---
+
+完成以上步骤后，Quipu 将能够正确识别 ````python.old` 和 ````python.new` 这样的代码块，并将其内容作为参数传递给 `act` 指令。
