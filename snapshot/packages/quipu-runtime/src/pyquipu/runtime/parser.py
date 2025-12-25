@@ -1,6 +1,6 @@
 import re
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from pyquipu.interfaces.types import Statement
 
@@ -17,97 +17,117 @@ class BaseParser(ABC):
         pass
 
 
-class RegexBlockParser(BaseParser):
+class StateBlockParser(BaseParser):
     """
-    支持变长围栏（Variable Length Fence）的解析器。
-    逻辑：
-    1. 扫描所有符合 `^([`~]{3,})(\\w*)$` 格式的行（作为代码块头）。
-    2. 记录该头的 fence 字符串（如 `~~~~`）。
-    3. 向后寻找第一个**完全匹配**该 fence 且独占一行的字符串作为结尾。
+    基于状态机的解析器。
+    逐行扫描文本，通过维护状态（在块内/在块外）来提取代码块。
+    相比正则解析器，它对语言标签的格式限制更少，更健壮。
     """
 
     def __init__(self, fence_char: str):
         self.fence_char = fence_char
-        # 匹配：行首 + 3个及以上字符 + 可选语言标记 + 行尾
-        # capture group 1: fence (e.g. "~~~~")
-        # capture group 2: lang (e.g. "python")
-        self.start_pattern = re.compile(rf"^({re.escape(fence_char)}{{3,}})(\w*(?:\.\w+)*)\s*$", re.MULTILINE)
 
     def parse(self, text: str) -> List[Statement]:
         statements: List[Statement] = []
-        current_statement: Statement | None = None
+        current_statement: Optional[Statement] = None
 
-        cursor = 0
-        text_len = len(text)
+        lines = text.splitlines(keepends=True)
+        
+        # 状态变量
+        in_block = False
+        current_fence = ""     # 记录开始时的围栏字符串，用于匹配结束
+        current_lang = ""
+        block_content: List[str] = []
 
-        while cursor < text_len:
-            # 1. 寻找下一个块的开始
-            match = self.start_pattern.search(text, cursor)
-            if not match:
-                break  # 没有更多代码块了
+        for line in lines:
+            stripped_line = line.strip()
+            
+            if not in_block:
+                # 检查是否是块的开始
+                # 规则：以 fence_char 开头，至少 3 个字符
+                if stripped_line.startswith(self.fence_char * 3):
+                    # 确定围栏部分
+                    # 我们需要分离 fence 和 language tag
+                    # 例如: "~~~~ python.old" -> fence="~~~~", lang="python.old"
+                    
+                    # 简单的分离逻辑：取连续的 fence_char
+                    fence_len = 0
+                    for char in stripped_line:
+                        if char == self.fence_char:
+                            fence_len += 1
+                        else:
+                            break
+                    
+                    # 剩下的部分是语言标签
+                    # 注意：我们要用原始行的切片，但 strip 后的版本比较容易处理逻辑
+                    # 这里我们直接从 stripped_line 切
+                    fence_str = stripped_line[:fence_len]
+                    lang_str = stripped_line[fence_len:].strip()
 
-            fence = match.group(1)
-            lang = match.group(2).strip().lower()
-
-            # 内容开始位置：匹配行的末尾 + 1 (换行符)
-            content_start = match.end() + 1
-
-            # 2. 寻找匹配的结束 fence
-            # 结束 fence 必须位于行首，且与开始 fence 完全一致，且该行除空白外无其他内容
-            # re.escape(fence) 确保如 `+++` 这样的特殊字符也被正确处理
-            end_pattern = re.compile(rf"^{re.escape(fence)}\s*$", re.MULTILINE)
-
-            end_match = end_pattern.search(text, content_start)
-
-            if not end_match:
-                # 如果找不到闭合，说明这是一个未闭合的块，直接跳过或报错
-                # 这里选择跳过，继续从 content_start 开始找（虽然不太可能找到）
-                # 或者更安全的做法是：把剩下的全部当做内容（不推荐），或者报错。
-                # 这里简单处理：跳过当前头，继续搜
-                cursor = match.end()
-                continue
-
-            # 提取内容
-            content_end = end_match.start()
-            # content_end 通常包含前一个换行符，保留它以维持原始内容格式
-            # 但为了规整，通常 Markdown 解析器会把紧贴 fence 的换行符去掉
-            # 这里我们取 content_start 到 content_end
-            # 注意：end_match.start() 是 fence 行的开头。
-            # 如果上一行有换行符，它会被包含在 content 里。
-
-            raw_content = text[content_start:content_end]
-
-            # 如果 raw_content 以换行符结尾（通常是的），且我们想模拟标准行为，
-            # 可以根据需求 strip。目前逻辑是保留原始数据，但在 act 处理时 strip。
-            # 实际上，为了让 replace 精确匹配，我们最好只去掉最后一个换行符（如果存在）。
-            if raw_content.endswith("\n"):
-                raw_content = raw_content[:-1]
-
-            # --- 处理逻辑 ---
-            if lang == "act":
-                action_name = raw_content.strip()
-                current_statement = {"act": action_name, "contexts": []}
-                statements.append(current_statement)
+                    # 进入块状态
+                    in_block = True
+                    current_fence = fence_str
+                    current_lang = lang_str.lower()
+                    block_content = []
+                else:
+                    # 普通文本行，忽略
+                    pass
 
             else:
-                # 将非 act 的块作为上下文添加到当前语句
-                if current_statement is not None:
-                    current_statement["contexts"].append(raw_content)
+                # 在块内
+                # 检查是否是结束围栏
+                # 规则：必须是独立的一行，且去除首尾空格后与开始围栏完全一致
+                # (这里我们采用严格匹配 current_fence，这是一种安全的策略)
+                if stripped_line == current_fence:
+                    # 块结束
+                    in_block = False
+                    
+                    # 处理收集到的内容
+                    # 1. 合并行
+                    full_content = "".join(block_content)
+                    
+                    # 2. 去除末尾的一个换行符 (如果存在)，因为 splitlines(keepends=True) 保留了它
+                    # 而通常代码块的内容不包含最后那个由闭合围栏造成的换行
+                    if full_content.endswith("\n"):
+                        full_content = full_content[:-1]
 
-            # 移动游标到结束块之后
-            cursor = end_match.end()
+                    # 3. 根据语言标签分发
+                    if current_lang == "act":
+                        # 这是一个指令块，开始一个新的 Statement
+                        action_name = full_content.strip()
+                        # 创建新语句
+                        new_stmt = {"act": action_name, "contexts": []}
+                        statements.append(new_stmt)
+                        current_statement = new_stmt
+                    else:
+                        # 这是一个上下文块
+                        # 只有当已经有一个 active 的语句时才添加
+                        if current_statement is not None:
+                            current_statement["contexts"].append(full_content)
+                        else:
+                            # 孤立的上下文块，被忽略（或者可以记录警告）
+                            pass
+                    
+                    # 重置块状态变量
+                    current_fence = ""
+                    current_lang = ""
+                    block_content = []
+
+                else:
+                    # 是块的内容，累积
+                    block_content.append(line)
 
         return statements
 
 
-class BacktickParser(RegexBlockParser):
+class BacktickParser(StateBlockParser):
     """标准 Markdown 解析器 (```) - 相当于 '绿幕'"""
 
     def __init__(self):
         super().__init__("`")
 
 
-class TildeParser(RegexBlockParser):
+class TildeParser(StateBlockParser):
     """波浪号解析器 (~~~) - 相当于 '蓝幕'"""
 
     def __init__(self):
@@ -119,7 +139,6 @@ class TildeParser(RegexBlockParser):
 _PARSERS = {
     "backtick": BacktickParser,
     "tilde": TildeParser,
-    # 可以在这里扩展更多，例如 XML 风格的 parser
 }
 
 
@@ -139,10 +158,14 @@ def detect_best_parser(text: str) -> str:
     扫描文本，根据第一个出现的 act 块特征自动决定使用哪种解析器。
     策略：搜索第一个 ` ```act ` 或 ` ~~~act `，返回对应的解析器名称。
     支持变长围栏检测 (如 ` ````act `)。
+    
+    注：为了保持高效，这里仍然使用正则进行预扫描，
+    但这个正则只负责检测“类型”，不负责解析内容，所以它是安全的。
     """
     # 匹配行首的 fence，后跟 act (忽略大小写)
     # group(1) 是 fence 字符
-    pattern = re.compile(r"^([`~]{3,})act\s*$", re.IGNORECASE | re.MULTILINE)
+    # 注意：这里我们放宽了对 act 后面的匹配，允许空格等
+    pattern = re.compile(r"^([`~]{3,})\s*act\b", re.IGNORECASE | re.MULTILINE)
     match = pattern.search(text)
 
     if match:
