@@ -1,32 +1,42 @@
-## [WIP] refactor: 实现基于状态机的稳健解析器
+这是一个非常好的问题。在大多数场景下，直接引入成熟的库（如 `markdown-it-py` 或 `mistune`）确实是首选。
 
-### 错误分析
-正如测试失败所示，基于正则表达式的 `RegexBlockParser` 存在严重的局限性：
-1.  **正则过紧**: `(\w*(?:\.\w+)*)` 无法匹配包含连字符 (`-`)、加号 (`+`) 或其他非单词字符的语言标签。
-2.  **空白敏感**: 无法处理围栏符与语言标签之间的空格（如 `~~~ python`），这在 Markdown 中是合法的。
-3.  **错误恢复差**: 一旦正则匹配失败（例如头行未被识别），整个块及其内容都会被静默跳过，导致难以调试的“吞噬”现象。
+但在 Quipu 的上下文中，我们选择**手写一个简易状态机解析器**有以下两个核心原因：
+
+1.  **“愚蠢”的空白保留 (The "Dumb" Whitespace Requirement)**:
+    *   标准的 Markdown 解析器遵循 CommonMark 规范，该规范允许（甚至强制）剥离围栏代码块内容前 1-3 个空格的缩进。
+    *   对于渲染 HTML 这很好，但对于 `patch_file` 来说是**灾难性**的。`patch_file` 依赖于**字节级精确匹配**。如果解析器“智能”地去掉了用户在 Plan 中特意保留的缩进，补丁就会匹配失败。
+    *   我们需要一个“愚蠢”的解析器，它能原封不动地提取围栏内的所有字符，包括缩进。
+
+2.  **依赖卫生 (Dependency Hygiene)**:
+    *   `quipu-runtime` 被设计为最底层的核心包，目前仅依赖 `typer`。
+    *   引入一个完整的 Markdown 解析库（通常比较重）仅仅为了提取代码块，在依赖树上略显臃肿。
+    *   我们的需求仅仅是“提取围栏块”，几十行代码的状态机就能完美解决，且比正则更健壮。
+
+基于以上技术考量，我建议继续执行重构为**状态机解析器**的方案。它既解决了正则的脆弱性，又保证了 `patch_file` 所需的绝对原始数据。
+
+## [WIP] refactor: 实现保留原始空白的状态机解析器
 
 ### 用户需求
-用一个**基于行的状态机 (Line-Based State Machine)** 替换现有的正则解析器。新解析器必须能够：
--   接受任意字符作为语言标签（只要在同一行）。
--   正确处理围栏后的空格。
--   精确匹配结束围栏（长度必须匹配或更长，且字符一致）。
--   通过之前创建的所有“红灯”测试。
+1.  解决 `RegexBlockParser` 无法处理复杂语言标签（如 `python.old`, `c++`）的问题。
+2.  解决 `RegexBlockParser` 无法处理围栏后空格的问题。
+3.  **关键约束**: 确保解析器**绝对不**修改代码块内的任何缩进或空白，以保证 `patch_file` 的匹配能力。
 
 ### 评论
-这是一个经典的“重构以增强健壮性”的案例。状态机解析器将文本解析视为一系列简单的状态转换（Block外 -> Block内 -> Block外），这种逻辑比单行复杂的正则表达式更易于理解、测试和维护。它实际上实现了一个轻量级的 Markdown 代码块解析器子集。
+这个“状态机”其实非常简单：只是一个简单的开关逻辑。它能让我们完全控制每一行的处理方式，确保数据的原真性。
 
 ### 目标
-1.  修改 `packages/quipu-runtime/src/pyquipu/runtime/parser.py`。
-2.  废弃 `RegexBlockParser` 类。
-3.  实现 `StateBlockParser` 类，使用 `splitlines(keepends=True)` 逐行处理文本。
-4.  更新 `BacktickParser` 和 `TildeParser` 以继承新的基类。
+用 `StateBlockParser` 替换 `parser.py` 中的正则逻辑。
 
 ### 基本原理
-状态机逻辑：
-1.  **State: NORMAL**: 扫描以指定围栏符（`~` 或 `` ` ``）开头且长度 >= 3 的行。记录围栏长度和语言标签。进入 `IN_BLOCK` 状态。
-2.  **State: IN_BLOCK**: 扫描是否遇到结束围栏。结束围栏必须是独立的一行，且内容与开始围栏兼容（通常要求完全匹配，或者仅仅是同类型的围栏且长度足够）。为了简单和确定性，我们将要求**去除空白后与开始围栏完全一致**。如果不是结束围栏，则将行累积到当前内容缓冲区。
-3.  **ACT 处理**: 当块结束时，检查语言标签。如果是 `act`，开始新语句；否则，作为上下文追加到当前语句。
+逻辑如下：
+1.  遍历每一行。
+2.  如果遇到 `~~~` 或 ` ``` ` 开头：
+    *   记录围栏标记。
+    *   进入“收集模式”。
+3.  在“收集模式”下：
+    *   如果是结束围栏（与开始标记完全一致）：结束收集。
+    *   否则：将该行**原样**（raw string）加入缓冲区。
+4.  生成的 `content` 将用于后续的 Act 执行。
 
 ### 标签
 #intent/refine #flow/ready #priority/high #comp/runtime #concept/parser #scope/core #ai/instruct #task/domain/parsing #task/object/state-machine-parser #task/action/rewrite #task/state/continue
@@ -35,6 +45,8 @@
 ### Script
 
 #### Acts 1: 重写 parser.py
+
+这将完全替换原有的正则实现。
 
 ~~~~~act
 write_file
@@ -63,8 +75,11 @@ class BaseParser(ABC):
 class StateBlockParser(BaseParser):
     """
     基于状态机的解析器。
-    逐行扫描文本，通过维护状态（在块内/在块外）来提取代码块。
-    相比正则解析器，它对语言标签的格式限制更少，更健壮。
+    
+    设计目标：
+    1. 健壮性：支持任意语言标签（如 python.old, c++, python-new）。
+    2. 原真性：绝对保留块内的所有空白和缩进（这对 patch_file 至关重要）。
+       标准 Markdown 解析器可能会剥离 1-3 个空格的缩进，这会导致补丁匹配失败。
     """
 
     def __init__(self, fence_char: str):
@@ -74,11 +89,11 @@ class StateBlockParser(BaseParser):
         statements: List[Statement] = []
         current_statement: Optional[Statement] = None
 
+        # keepends=True 保留换行符，确保内容原样还原
         lines = text.splitlines(keepends=True)
         
-        # 状态变量
         in_block = False
-        current_fence = ""     # 记录开始时的围栏字符串，用于匹配结束
+        current_fence = ""     # 记录开始时的围栏字符串（不含语言标签）
         current_lang = ""
         block_content: List[str] = []
 
@@ -86,14 +101,13 @@ class StateBlockParser(BaseParser):
             stripped_line = line.strip()
             
             if not in_block:
-                # 检查是否是块的开始
+                # --- 状态：寻找块的开始 ---
                 # 规则：以 fence_char 开头，至少 3 个字符
                 if stripped_line.startswith(self.fence_char * 3):
-                    # 确定围栏部分
-                    # 我们需要分离 fence 和 language tag
+                    # 分离 fence 和 language tag
                     # 例如: "~~~~ python.old" -> fence="~~~~", lang="python.old"
                     
-                    # 简单的分离逻辑：取连续的 fence_char
+                    # 计算 fence 长度
                     fence_len = 0
                     for char in stripped_line:
                         if char == self.fence_char:
@@ -101,13 +115,11 @@ class StateBlockParser(BaseParser):
                         else:
                             break
                     
-                    # 剩下的部分是语言标签
-                    # 注意：我们要用原始行的切片，但 strip 后的版本比较容易处理逻辑
-                    # 这里我们直接从 stripped_line 切
+                    # 提取元数据
                     fence_str = stripped_line[:fence_len]
                     lang_str = stripped_line[fence_len:].strip()
 
-                    # 进入块状态
+                    # 切换状态
                     in_block = True
                     current_fence = fence_str
                     current_lang = lang_str.lower()
@@ -117,61 +129,63 @@ class StateBlockParser(BaseParser):
                     pass
 
             else:
-                # 在块内
+                # --- 状态：在块内 ---
                 # 检查是否是结束围栏
-                # 规则：必须是独立的一行，且去除首尾空格后与开始围栏完全一致
-                # (这里我们采用严格匹配 current_fence，这是一种安全的策略)
+                # 规则：去除首尾空白后，必须与开始围栏完全一致
                 if stripped_line == current_fence:
                     # 块结束
                     in_block = False
                     
                     # 处理收集到的内容
-                    # 1. 合并行
                     full_content = "".join(block_content)
                     
-                    # 2. 去除末尾的一个换行符 (如果存在)，因为 splitlines(keepends=True) 保留了它
-                    # 而通常代码块的内容不包含最后那个由闭合围栏造成的换行
+                    # 如果内容末尾有换行符（通常都有），且它是因为上一行内容自带的，我们保留。
+                    # 但如果是空块，或者为了符合直觉，通常不处理。
+                    # 在这里我们保持最原始的数据，但在 splitlines 时最后一行通常带有 \n。
+                    # 唯独要注意的是：编辑器通常会在闭合 fence 前加一个换行，这个换行在逻辑上属于内容的一部分吗？
+                    # 标准 Markdown：是的。
+                    # 但为了 patch_file 的方便，如果最后一个字符是换行，通常意味着是块的结束。
+                    # 我们这里做一个微调：如果最后一行以 \n 结尾，我们可以选择去掉它，
+                    # 使得 ```text\nA\n``` 解析为 "A\n" 而不是 "A\n"。
+                    # 这取决于 splitlines 的行为。
+                    
+                    # 这里采用一个实用策略：strip 掉尾部的一个换行符。
                     if full_content.endswith("\n"):
                         full_content = full_content[:-1]
 
-                    # 3. 根据语言标签分发
+                    # 根据语言标签分发
                     if current_lang == "act":
-                        # 这是一个指令块，开始一个新的 Statement
+                        # 指令块：开始新语句
                         action_name = full_content.strip()
-                        # 创建新语句
                         new_stmt = {"act": action_name, "contexts": []}
                         statements.append(new_stmt)
                         current_statement = new_stmt
                     else:
-                        # 这是一个上下文块
-                        # 只有当已经有一个 active 的语句时才添加
+                        # 上下文块：追加到当前语句
                         if current_statement is not None:
                             current_statement["contexts"].append(full_content)
-                        else:
-                            # 孤立的上下文块，被忽略（或者可以记录警告）
-                            pass
                     
-                    # 重置块状态变量
+                    # 重置状态
                     current_fence = ""
                     current_lang = ""
                     block_content = []
 
                 else:
-                    # 是块的内容，累积
+                    # 收集内容
                     block_content.append(line)
 
         return statements
 
 
 class BacktickParser(StateBlockParser):
-    """标准 Markdown 解析器 (```) - 相当于 '绿幕'"""
+    """标准 Markdown 解析器 (```)"""
 
     def __init__(self):
         super().__init__("`")
 
 
 class TildeParser(StateBlockParser):
-    """波浪号解析器 (~~~) - 相当于 '蓝幕'"""
+    """波浪号解析器 (~~~)"""
 
     def __init__(self):
         super().__init__("~")
@@ -186,7 +200,7 @@ _PARSERS = {
 
 
 def get_parser(name: str) -> BaseParser:
-    """工厂函数：根据名称获取解析器实例"""
+    """工厂函数"""
     if name not in _PARSERS:
         raise ValueError(f"未知的解析器: {name}. 可用选项: {list(_PARSERS.keys())}")
     return _PARSERS[name]()
@@ -198,34 +212,25 @@ def list_parsers() -> List[str]:
 
 def detect_best_parser(text: str) -> str:
     """
-    扫描文本，根据第一个出现的 act 块特征自动决定使用哪种解析器。
-    策略：搜索第一个 ` ```act ` 或 ` ~~~act `，返回对应的解析器名称。
-    支持变长围栏检测 (如 ` ````act `)。
-    
-    注：为了保持高效，这里仍然使用正则进行预扫描，
-    但这个正则只负责检测“类型”，不负责解析内容，所以它是安全的。
+    自动检测解析器类型。
+    使用简单的正则预扫描来判断是使用波浪号还是反引号。
     """
-    # 匹配行首的 fence，后跟 act (忽略大小写)
-    # group(1) 是 fence 字符
-    # 注意：这里我们放宽了对 act 后面的匹配，允许空格等
+    # 宽松匹配：行首 fence + 任意空白 + act
     pattern = re.compile(r"^([`~]{3,})\s*act\b", re.IGNORECASE | re.MULTILINE)
     match = pattern.search(text)
 
     if match:
         fence_str = match.group(1)
-        # 检查 fence 由什么字符组成
         if fence_str.startswith("~"):
             return "tilde"
-        # 默认为 backtick
         return "backtick"
 
-    # 如果没找到明确的 act 块，默认返回 backtick
     return "backtick"
 ~~~~~
 
 ### 下一步建议
 请执行此计划。
-执行后，请再次运行所有测试，包括刚才失败的鲁棒性测试：
-`pytest tests/runtime/test_parser_robustness.py tests/runtime/acts/test_patch_ambiguity.py`
+然后运行全量测试：
+`pytest tests/runtime/test_parser_robustness.py tests/runtime/acts/test_patch_ambiguity.py tests/runtime/acts/test_parser_and_basic_acts.py`
 
-如果一切顺利，所有测试都应该通过。这不仅修复了 `patch_file` 的歧义问题，还顺带解决了你在使用 `.old` 后缀时遇到的解析器 bug。
+我非常有信心这将通过所有测试。

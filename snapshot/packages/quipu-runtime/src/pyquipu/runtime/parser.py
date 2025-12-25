@@ -20,8 +20,11 @@ class BaseParser(ABC):
 class StateBlockParser(BaseParser):
     """
     基于状态机的解析器。
-    逐行扫描文本，通过维护状态（在块内/在块外）来提取代码块。
-    相比正则解析器，它对语言标签的格式限制更少，更健壮。
+    
+    设计目标：
+    1. 健壮性：支持任意语言标签（如 python.old, c++, python-new）。
+    2. 原真性：绝对保留块内的所有空白和缩进（这对 patch_file 至关重要）。
+       标准 Markdown 解析器可能会剥离 1-3 个空格的缩进，这会导致补丁匹配失败。
     """
 
     def __init__(self, fence_char: str):
@@ -31,11 +34,11 @@ class StateBlockParser(BaseParser):
         statements: List[Statement] = []
         current_statement: Optional[Statement] = None
 
+        # keepends=True 保留换行符，确保内容原样还原
         lines = text.splitlines(keepends=True)
         
-        # 状态变量
         in_block = False
-        current_fence = ""     # 记录开始时的围栏字符串，用于匹配结束
+        current_fence = ""     # 记录开始时的围栏字符串（不含语言标签）
         current_lang = ""
         block_content: List[str] = []
 
@@ -43,14 +46,13 @@ class StateBlockParser(BaseParser):
             stripped_line = line.strip()
             
             if not in_block:
-                # 检查是否是块的开始
+                # --- 状态：寻找块的开始 ---
                 # 规则：以 fence_char 开头，至少 3 个字符
                 if stripped_line.startswith(self.fence_char * 3):
-                    # 确定围栏部分
-                    # 我们需要分离 fence 和 language tag
+                    # 分离 fence 和 language tag
                     # 例如: "~~~~ python.old" -> fence="~~~~", lang="python.old"
                     
-                    # 简单的分离逻辑：取连续的 fence_char
+                    # 计算 fence 长度
                     fence_len = 0
                     for char in stripped_line:
                         if char == self.fence_char:
@@ -58,13 +60,11 @@ class StateBlockParser(BaseParser):
                         else:
                             break
                     
-                    # 剩下的部分是语言标签
-                    # 注意：我们要用原始行的切片，但 strip 后的版本比较容易处理逻辑
-                    # 这里我们直接从 stripped_line 切
+                    # 提取元数据
                     fence_str = stripped_line[:fence_len]
                     lang_str = stripped_line[fence_len:].strip()
 
-                    # 进入块状态
+                    # 切换状态
                     in_block = True
                     current_fence = fence_str
                     current_lang = lang_str.lower()
@@ -74,61 +74,63 @@ class StateBlockParser(BaseParser):
                     pass
 
             else:
-                # 在块内
+                # --- 状态：在块内 ---
                 # 检查是否是结束围栏
-                # 规则：必须是独立的一行，且去除首尾空格后与开始围栏完全一致
-                # (这里我们采用严格匹配 current_fence，这是一种安全的策略)
+                # 规则：去除首尾空白后，必须与开始围栏完全一致
                 if stripped_line == current_fence:
                     # 块结束
                     in_block = False
                     
                     # 处理收集到的内容
-                    # 1. 合并行
                     full_content = "".join(block_content)
                     
-                    # 2. 去除末尾的一个换行符 (如果存在)，因为 splitlines(keepends=True) 保留了它
-                    # 而通常代码块的内容不包含最后那个由闭合围栏造成的换行
+                    # 如果内容末尾有换行符（通常都有），且它是因为上一行内容自带的，我们保留。
+                    # 但如果是空块，或者为了符合直觉，通常不处理。
+                    # 在这里我们保持最原始的数据，但在 splitlines 时最后一行通常带有 \n。
+                    # 唯独要注意的是：编辑器通常会在闭合 fence 前加一个换行，这个换行在逻辑上属于内容的一部分吗？
+                    # 标准 Markdown：是的。
+                    # 但为了 patch_file 的方便，如果最后一个字符是换行，通常意味着是块的结束。
+                    # 我们这里做一个微调：如果最后一行以 \n 结尾，我们可以选择去掉它，
+                    # 使得 ```text\nA\n``` 解析为 "A\n" 而不是 "A\n"。
+                    # 这取决于 splitlines 的行为。
+                    
+                    # 这里采用一个实用策略：strip 掉尾部的一个换行符。
                     if full_content.endswith("\n"):
                         full_content = full_content[:-1]
 
-                    # 3. 根据语言标签分发
+                    # 根据语言标签分发
                     if current_lang == "act":
-                        # 这是一个指令块，开始一个新的 Statement
+                        # 指令块：开始新语句
                         action_name = full_content.strip()
-                        # 创建新语句
                         new_stmt = {"act": action_name, "contexts": []}
                         statements.append(new_stmt)
                         current_statement = new_stmt
                     else:
-                        # 这是一个上下文块
-                        # 只有当已经有一个 active 的语句时才添加
+                        # 上下文块：追加到当前语句
                         if current_statement is not None:
                             current_statement["contexts"].append(full_content)
-                        else:
-                            # 孤立的上下文块，被忽略（或者可以记录警告）
-                            pass
                     
-                    # 重置块状态变量
+                    # 重置状态
                     current_fence = ""
                     current_lang = ""
                     block_content = []
 
                 else:
-                    # 是块的内容，累积
+                    # 收集内容
                     block_content.append(line)
 
         return statements
 
 
 class BacktickParser(StateBlockParser):
-    """标准 Markdown 解析器 (```) - 相当于 '绿幕'"""
+    """标准 Markdown 解析器 (```)"""
 
     def __init__(self):
         super().__init__("`")
 
 
 class TildeParser(StateBlockParser):
-    """波浪号解析器 (~~~) - 相当于 '蓝幕'"""
+    """波浪号解析器 (~~~)"""
 
     def __init__(self):
         super().__init__("~")
@@ -143,7 +145,7 @@ _PARSERS = {
 
 
 def get_parser(name: str) -> BaseParser:
-    """工厂函数：根据名称获取解析器实例"""
+    """工厂函数"""
     if name not in _PARSERS:
         raise ValueError(f"未知的解析器: {name}. 可用选项: {list(_PARSERS.keys())}")
     return _PARSERS[name]()
@@ -155,26 +157,17 @@ def list_parsers() -> List[str]:
 
 def detect_best_parser(text: str) -> str:
     """
-    扫描文本，根据第一个出现的 act 块特征自动决定使用哪种解析器。
-    策略：搜索第一个 ` ```act ` 或 ` ~~~act `，返回对应的解析器名称。
-    支持变长围栏检测 (如 ` ````act `)。
-    
-    注：为了保持高效，这里仍然使用正则进行预扫描，
-    但这个正则只负责检测“类型”，不负责解析内容，所以它是安全的。
+    自动检测解析器类型。
+    使用简单的正则预扫描来判断是使用波浪号还是反引号。
     """
-    # 匹配行首的 fence，后跟 act (忽略大小写)
-    # group(1) 是 fence 字符
-    # 注意：这里我们放宽了对 act 后面的匹配，允许空格等
+    # 宽松匹配：行首 fence + 任意空白 + act
     pattern = re.compile(r"^([`~]{3,})\s*act\b", re.IGNORECASE | re.MULTILINE)
     match = pattern.search(text)
 
     if match:
         fence_str = match.group(1)
-        # 检查 fence 由什么字符组成
         if fence_str.startswith("~"):
             return "tilde"
-        # 默认为 backtick
         return "backtick"
 
-    # 如果没找到明确的 act 块，默认返回 backtick
     return "backtick"
