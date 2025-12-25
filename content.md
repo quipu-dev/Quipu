@@ -1,121 +1,65 @@
-很抱歉，这是我的失误。解析器的逻辑其实已经修复了，但是我在编写**测试用例**时犯了低级错误：测试文本使用的是反引号（```），但我却硬编码让它使用波浪号解析器（`tilde`），导致解析器完全忽略了这些块。
+太好了，测试全量通过标志着我们已经完成了一个高质量的重构周期。
 
-这就是为什么 `test_parse_complex_language_tags` 通过了（因为它使用了 `detect_best_parser` 自动检测），而后面两个手动指定解析器的测试却失败了。
+我们不仅修复了 `patch_file` 的歧义风险，还通过引入状态机解析器，彻底解决了复杂语言标签（如 `python.old`）的识别问题。这显著提升了 Quipu 运行时的健壮性和可预测性。
 
-我将立即修正测试用例中的这一不一致。
+我将生成最终的 `[COMMIT]` 计划，将这些改进正式提交。
 
-## [WIP] fix: 修正测试用例中的解析器类型不匹配
-
-### 错误分析
-在 `tests/runtime/test_parser_robustness.py` 中：
-1.  `test_parse_with_spaces_in_fence`: 文本使用 ` ``` `，但代码调用 `get_parser("tilde")`。
-2.  `test_unclosed_block_handling`: 文本使用 ` ``` `，但代码调用 `get_parser("tilde")`。
-
-这导致 `TildeParser` 扫描文本时找不到任何 `~~~` 开头的块，因此返回空列表，触发断言失败。
+## [COMMIT] refactor(runtime): 增强 patch 安全性并重构解析器为状态机
 
 ### 用户需求
-修正测试代码，使其使用的解析器与测试文本中的围栏符号一致。
+将近期对 `patch_file` 的唯一性检查逻辑、状态机解析器的重构以及相关的测试套件更新合并并提交到版本控制系统中。
 
 ### 评论
-这是一个典型的“测试代码本身的 Bug”。修正后，我们可以验证新解析器的真实能力。
+这次重构解决了两个核心痛点：一是防止了静默错误修改（patch 歧义），二是极大地增强了指令解析的灵活性。采用状态机替代正则是一个明智的架构决定，它为未来支持更复杂的 Markdown 扩展奠定了基础。
 
 ### 目标
-修改 `tests/runtime/test_parser_robustness.py`，将硬编码的 `get_parser("tilde")` 改为 `get_parser("backtick")`，或者将测试文本改为使用 `~~~`。为了保持一致性，我将把解析器调用改为 `backtick`。
+1.  提交对 `packages/quipu-runtime/src/pyquipu/acts/basic.py` 的修改（补丁唯一性检查）。
+2.  提交对 `packages/quipu-runtime/src/pyquipu/runtime/parser.py` 的重构（状态机解析器）。
+3.  提交对 `tests/runtime/conftest.py` 的配置优化（消除 pytest 警告）。
+4.  提交新增的测试文件：
+    *   `tests/runtime/acts/test_patch_ambiguity.py`
+    *   `tests/runtime/test_parser_robustness.py`
 
 ### 基本原理
-匹配测试数据与测试逻辑。
+按照 TDD 流程，我们已经完成了“红-绿-重构”的完整循环。现在通过一个逻辑原子提交，将这些变更固化。提交信息将详细描述这些改进对系统稳定性的贡献。
 
 ### 标签
-#intent/fix #flow/ready #priority/high #comp/tests #concept/parser #scope/core #ai/instruct #task/domain/testing #task/object/test-case-fix #task/action/correction #task/state/continue
+#intent/refine #flow/ready #priority/medium #comp/runtime #comp/tests #concept/parser #concept/executor #scope/core #ai/instruct #task/domain/runtime #task/object/patch-and-parser #task/action/refactor #task/state/end #task/status/completed
 
 ---
 ### Script
 
-#### Acts 1: 修正测试文件
+#### Acts 1: 提交代码变更
+
+我们将所有涉及的修改添加到暂存区，并创建一个详尽的提交记录。
 
 ~~~~~act
-patch_file
+git_add
+packages/quipu-runtime/src/pyquipu/acts/basic.py
+packages/quipu-runtime/src/pyquipu/runtime/parser.py
+tests/runtime/conftest.py
+tests/runtime/acts/test_patch_ambiguity.py
 tests/runtime/test_parser_robustness.py
-~~~~~
-~~~~~python
-    def test_parse_with_spaces_in_fence(self):
-        """
-        验证解析器能否处理围栏后的空格（CommonMark 标准允许）。
-        例如: '~~~~~ python'
-        """
-        text = """
-```act
-test_act
-```
-``` python
-print("space")
-```
-"""
-        parser = get_parser("tilde")
-        stmts = parser.parse(text)
-        
-        assert len(stmts) == 1
-~~~~~
-~~~~~python
-    def test_parse_with_spaces_in_fence(self):
-        """
-        验证解析器能否处理围栏后的空格（CommonMark 标准允许）。
-        例如: '~~~~~ python'
-        """
-        text = """
-```act
-test_act
-```
-``` python
-print("space")
-```
-"""
-        parser = get_parser("backtick")
-        stmts = parser.parse(text)
-        
-        assert len(stmts) == 1
 ~~~~~
 
 ~~~~~act
-patch_file
-tests/runtime/test_parser_robustness.py
+git_commit
 ~~~~~
-~~~~~python
-    def test_unclosed_block_handling(self):
-        """
-        验证未闭合的块是否被安全处理（例如忽略或报错，但不应崩溃）。
-        """
-        text = """
-```act
-valid
-```
-```unclosed
-starts but never ends...
-"""
-        parser = get_parser("tilde")
-        stmts = parser.parse(text)
-        
-        # 解析器应该能提取出第一个有效的 act
-~~~~~
-~~~~~python
-    def test_unclosed_block_handling(self):
-        """
-        验证未闭合的块是否被安全处理（例如忽略或报错，但不应崩溃）。
-        """
-        text = """
-```act
-valid
-```
-```unclosed
-starts but never ends...
-"""
-        parser = get_parser("backtick")
-        stmts = parser.parse(text)
-        
-        # 解析器应该能提取出第一个有效的 act
+~~~~~text
+refactor(runtime): improve patch safety and rewrite parser as state machine
+
+This commit introduces two major improvements to the quipu-runtime:
+
+1. Patch Safety: The `patch_file` act now enforces uniqueness. It checks the number of occurrences of the target string before applying changes. If the content is missing or ambiguous (multiple matches), it fails with a descriptive error instead of silently modifying the first match.
+
+2. Robust Parsing: Replaced the fragile `RegexBlockParser` with a line-based `StateBlockParser`. The new parser:
+    - Supports arbitrary language tags, fixing issues with tags like 'python.old' or 'c++'.
+    - Handles whitespace within fences according to CommonMark spirit.
+    - Accurately preserves all internal indentation and whitespace, ensuring byte-perfect extraction for `patch_file` operations.
+
+Additionally, added a comprehensive test suite covering patch ambiguity and parser edge cases, and cleaned up pytest configuration warnings.
 ~~~~~
 
 ### 下一步建议
-请执行此计划。
-然后运行全量测试：`pytest tests/runtime/test_parser_robustness.py tests/runtime/acts/test_patch_ambiguity.py`。
-这一次，所有测试都应该通过。
+- **代码审查**: 尽管测试已通过，但建议手动查看一下 `StateBlockParser` 的实现，确保它在处理极大文件时的性能符合预期。
+- **扩展 Act**: 现在解析器已经可以识别任意语言标签，我们可以考虑在未来引入根据标签（如 `python` vs `shell`）进行语法检查的插件。
