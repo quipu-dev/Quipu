@@ -1,65 +1,116 @@
-太好了，测试全量通过标志着我们已经完成了一个高质量的重构周期。
+你提出了一个非常关键的开发者体验 (DX) 优化点。在 Monorepo 结构中，如果不能通过一条命令建立起完整的开发环境，将会极大地增加新贡献者的上手难度和日常开发的复杂度。
 
-我们不仅修复了 `patch_file` 的歧义风险，还通过引入状态机解析器，彻底解决了复杂语言标签（如 `python.old`）的识别问题。这显著提升了 Quipu 运行时的健壮性和可预测性。
+你提供的 `Cascade` 项目是一个完美的参考。它采用了标准的“伞形包 (Umbrella Package)”模式：
 
-我将生成最终的 `[COMMIT]` 计划，将这些改进正式提交。
+1.  **根 `pyproject.toml` 作为入口**: 项目根目录的 `pyproject.toml` 定义了一个名为 `cascade` 的元包。
+2.  **`[dev]` 可选依赖**: 这个元包通过 `[project.optional-dependencies]` 定义了一个 `dev` 组。
+3.  **依赖聚合**: `dev` 组不仅包含了 `pytest`, `ruff` 等通用开发工具，还**显式地包含了工作区内的所有其他本地包** (如 `"cascade-application"`, `"cascade-provider-ipfs"`)。
 
-## [COMMIT] refactor(runtime): 增强 patch 安全性并重构解析器为状态机
+当你运行 `uv pip install -e .[dev]` 时，`uv` 会：
+1.  安装 `cascade` 这个元包。
+2.  解析 `[dev]` 组，安装所有列出的开发工具。
+3.  因为 `dev` 组也依赖于工作区内的其他包，`uv` 会自动找到这些本地包，解析它们各自的 `dependencies`，并将它们全部以可编辑模式安装。
+
+这正是我们 `pyquipu` 项目所需要的。我们将完全复制这个模式。
+
+## [WIP] chore: 聚合开发依赖到根 pyproject.toml
 
 ### 用户需求
-将近期对 `patch_file` 的唯一性检查逻辑、状态机解析器的重构以及相关的测试套件更新合并并提交到版本控制系统中。
+修改项目配置，使得开发者可以通过在项目根目录运行 `uv pip install -e .[dev]` 一条命令，安装所有 `packages/*` 子包及其依赖，以及所有用于测试和代码检查的开发工具。
 
 ### 评论
-这次重构解决了两个核心痛点：一是防止了静默错误修改（patch 歧义），二是极大地增强了指令解析的灵活性。采用状态机替代正则是一个明智的架构决定，它为未来支持更复杂的 Markdown 扩展奠定了基础。
+这是一个至关重要的 DX 改进，它将开发环境的搭建过程从一系列零散的步骤（可能包括手动安装各个包、安装 `dev-requirements.txt`）简化为一条标准的、确定性的命令。这使得环境搭建更快、更可靠，并为自动化 CI 流程奠定了坚实的基础。
 
 ### 目标
-1.  提交对 `packages/quipu-runtime/src/pyquipu/acts/basic.py` 的修改（补丁唯一性检查）。
-2.  提交对 `packages/quipu-runtime/src/pyquipu/runtime/parser.py` 的重构（状态机解析器）。
-3.  提交对 `tests/runtime/conftest.py` 的配置优化（消除 pytest 警告）。
-4.  提交新增的测试文件：
-    *   `tests/runtime/acts/test_patch_ambiguity.py`
-    *   `tests/runtime/test_parser_robustness.py`
+1.  修改根目录的 `pyproject.toml` 文件，使其成为一个聚合所有子包的“伞形包”。
+2.  在根 `pyproject.toml` 中定义一个 `[project.optional-dependencies]`，其中包含一个 `dev` 组。
+3.  将 `dev-requirements.txt` 中的所有内容迁移到 `dev` 组中。
+4.  将所有本地 `packages/*` 也作为依赖项添加到 `dev` 组中。
+5.  删除现在已经冗余的 `dev-requirements.txt` 文件。
 
 ### 基本原理
-按照 TDD 流程，我们已经完成了“红-绿-重构”的完整循环。现在通过一个逻辑原子提交，将这些变更固化。提交信息将详细描述这些改进对系统稳定性的贡献。
+我们将遵循 `Cascade` 项目的最佳实践。通过在根 `pyproject.toml` 中定义一个全面的 `[dev]` 依赖组，我们为 `uv` 提供了一个单一的、权威的入口点来理解整个项目的开发依赖图。这利用了 `uv` 对 monorepo 工作区的原生支持，实现了依赖的集中管理和一键安装。
 
 ### 标签
-#intent/refine #flow/ready #priority/medium #comp/runtime #comp/tests #concept/parser #concept/executor #scope/core #ai/instruct #task/domain/runtime #task/object/patch-and-parser #task/action/refactor #task/state/end #task/status/completed
+#intent/tooling #flow/ready #priority/high #comp/build #scope/dx #ai/instruct #task/domain/build #task/object/dependency-management #task/action/centralize #task/state/begin
 
 ---
 ### Script
 
-#### Acts 1: 提交代码变更
+#### Acts 1: 改造根 pyproject.toml
 
-我们将所有涉及的修改添加到暂存区，并创建一个详尽的提交记录。
-
-~~~~~act
-git_add
-packages/quipu-runtime/src/pyquipu/acts/basic.py
-packages/quipu-runtime/src/pyquipu/runtime/parser.py
-tests/runtime/conftest.py
-tests/runtime/acts/test_patch_ambiguity.py
-tests/runtime/test_parser_robustness.py
-~~~~~
+我们将修改根 `pyproject.toml`，重命名项目，并添加包含所有开发依赖的 `[dev]` 组。
 
 ~~~~~act
-git_commit
+patch_file
+pyproject.toml
 ~~~~~
-~~~~~text
-refactor(runtime): improve patch safety and rewrite parser as state machine
+~~~~~toml.old
+[project]
+name = "pyquipu-monorepo"
+version = "0.1.0"
+description = "Quipu Development Monorepo"
+requires-python = ">=3.10"
+dependencies = []
 
-This commit introduces two major improvements to the quipu-runtime:
+[tool.uv]
+# 将 packages 下的所有包纳入工作区管理
+workspace.members = ["packages/*", "packages/quipu-common"]
+~~~~~
+~~~~~toml.new
+[project]
+name = "pyquipu"
+version = "0.1.0"
+description = "Quipu Development Monorepo"
+requires-python = ">=3.10"
+dependencies = [
+    "pyquipu-application",
+    "pyquipu-cli",
+    "pyquipu-common",
+    "pyquipu-engine",
+    "pyquipu-interfaces",
+    "pyquipu-runtime",
+]
 
-1. Patch Safety: The `patch_file` act now enforces uniqueness. It checks the number of occurrences of the target string before applying changes. If the content is missing or ambiguous (multiple matches), it fails with a descriptive error instead of silently modifying the first match.
+[project.optional-dependencies]
+dev = [
+    # Local workspace packages
+    "pyquipu-application",
+    "pyquipu-cli",
+    "pyquipu-common",
+    "pyquipu-engine",
+    "pyquipu-interfaces",
+    "pyquipu-runtime",
+    # Dev tools
+    "pytest",
+    "pytest-cov",
+    "pytest-timeout",
+    "ruff",
+    "pre-commit"
+]
 
-2. Robust Parsing: Replaced the fragile `RegexBlockParser` with a line-based `StateBlockParser`. The new parser:
-    - Supports arbitrary language tags, fixing issues with tags like 'python.old' or 'c++'.
-    - Handles whitespace within fences according to CommonMark spirit.
-    - Accurately preserves all internal indentation and whitespace, ensuring byte-perfect extraction for `patch_file` operations.
+[tool.uv]
+# 将 packages 下的所有包纳入工作区管理
+workspace.members = ["packages/*"]
 
-Additionally, added a comprehensive test suite covering patch ambiguity and parser edge cases, and cleaned up pytest configuration warnings.
+[tool.uv.sources]
+pyquipu-application = { workspace = true }
+pyquipu-cli = { workspace = true }
+pyquipu-common = { workspace = true }
+pyquipu-engine = { workspace = true }
+pyquipu-interfaces = { workspace = true }
+pyquipu-runtime = { workspace = true }
+~~~~~
+
+#### Acts 2: 删除冗余的依赖文件
+
+`dev-requirements.txt` 的职责已经被 `pyproject.toml` 完全接管，我们将其删除以避免混淆。
+
+~~~~~act
+delete_file
+dev-requirements.txt
 ~~~~~
 
 ### 下一步建议
-- **代码审查**: 尽管测试已通过，但建议手动查看一下 `StateBlockParser` 的实现，确保它在处理极大文件时的性能符合预期。
-- **扩展 Act**: 现在解析器已经可以识别任意语言标签，我们可以考虑在未来引入根据标签（如 `python` vs `shell`）进行语法检查的插件。
+请执行此计划。
+完成后，建议在一个**干净的虚拟环境**中运行 `uv pip install -e ".[dev]"`。然后可以通过 `uv pip list` 来验证是否所有的 `pyquipu-*` 包和开发工具（如 `pytest`）都已成功安装。
