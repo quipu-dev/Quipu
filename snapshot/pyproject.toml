@@ -69,3 +69,6 @@ select = ["E", "F", "I"] # Pycodestyle Errors, Pyflakes, isort
 [tool.ruff.format]
 quote-style = "double"
 docstring-code-format = true
+
+[tool.stitcher]
+scan_paths = ["packages"]
