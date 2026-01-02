@@ -21,7 +21,7 @@ class CodeVisitor(ast.NodeVisitor):
         self.keys = set()
 
     def visit_Call(self, node: ast.Call):
-        # We are looking for calls of the form: bus.method("key", ...)
+        # Pattern 1: bus.method("key.id", ...)
         if (
             isinstance(node.func, ast.Attribute)
             and isinstance(node.func.value, ast.Name)
@@ -31,6 +31,14 @@ class CodeVisitor(ast.NodeVisitor):
             if node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
                 key = node.args[0].value
                 self.keys.add(key)
+
+        # Pattern 2: QuipuResult(message="key.id", ...)
+        elif isinstance(node.func, ast.Name) and node.func.id == "QuipuResult":
+            for keyword in node.keywords:
+                if keyword.arg == "message" and isinstance(keyword.value, ast.Constant) and isinstance(keyword.value.value, str):
+                    key = keyword.value.value
+                    self.keys.add(key)
+                    break # Found it, no need to check other keywords
 
         self.generic_visit(node)
 
