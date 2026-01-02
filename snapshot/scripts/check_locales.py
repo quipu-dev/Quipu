@@ -1,59 +1,3 @@
-You've correctly identified a potential gap in our tooling. A script to verify localization string coverage is an excellent idea for maintaining code quality. I will create a script named `check_locales.py` in a new `scripts/` directory. This script will use Python's `ast` module to find all localization keys used in the codebase and compare them against the keys defined in the JSON files, reporting any discrepancies.
-
-## [WIP] feat: Add script to check localization string coverage
-
-### 用户需求
-
-The user wants a Python script in the `./scripts` directory to ensure localization strings are fully covered and have no duplicates. The script should:
-1.  Use `ast` to find all localization keys (e.g., `"a.b.c"`) used in calls to the `bus` object within the source code.
-2.  Load all key-value pairs from the `locales/zh/*.json` files.
-3.  Compare the set of used keys against the set of defined keys.
-4.  Report on missing keys, unused keys, and duplicate key definitions.
-
-### 评论
-
-This is a crucial piece of tooling for developer experience (DX) and ensuring a polished user experience (UX). It automates a tedious and error-prone checking process, preventing runtime errors from missing keys and keeping the locale files clean. Using `ast` is the correct and robust approach, as it avoids the fragility of regular expressions for code analysis.
-
-### 目标
-
-1.  Create a new directory named `scripts`.
-2.  Create a Python script `scripts/check_locales.py`.
-3.  Implement the script to perform a three-way analysis: missing, unused, and duplicate localization keys.
-4.  The script should be executable and provide a clear report of its findings.
-5.  The script should exit with a non-zero status code if critical errors (missing or duplicate keys) are found, making it suitable for CI/CD integration.
-
-### 基本原理
-
-By creating a dedicated script, we establish a single source of truth for localization health. This script can be run locally by developers before committing and can be integrated into automated CI pipelines to catch localization issues early. The `ast` approach ensures accuracy by parsing the code exactly as the Python interpreter does, making it resilient to formatting changes. The clear, actionable report helps developers quickly identify and fix problems.
-
-### 标签
-
-#intent/tooling #flow/ready #priority/medium #comp/build #scope/dx #ai/instruct #task/domain/testing #task/object/localization-checker #task/action/implementation #task/state/begin
-
----
-
-### Script
-
-#### Acts 1: 创建脚本目录
-
-首先，我们创建 `scripts` 目录来存放新的工具脚本。
-
-~~~~~act
-run_command
-~~~~~
-~~~~~
-mkdir -p scripts
-~~~~~
-
-#### Acts 2: 创建本地化检查脚本
-
-接下来，我们创建 `check_locales.py` 脚本。它将包含解析代码、加载 JSON 文件和比较键的所有逻辑。
-
-~~~~~act
-write_file
-scripts/check_locales.py
-~~~~~
-~~~~~
 import ast
 import json
 import sys
@@ -194,12 +138,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-~~~~~
-
-### 下一步建议
-
-现在我们有了这个脚本，下一步是将其集成到我们的开发工作流中：
-
-1.  **运行检查**：你可以立即运行 `python scripts/check_locales.py` 来查看当前本地化字符串的健康状况，并修复报告的任何问题。
-2.  **添加到 `pyproject.toml`**：我们可以将这个脚本作为一个 `poe` 任务或 `[tool.poetry.scripts]` 入口点添加到 `pyproject.toml` 中，方便通过 `poe check-locales` 或类似命令调用。
-3.  **CI 集成**：将此检查步骤添加到我们的持续集成（CI）流程中，以确保任何合并到主分支的代码都具有完整的本地化覆盖率。
