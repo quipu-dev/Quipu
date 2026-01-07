@@ -1,13 +1,16 @@
 import hashlib
 import re
+import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from pyquipu.cli.main import app
 from pyquipu.engine.state_machine import Engine
 from pyquipu.interfaces.models import QuipuNode
 from pyquipu.interfaces.storage import HistoryReader, HistoryWriter
+from typer.testing import CliRunner
 
 # --- Constants ---
 
@@ -236,3 +239,232 @@ class InMemoryHistoryManager(HistoryReader, HistoryWriter):
 
     def get_node_blobs(self, commit_hash: str) -> Dict[str, bytes]:
         return {}
+
+
+# --- CLI/Integration Test Helpers ---
+
+
+def run_git_command(cwd: Path, args: list[str], check: bool = True) -> str:
+    """Helper to run a git command and return stdout."""
+    result = subprocess.run(["git"] + args, cwd=cwd, capture_output=True, text=True, check=check)
+    return result.stdout.strip()
+
+
+def get_local_quipu_heads(work_dir: Path) -> set[str]:
+    """Helper to get a set of all local quipu head commit hashes."""
+    refs_output = run_git_command(
+        work_dir, ["for-each-ref", "--format=%(objectname)", "refs/quipu/local/heads"], check=False
+    )
+    if not refs_output:
+        return set()
+    return set(refs_output.splitlines())
+
+
+def create_node_via_cli(runner: CliRunner, work_dir: Path, content: str) -> str:
+    """Helper to create a node via the CLI runner and return its commit hash."""
+    heads_before = get_local_quipu_heads(work_dir)
+
+    # [FIX] Add an explicit title to the plan to ensure predictable node summary.
+    plan_title = f"Plan for {content}"
+    plan_file = work_dir / f"{content}.md"
+    plan_file.write_text(f"# {plan_title}\n\n~~~~~act\necho '{content}'\n~~~~~")
+
+    result = runner.invoke(app, ["run", str(plan_file), "--work-dir", str(work_dir), "-y"])
+    assert result.exit_code == 0
+
+    heads_after = get_local_quipu_heads(work_dir)
+    new_heads = heads_after - heads_before
+
+    if not new_heads:
+        raise AssertionError("No new Quipu nodes created.")
+
+    # If only 1 node created, return it.
+    if len(new_heads) == 1:
+        return new_heads.pop()
+
+    # If 2 nodes created (Capture + Plan), identify the Plan node by checking if
+    # the explicit title is present in the commit message.
+    for head in new_heads:
+        msg = run_git_command(work_dir, ["log", "-1", "--format=%B", head])
+        if plan_title in msg:
+            return head
+
+    raise AssertionError(f"Could not identify Plan node among {len(new_heads)} new heads: {new_heads}")
+
+
+# --- Engine/Component Test Helpers ---
+
+
+def create_branching_history(engine: Engine) -> Engine:
+    """
+    Creates a common branching history for testing.
+    History:
+    - n0 (root) -> n1 -> n2 (branch point) -> n3a (branch A) -> n4 (summary)
+                                          \\-> n3b (branch B)
+    """
+    ws = engine.root_dir
+    (ws / "file.txt").write_text("v0")
+    h0 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(EMPTY_TREE_HASH, h0, "plan 0", summary_override="Root Node")
+    (ws / "file.txt").write_text("v1")
+    h1 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h0, h1, "plan 1", summary_override="Linear Node 1")
+    (ws / "file.txt").write_text("v2")
+    h2 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h1, h2, "plan 2", summary_override="Branch Point")
+    engine.visit(h2)
+    (ws / "branch_a.txt").touch()
+    h3a = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h2, h3a, "plan 3a", summary_override="Branch A change")
+    engine.visit(h3a)
+    engine.create_plan_node(h3a, h3a, "plan 4", summary_override="Summary Node")
+    engine.visit(h2)
+    (ws / "branch_b.txt").touch()
+    h3b = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h2, h3b, "plan 3b", summary_override="Branch B change")
+    return engine
+
+
+def create_complex_link_history(engine: Engine) -> Engine:
+    """
+    Creates a complex history to ensure a specific node has all navigation link types.
+    Node n3 will have: a parent (n2b), a child (n4), an ancestor branch point (n1),
+    and an ancestor summary node (n_summary).
+    """
+    ws = engine.root_dir
+    engine.create_plan_node(EMPTY_TREE_HASH, EMPTY_TREE_HASH, "plan sum", summary_override="Ancestor_Summary")
+    (ws / "f").write_text("v0")
+    h0 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(EMPTY_TREE_HASH, h0, "plan 0", summary_override="Root")
+    (ws / "f").write_text("v1")
+    h1 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h0, h1, "plan 1", summary_override="Branch_Point")
+    engine.visit(h1)
+    (ws / "a").touch()
+    h2a = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h1, h2a, "plan 2a", summary_override="Branch_A")
+    engine.visit(h1)
+    (ws / "b").touch()
+    h2b = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h1, h2b, "plan 2b", summary_override="Parent_Node")
+    engine.visit(h2b)
+    (ws / "c").touch()
+    h3 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h2b, h3, "plan 3", summary_override="Test_Target_Node")
+    engine.visit(h3)
+    (ws / "d").touch()
+    h4 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h3, h4, "plan 4", summary_override="Child_Node")
+    return engine
+
+
+def create_linear_history(engine: Engine) -> Tuple[Engine, Dict[str, str]]:
+    """
+    Creates a simple linear history A -> B.
+    - State A: a.txt
+    - State B: b.txt (a.txt is removed)
+    Returns the engine and a dictionary mapping state names ('a', 'b') to their output tree hashes.
+    """
+    ws = engine.root_dir
+
+    # State A
+    (ws / "a.txt").write_text("A")
+    hash_a = engine.git_db.get_tree_hash()
+    engine.create_plan_node(EMPTY_TREE_HASH, hash_a, "Plan A", summary_override="State A")
+
+    # State B
+    (ws / "b.txt").write_text("B")
+    (ws / "a.txt").unlink()
+    hash_b = engine.git_db.get_tree_hash()
+    engine.create_plan_node(hash_a, hash_b, "Plan B", summary_override="State B")
+
+    hashes = {"a": hash_a, "b": hash_b}
+    return engine, hashes
+
+
+def create_dirty_workspace_history(engine: Engine) -> Tuple[Engine, str]:
+    """
+    Creates a history A -> B, then makes the workspace dirty.
+    - State A: file.txt -> "v1"
+    - State B (HEAD): file.txt -> "v2"
+    - Dirty State: file.txt -> "v3"
+    Returns the engine and the hash of state A for checkout tests.
+    """
+    work_dir = engine.root_dir
+    file_path = work_dir / "file.txt"
+
+    # State A
+    file_path.write_text("v1")
+    hash_a = engine.git_db.get_tree_hash()
+    engine.capture_drift(hash_a, message="State A")
+
+    # State B (HEAD)
+    file_path.write_text("v2")
+    engine.capture_drift(engine.git_db.get_tree_hash(), message="State B")
+
+    # Dirty State
+    file_path.write_text("v3")
+
+    return engine, hash_a
+
+
+def create_linear_history_from_specs(engine: Engine, specs: List[Dict[str, Any]]):
+    """
+    Creates a linear history based on a list of specifications.
+    Each spec is a dict: {'type': 'plan'|'capture', 'summary': str, 'content': Optional[str]}
+    """
+    parent_hash = EMPTY_TREE_HASH
+    if engine.history_graph:
+        # If history is not empty, start from the latest node
+        latest_node = sorted(engine.history_graph.values(), key=lambda n: n.timestamp)[-1]
+        parent_hash = latest_node.output_tree
+
+    for i, spec in enumerate(specs):
+        # Create a unique file change for each node to ensure a new tree hash
+        (engine.root_dir / f"file_{time.time()}_{i}.txt").touch()
+        new_hash = engine.git_db.get_tree_hash()
+
+        if spec["type"] == "plan":
+            engine.create_plan_node(
+                input_tree=parent_hash,
+                output_tree=new_hash,
+                plan_content=spec.get("content", ""),
+                summary_override=spec["summary"],
+            )
+        elif spec["type"] == "capture":
+            engine.capture_drift(new_hash, message=spec["summary"])
+
+        parent_hash = new_hash
+    # Re-align to ensure the engine's internal graph is fully updated
+    engine.align()
+
+
+def create_query_branching_history(engine: Engine) -> Tuple[Engine, str]:
+    """
+    Creates a specific branching history for query reachability tests.
+    History: root -> A -> B (HEAD)
+                   \\-> C (unreachable)
+    Returns the engine and the hash of state B (the HEAD).
+    """
+    ws = engine.root_dir
+    # root -> A
+    (ws / "f_a").touch()
+    h_a = engine.git_db.get_tree_hash()
+    node_a = engine.capture_drift(h_a, "Node A")
+
+    # A -> B (This will become the main branch)
+    (ws / "f_b").touch()
+    h_b = engine.git_db.get_tree_hash()
+    engine.capture_drift(h_b, "Node B")
+
+    # Go back to A to create the branch
+    engine.visit(node_a.output_tree)
+
+    # A -> C
+    (ws / "f_c").touch()
+    engine.capture_drift(engine.git_db.get_tree_hash(), "Node C")
+
+    # Checkout back to B to set it as the current HEAD for the test
+    engine.visit(h_b)
+    engine.align()
+    return engine, h_b

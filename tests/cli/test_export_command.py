@@ -5,74 +5,19 @@ import pytest
 from pyquipu.cli.main import app
 from pyquipu.engine.state_machine import Engine
 
-from tests.helpers import EMPTY_TREE_HASH
+from ..helpers import create_branching_history, create_complex_link_history
 
 
 @pytest.fixture
 def populated_history(engine_instance: Engine):
-    """
-    创建一个包含分支、总结节点的通用历史记录用于测试。
-    History:
-    - n0 (root) -> n1 -> n2 (branch point) -> n3a (branch A) -> n4 (summary)
-                                          \\-> n3b (branch B)
-    """
-    engine = engine_instance
-    ws = engine.root_dir
-    (ws / "file.txt").write_text("v0")
-    h0 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(EMPTY_TREE_HASH, h0, "plan 0", summary_override="Root Node")
-    (ws / "file.txt").write_text("v1")
-    h1 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h0, h1, "plan 1", summary_override="Linear Node 1")
-    (ws / "file.txt").write_text("v2")
-    h2 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h1, h2, "plan 2", summary_override="Branch Point")
-    engine.visit(h2)
-    (ws / "branch_a.txt").touch()
-    h3a = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h2, h3a, "plan 3a", summary_override="Branch A change")
-    engine.visit(h3a)
-    engine.create_plan_node(h3a, h3a, "plan 4", summary_override="Summary Node")
-    engine.visit(h2)
-    (ws / "branch_b.txt").touch()
-    h3b = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h2, h3b, "plan 3b", summary_override="Branch B change")
-    return engine
+    """Provides a common branching history for export tests."""
+    return create_branching_history(engine_instance)
 
 
 @pytest.fixture
 def history_for_all_links(engine_instance: Engine):
-    """
-    创建一个复杂的历史记录，确保特定节点拥有所有类型的导航链接。
-    Node n3 will have: a parent (n2b), a child (n4), an ancestor branch point (n1),
-    and an ancestor summary node (n_summary).
-    """
-    engine = engine_instance
-    ws = engine.root_dir
-    engine.create_plan_node(EMPTY_TREE_HASH, EMPTY_TREE_HASH, "plan sum", summary_override="Ancestor_Summary")
-    (ws / "f").write_text("v0")
-    h0 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(EMPTY_TREE_HASH, h0, "plan 0", summary_override="Root")
-    (ws / "f").write_text("v1")
-    h1 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h0, h1, "plan 1", summary_override="Branch_Point")
-    engine.visit(h1)
-    (ws / "a").touch()
-    h2a = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h1, h2a, "plan 2a", summary_override="Branch_A")
-    engine.visit(h1)
-    (ws / "b").touch()
-    h2b = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h1, h2b, "plan 2b", summary_override="Parent_Node")
-    engine.visit(h2b)
-    (ws / "c").touch()
-    h3 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h2b, h3, "plan 3", summary_override="Test_Target_Node")
-    engine.visit(h3)
-    (ws / "d").touch()
-    h4 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(h3, h4, "plan 4", summary_override="Child_Node")
-    return engine
+    """Provides a complex history for testing all navigation link types."""
+    return create_complex_link_history(engine_instance)
 
 
 def test_export_basic(runner, populated_history, monkeypatch):
