@@ -1,50 +1,3 @@
-好的，我完全理解。使用显式映射（map）而不是启发式规则是更稳健、更符合“零启发式策略”公理的做法。它消除了所有歧义，确保了重构的精确性。使用 `pathlib` 也是现代 Python 开发的最佳实践。
-
-我将为你生成一个计划，该计划的核心产物是一个名为 `refactor_tests.py` 的 Python 脚本。这个脚本将包含从旧路径到新路径的完整、精确的映射，并使用 `pathlib` 执行所有文件系统操作。
-
-我还将对 `conftest.py` 文件进行拆分，将共享的 fixtures 移动到其逻辑上所属的包中，以实现更好的模块化和关注点分离。
-
-## [WIP] feat(test): 创建脚本以原子化方式重构测试套件结构
-
-### 用户需求
-1.  创建一个名为 `refactor_tests.py` 的 Python 脚本。
-2.  该脚本需要将 `tests/` 目录下的所有测试文件和 `conftest.py` 文件，根据一个显式定义的映射关系，移动到新的 `packages/*/tests/{unit,integration}/` 结构中。
-3.  脚本必须使用 `pathlib` 库进行文件操作。
-4.  脚本执行完毕后，应清理掉旧的、已变为空的 `tests/` 子目录。
-
-### 评论
-这个方法非常出色。通过创建一个独立的、可审查的重构脚本，我们将一个复杂、高风险的操作（大规模文件移动）转变为一个确定性的、可重复执行的原子事务。使用显式映射而不是启发式规则，完全杜绝了猜测，确保了操作的“本体论正确性”——每个测试文件都被精确地放置在其逻辑归属的新位置。
-
-### 目标
-1.  生成一个名为 `refactor_tests.py` 的 Python 脚本文件在项目根目录。
-2.  该脚本将硬编码一个 `FILE_MAP` 字典，其中包含所有需要移动的测试文件的源路径和目标路径。
-3.  脚本将能够安全地创建目标目录，移动文件，并在最后清理空的源目录。
-
-### 基本原理
-1.  **脚本生成**: 我将使用 `write_file` 创建 `refactor_tests.py`。
-2.  **核心逻辑 (脚本内部)**:
-    *   **数据驱动**: 脚本的核心是一个名为 `FILE_MAP` 的字典，它构成了本次重构的“真理单一来源 (SSoT)”。
-    *   **Pathlib**: 所有路径操作都将通过 `pathlib.Path` 对象完成，确保跨平台兼容性和代码的清晰性。
-    *   **原子化操作**: 脚本会遍历映射表，对每个文件执行 `destination.parent.mkdir(parents=True, exist_ok=True)` 来确保目标目录存在，然后使用 `source.rename(destination)` 来原子性地移动文件。
-    *   **Fixtures 分离**: 根 `tests/conftest.py` 文件将被拆分。`runner` fixture 强耦合于 CLI，因此其配置将被移动到 `packages/quipu-cli/tests/conftest.py`。`engine_instance` fixture 则被移动到 `packages/quipu-engine/tests/conftest.py`，因为它是引擎的核心测试工具。这遵循了“严格分层与边界”的原则。
-    *   **清理**: 在所有文件移动完成后，脚本将尝试删除旧的顶层测试目录，确保不留下任何残余结构。
-
-### 标签
-#intent/tooling #flow/ready #priority/critical #comp/tests #comp/build #scope/dx #ai/brainstorm #task/domain/testing #task/object/test-suite-structure #task/action/refactor #task/state/continue
-
----
-
-### Script
-
-#### Acts 1: 生成测试重构脚本
-
-我将创建一个 `refactor_tests.py` 脚本。请在执行后仔细审查此脚本，然后运行它来完成重构。
-
-~~~~~act
-write_file
-refactor_tests.py
-~~~~~
-~~~~~python
 import shutil
 from pathlib import Path
 
@@ -226,12 +179,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-~~~~~
-
-### 下一步建议
-1.  **审查脚本**: 请仔细检查上面生成的 `refactor_tests.py` 脚本，特别是 `FILE_MAP` 的内容，确保它符合你的预期。
-2.  **执行脚本**: 在项目根目录运行 `python refactor_tests.py`。
-3.  **验证**: 运行 `pytest` 命令，确保所有测试依然能够被发现并成功通过。
-4.  **提交**: 在验证通过后，将 `refactor_tests.py` 脚本本身（作为重构的证据）以及所有被移动的文件提交到仓库。
-
-如果你同意这个计划，请确认，然后你就可以执行这个脚本了。
