@@ -290,3 +290,69 @@ def create_node_via_cli(runner: CliRunner, work_dir: Path, content: str) -> str:
             return head
 
     raise AssertionError(f"Could not identify Plan node among {len(new_heads)} new heads: {new_heads}")
+
+
+# --- Engine/Component Test Helpers ---
+
+
+def create_branching_history(engine: Engine) -> Engine:
+    """
+    Creates a common branching history for testing.
+    History:
+    - n0 (root) -> n1 -> n2 (branch point) -> n3a (branch A) -> n4 (summary)
+                                          \\-> n3b (branch B)
+    """
+    ws = engine.root_dir
+    (ws / "file.txt").write_text("v0")
+    h0 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(EMPTY_TREE_HASH, h0, "plan 0", summary_override="Root Node")
+    (ws / "file.txt").write_text("v1")
+    h1 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h0, h1, "plan 1", summary_override="Linear Node 1")
+    (ws / "file.txt").write_text("v2")
+    h2 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h1, h2, "plan 2", summary_override="Branch Point")
+    engine.visit(h2)
+    (ws / "branch_a.txt").touch()
+    h3a = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h2, h3a, "plan 3a", summary_override="Branch A change")
+    engine.visit(h3a)
+    engine.create_plan_node(h3a, h3a, "plan 4", summary_override="Summary Node")
+    engine.visit(h2)
+    (ws / "branch_b.txt").touch()
+    h3b = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h2, h3b, "plan 3b", summary_override="Branch B change")
+    return engine
+
+
+def create_complex_link_history(engine: Engine) -> Engine:
+    """
+    Creates a complex history to ensure a specific node has all navigation link types.
+    Node n3 will have: a parent (n2b), a child (n4), an ancestor branch point (n1),
+    and an ancestor summary node (n_summary).
+    """
+    ws = engine.root_dir
+    engine.create_plan_node(EMPTY_TREE_HASH, EMPTY_TREE_HASH, "plan sum", summary_override="Ancestor_Summary")
+    (ws / "f").write_text("v0")
+    h0 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(EMPTY_TREE_HASH, h0, "plan 0", summary_override="Root")
+    (ws / "f").write_text("v1")
+    h1 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h0, h1, "plan 1", summary_override="Branch_Point")
+    engine.visit(h1)
+    (ws / "a").touch()
+    h2a = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h1, h2a, "plan 2a", summary_override="Branch_A")
+    engine.visit(h1)
+    (ws / "b").touch()
+    h2b = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h1, h2b, "plan 2b", summary_override="Parent_Node")
+    engine.visit(h2b)
+    (ws / "c").touch()
+    h3 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h2b, h3, "plan 3", summary_override="Test_Target_Node")
+    engine.visit(h3)
+    (ws / "d").touch()
+    h4 = engine.git_db.get_tree_hash()
+    engine.create_plan_node(h3, h4, "plan 4", summary_override="Child_Node")
+    return engine
