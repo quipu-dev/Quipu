@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "Capture: A uv.lock", "type": "capture", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1767770482.223587, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] fix: Resolve pytest collection error by creating package initializers", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1767770483.2098856, "duration_ms": 0}}
