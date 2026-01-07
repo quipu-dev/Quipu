@@ -5,13 +5,6 @@ import pytest
 from pyquipu.engine.git_db import GitDB
 from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from pyquipu.engine.state_machine import Engine
-from typer.testing import CliRunner
-
-
-@pytest.fixture
-def runner() -> CliRunner:
-    """提供一个可复用的 CliRunner 实例。"""
-    return CliRunner()
 
 
 @pytest.fixture
