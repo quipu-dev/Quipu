@@ -6,7 +6,7 @@ from pyquipu.cli.tui import QuipuUiApp
 from pyquipu.cli.view_model import GraphViewModel
 from pyquipu.interfaces.models import QuipuNode
 
-from .test_view_model import MockHistoryReader
+from test_view_model import MockHistoryReader
 
 
 @pytest.fixture

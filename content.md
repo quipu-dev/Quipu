@@ -1,209 +1,105 @@
-好的，我们将采用确定性的、脚本驱动的方式来完成这次重构，而不是依赖任何启发式规则。
+**检测到“测试模块命名冲突”违例，已根据 ADAP v1.0 协议挂起执行。**
 
-我将生成一个计划，该计划分为四个核心步骤：
-1.  **创建迁移脚本**: 生成一个名为 `migrate_tests.py` 的 Python 脚本，其中包含一个手动定义的映射，精确指定每个测试文件的新位置（包括单元/集成分类）。
-2.  **执行迁移**: 运行此脚本，将文件移动到 `packages/*/tests/` 目录下。
-3.  **更新配置**: 修改 `pyproject.toml`，移除旧的 `pythonpath` 条目并添加新的，以确保 `pytest` 能够发现迁移后的测试。
-4.  **清理旧目录**: 删除 `tests/` 下现在已经为空的旧目录结构。
+**分析显示，为了继续执行任务，我必须做出以下未经证实的核心假设：**
+*   假设 `pytest` 能够自动处理两个都名为 `tests` 且都包含 `__init__.py` 的包（根目录 `tests` 和 `packages/pkg/tests`）之间的命名空间冲突。
 
-## [WIP] refactor(tests): Migrate tests into individual package directories
+**诊断缺失组件:**
+*   **明确的测试包命名策略**：当前架构在根目录和子包中同时使用了 `tests` 作为包名（通过添加 `__init__.py`），导致 Python 导入系统出现“影子（Shadowing）”和“路径不匹配（Path Mismatch）”错误。我们必须移除子包测试目录中的 `__init__.py`，使其成为“命名空间包（Namespace Packages）”或简单的文件目录，从而避免被识别为顶层 `tests` 包。
+
+**拒绝战术修复并提出战略方案:**
+*   我拒绝仅修复报错文件的“打地鼠”式尝试。
+*   我提议执行以下战略修复：
+    1.  **清理命名空间**：批量删除 `packages/*/tests` 及其子目录下的所有 `__init__.py` 文件。这将解除它们作为 Python 包的身份，消除与根目录 `tests` 的冲突。
+    2.  **修正引用方式**：由于移除了 `__init__.py`，显式相对导入（如 `from .foo import bar`）将失效。必须将其转换为隐式同级导入（`from foo import bar`），这利用了 Pytest 将当前测试目录加入 `sys.path` 的特性。
+
+---
+
+### [WIP] refactor(tests): 移除子包测试目录的 __init__.py 以解决命名冲突
 
 ### 用户需求
-将位于根目录 `tests/` 下的、与特定包相关的测试文件，迁移到各个 `packages/<pkg-name>/tests/{unit,integration}/` 目录中。迁移过程需要手动指定每个文件的归属和类型（单元/集成），并通过一个自动化脚本来执行。
+解决运行 `pytest packages` 时出现的 `ImportPathMismatchError` 和 `ModuleNotFoundError`。
 
 ### 评论
-这是一个符合 **HFEA (高保真工程公理)** 的关键重构。它将测试的物理位置与其所验证的代码的逻辑位置对齐，极大地增强了代码库的内聚性和模块化程度。使用一个带有硬编码映射的脚本，我们遵循了 **ADAP (假设驱动分析协议)** 的精神，移除了所有猜测，确保了迁移过程的确定性和可重复性。
+这是一个经典的 Python 测试结构陷阱。在 Monorepo 中，如果不小心在嵌套的 `tests` 目录中放置了 `__init__.py`，Python 就会尝试将其解析为名为 `tests` 的顶层包，从而与根目录的 `tests` 发生灾难性的冲突。移除 `__init__.py` 是最标准、最符合 Pytest 推荐实践（"Tests as part of application code" vs "Tests outside application code"）的解法。
 
 ### 目标
-1.  创建一个 `migrate_tests.py` 脚本，该脚本包含一个从源文件到目标目录的完整映射。
-2.  执行该脚本，将 `tests/application/`, `tests/cli/`, `tests/engine/`, 和 `tests/runtime/` 下的所有测试文件移动到其各自包内的新 `tests` 目录中。
-3.  更新 `pyproject.toml` 的 `pythonpath` 配置，以反映新的目录结构。
-4.  删除 `tests/` 目录下的旧子目录。
+1.  删除所有 `packages/*/tests/**/__init__.py` 文件。
+2.  修复因移除 `__init__.py` 而破坏的相对导入（主要在 `quipu-cli` 的单元测试中）。
 
 ### 基本原理
-我们将定义一个详尽的 `TEST_MAPPING` 字典，作为迁移脚本的“单一真理来源”。脚本将遍历此映射，为每个条目创建目标目录，然后移动文件。这种方法避免了任何模糊的匹配逻辑，确保了迁移的精确性。迁移完成后，`pyproject.toml` 必须同步更新，否则测试将无法被发现。最后，清理旧目录结构以完成整个重构过程。
+1.  **消除歧义**：没有 `__init__.py`，`pytest` 会根据文件路径生成唯一的模块名（如 `packages.quipu_cli.tests.unit.test_foo`），而不是通用的 `tests.unit.test_foo`，从而解决 `ImportPathMismatchError`。
+2.  **利用 Pytest 机制**：Pytest 默认将正在执行的测试文件所在目录添加到 `sys.path`。这意味着我们可以直接 `import sibling_module` 而不需要 `from . import sibling_module`。
 
 ### 标签
-#intent/tooling #intent/refine #flow/ready #priority/high 
-#comp/tests #comp/build #scope/dx 
-#ai/instruct 
-#task/domain/testing #task/object/test-layout #task/action/migration #task/state/begin
+#intent/fix #flow/ready #priority/high
+#comp/tests #scope/dx
+#ai/instruct
+#task/domain/testing #task/object/test-structure #task/action/namespace-fix #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 创建迁移脚本
+#### Acts 1: 批量删除冲突的 `__init__.py`
 
-我们将创建一个 Python 脚本，它包含一个精确的映射表，用于指导所有测试文件的迁移。
-
-~~~~~act
-write_file
-migrate_tests.py
-~~~~~
-~~~~~python
-import shutil
-from pathlib import Path
-
-# 定义从 tests/ 子目录到 packages/ 内部的精确映射
-# 格式: "source_file_path": "package_name/test_type"
-# test_type 必须是 'unit' 或 'integration'
-TEST_MAPPING = {
-    # Application Tests
-    "application/conftest.py": "quipu-application/unit",
-    "application/test_controller.py": "quipu-application/unit",
-    "application/test_utils.py": "quipu-application/unit",
-
-    # CLI Tests (mostly integration)
-    "cli/conftest.py": "quipu-cli/integration",
-    "cli/test_cache_commands.py": "quipu-cli/integration",
-    "cli/test_cli_interaction.py": "quipu-cli/integration",
-    "cli/test_export_command.py": "quipu-cli/integration",
-    "cli/test_navigation_commands.py": "quipu-cli/integration",
-    "cli/test_query_commands.py": "quipu-cli/integration",
-    "cli/test_tui_logic.py": "quipu-cli/unit",
-    "cli/test_tui_reachability.py": "quipu-cli/unit",
-    "cli/test_unfriendly_paths.py": "quipu-cli/integration",
-    "cli/test_view_model.py": "quipu-cli/unit",
-    "cli/test_workspace_commands.py": "quipu-cli/integration",
-
-    # Engine Tests
-    "engine/sqlite/test_hydrator.py": "quipu-engine/integration/sqlite",
-    "engine/sqlite/test_reader.py": "quipu-engine/integration/sqlite",
-    "engine/sqlite/test_reader_integrity.py": "quipu-engine/unit/sqlite",
-    "engine/sqlite/test_writer.py": "quipu-engine/integration/sqlite",
-    "engine/sqlite/test_writer_idempotency.py": "quipu-engine/integration/sqlite",
-    "engine/test_branching.py": "quipu-engine/integration",
-    "engine/test_checkout_behavior.py": "quipu-engine/integration",
-    "engine/test_config.py": "quipu-engine/unit",
-    "engine/test_deduplication.py": "quipu-engine/unit",
-    "engine/test_engine.py": "quipu-engine/integration",
-    "engine/test_engine_memory.py": "quipu-engine/unit",
-    "engine/test_git_db.py": "quipu-engine/integration",
-    "engine/test_git_reader.py": "quipu-engine/integration",
-    "engine/test_git_writer.py": "quipu-engine/integration",
-    "engine/test_head_tracking.py": "quipu-engine/integration",
-    "engine/test_navigation.py": "quipu-engine/unit",
-
-    # Runtime Tests (mostly unit)
-    "runtime/acts/test_check.py": "quipu-runtime/unit/acts",
-    "runtime/acts/test_git.py": "quipu-runtime/unit/acts",
-    "runtime/acts/test_memory.py": "quipu-runtime/unit/acts",
-    "runtime/acts/test_patch_ambiguity.py": "quipu-runtime/unit/acts",
-    "runtime/acts/test_read.py": "quipu-runtime/unit/acts",
-    "runtime/acts/test_refactor.py": "quipu-runtime/unit/acts",
-    "runtime/acts/test_shell.py": "quipu-runtime/unit/acts",
-    "runtime/conftest.py": "quipu-runtime/unit",
-    "runtime/test_arg_strategy.py": "quipu-runtime/unit",
-    "runtime/test_parser_and_basic_acts.py": "quipu-runtime/unit",
-    "runtime/test_parser_auto_detect.py": "quipu-runtime/unit",
-    "runtime/test_parser_robustness.py": "quipu-runtime/unit",
-    "runtime/test_plugin_loader.py": "quipu-runtime/unit",
-    "runtime/test_plugin_resilience.py": "quipu-runtime/unit",
-}
-
-def main():
-    project_root = Path.cwd()
-    if not (project_root / "pyproject.toml").exists():
-        print("❌ Error: This script must be run from the project root directory.")
-        return 1
-
-    source_base = project_root / "tests"
-    dest_base = project_root / "packages"
-
-    print("🚀 Starting test file migration...")
-
-    for src_rel_path_str, dest_info in TEST_MAPPING.items():
-        src_rel_path = Path(src_rel_path_str)
-        src_abs_path = source_base / src_rel_path
-
-        package_name, test_type_path = dest_info.split("/", 1)
-        
-        # Preserve the original file name
-        file_name = src_rel_path.name
-        
-        # Build the destination path
-        dest_dir = dest_base / package_name / "tests" / test_type_path
-        dest_abs_path = dest_dir / file_name
-
-        if not src_abs_path.exists():
-            print(f"⚠️  Warning: Source file not found, skipping: {src_abs_path}")
-            continue
-
-        # Create destination directory if it doesn't exist
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        (dest_dir.parent / "__init__.py").touch(exist_ok=True)
-        (dest_dir / "__init__.py").touch(exist_ok=True)
-
-        if dest_abs_path.exists():
-            print(f"⚠️  Warning: Destination file already exists, skipping: {dest_abs_path}")
-            continue
-
-        print(f"🚚 Moving: {src_rel_path} -> packages/{package_name}/tests/{test_type_path}/")
-        shutil.move(str(src_abs_path), str(dest_abs_path))
-
-    print("\n✅ Migration complete.")
-    return 0
-
-if __name__ == "__main__":
-    exit(main())
-~~~~~
-
-#### Acts 2: 执行迁移脚本
-
-现在我们运行刚刚创建的脚本来移动所有文件。
+我们使用 `find` 命令来精确定位并删除这些文件。保留根目录 `tests/__init__.py`。
 
 ~~~~~act
 run_command
 ~~~~~
 ~~~~~bash
-python migrate_tests.py
+find packages -path "*/tests/__init__.py" -delete
+find packages -path "*/tests/unit/__init__.py" -delete
+find packages -path "*/tests/integration/__init__.py" -delete
+find packages -path "*/tests/integration/*/__init__.py" -delete
+find packages -path "*/tests/unit/*/__init__.py" -delete
 ~~~~~
 
-#### Acts 3: 更新 `pyproject.toml` 配置
+#### Acts 2: 修复 `test_tui_logic.py` 的相对导入
 
-迁移完成后，我们必须更新 `pytest` 的 `pythonpath` 以便它能在新位置找到模块和测试。
+将 `from .test_view_model import` 改为 `from test_view_model import`。
 
 ~~~~~act
 patch_file
-pyproject.toml
+packages/quipu-cli/tests/unit/test_tui_logic.py
 ~~~~~
-~~~~~toml.old
-[tool.pytest.ini_options]
-addopts = "-ra --cov=pyquipu --cov-report=term-missing"
-pythonpath = [
-  "packages/quipu-interfaces/src",
-  "packages/quipu-engine/src",
-  "packages/quipu-runtime/src",
-  "packages/quipu-cli/src",
-  "packages/quipu-common/src",
-]
+~~~~~python.old
+from pyquipu.cli.tui import QuipuUiApp
+from pyquipu.cli.view_model import GraphViewModel
+from pyquipu.interfaces.models import QuipuNode
+
+from .test_view_model import MockHistoryReader
 ~~~~~
-~~~~~toml.new
-[tool.pytest.ini_options]
-addopts = "-ra --cov=pyquipu --cov-report=term-missing"
-testpaths = "tests packages" # Scan both root tests and package tests
-pythonpath = [
-  "packages/quipu-interfaces/src",
-  "packages/quipu-engine/src",
-  "packages/quipu-runtime/src",
-  "packages/quipu-cli/src",
-  "packages/quipu-common/src",
-  "packages/quipu-application/src",
-  "packages/quipu-test-utils/src",
-]
+~~~~~python.new
+from pyquipu.cli.tui import QuipuUiApp
+from pyquipu.cli.view_model import GraphViewModel
+from pyquipu.interfaces.models import QuipuNode
+
+from test_view_model import MockHistoryReader
 ~~~~~
 
-#### Acts 4: 清理旧的测试目录
+#### Acts 3: 修复 `test_tui_reachability.py` 的相对导入
 
-最后，我们删除 `tests/` 下的空目录。我们保留 `tests/integration` 因为它包含跨包的端到端测试。
+同样的操作。
 
 ~~~~~act
-run_command
+patch_file
+packages/quipu-cli/tests/unit/test_tui_reachability.py
 ~~~~~
-~~~~~bash
-rm -rf tests/application tests/cli tests/engine tests/runtime
+~~~~~python.old
+from pyquipu.cli.tui import QuipuUiApp
+from pyquipu.cli.view_model import GraphViewModel
+from pyquipu.interfaces.models import QuipuNode
+
+from .test_view_model import MockHistoryReader
+~~~~~
+~~~~~python.new
+from pyquipu.cli.tui import QuipuUiApp
+from pyquipu.cli.view_model import GraphViewModel
+from pyquipu.interfaces.models import QuipuNode
+
+from test_view_model import MockHistoryReader
 ~~~~~
 
 ### 下一步建议
-迁移已经完成。现在应该运行 `pytest` 来验证所有的测试是否都能在新位置被正确发现和执行。如果所有测试通过，我们就可以提交这次重构。
+再次运行 `uv run pytest packages` 验证修复效果。如果通过，则说明测试架构迁移成功。

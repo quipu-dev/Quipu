@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] refactor(tests): Migrate tests into individual package directories", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1767775272.2739718, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] refactor(tests): 移除子包测试目录的 __init__.py 以解决命名冲突", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1767775532.812769, "duration_ms": 0}}
