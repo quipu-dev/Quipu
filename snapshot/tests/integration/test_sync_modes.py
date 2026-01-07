@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from pyquipu.cli.main import app
 from pyquipu.common.identity import get_user_id_from_email
 from typer.testing import CliRunner

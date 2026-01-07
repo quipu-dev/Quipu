@@ -1,13 +1,16 @@
 import hashlib
 import re
+import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from pyquipu.cli.main import app
 from pyquipu.engine.state_machine import Engine
 from pyquipu.interfaces.models import QuipuNode
 from pyquipu.interfaces.storage import HistoryReader, HistoryWriter
+from typer.testing import CliRunner
 
 # --- Constants ---
 
@@ -239,9 +242,6 @@ class InMemoryHistoryManager(HistoryReader, HistoryWriter):
 
 
 # --- CLI/Integration Test Helpers ---
-import subprocess
-from typer.testing import CliRunner
-from pyquipu.cli.main import app
 
 
 def run_git_command(cwd: Path, args: list[str], check: bool = True) -> str:
