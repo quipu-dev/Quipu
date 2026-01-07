@@ -1,4 +1,5 @@
 from pyquipu.test_utils.fixtures import executor, isolated_vault, mock_runtime_bus
+import pytest
 
 # 保持 autouse 生效
 @pytest.fixture(autouse=True)
