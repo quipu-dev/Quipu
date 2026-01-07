@@ -45,13 +45,6 @@ pyquipu-test-utils = { workspace = true }
 
 [tool.pytest.ini_options]
 addopts = "-ra --cov=pyquipu --cov-report=term-missing"
-pythonpath = [
-  "packages/quipu-interfaces/src",
-  "packages/quipu-engine/src",
-  "packages/quipu-runtime/src",
-  "packages/quipu-cli/src",
-  "packages/quipu-common/src",
-]
 
 [build-system]
 requires = ["hatchling"]

@@ -1,11 +1,20 @@
 import subprocess
 from pathlib import Path
+
 import pytest
 from pyquipu.engine.git_db import GitDB
 from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from pyquipu.engine.state_machine import Engine
+from typer.testing import CliRunner
 
 
+@pytest.fixture
+def runner() -> CliRunner:
+    """提供一个可复用的 CliRunner 实例。"""
+    return CliRunner()
+
+
+@pytest.fixture
 def git_workspace(tmp_path: Path) -> Path:
     """
     提供一个已初始化 Git 的干净工作区路径。
@@ -17,8 +26,6 @@ def git_workspace(tmp_path: Path) -> Path:
     subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo_path, check=True)
     subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo_path, check=True)
     return repo_path
-
-
 
 
 @pytest.fixture
