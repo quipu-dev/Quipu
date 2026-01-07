@@ -10,9 +10,6 @@ from pyquipu.engine.sqlite_db import DatabaseManager
 
 @pytest.fixture
 def hydrator_setup(tmp_path: Path):
-    """
-    创建一个包含 Git 仓库、DB 管理器和 Hydrator 实例的测试环境。
-    """
     repo_path = tmp_path / "hydro_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
@@ -31,7 +28,6 @@ def hydrator_setup(tmp_path: Path):
 
 class TestHydration:
     def test_full_hydration_from_scratch(self, hydrator_setup):
-        """测试从一个空的数据库开始，完整补水一个已有的 Git 历史。"""
         hydrator, writer, git_db, db_manager, repo = hydrator_setup
 
         # 1. 在 Git 中创建两个节点
@@ -64,7 +60,6 @@ class TestHydration:
         assert edge_row is not None
 
     def test_incremental_hydration(self, hydrator_setup):
-        """测试只补水增量部分。"""
         hydrator, writer, git_db, db_manager, repo = hydrator_setup
 
         # 1. 创建节点 A 并立即补水
@@ -90,7 +85,6 @@ class TestHydration:
         assert node_b_row is not None
 
     def test_hydration_idempotency(self, hydrator_setup):
-        """测试重复运行补水不会产生副作用。"""
         hydrator, writer, git_db, db_manager, repo = hydrator_setup
 
         (repo / "a.txt").touch()

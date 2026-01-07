@@ -23,7 +23,6 @@ class TestHeadTracking:
         return Engine(repo, db=git_db, reader=reader, writer=writer)
 
     def test_head_persistence(self, engine_with_repo):
-        """测试 HEAD 指针的创建和更新"""
         engine = engine_with_repo
 
         # 1. 初始状态，无 HEAD
@@ -44,7 +43,6 @@ class TestHeadTracking:
         assert engine._read_head() == tree1
 
     def test_drift_uses_head(self, engine_with_repo):
-        """测试漂移捕获时使用 HEAD 作为父节点"""
         engine = engine_with_repo
 
         # 1. 建立 State A 并确立 HEAD
@@ -68,7 +66,6 @@ class TestHeadTracking:
         assert engine._read_head() == hash_b
 
     def test_checkout_updates_head(self, engine_with_repo):
-        """验证 engine.checkout 正确更新 HEAD"""
         engine = engine_with_repo
 
         # 1. Create State A (Plan)
@@ -93,10 +90,6 @@ class TestHeadTracking:
         assert engine._read_head() == hash_a
 
     def test_capture_drift_on_detached_head(self, engine_with_repo):
-        """
-        A more robust regression test. Ensures capture_drift uses the HEAD
-        pointer even when it's not pointing to the latest node in history.
-        """
         engine = engine_with_repo
         engine.align()
 

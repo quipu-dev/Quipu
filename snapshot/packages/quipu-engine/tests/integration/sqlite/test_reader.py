@@ -12,10 +12,6 @@ from pyquipu.engine.sqlite_storage import SQLiteHistoryReader
 
 @pytest.fixture
 def sqlite_reader_setup(tmp_path: Path):
-    """
-    创建一个包含 Git 仓库、DB 管理器、Writer 和 Reader 的测试环境。
-    此 Fixture 保持 function 作用域，为需要隔离的测试提供服务。
-    """
     repo_path = tmp_path / "sql_read_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
@@ -38,7 +34,6 @@ def sqlite_reader_setup(tmp_path: Path):
 
 class TestSQLiteHistoryReader:
     def test_load_linear_history_from_db(self, sqlite_reader_setup):
-        """测试从 DB 加载一个简单的线性历史。"""
         reader, git_writer, hydrator, _, repo, git_db = sqlite_reader_setup
 
         # 1. 在 Git 中创建两个节点
@@ -69,7 +64,6 @@ class TestSQLiteHistoryReader:
         assert node_b.input_tree == node_a.output_tree
 
     def test_read_through_cache(self, sqlite_reader_setup):
-        """测试通读缓存是否能正确工作（从未缓存到已缓存）。"""
         reader, git_writer, hydrator, db_manager, repo, git_db = sqlite_reader_setup
 
         # 1. 在 Git 中创建节点
@@ -108,10 +102,6 @@ class TestSQLiteHistoryReader:
 
 @pytest.fixture(scope="class")
 def populated_db(tmp_path_factory):
-    """
-    一个预填充了15个节点和一些私有数据的数据库环境。
-    此 Fixture 具有 class 作用域，仅为 TestSQLiteReaderPaginated 类设置一次。
-    """
     # --- Class-scoped setup logic (from sqlite_reader_setup) ---
     class_tmp_path = tmp_path_factory.mktemp("populated_db_class_scope")
     repo_path = class_tmp_path / "sql_read_repo"

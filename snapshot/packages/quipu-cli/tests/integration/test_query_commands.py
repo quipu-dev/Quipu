@@ -2,7 +2,6 @@ import json
 from unittest.mock import MagicMock
 
 from pyquipu.cli.main import app
-
 from pyquipu.test_utils.helpers import create_linear_history_from_specs, create_query_branching_history
 
 
@@ -103,7 +102,6 @@ def test_log_json_empty(runner, quipu_workspace, monkeypatch):
 
 
 def test_log_filtering(runner, quipu_workspace, monkeypatch):
-    """Test limit and time filtering logic for log command."""
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
@@ -131,7 +129,6 @@ def test_log_filtering(runner, quipu_workspace, monkeypatch):
 
 
 def test_log_reachable_only(runner, quipu_workspace, monkeypatch):
-    """Test --reachable-only filtering for the log command."""
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)

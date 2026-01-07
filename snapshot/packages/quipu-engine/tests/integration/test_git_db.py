@@ -8,7 +8,6 @@ from pyquipu.engine.git_db import GitDB
 
 @pytest.fixture
 def git_repo(tmp_path):
-    """创建一个初始化的 Git 仓库"""
     root = tmp_path / "repo"
     root.mkdir()
     subprocess.run(["git", "init"], cwd=root, check=True)
@@ -22,13 +21,11 @@ def git_repo(tmp_path):
 
 @pytest.fixture
 def db(git_repo):
-    """返回绑定到该仓库的 GitDB 实例"""
     return GitDB(git_repo)
 
 
 class TestGitDBPlumbing:
     def test_get_tree_hash_stability(self, git_repo, db):
-        """测试：内容不变，Hash 不变 (State Truth)"""
         f = git_repo / "test.txt"
         f.write_text("hello", encoding="utf-8")
 
@@ -39,7 +36,6 @@ class TestGitDBPlumbing:
         assert hash1 == hash2
 
     def test_get_tree_hash_sensitivity(self, git_repo, db):
-        """测试：内容变化，Hash 必变"""
         f = git_repo / "test.txt"
         f.write_text("v1", encoding="utf-8")
         hash1 = db.get_tree_hash()
@@ -50,10 +46,6 @@ class TestGitDBPlumbing:
         assert hash1 != hash2
 
     def test_shadow_index_isolation(self, git_repo, db):
-        """
-        测试关键特性：零污染 (Zero Pollution)
-        Quipu 计算 Hash 的过程绝对不能把文件加入到用户的暂存区。
-        """
         f = git_repo / "wip.txt"
         f.write_text("working in progress", encoding="utf-8")
 
@@ -73,7 +65,6 @@ class TestGitDBPlumbing:
         assert not (git_repo / ".quipu" / "tmp_index").exists()
 
     def test_exclude_quipu_dir(self, git_repo, db):
-        """测试：.quipu 目录内的变化不应改变 Tree Hash"""
         (git_repo / "main.py").touch()
         hash_base = db.get_tree_hash()
 
@@ -87,7 +78,6 @@ class TestGitDBPlumbing:
         assert hash_base == hash_new
 
     def test_anchor_commit_persistence(self, git_repo, db):
-        """测试：创建影子锚点"""
         (git_repo / "f.txt").write_text("content")
         tree_hash = db.get_tree_hash()
 
@@ -111,7 +101,6 @@ class TestGitDBPlumbing:
         assert commit_tree == tree_hash
 
     def test_hash_object(self, db):
-        """测试 hash_object 能否正确创建 blob 并返回 hash。"""
         content = b"hello quipu blob"
         expected_hash = "9cb67783b5a82481c643efb6897e5412d4c221ea"
 
@@ -119,7 +108,6 @@ class TestGitDBPlumbing:
         assert blob_hash == expected_hash
 
     def test_mktree_and_commit_tree(self, db):
-        """测试 mktree 和 commit_tree 的协同工作。"""
         # 1. Create a blob
         file_content = b"content of file.txt"
         blob_hash = db.hash_object(file_content)
@@ -144,7 +132,6 @@ class TestGitDBPlumbing:
         assert "This is the body" in commit_content
 
     def test_is_ancestor(self, git_repo, db, caplog):
-        """测试血统检测，并验证无错误日志"""
         import logging
 
         caplog.set_level(logging.INFO)
@@ -169,7 +156,6 @@ class TestGitDBPlumbing:
         assert "Git plumbing error" not in caplog.text
 
     def test_checkout_tree(self, git_repo: Path, db: GitDB):
-        """Test the low-level hard reset functionality of checkout_tree."""
         # 1. Create State A
         (git_repo / "file1.txt").write_text("version 1", "utf-8")
         (git_repo / "common.txt").write_text("shared", "utf-8")
@@ -194,7 +180,6 @@ class TestGitDBPlumbing:
         assert (quipu_dir / "preserve.me").exists(), ".quipu directory should be preserved"
 
     def test_checkout_tree_messaging(self, git_repo: Path, db: GitDB, monkeypatch):
-        """Verify checkout_tree emits correct messages via the bus."""
         mock_bus = MagicMock()
         monkeypatch.setattr("pyquipu.engine.git_db.bus", mock_bus)
 
@@ -207,7 +192,6 @@ class TestGitDBPlumbing:
         mock_bus.success.assert_called_once_with("engine.git.success.checkoutComplete")
 
     def test_get_diff_name_status(self, git_repo: Path, db: GitDB):
-        """Test the file status diffing functionality."""
         # State A
         (git_repo / "modified.txt").write_text("v1", "utf-8")
         (git_repo / "deleted.txt").write_text("delete me", "utf-8")
@@ -230,7 +214,6 @@ class TestGitDBPlumbing:
         assert len(changes) == 3
 
     def test_log_ref_basic(self, git_repo, db):
-        """测试 log_ref 能正确解析 Git 日志格式"""
         # Create 3 commits
         for i in range(3):
             (git_repo / f"f{i}").touch()
@@ -246,12 +229,10 @@ class TestGitDBPlumbing:
         assert "timestamp" in logs[0]
 
     def test_log_ref_non_existent(self, db):
-        """测试读取不存在的引用返回空列表而不是报错"""
         logs = db.log_ref("refs/heads/non-existent")
         assert logs == []
 
     def test_cat_file_types(self, git_repo, db):
-        """测试 cat_file 处理不同类型对象的能力"""
         # 1. Prepare data: create file, add, and commit
         (git_repo / "test_file").write_text("file content", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=git_repo, check=True)
@@ -280,7 +261,6 @@ class TestGitDBPlumbing:
         assert bytes.fromhex(blob_hash) in read_tree
 
     def test_batch_cat_file(self, git_repo, db):
-        """测试 batch_cat_file 的批量读取能力"""
         # 1. Prepare objects
         h1 = db.hash_object(b"obj1")
         h2 = db.hash_object(b"obj2")

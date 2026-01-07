@@ -8,7 +8,6 @@ from pyquipu.engine.git_db import GitDB
 
 @pytest.fixture
 def git_env(tmp_path: Path):
-    """Setup a real Git environment for testing plumbing commands."""
     repo = tmp_path / "checkout_repo"
     repo.mkdir()
     subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
@@ -20,10 +19,6 @@ def git_env(tmp_path: Path):
 
 class TestCheckoutBehavior:
     def test_checkout_resets_dirty_index(self, git_env):
-        """
-        验证：当索引/工作区不干净（有未提交的 add）时，checkout_tree 能强制重置并成功。
-        这是为了修复之前遇到的 'Entry not uptodate' 崩溃问题。
-        """
         repo, db = git_env
 
         # 1. 创建状态 A
@@ -75,10 +70,6 @@ class TestCheckoutBehavior:
         assert dirty_hash not in ls_files, "Index should have been reset from the dirty state"
 
     def test_checkout_optimization_mtime(self, git_env):
-        """
-        验证：对于未发生变更的文件，checkout_tree 不会更新其 mtime。
-        这证明了 read-tree -u 的 diff 优化生效了。
-        """
         repo, db = git_env
 
         # 1. 创建状态 A: 包含一个不变文件和一个变动文件

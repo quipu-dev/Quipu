@@ -11,9 +11,6 @@ from pyquipu.interfaces.models import QuipuNode
 
 @pytest.fixture
 def repo_with_sqlite_db(tmp_path):
-    """
-    创建一个包含初始化 Git 仓库和 SQLite 数据库的临时环境。
-    """
     # 1. Initialize Git repo
     subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
     # Configure user for commits (needed if we were making commits, good practice anyway)
@@ -34,13 +31,6 @@ def repo_with_sqlite_db(tmp_path):
 
 
 def _has_cycle(nodes: List[QuipuNode]) -> bool:
-    """
-    ## test: Detects cycles in a graph represented by parent pointers.
-
-    Uses a standard Depth-First Search traversal. For each node, it traverses
-    up the parent chain, keeping track of the nodes in the current path. If a
-    node is encountered that is already in the current path, a cycle is detected.
-    """
     # A set for all nodes visited during the entire traversal, to avoid re-checking paths
     global_visited = set()
     for node in nodes:
@@ -69,14 +59,6 @@ def _has_cycle(nodes: List[QuipuNode]) -> bool:
 
 @pytest.mark.timeout(5)  # Fails the test if it hangs for more than 5 seconds
 def test_load_all_nodes_handles_self_referencing_edge(repo_with_sqlite_db):
-    """
-    ## test: SQLite reader should not create a graph with cycles from corrupted data.
-
-    This test ensures that `SQLiteHistoryReader.load_all_nodes` can gracefully
-    handle a corrupted `edges` table where a node incorrectly lists itself as
-    its own parent. The reader should ignore this edge and not produce an
-    in-memory graph with a cycle, which would otherwise cause infinite loops.
-    """
     db_manager, git_db = repo_with_sqlite_db
 
     # --- Setup: Manually inject corrupted data into the SQLite database ---

@@ -5,14 +5,7 @@ from pyquipu.interfaces.exceptions import ExecutionError
 
 
 class TestControllerUnit:
-    """
-    对 Application 层 Controller 的纯单元测试。
-    使用 Mock 替代真实的 Engine 和 Runtime，仅验证编排逻辑。
-    """
-
     def test_run_quipu_success(self, tmp_path, mock_engine, mock_runtime):
-        """测试正常执行流程：应正确初始化组件并按顺序调用。"""
-
         plan_content = """
 ```act
 echo
@@ -58,7 +51,6 @@ hello
             mock_engine.create_plan_node.assert_called_once()
 
     def test_run_quipu_execution_error(self, tmp_path, mock_engine, mock_runtime):
-        """测试执行器抛出异常时的错误处理流程。"""
         plan_content = """
 ```act
 fail_act
@@ -86,7 +78,6 @@ fail_act
             assert "Task failed successfully" in str(result.error)
 
     def test_run_quipu_empty_plan(self, tmp_path, mock_engine, mock_runtime):
-        """测试空计划的处理。"""
         plan_content = "Just some text, no acts."
 
         # 配置 Mock Engine

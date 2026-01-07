@@ -2,7 +2,6 @@ from unittest.mock import ANY, MagicMock
 
 import pytest
 from pyquipu.cli.main import app
-
 from pyquipu.test_utils.helpers import create_linear_history
 
 

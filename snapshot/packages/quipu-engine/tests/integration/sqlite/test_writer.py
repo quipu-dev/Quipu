@@ -10,7 +10,6 @@ from pyquipu.engine.sqlite_storage import SQLiteHistoryWriter
 
 @pytest.fixture
 def sqlite_setup(tmp_path: Path):
-    """创建一个配置为使用 SQLite 后端的 Git 环境。"""
     ws = tmp_path / "ws_sqlite"
     ws.mkdir()
 
@@ -32,10 +31,6 @@ def sqlite_setup(tmp_path: Path):
 
 class TestSQLiteWriterIntegration:
     def test_dual_write_and_link(self, sqlite_setup):
-        """
-        验证 SQLiteHistoryWriter 是否能正确地双写到 Git 和 DB，并建立父子关系。
-        不依赖 application 层的 run_quipu。
-        """
         writer, db_manager, git_db, ws = sqlite_setup
 
         EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"

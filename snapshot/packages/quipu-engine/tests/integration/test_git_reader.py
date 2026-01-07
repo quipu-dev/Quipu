@@ -24,13 +24,11 @@ def reader_setup(tmp_path):
 
 class TestGitObjectHistoryReader:
     def test_load_empty_history(self, reader_setup):
-        """测试：没有 Quipu 历史时的行为"""
         reader, _, _, _ = reader_setup
         nodes = reader.load_all_nodes()
         assert nodes == []
 
     def test_load_linear_history(self, reader_setup):
-        """测试：标准的线性历史 A -> B -> C"""
         reader, writer, git_db, repo = reader_setup
 
         h0 = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
@@ -76,7 +74,6 @@ class TestGitObjectHistoryReader:
         assert node_c.node_type == "capture"
 
     def test_load_forked_history(self, reader_setup):
-        """测试：正确加载分叉的历史 A -> B and A -> C"""
         reader, writer, git_db, repo = reader_setup
 
         h0 = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
@@ -117,7 +114,6 @@ class TestGitObjectHistoryReader:
         assert child_contents == ["Plan B", "Plan C"]
 
     def test_corrupted_node_missing_metadata(self, reader_setup):
-        """测试：Commit 存在但缺少 metadata.json"""
         reader, _, git_db, repo = reader_setup
 
         content_hash = git_db.hash_object(b"content")
@@ -131,7 +127,6 @@ class TestGitObjectHistoryReader:
         assert len(nodes) == 0
 
     def test_corrupted_node_missing_trailer(self, reader_setup):
-        """测试：Commit 存在但缺少 Output Tree Trailer"""
         reader, _, git_db, repo = reader_setup
 
         meta_hash = git_db.hash_object(json.dumps({"type": "plan"}).encode())
@@ -146,7 +141,6 @@ class TestGitObjectHistoryReader:
         assert len(nodes) == 0
 
     def test_parent_linking_with_gap(self, reader_setup):
-        """测试：如果父 Commit 是损坏的节点，子节点应断开链接并视为新的根"""
         reader, writer, git_db, _ = reader_setup
 
         h0 = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"

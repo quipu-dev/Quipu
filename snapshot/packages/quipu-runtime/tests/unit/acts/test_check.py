@@ -10,7 +10,6 @@ from pyquipu.runtime.executor import Executor
 class TestCheckActs:
     @pytest.fixture(autouse=True)
     def setup_executor(self, executor: Executor):
-        """自动为每个测试注册 check acts"""
         register_check_acts(executor)
 
     def test_check_files_exist_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):

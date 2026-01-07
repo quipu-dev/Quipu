@@ -9,8 +9,6 @@ from pyquipu.interfaces.storage import HistoryReader
 
 
 class MockHistoryReader(HistoryReader):
-    """一个用于测试的、可配置的 HistoryReader 模拟实现。"""
-
     def __init__(
         self,
         nodes: List[QuipuNode],
@@ -66,7 +64,6 @@ class MockHistoryReader(HistoryReader):
 
 @pytest.fixture
 def sample_nodes():
-    """生成一组用于测试的节点。"""
     return [
         QuipuNode(f"c{i}", f"h{i}", "h0", datetime(2023, 1, i + 1), Path(f"f{i}"), "plan", summary=f"Public {i}")
         for i in range(10)
@@ -75,7 +72,6 @@ def sample_nodes():
 
 class TestGraphViewModel:
     def test_initialization_and_reachability(self, sample_nodes):
-        """测试 ViewModel 初始化是否正确计算可达性集合。"""
         ancestors = {"h2", "h1"}
         descendants = {"h4", "h5"}
         current_hash = "h3"
@@ -90,7 +86,6 @@ class TestGraphViewModel:
         assert vm.current_page == 0
 
     def test_pagination_flow(self, sample_nodes):
-        """测试分页加载逻辑是否正确。"""
         reader = MockHistoryReader(sample_nodes)
         # 10 nodes, page_size=4 -> 3 pages
         vm = GraphViewModel(reader, current_output_tree_hash=None, page_size=4)
@@ -121,7 +116,6 @@ class TestGraphViewModel:
         assert len(page4) == 0
 
     def test_is_reachable(self, sample_nodes):
-        """测试可达性检查逻辑。"""
         ancestors = {"h8"}
         descendants = {"h10"}
         current_hash = "h9"
@@ -135,7 +129,6 @@ class TestGraphViewModel:
         assert vm.is_reachable("h1") is False  # Unreachable
 
     def test_is_reachable_no_current_hash(self, sample_nodes):
-        """测试在没有当前哈希时，所有节点都应被视为可达。"""
         reader = MockHistoryReader(sample_nodes, ancestors=set())
         vm = GraphViewModel(reader, current_output_tree_hash=None)
         vm.initialize()
@@ -144,7 +137,6 @@ class TestGraphViewModel:
         assert vm.is_reachable("h1") is True
 
     def test_calculate_initial_page_not_found(self, sample_nodes):
-        """测试当 HEAD 节点在历史中找不到时，应回退到第一页。"""
         reader = MockHistoryReader(sample_nodes)
         vm = GraphViewModel(reader, current_output_tree_hash="unknown_hash")
         vm.initialize()
@@ -153,7 +145,6 @@ class TestGraphViewModel:
         assert vm.calculate_initial_page() == 1
 
     def test_select_node_by_key_missing(self, sample_nodes):
-        """测试选择不存在的 key。"""
         reader = MockHistoryReader(sample_nodes)
         vm = GraphViewModel(reader, current_output_tree_hash=None)
         vm.load_page(1)
@@ -163,7 +154,6 @@ class TestGraphViewModel:
         assert vm.get_selected_node() is None
 
     def test_get_content_bundle(self):
-        """测试公共和私有内容的格式化逻辑。"""
         node_both = QuipuNode(
             "c_both", "h_both", "a", datetime.now(), Path("mock/h_both"), "plan", summary="Public Content"
         )

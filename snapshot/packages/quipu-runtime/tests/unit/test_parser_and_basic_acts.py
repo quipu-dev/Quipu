@@ -133,7 +133,6 @@ class TestBasicActs:
             append_func(ctx, ["ghost.txt", "content"])
 
     def test_variable_lang_parser_recognition(self):
-        """测试解析器能够识别并捕获 python.old 或 python.new 等后缀语言块的内容"""
         md_backtick_with_act = """
 ```act
 my_test_act

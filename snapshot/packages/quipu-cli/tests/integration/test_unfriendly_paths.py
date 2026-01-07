@@ -3,14 +3,12 @@ from unittest.mock import ANY, MagicMock, call
 import click
 import pytest
 from pyquipu.cli.main import app
-from typer.testing import CliRunner
-
 from pyquipu.test_utils.helpers import create_dirty_workspace_history
+from typer.testing import CliRunner
 
 
 @pytest.fixture
 def dirty_workspace(quipu_workspace):
-    """Provides a workspace with history and uncommitted changes."""
     work_dir, _, engine = quipu_workspace
     _, hash_a = create_dirty_workspace_history(engine)
     return work_dir, engine, hash_a
@@ -20,9 +18,6 @@ def dirty_workspace(quipu_workspace):
 
 
 def test_run_command_user_cancellation(runner: CliRunner, quipu_workspace, monkeypatch):
-    """
-    不友好路径测试: 验证当用户输入 'n' 时，`run` 操作会被正确取消。
-    """
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.run.bus", mock_bus)
@@ -52,9 +47,6 @@ echo "Should not run" > {output_file.name}
 
 
 def test_run_command_in_non_interactive_env(runner: CliRunner, quipu_workspace, monkeypatch):
-    """
-    不友好路径测试: 验证在非交互式环境 (无法 getchar) 中，`run` 操作会自动中止。
-    """
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.run.bus", mock_bus)
@@ -85,7 +77,6 @@ echo "Should not run" > {output_file.name}
 
 
 def test_discard_user_cancellation(runner: CliRunner, dirty_workspace, monkeypatch):
-    """不友好路径测试: 验证 `discard` 操作可以被用户取消。"""
     work_dir, _, _ = dirty_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.workspace.bus", mock_bus)
@@ -103,7 +94,6 @@ def test_discard_user_cancellation(runner: CliRunner, dirty_workspace, monkeypat
 
 
 def test_discard_in_non_interactive_env(runner: CliRunner, dirty_workspace, monkeypatch):
-    """不友好路径测试: 验证 `discard` 在非交互式环境中安全中止。"""
     work_dir, _, _ = dirty_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.workspace.bus", mock_bus)
@@ -123,7 +113,6 @@ def test_discard_in_non_interactive_env(runner: CliRunner, dirty_workspace, monk
 
 
 def test_checkout_user_cancellation(runner: CliRunner, dirty_workspace, monkeypatch):
-    """不友好路径测试: 验证 `checkout` 操作可以被用户取消。"""
     work_dir, _, hash_a = dirty_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
@@ -145,7 +134,6 @@ def test_checkout_user_cancellation(runner: CliRunner, dirty_workspace, monkeypa
 
 
 def test_checkout_in_non_interactive_env(runner: CliRunner, dirty_workspace, monkeypatch):
-    """不友好路径测试: 验证 `checkout` 在非交互式环境中安全中止。"""
     work_dir, _, hash_a = dirty_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)

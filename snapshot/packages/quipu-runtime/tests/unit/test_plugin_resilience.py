@@ -18,7 +18,6 @@ class TestPluginResilience:
         return p_dir
 
     def test_load_plugin_with_syntax_error(self, executor: Executor, plugin_dir: Path, mock_runtime_bus):
-        """验证加载有语法错误的插件不会使程序崩溃。"""
         from pyquipu.acts.basic import register as register_basic_acts
 
         # 1. 创建一个有语法错误的插件
@@ -42,7 +41,6 @@ class TestPluginResilience:
         assert "write_file" in executor.get_registered_acts(), "核心 Act 应该仍然存在"
 
     def test_load_plugin_with_registration_error(self, executor: Executor, plugin_dir: Path, mock_runtime_bus):
-        """验证插件在 register() 函数中抛出异常不会使程序崩溃。"""
         # 1. 创建一个在注册时会失败的插件
         bad_plugin_file = plugin_dir / "fail_on_register.py"
         plugin_content = """

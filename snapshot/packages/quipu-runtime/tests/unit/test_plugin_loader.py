@@ -9,13 +9,11 @@ from pyquipu.runtime.plugin_loader import load_plugins
 class TestPluginLoading:
     @pytest.fixture
     def custom_plugin_dir(self, tmp_path):
-        """创建一个模拟的外部插件目录"""
         plugin_dir = tmp_path / ".quipu" / "acts"
         plugin_dir.mkdir(parents=True)
         return plugin_dir
 
     def test_load_external_plugin(self, executor: Executor, custom_plugin_dir, mock_runtime_bus):
-        """测试从任意路径加载插件文件"""
         # 1. 创建一个动态插件文件
         plugin_file = custom_plugin_dir / "hello_world.py"
         plugin_content = """
@@ -38,7 +36,6 @@ def register(executor):
         assert len(loaded_modules) > 0
 
     def test_ignore_invalid_files(self, executor: Executor, custom_plugin_dir):
-        """测试忽略非 Python 文件和无 register 函数的文件"""
         # 非 py 文件
         (custom_plugin_dir / "readme.md").write_text("# Readme")
 
@@ -51,7 +48,6 @@ def register(executor):
         assert "foo" not in executor._acts
 
     def test_find_git_repository_root(self, tmp_path):
-        """测试 Git 项目根目录检测逻辑"""
         root = tmp_path / "my_project"
         root.mkdir()
         (root / ".git").mkdir()

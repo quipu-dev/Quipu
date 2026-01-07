@@ -20,15 +20,6 @@ def branching_env(tmp_path):
 
 
 def test_branching_creation(branching_env):
-    """
-    测试分支创建场景：
-    1. A -> B
-    2. Checkout A -> C
-    结果应为:
-      A -> B
-       \\-> C
-    Reader 应能读取到所有节点。
-    """
     repo, git_db, writer, reader = branching_env
     ref_prefix = "refs/quipu/local/heads"
 

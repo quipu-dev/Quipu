@@ -4,9 +4,6 @@ from pyquipu.engine.state_machine import Engine
 
 @pytest.fixture
 def nav_workspace(engine_instance: Engine):
-    """
-    创建一个包含 Git 仓库和 Engine 实例的测试环境。
-    """
     engine = engine_instance
     repo_path = engine.root_dir
 

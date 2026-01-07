@@ -19,7 +19,6 @@ class TestShellActs:
         mock_runtime_bus.data.assert_called_with("Hello Shell")
 
     def test_run_command_multiline_script(self, executor: Executor, isolated_vault, mock_runtime_bus):
-        """验证多行脚本可以被正确执行。"""
         script = "touch file_a.txt\nmv file_a.txt file_b.txt"
         func, _, _ = executor._acts["run_command"]
         ctx = ActContext(executor)
@@ -30,10 +29,6 @@ class TestShellActs:
         mock_runtime_bus.info.assert_called_with("acts.shell.info.executing", command=script)
 
     def test_run_command_does_not_swallow_blocks(self, executor: Executor, mock_runtime_bus):
-        """
-        验证 run_command 不会吞噬后续指令。
-        这是一个更底层的测试，直接使用 executor.execute。
-        """
         # 模拟解析器输出两个独立的指令
         statements = [
             {"act": "run_command", "contexts": ["echo 'first'"]},

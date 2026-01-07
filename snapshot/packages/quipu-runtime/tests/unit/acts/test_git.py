@@ -11,7 +11,6 @@ from pyquipu.runtime.executor import Executor
 class TestGitActs:
     @pytest.fixture(autouse=True)
     def setup_git_env(self, executor: Executor, isolated_vault: Path):
-        """为测试环境自动注册 Git Acts 并进行 git init"""
         register_git_acts(executor)
 
         # 执行初始化
@@ -52,9 +51,6 @@ class TestGitActs:
         mock_runtime_bus.warning.assert_called_with("acts.git.warning.repoExists")
 
     def test_git_status_output_stream(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):
-        """
-        验证 git_status 使用 bus.data 输出数据，而 executor 使用 bus.info 输出进度。
-        """
         # 1. 制造一些状态变更
         (isolated_vault / "untracked.txt").write_text("new file")
 

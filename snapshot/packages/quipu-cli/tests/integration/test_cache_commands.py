@@ -7,13 +7,6 @@ from pyquipu.engine.state_machine import Engine
 
 @pytest.fixture
 def history_with_redundant_refs(engine_instance: Engine):
-    """
-    创建一个包含线性和分支历史的仓库，这将生成冗余的 head 引用。
-    History: root -> n1 -> n2 (branch point) -> n3a (leaf)
-                                            \\-> n3b (leaf)
-    Expected redundant refs: root, n1, n2
-    Expected preserved refs: n3a, n3b
-    """
     engine = engine_instance
     ws = engine.root_dir
 
@@ -73,9 +66,6 @@ def test_cache_rebuild_no_db(runner, quipu_workspace, monkeypatch):
 
 
 def test_cache_prune_refs_with_redundancy(runner, history_with_redundant_refs, monkeypatch):
-    """
-    测试 prune-refs 命令是否能正确识别并删除冗余引用。
-    """
     engine = history_with_redundant_refs
     work_dir = engine.root_dir
     mock_bus = MagicMock()
@@ -94,9 +84,6 @@ def test_cache_prune_refs_with_redundancy(runner, history_with_redundant_refs, m
 
 
 def test_cache_prune_refs_no_redundancy(runner, history_with_redundant_refs, monkeypatch):
-    """
-    测试在没有冗余引用的情况下运行 prune-refs。
-    """
     engine = history_with_redundant_refs
     work_dir = engine.root_dir
     mock_bus = MagicMock()
@@ -115,9 +102,6 @@ def test_cache_prune_refs_no_redundancy(runner, history_with_redundant_refs, mon
 
 
 def test_cache_prune_refs_empty_repo(runner, quipu_workspace, monkeypatch):
-    """
-    测试在空仓库（无任何 quipu 引用）上运行 prune-refs。
-    """
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.cache.bus", mock_bus)

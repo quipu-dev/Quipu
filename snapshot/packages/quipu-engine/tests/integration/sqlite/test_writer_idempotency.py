@@ -9,10 +9,6 @@ from pyquipu.engine.sqlite_storage import SQLiteHistoryWriter
 
 @pytest.fixture
 def repo_with_sqlite_db(tmp_path):
-    """
-    创建一个包含初始化 Git 仓库和 SQLite 数据库的临时环境。
-    (从 test_sqlite_reader_integrity.py 复制并简化)
-    """
     subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=tmp_path, check=True)
@@ -27,13 +23,6 @@ def repo_with_sqlite_db(tmp_path):
 
 
 def test_writer_handles_idempotent_operations_correctly(repo_with_sqlite_db):
-    """
-    ## test: Verify parent-child linkage during idempotent operations.
-
-    When two consecutive nodes produce the exact same Output Tree Hash (idempotent operation),
-    the SQLite writer must ensure that the second node points to the first node as its parent,
-    rather than pointing to itself (self-loop) or getting confused by the identical tree hash.
-    """
     db_manager, git_db = repo_with_sqlite_db
 
     # 1. Initialize the stack

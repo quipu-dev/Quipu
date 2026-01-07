@@ -4,24 +4,20 @@ from unittest.mock import ANY, MagicMock
 import pytest
 from pyquipu.cli.main import app
 from pyquipu.engine.state_machine import Engine
-
 from pyquipu.test_utils.helpers import create_branching_history, create_complex_link_history
 
 
 @pytest.fixture
 def populated_history(engine_instance: Engine):
-    """Provides a common branching history for export tests."""
     return create_branching_history(engine_instance)
 
 
 @pytest.fixture
 def history_for_all_links(engine_instance: Engine):
-    """Provides a complex history for testing all navigation link types."""
     return create_complex_link_history(engine_instance)
 
 
 def test_export_basic(runner, populated_history, monkeypatch):
-    """测试基本的导出功能。"""
     engine = populated_history
     output_dir = engine.root_dir / ".quipu" / "test_export"
     mock_bus = MagicMock()
@@ -42,7 +38,6 @@ def test_export_basic(runner, populated_history, monkeypatch):
 
 
 def test_export_filtering(runner, populated_history, monkeypatch):
-    """测试过滤选项。"""
     engine = populated_history
     output_dir = engine.root_dir / ".quipu" / "test_export_filter"
     mock_bus = MagicMock()
@@ -56,7 +51,6 @@ def test_export_filtering(runner, populated_history, monkeypatch):
 
 
 def test_export_edge_cases(runner, quipu_workspace, monkeypatch):
-    """测试边界情况。"""
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.export.bus", mock_bus)
@@ -130,7 +124,6 @@ def test_export_zip(runner, populated_history, monkeypatch):
 def test_export_hide_link_type(
     runner, history_for_all_links, link_type_to_hide, text_not_expected, text_still_expected, monkeypatch
 ):
-    """验证 --hide-link-type 选项能成功禁用特定类型的导航链接。"""
     engine = history_for_all_links
     output_dir = engine.root_dir / ".quipu" / "test_export_hide_links"
     mock_bus = MagicMock()
@@ -148,7 +141,6 @@ def test_export_hide_link_type(
 
 
 def test_export_hide_multiple_link_types(runner, history_for_all_links, monkeypatch):
-    """验证可以同时禁用多种链接类型。"""
     engine = history_for_all_links
     output_dir = engine.root_dir / ".quipu" / "test_export_hide_multi"
     mock_bus = MagicMock()
@@ -177,7 +169,6 @@ def test_export_hide_multiple_link_types(runner, history_for_all_links, monkeypa
 
 
 def test_export_reachable_only(runner, populated_history, monkeypatch):
-    """测试 --reachable-only 选项是否能过滤掉无关分支。"""
     engine = populated_history
     output_dir = engine.root_dir / ".quipu" / "test_export_reachable"
     mock_bus = MagicMock()

@@ -5,14 +5,11 @@ import pytest
 from pyquipu.cli.tui import QuipuUiApp
 from pyquipu.cli.view_model import GraphViewModel
 from pyquipu.interfaces.models import QuipuNode
-
 from test_view_model import MockHistoryReader
 
 
 @pytest.fixture
 def view_model_factory():
-    """A factory to create a GraphViewModel instance with mock data for tests."""
-
     def _factory(nodes, current_hash=None, ancestors=None, private_data=None):
         reader = MockHistoryReader(nodes, ancestors=ancestors, private_data=private_data)
         vm = GraphViewModel(reader, current_output_tree_hash=current_hash)
@@ -24,7 +21,6 @@ def view_model_factory():
 
 class TestUiLogic:
     def test_graph_renderer_simple_linear(self, view_model_factory):
-        """Smoke test for simple linear history rendering."""
         node_a = QuipuNode("c1", "a", "root", datetime(2023, 1, 1), Path("f1"), "plan", summary="A")
         node_b = QuipuNode("c2", "b", "a", datetime(2023, 1, 2), Path("f2"), "plan", summary="B")
         node_c = QuipuNode("c3", "c", "b", datetime(2023, 1, 3), Path("f3"), "plan", summary="C")
@@ -36,7 +32,6 @@ class TestUiLogic:
         assert app.view_model.total_nodes == 3
 
     def test_graph_renderer_branching(self, view_model_factory):
-        """Smoke test for branching history rendering."""
         node_a = QuipuNode("c1", "a", "root", datetime(2023, 1, 1), Path("f1"), "plan", summary="A")
         node_b = QuipuNode("c2", "b", "a", datetime(2023, 1, 2), Path("f2"), "plan", summary="B")
         node_c = QuipuNode("c3", "c", "a", datetime(2023, 1, 3), Path("f3"), "plan", summary="C")
@@ -48,9 +43,6 @@ class TestUiLogic:
         assert app.view_model.total_nodes == 3
 
     def test_get_node_summary(self, view_model_factory):
-        """
-        Tests if the TUI correctly uses the pre-loaded summary field.
-        """
         view_model = view_model_factory([])
         app = QuipuUiApp(work_dir=Path("."))
         app.view_model = view_model

@@ -1,14 +1,9 @@
 from pyquipu.engine.state_machine import Engine
-
 from pyquipu.test_utils.helpers import EMPTY_TREE_HASH
 
 
 class TestDeduplication:
     def test_idempotent_plan_creation(self, engine_instance: Engine):
-        """
-        验证当 output_tree == input_tree 时（即操作未产生文件变更），
-        Engine 仍然能够生成一个新的 Plan 节点，并在历史图谱中正确链接。
-        """
         engine = engine_instance
         root_dir = engine.root_dir
 

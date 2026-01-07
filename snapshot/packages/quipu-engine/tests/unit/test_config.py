@@ -8,12 +8,10 @@ from pyquipu.engine.config import ConfigManager
 # A pytest fixture to provide a clean work directory for each test
 @pytest.fixture
 def work_dir(tmp_path: Path) -> Path:
-    """Creates a temporary directory to act as a project root."""
     return tmp_path
 
 
 def test_config_get_defaults(work_dir: Path):
-    """Test that default values are returned when no config file exists."""
     config = ConfigManager(work_dir)
 
     # Test accessing a nested default value
@@ -25,7 +23,6 @@ def test_config_get_defaults(work_dir: Path):
 
 
 def test_config_load_from_file(work_dir: Path):
-    """Test loading configuration from an existing config.yml file."""
     config_dir = work_dir / ".quipu"
     config_dir.mkdir()
     config_file = config_dir / "config.yml"
@@ -46,7 +43,6 @@ def test_config_load_from_file(work_dir: Path):
 
 
 def test_config_set_and_save(work_dir: Path):
-    """Test setting a simple value and saving it to a new file."""
     config = ConfigManager(work_dir)
 
     # Pre-check: value should be default (None)
@@ -70,7 +66,6 @@ def test_config_set_and_save(work_dir: Path):
 
 
 def test_config_nested_set_and_save(work_dir: Path):
-    """Test that setting a nested key creates the necessary dictionaries."""
     config = ConfigManager(work_dir)
 
     config.set("a.b.c", 123)
@@ -82,9 +77,6 @@ def test_config_nested_set_and_save(work_dir: Path):
 
 
 def test_config_round_trip_consistency(work_dir: Path):
-    """
-    Test the full cycle: create, set, save, then create a new instance and load.
-    """
     # --- Phase 1: Create and save ---
     config1 = ConfigManager(work_dir)
     config1.set("storage.type", "sqlite")
