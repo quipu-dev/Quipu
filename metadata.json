@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] feat(test): 创建 pyquipu-test-utils 并迁移测试辅助模块", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1767772799.7333097, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "Capture: D __init__.py, M uv.lock", "type": "capture", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1767772864.4543612, "duration_ms": 0}}

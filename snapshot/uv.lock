@@ -11,6 +11,7 @@ members = [
     "pyquipu-engine",
     "pyquipu-interfaces",
     "pyquipu-runtime",
+    "pyquipu-test-utils",
 ]
 
 [[package]]
@@ -328,6 +329,7 @@ dev = [
     { name = "pyquipu-engine" },
     { name = "pyquipu-interfaces" },
     { name = "pyquipu-runtime" },
+    { name = "pyquipu-test-utils" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-timeout" },
@@ -349,6 +351,7 @@ requires-dist = [
     { name = "pyquipu-interfaces", marker = "extra == 'dev'", editable = "packages/quipu-interfaces" },
     { name = "pyquipu-runtime", editable = "packages/quipu-runtime" },
     { name = "pyquipu-runtime", marker = "extra == 'dev'", editable = "packages/quipu-runtime" },
+    { name = "pyquipu-test-utils", marker = "extra == 'dev'", editable = "packages/quipu-test-utils" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
     { name = "pytest-timeout", marker = "extra == 'dev'" },
@@ -442,6 +445,23 @@ requires-dist = [
     { name = "pyquipu-common", editable = "packages/quipu-common" },
     { name = "pyquipu-interfaces", editable = "packages/quipu-interfaces" },
     { name = "typer", specifier = ">=0.9.0" },
+]
+
+[[package]]
+name = "pyquipu-test-utils"
+version = "0.1.0"
+source = { editable = "packages/quipu-test-utils" }
+dependencies = [
+    { name = "pyquipu-engine" },
+    { name = "pyquipu-interfaces" },
+    { name = "typer" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pyquipu-engine", editable = "packages/quipu-engine" },
+    { name = "pyquipu-interfaces", editable = "packages/quipu-interfaces" },
+    { name = "typer" },
 ]
 
 [[package]]
