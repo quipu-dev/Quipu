@@ -1,31 +1,32 @@
-好的，我们继续。
+好的，我们继续执行计划。
 
-下一个最明显需要重构的目标是 `tests/cli/test_navigation_commands.py` 和 `tests/cli/test_unfriendly_paths.py`。这两个文件都定义了本地的 fixture (`populated_workspace` 和 `dirty_workspace`) 来创建简单的线性历史记录。这是一种常见的模式，非常适合提取为通用的辅助函数。
+下一个重构目标是 `tests/cli/test_query_commands.py`。这个文件中的多个测试用例都通过直接调用 `engine.capture_drift` 或 `engine.create_plan_node` 来内联地创建测试数据。这是典型的过程化设置，我们可以通过将其替换为对 `tests/helpers.py` 的声明式调用来极大地改善它。
 
-我将生成一个计划，创建两个新的、语义化的辅助函数 `create_linear_history` 和 `create_dirty_workspace_history`，并将它们迁移到 `tests/helpers.py` 中。
+我将生成一个计划，在 `tests/helpers.py` 中创建两个新的、语义化的辅助函数，专门用于生成查询测试所需的线性和分支历史，然后重构 `test_query_commands.py` 来使用它们。
 
-## [WIP] refactor(tests): 提取线性历史和脏工作区创建逻辑
+## [WIP] refactor(tests): 标准化 query 命令的测试数据创建
 
 ### 用户需求
 
-继续审查 `tests/cli` 和 `tests/engine` 目录，并将其中用于创建测试数据的重复 fixture 逻辑，提取到 `tests/helpers.py` 中。
+继续进行测试重构，将 `tests/cli/test_query_commands.py` 中内联创建历史记录的逻辑，替换为对 `tests/helpers.py` 中标准化辅助函数的调用。
 
 ### 评论
 
-这次重构的目标是 `populated_workspace` 和 `dirty_workspace` 这两个 fixture。它们代表了两种非常常见的测试场景：“一个简单的 A->B 线性历史”和“一个带有未提交更改的 A->B 历史”。
-
-将这些场景封装成 `tests/helpers.py` 中有明确名称的函数，如 `create_linear_history`，可以极大地提高测试的可读性。测试的设置部分将从一系列命令式的 `write_text`/`capture_drift` 调用，转变为一句声明式的 `create_linear_history(engine)`。这使得任何阅读测试的人都能立刻明白其初始状态，而无需关心实现的细节。
+这是本次重构的核心收益所在。通过将测试数据创建的逻辑（例如，“创建一个捕获节点，然后创建一个计划节点”）抽象成一个单一的辅助函数调用，我们让测试用例本身变得极其清晰。测试代码的读者可以立即理解测试的初始状态（“给定一个包含捕获和计划节点的历史”），而无需解析多行底层的 `engine` API 调用。这使得测试的意图更加突出，维护也更加容易。
 
 ### 目标
 
-1.  在 `tests/helpers.py` 中创建两个新的辅助函数：`create_linear_history` 和 `create_dirty_workspace_history`。
-2.  将 `tests/cli/test_navigation_commands.py` 中 `populated_workspace` fixture 的实现逻辑迁移到 `create_linear_history` 中。
-3.  将 `tests/cli/test_unfriendly_paths.py` 中 `dirty_workspace` fixture 的实现逻辑迁移到 `create_dirty_workspace_history` 中。
-4.  重构这两个测试文件，使其 fixture 调用新的、位于 `tests/helpers.py` 中的辅助函数。
+1.  在 `tests/helpers.py` 中创建两个新的辅助函数：
+    *   `create_linear_history_from_specs`: 一个灵活的函数，可以根据一个简单的规格列表（例如 `[{'type': 'capture', 'summary': 'Fix bug'}]`）创建线性历史。
+    *   `create_query_branching_history`: 一个专用的函数，用于创建 `test_log_reachable_only` 所需的特定分支结构。
+2.  重构 `tests/cli/test_query_commands.py` 中的所有测试用例，移除所有内联的 `engine.capture_drift` 和 `engine.create_plan_node` 调用。
+3.  让这些测试用例转而调用上述新的辅助函数来声明式地构建其所需的历史数据。
 
 ### 基本原理
 
-我们继续将“如何构建”的逻辑从测试文件中分离出去。通过为常见的历史模式（如线性、分支、脏工作区）创建标准化的构建函数，我们正在为测试套件建立一个领域特定语言（DSL）。这将使未来的测试编写变得更快、更不容易出错，并且更易于理解。
+我们采用“声明式测试设置”的原则。测试的设置（Arrange）阶段应该像一份清单，清晰地描述所需的初始状态，而不是一堆如何达到该状态的指令。
+
+新的 `create_linear_history_from_specs` 函数就是这个原则的体现。它接受一个高级的、人类可读的规格说明，并将其转化为底层的引擎操作。这不仅消除了 `test_query_commands.py` 中的代码重复，更重要的是，它将测试的“意图”和“实现”清晰地分离开来。
 
 ### 标签
 
@@ -35,335 +36,251 @@
 
 ### Script
 
-#### Acts 1: 在 `tests/helpers.py` 中添加新的历史场景生成器
+#### Acts 1: 在 `tests/helpers.py` 中添加更灵活的历史生成器
 
-我将把 `populated_workspace` 和 `dirty_workspace` 的核心逻辑作为两个新函数添加到 `tests/helpers.py` 中。
+我将在 `tests/helpers.py` 的末尾添加两个新的、功能更强大的历史创建函数，以满足 `query` 命令测试的特定需求。
 
 ~~~~~act
 patch_file
 tests/helpers.py
 ~~~~~
 ~~~~~python.old
-    engine.create_plan_node(h3, h4, "plan 4", summary_override="Child_Node")
-    return engine
-~~~~~
-~~~~~python.new
-    engine.create_plan_node(h3, h4, "plan 4", summary_override="Child_Node")
-    return engine
-
-
-def create_linear_history(engine: Engine) -> Tuple[Engine, Dict[str, str]]:
-    """
-    Creates a simple linear history A -> B.
-    - State A: a.txt
-    - State B: b.txt (a.txt is removed)
-    Returns the engine and a dictionary mapping state names ('a', 'b') to their output tree hashes.
-    """
-    ws = engine.root_dir
-
-    # State A
-    (ws / "a.txt").write_text("A")
-    hash_a = engine.git_db.get_tree_hash()
-    engine.create_plan_node(EMPTY_TREE_HASH, hash_a, "Plan A", summary_override="State A")
-
-    # State B
-    (ws / "b.txt").write_text("B")
-    (ws / "a.txt").unlink()
-    hash_b = engine.git_db.get_tree_hash()
-    engine.create_plan_node(hash_a, hash_b, "Plan B", summary_override="State B")
-
-    hashes = {"a": hash_a, "b": hash_b}
-    return engine, hashes
-
-
-def create_dirty_workspace_history(engine: Engine) -> Tuple[Engine, str]:
-    """
-    Creates a history A -> B, then makes the workspace dirty.
-    - State A: file.txt -> "v1"
-    - State B (HEAD): file.txt -> "v2"
-    - Dirty State: file.txt -> "v3"
-    Returns the engine and the hash of state A for checkout tests.
-    """
-    work_dir = engine.root_dir
-    file_path = work_dir / "file.txt"
-
-    # State A
-    file_path.write_text("v1")
-    hash_a = engine.git_db.get_tree_hash()
-    engine.capture_drift(hash_a, message="State A")
-
-    # State B (HEAD)
-    file_path.write_text("v2")
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="State B")
-
     # Dirty State
     file_path.write_text("v3")
 
     return engine, hash_a
 ~~~~~
+~~~~~python.new
+    # Dirty State
+    file_path.write_text("v3")
 
-#### Acts 2: 重构 `test_navigation_commands.py`
+    return engine, hash_a
 
-现在，`populated_workspace` fixture 可以被极大地简化，只需调用新的辅助函数即可。
+
+def create_linear_history_from_specs(engine: Engine, specs: List[Dict[str, Any]]):
+    """
+    Creates a linear history based on a list of specifications.
+    Each spec is a dict: {'type': 'plan'|'capture', 'summary': str, 'content': Optional[str]}
+    """
+    parent_hash = EMPTY_TREE_HASH
+    if engine.history_graph:
+        # If history is not empty, start from the latest node
+        latest_node = sorted(engine.history_graph.values(), key=lambda n: n.timestamp)[-1]
+        parent_hash = latest_node.output_tree
+
+    for i, spec in enumerate(specs):
+        # Create a unique file change for each node to ensure a new tree hash
+        (engine.root_dir / f"file_{time.time()}_{i}.txt").touch()
+        new_hash = engine.git_db.get_tree_hash()
+
+        if spec["type"] == "plan":
+            engine.create_plan_node(
+                input_tree=parent_hash,
+                output_tree=new_hash,
+                plan_content=spec.get("content", ""),
+                summary_override=spec["summary"],
+            )
+        elif spec["type"] == "capture":
+            engine.capture_drift(new_hash, message=spec["summary"])
+
+        parent_hash = new_hash
+    # Re-align to ensure the engine's internal graph is fully updated
+    engine.align()
+
+
+def create_query_branching_history(engine: Engine) -> Tuple[Engine, str]:
+    """
+    Creates a specific branching history for query reachability tests.
+    History: root -> A -> B (HEAD)
+                   \\-> C (unreachable)
+    Returns the engine and the hash of state B (the HEAD).
+    """
+    ws = engine.root_dir
+    # root -> A
+    (ws / "f_a").touch()
+    h_a = engine.git_db.get_tree_hash()
+    node_a = engine.capture_drift(h_a, "Node A")
+
+    # A -> B (This will become the main branch)
+    (ws / "f_b").touch()
+    h_b = engine.git_db.get_tree_hash()
+    engine.capture_drift(h_b, "Node B")
+
+    # Go back to A to create the branch
+    engine.visit(node_a.output_tree)
+
+    # A -> C
+    (ws / "f_c").touch()
+    engine.capture_drift(engine.git_db.get_tree_hash(), "Node C")
+
+    # Checkout back to B to set it as the current HEAD for the test
+    engine.visit(h_b)
+    engine.align()
+    return engine, h_b
+~~~~~
+
+#### Acts 2: 使用新的辅助函数重构 `test_query_commands.py`
+
+现在，我将用一个完全重构的版本替换 `test_query_commands.py`。新的版本将不再包含任何底层的 `engine` 操作，而是完全依赖于 `helpers` 模块。
 
 ~~~~~act
 write_file
-tests/cli/test_navigation_commands.py
+tests/cli/test_query_commands.py
 ~~~~~
 ~~~~~python
-from unittest.mock import ANY, MagicMock
+import json
+from unittest.mock import MagicMock
 
-import pytest
 from pyquipu.cli.main import app
 
-from ..helpers import create_linear_history
+from ..helpers import create_linear_history_from_specs, create_query_branching_history
 
 
-@pytest.fixture
-def populated_workspace(quipu_workspace):
-    ws, _, engine = quipu_workspace
-    _, hashes = create_linear_history(engine)
-    return ws, hashes["a"], hashes["b"]
-
-
-def test_cli_back_forward_flow(runner, populated_workspace, monkeypatch):
-    workspace, hash_a, hash_b = populated_workspace
-    mock_bus_nav = MagicMock()
-    mock_bus_helper = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus_nav)
-    monkeypatch.setattr("pyquipu.cli.commands.helpers.bus", mock_bus_helper)
-
-    # Initial state is B. Let's checkout to A.
-    runner.invoke(app, ["checkout", hash_a[:7], "-w", str(workspace), "-f"])
-    assert (workspace / "a.txt").exists()
-    assert not (workspace / "b.txt").exists()
-
-    # Now we are at A. Let's go back. It should go to the previous state (B).
-    result_back = runner.invoke(app, ["back", "-w", str(workspace)])
-    assert result_back.exit_code == 0
-    mock_bus_nav.success.assert_called_with("navigation.back.success", short_hash=ANY)
-    assert (workspace / "b.txt").exists()
-    assert not (workspace / "a.txt").exists()
-
-    # Now we are back at B. Let's go forward to A again.
-    result_fwd = runner.invoke(app, ["forward", "-w", str(workspace)])
-    assert result_fwd.exit_code == 0
-    mock_bus_nav.success.assert_called_with("navigation.forward.success", short_hash=ANY)
-    assert (workspace / "a.txt").exists()
-    assert not (workspace / "b.txt").exists()
-
-
-def test_cli_boundary_messages(runner, populated_workspace, monkeypatch):
-    workspace, hash_a, hash_b = populated_workspace
+def test_log_empty(runner, quipu_workspace, monkeypatch):
+    work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
+    monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    # Go to a known state
-    runner.invoke(app, ["checkout", hash_a[:7], "-w", str(workspace), "-f"])
-
-    # Back until the beginning
-    runner.invoke(app, ["back", "-w", str(workspace)])  # to B
-    runner.invoke(app, ["back", "-w", str(workspace)])
-    result2 = runner.invoke(app, ["back", "-w", str(workspace)])  # one more should hit boundary
-    assert result2.exit_code == 0
-    mock_bus.warning.assert_called_with("navigation.back.atStart")
-
-    # Forward until the end
-    runner.invoke(app, ["forward", "-w", str(workspace)])  # to B
-    runner.invoke(app, ["forward", "-w", str(workspace)])  # to A
-    result3 = runner.invoke(app, ["forward", "-w", str(workspace)])
-    assert result3.exit_code == 0
-    mock_bus.warning.assert_called_with("navigation.forward.atEnd")
+    result = runner.invoke(app, ["log", "-w", str(work_dir)])
+    assert result.exit_code == 0
+    mock_bus.info.assert_called_once_with("query.info.emptyHistory")
 
 
-def test_checkout_not_found(runner, populated_workspace, monkeypatch):
-    workspace, _, _ = populated_workspace
-    mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
-
-    result = runner.invoke(app, ["checkout", "nonexistent", "-w", str(workspace)])
-    assert result.exit_code == 1
-    mock_bus.error.assert_called_once_with("navigation.checkout.error.notFound", hash_prefix="nonexistent")
-~~~~~
-
-#### Acts 3: 重构 `test_unfriendly_paths.py`
-
-同样，`dirty_workspace` fixture 也可以被简化。
-
-~~~~~act
-write_file
-tests/cli/test_unfriendly_paths.py
-~~~~~
-~~~~~python
-from unittest.mock import ANY, MagicMock, call
-
-import click
-import pytest
-from pyquipu.cli.main import app
-from typer.testing import CliRunner
-
-from ..helpers import create_dirty_workspace_history
-
-
-@pytest.fixture
-def dirty_workspace(quipu_workspace):
-    """Provides a workspace with history and uncommitted changes."""
+def test_log_output(runner, quipu_workspace, monkeypatch):
     work_dir, _, engine = quipu_workspace
-    _, hash_a = create_dirty_workspace_history(engine)
-    return work_dir, engine, hash_a
+    mock_bus = MagicMock()
+    monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
+
+    specs = [
+        {"type": "capture", "summary": "Node 1"},
+        {"type": "capture", "summary": "Node 2"},
+    ]
+    create_linear_history_from_specs(engine, specs)
+
+    result = runner.invoke(app, ["log", "-w", str(work_dir)])
+    assert result.exit_code == 0
+    mock_bus.info.assert_called_once_with("query.log.ui.header")
+    # The log is in reverse chronological order, so Node 2 comes first.
+    assert "Node 2" in mock_bus.data.call_args_list[0].args[0]
+    assert "Node 1" in mock_bus.data.call_args_list[1].args[0]
 
 
-# --- Tests for `quipu run` ---
+def test_find_command(runner, quipu_workspace, monkeypatch):
+    work_dir, _, engine = quipu_workspace
+    mock_bus = MagicMock()
+    monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
+
+    specs = [
+        {"type": "capture", "summary": "Fix bug"},
+        {"type": "plan", "summary": "Implement feature", "content": "content"},
+    ]
+    create_linear_history_from_specs(engine, specs)
+
+    result = runner.invoke(app, ["find", "-s", "Fix", "-w", str(work_dir)])
+    assert result.exit_code == 0
+    mock_bus.info.assert_called_once_with("query.find.ui.header")
+    mock_bus.data.assert_called_once()
+    assert "Fix bug" in mock_bus.data.call_args.args[0]
 
 
-def test_run_command_user_cancellation(runner: CliRunner, quipu_workspace, monkeypatch):
-    """
-    不友好路径测试: 验证当用户输入 'n' 时，`run` 操作会被正确取消。
-    """
+def test_log_json_output(runner, quipu_workspace, monkeypatch):
+    work_dir, _, engine = quipu_workspace
+    mock_bus = MagicMock()
+    monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
+
+    create_linear_history_from_specs(engine, [{"type": "capture", "summary": "Node 1"}])
+
+    result = runner.invoke(app, ["log", "--json", "-w", str(work_dir)])
+    assert result.exit_code == 0
+    mock_bus.data.assert_called_once()
+
+    # Verify the data passed to bus.data is valid JSON with expected content
+    json_data = json.loads(mock_bus.data.call_args.args[0])
+    assert isinstance(json_data, list)
+    assert len(json_data) == 1
+    assert "Node 1" in json_data[0]["summary"]
+
+
+def test_find_json_output(runner, quipu_workspace, monkeypatch):
+    work_dir, _, engine = quipu_workspace
+    mock_bus = MagicMock()
+    monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
+
+    specs = [
+        {"type": "capture", "summary": "Feature A"},
+        {"type": "capture", "summary": "Bugfix B"},
+    ]
+    create_linear_history_from_specs(engine, specs)
+
+    result = runner.invoke(app, ["find", "--summary", "Bugfix", "--json", "-w", str(work_dir)])
+    assert result.exit_code == 0
+    mock_bus.data.assert_called_once()
+
+    json_data = json.loads(mock_bus.data.call_args.args[0])
+    assert isinstance(json_data, list)
+    assert len(json_data) == 1
+    assert "Bugfix B" in json_data[0]["summary"]
+
+
+def test_log_json_empty(runner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.run.bus", mock_bus)
-    output_file = work_dir / "output.txt"
-    assert not output_file.exists()
+    monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    plan_content = f"""
-```act
-run_command
-```
-```text
-echo "Should not run" > {output_file.name}
-```
-"""
-
-    def mock_getchar_n(echo):
-        click.echo("n", err=True)
-        return "n"
-
-    monkeypatch.setattr(click, "getchar", mock_getchar_n)
-
-    result = runner.invoke(app, ["run", "-w", str(work_dir)], input=plan_content)
-
-    assert result.exit_code == 2
-    mock_bus.warning.assert_called_once_with("run.error.cancelled", error=ANY)
-    assert not output_file.exists()
+    result = runner.invoke(app, ["log", "--json", "-w", str(work_dir)])
+    assert result.exit_code == 0
+    mock_bus.data.assert_called_once_with("[]")
 
 
-def test_run_command_in_non_interactive_env(runner: CliRunner, quipu_workspace, monkeypatch):
-    """
-    不友好路径测试: 验证在非交互式环境 (无法 getchar) 中，`run` 操作会自动中止。
-    """
-    work_dir, _, _ = quipu_workspace
+def test_log_filtering(runner, quipu_workspace, monkeypatch):
+    """Test limit and time filtering logic for log command."""
+    work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.run.bus", mock_bus)
-    output_file = work_dir / "output.txt"
-    assert not output_file.exists()
+    monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    plan_content = f"""
-```act
-run_command
-```
-```text
-echo "Should not run" > {output_file.name}
-```
-"""
-
-    def mock_getchar_fail(echo):
-        raise EOFError("Simulating non-interactive environment")
-
-    monkeypatch.setattr(click, "getchar", mock_getchar_fail)
-    result = runner.invoke(app, ["run", "-w", str(work_dir)], input=plan_content)
-
-    assert result.exit_code == 2
-    mock_bus.warning.assert_called_once_with("run.error.cancelled", error=ANY)
-    assert not output_file.exists()
-
-
-# --- Tests for `quipu discard` ---
-
-
-def test_discard_user_cancellation(runner: CliRunner, dirty_workspace, monkeypatch):
-    """不友好路径测试: 验证 `discard` 操作可以被用户取消。"""
-    work_dir, _, _ = dirty_workspace
-    mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.workspace.bus", mock_bus)
-
-    def mock_getchar_n(echo):
-        click.echo("n", err=True)
-        return "n"
-
-    monkeypatch.setattr(click, "getchar", mock_getchar_n)
-    result = runner.invoke(app, ["discard", "-w", str(work_dir)])
-
-    assert result.exit_code == 1  # typer.Abort exits with 1
-    mock_bus.warning.assert_called_once_with("common.prompt.cancel")
-    assert (work_dir / "file.txt").read_text() == "v3", "File should not be changed."
-
-
-def test_discard_in_non_interactive_env(runner: CliRunner, dirty_workspace, monkeypatch):
-    """不友好路径测试: 验证 `discard` 在非交互式环境中安全中止。"""
-    work_dir, _, _ = dirty_workspace
-    mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.workspace.bus", mock_bus)
-
-    def mock_getchar_fail(echo):
-        raise EOFError("Simulating non-interactive environment")
-
-    monkeypatch.setattr(click, "getchar", mock_getchar_fail)
-    result = runner.invoke(app, ["discard", "-w", str(work_dir)])
-
-    assert result.exit_code == 1  # typer.Abort exits with 1
-    mock_bus.warning.assert_called_once_with("common.prompt.cancel")
-    assert (work_dir / "file.txt").read_text() == "v3", "File should not be changed."
-
-
-# --- Tests for `quipu checkout` ---
-
-
-def test_checkout_user_cancellation(runner: CliRunner, dirty_workspace, monkeypatch):
-    """不友好路径测试: 验证 `checkout` 操作可以被用户取消。"""
-    work_dir, _, hash_a = dirty_workspace
-    mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
-
-    def mock_getchar_n(echo):
-        click.echo("n", err=True)
-        return "n"
-
-    monkeypatch.setattr(click, "getchar", mock_getchar_n)
-    result = runner.invoke(app, ["checkout", hash_a[:7], "-w", str(work_dir)])
-
-    assert result.exit_code == 1
-    expected_calls = [
-        call("navigation.checkout.info.capturingDrift"),
-        call("common.prompt.cancel"),
+    specs = [
+        {"type": "capture", "summary": "Node 1"},
+        {"type": "capture", "summary": "Node 2"},
+        {"type": "capture", "summary": "Node 3"},
     ]
-    mock_bus.warning.assert_has_calls(expected_calls)
-    assert (work_dir / "file.txt").read_text() == "v3", "File should not be changed."
+    create_linear_history_from_specs(engine, specs)
+
+    # 1. Test Limit
+    result = runner.invoke(app, ["log", "-n", "1", "-w", str(work_dir)])
+    assert result.exit_code == 0
+    # Should only print header + 1 node
+    assert mock_bus.data.call_count == 1
+    assert "Node 3" in mock_bus.data.call_args_list[0].args[0]  # Newest
+
+    # 2. Test Filtering Result Empty
+    mock_bus.reset_mock()
+    # Using a future date
+    result = runner.invoke(app, ["log", "--since", "2099-01-01 00:00", "-w", str(work_dir)])
+    assert result.exit_code == 0
+    mock_bus.info.assert_called_with("query.info.noResults")
 
 
-def test_checkout_in_non_interactive_env(runner: CliRunner, dirty_workspace, monkeypatch):
-    """不友好路径测试: 验证 `checkout` 在非交互式环境中安全中止。"""
-    work_dir, _, hash_a = dirty_workspace
+def test_log_reachable_only(runner, quipu_workspace, monkeypatch):
+    """Test --reachable-only filtering for the log command."""
+    work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
+    monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    def mock_getchar_fail(echo):
-        raise EOFError("Simulating non-interactive environment")
+    create_query_branching_history(engine)
 
-    monkeypatch.setattr(click, "getchar", mock_getchar_fail)
-    result = runner.invoke(app, ["checkout", hash_a[:7], "-w", str(work_dir)])
+    result = runner.invoke(app, ["log", "--reachable-only", "-w", str(work_dir)])
+    assert result.exit_code == 0
 
-    assert result.exit_code == 1
-    expected_calls = [
-        call("navigation.checkout.info.capturingDrift"),
-        call("common.prompt.cancel"),
-    ]
-    mock_bus.warning.assert_has_calls(expected_calls)
-    assert (work_dir / "file.txt").read_text() == "v3", "File should not be changed."
+    output = "".join(call.args[0] for call in mock_bus.data.call_args_list)
+    assert "Node B" in output  # HEAD is reachable
+    assert "Node A" in output  # Ancestor is reachable
+    assert "Node C" not in output  # Unrelated branch is not reachable
 ~~~~~
 
 ### 下一步建议
 
-我们已经成功地将最常见的几种历史创建模式（分支、线性、脏工作区）抽象成了标准辅助函数。
+我们已经成功地将所有主要的、重复的测试设置逻辑都提取到了 `tests/helpers.py` 中。测试代码现在更加清晰、声明式且易于维护。
 
-现在，我们可以转向处理那些在测试函数**内部**直接创建历史记录的用例了。例如，`tests/cli/test_query_commands.py` 中的 `test_log_output` 和 `test_find_command` 函数都包含了手动的 `capture_drift` 调用。将这些调用也替换为对 `tests/helpers.py` 中函数的调用，将是完成本次重构的最后一步。
+本次重构任务的核心目标已经达成。我建议将此作为一个 `[COMMIT]` 点，标志着这项工作的完成。
+
+如果你同意，我将生成一个包含 `git add` 和 `git commit` 指令的计划，来正式提交这些改进。

@@ -406,3 +406,65 @@ def create_dirty_workspace_history(engine: Engine) -> Tuple[Engine, str]:
     file_path.write_text("v3")
 
     return engine, hash_a
+
+
+def create_linear_history_from_specs(engine: Engine, specs: List[Dict[str, Any]]):
+    """
+    Creates a linear history based on a list of specifications.
+    Each spec is a dict: {'type': 'plan'|'capture', 'summary': str, 'content': Optional[str]}
+    """
+    parent_hash = EMPTY_TREE_HASH
+    if engine.history_graph:
+        # If history is not empty, start from the latest node
+        latest_node = sorted(engine.history_graph.values(), key=lambda n: n.timestamp)[-1]
+        parent_hash = latest_node.output_tree
+
+    for i, spec in enumerate(specs):
+        # Create a unique file change for each node to ensure a new tree hash
+        (engine.root_dir / f"file_{time.time()}_{i}.txt").touch()
+        new_hash = engine.git_db.get_tree_hash()
+
+        if spec["type"] == "plan":
+            engine.create_plan_node(
+                input_tree=parent_hash,
+                output_tree=new_hash,
+                plan_content=spec.get("content", ""),
+                summary_override=spec["summary"],
+            )
+        elif spec["type"] == "capture":
+            engine.capture_drift(new_hash, message=spec["summary"])
+
+        parent_hash = new_hash
+    # Re-align to ensure the engine's internal graph is fully updated
+    engine.align()
+
+
+def create_query_branching_history(engine: Engine) -> Tuple[Engine, str]:
+    """
+    Creates a specific branching history for query reachability tests.
+    History: root -> A -> B (HEAD)
+                   \\-> C (unreachable)
+    Returns the engine and the hash of state B (the HEAD).
+    """
+    ws = engine.root_dir
+    # root -> A
+    (ws / "f_a").touch()
+    h_a = engine.git_db.get_tree_hash()
+    node_a = engine.capture_drift(h_a, "Node A")
+
+    # A -> B (This will become the main branch)
+    (ws / "f_b").touch()
+    h_b = engine.git_db.get_tree_hash()
+    engine.capture_drift(h_b, "Node B")
+
+    # Go back to A to create the branch
+    engine.visit(node_a.output_tree)
+
+    # A -> C
+    (ws / "f_c").touch()
+    engine.capture_drift(engine.git_db.get_tree_hash(), "Node C")
+
+    # Checkout back to B to set it as the current HEAD for the test
+    engine.visit(h_b)
+    engine.align()
+    return engine, h_b

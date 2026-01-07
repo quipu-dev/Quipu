@@ -3,6 +3,8 @@ from unittest.mock import MagicMock
 
 from pyquipu.cli.main import app
 
+from ..helpers import create_linear_history_from_specs, create_query_branching_history
+
 
 def test_log_empty(runner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
@@ -19,10 +21,11 @@ def test_log_output(runner, quipu_workspace, monkeypatch):
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    (work_dir / "f1").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 1")
-    (work_dir / "f2").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 2")
+    specs = [
+        {"type": "capture", "summary": "Node 1"},
+        {"type": "capture", "summary": "Node 2"},
+    ]
+    create_linear_history_from_specs(engine, specs)
 
     result = runner.invoke(app, ["log", "-w", str(work_dir)])
     assert result.exit_code == 0
@@ -37,14 +40,11 @@ def test_find_command(runner, quipu_workspace, monkeypatch):
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    (work_dir / "f1").touch()
-    hash_v1 = engine.git_db.get_tree_hash()
-    engine.capture_drift(hash_v1, message="Fix bug")
-    (work_dir / "f2").touch()
-    hash_v2 = engine.git_db.get_tree_hash()
-    engine.create_plan_node(
-        input_tree=hash_v1, output_tree=hash_v2, plan_content="content", summary_override="Implement feature"
-    )
+    specs = [
+        {"type": "capture", "summary": "Fix bug"},
+        {"type": "plan", "summary": "Implement feature", "content": "content"},
+    ]
+    create_linear_history_from_specs(engine, specs)
 
     result = runner.invoke(app, ["find", "-s", "Fix", "-w", str(work_dir)])
     assert result.exit_code == 0
@@ -58,8 +58,7 @@ def test_log_json_output(runner, quipu_workspace, monkeypatch):
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    (work_dir / "f1").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 1")
+    create_linear_history_from_specs(engine, [{"type": "capture", "summary": "Node 1"}])
 
     result = runner.invoke(app, ["log", "--json", "-w", str(work_dir)])
     assert result.exit_code == 0
@@ -77,10 +76,11 @@ def test_find_json_output(runner, quipu_workspace, monkeypatch):
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    (work_dir / "f1").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Feature A")
-    (work_dir / "f2").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Bugfix B")
+    specs = [
+        {"type": "capture", "summary": "Feature A"},
+        {"type": "capture", "summary": "Bugfix B"},
+    ]
+    create_linear_history_from_specs(engine, specs)
 
     result = runner.invoke(app, ["find", "--summary", "Bugfix", "--json", "-w", str(work_dir)])
     assert result.exit_code == 0
@@ -108,13 +108,12 @@ def test_log_filtering(runner, quipu_workspace, monkeypatch):
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    # Create 3 nodes
-    (work_dir / "f1").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 1")
-    (work_dir / "f2").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 2")
-    (work_dir / "f3").touch()
-    engine.capture_drift(engine.git_db.get_tree_hash(), message="Node 3")
+    specs = [
+        {"type": "capture", "summary": "Node 1"},
+        {"type": "capture", "summary": "Node 2"},
+        {"type": "capture", "summary": "Node 3"},
+    ]
+    create_linear_history_from_specs(engine, specs)
 
     # 1. Test Limit
     result = runner.invoke(app, ["log", "-n", "1", "-w", str(work_dir)])
@@ -137,23 +136,7 @@ def test_log_reachable_only(runner, quipu_workspace, monkeypatch):
     mock_bus = MagicMock()
     monkeypatch.setattr("pyquipu.cli.commands.query.bus", mock_bus)
 
-    # History: root -> A -> B (HEAD)
-    #               \\-> C (unreachable)
-    (work_dir / "f_a").touch()
-    h_a = engine.git_db.get_tree_hash()
-    node_a = engine.capture_drift(h_a, "Node A")
-
-    (work_dir / "f_b").touch()
-    h_b = engine.git_db.get_tree_hash()
-    engine.capture_drift(h_b, "Node B")
-
-    engine.visit(node_a.output_tree)
-    (work_dir / "f_c").touch()
-    h_c = engine.git_db.get_tree_hash()
-    engine.capture_drift(h_c, "Node C")
-
-    # Checkout back to B to set it as current HEAD
-    engine.visit(h_b)
+    create_query_branching_history(engine)
 
     result = runner.invoke(app, ["log", "--reachable-only", "-w", str(work_dir)])
     assert result.exit_code == 0
