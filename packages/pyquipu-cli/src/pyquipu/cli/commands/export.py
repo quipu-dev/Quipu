@@ -6,7 +6,7 @@ from typing import Annotated, Dict, List, Optional, Set
 
 import typer
 import yaml
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 from pyquipu.engine.state_machine import Engine
 from pyquipu.interfaces.models import QuipuNode
 

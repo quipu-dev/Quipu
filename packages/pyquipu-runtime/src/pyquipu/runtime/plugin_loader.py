@@ -3,7 +3,7 @@ import logging
 import sys
 from pathlib import Path
 
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 
 from .executor import Executor
 

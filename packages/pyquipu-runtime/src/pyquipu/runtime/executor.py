@@ -4,7 +4,7 @@ import shlex
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 from pyquipu.interfaces.exceptions import ExecutionError, OperationCancelledError
 from pyquipu.interfaces.types import ActContext, ActFunction, Statement
 

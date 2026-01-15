@@ -19,12 +19,14 @@ classifiers = [
 dependencies = [
     "pyquipu-interfaces",
     "pyquipu-common",
+    "pyquipu-bus",
     "pyyaml>=6.0",
 ]
 
 [tool.uv.sources]
 pyquipu-interfaces = { workspace = true }
 pyquipu-common = { workspace = true }
+pyquipu-bus = { workspace = true }
 
 [tool.setuptools.packages.find]
 where = ["src"]

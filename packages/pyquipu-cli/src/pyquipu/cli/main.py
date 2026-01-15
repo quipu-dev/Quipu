@@ -1,7 +1,7 @@
 import logging
 
 import typer
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 
 from .commands import axon, cache, export, navigation, query, remote, run, show, ui, workspace
 from .rendering import TyperRenderer

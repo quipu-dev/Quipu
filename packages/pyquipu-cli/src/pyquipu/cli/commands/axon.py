@@ -7,7 +7,7 @@ from typing import Annotated, Optional
 import typer
 from pyquipu.acts import register_core_acts
 from pyquipu.application.plugin_manager import PluginManager
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 from pyquipu.interfaces.exceptions import ExecutionError
 from pyquipu.runtime.executor import Executor
 from pyquipu.runtime.parser import detect_best_parser, get_parser

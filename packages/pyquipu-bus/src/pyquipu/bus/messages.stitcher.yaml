@@ -1,0 +1,2 @@
+find_locales_dir: |-
+  Locates the 'locales' directory which is stored in the pyquipu-common package.

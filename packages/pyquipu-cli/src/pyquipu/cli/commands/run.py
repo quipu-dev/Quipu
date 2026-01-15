@@ -6,7 +6,7 @@ from typing import Annotated, Optional
 
 import typer
 from pyquipu.application.controller import run_quipu
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 from pyquipu.runtime.executor import Executor
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
