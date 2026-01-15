@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 from pyquipu.interfaces.exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)

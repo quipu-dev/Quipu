@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import yaml
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 
 logger = logging.getLogger(__name__)
 

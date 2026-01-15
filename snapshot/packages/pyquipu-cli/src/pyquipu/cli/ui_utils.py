@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import click
 import typer
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 from pyquipu.interfaces.exceptions import OperationCancelledError
 
 

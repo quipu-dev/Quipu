@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from pyquipu.common.messaging import bus
+from pyquipu.bus import bus
 
 from ..config import DEFAULT_WORK_DIR
 from ..logger_config import setup_logging

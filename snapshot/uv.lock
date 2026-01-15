@@ -388,11 +388,11 @@ name = "pyquipu-bus"
 version = "0.1.0"
 source = { editable = "packages/pyquipu-bus" }
 dependencies = [
-    { name = "pyquipu-interfaces" },
+    { name = "pyquipu-common" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" }]
+requires-dist = [{ name = "pyquipu-common", editable = "packages/pyquipu-common" }]
 
 [[package]]
 name = "pyquipu-cli"
