@@ -98,7 +98,5 @@ class MessageBus:
 
 
 # --- Default Instance ---
-# A default instance that can be easily imported and used.
-# The renderer will be injected at runtime by the application layer (e.g., CLI).
 _default_store = MessageStore(locale="zh")
 bus = MessageBus(store=_default_store)

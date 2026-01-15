@@ -1,3 +1,3 @@
-"""
-pyquipu.bus: Message bus and event orchestration for the Quipu ecosystem.
-"""
+from .bus import MessageBus, bus
+
+__all__ = ["bus", "MessageBus"]
