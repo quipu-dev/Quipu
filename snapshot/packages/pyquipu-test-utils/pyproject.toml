@@ -20,12 +20,14 @@ classifiers = [
 dependencies = [
     "pyquipu-interfaces",
     "pyquipu-engine",
+    "pyquipu-bus",
     "typer"
 ]
 
 [tool.uv.sources]
 pyquipu-interfaces = { workspace = true }
 pyquipu-engine = { workspace = true }
+pyquipu-bus = { workspace = true }
 
 [tool.setuptools.packages.find]
 where = ["src"]

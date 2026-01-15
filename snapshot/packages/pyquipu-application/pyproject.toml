@@ -21,6 +21,7 @@ dependencies = [
     "pyquipu-engine",
     "pyquipu-runtime",
     "pyquipu-common",
+    "pyquipu-bus",
 ]
 
 [tool.uv.sources]
@@ -28,6 +29,7 @@ pyquipu-interfaces = { workspace = true }
 pyquipu-engine = { workspace = true }
 pyquipu-runtime = { workspace = true }
 pyquipu-common = { workspace = true }
+pyquipu-bus = { workspace = true }
 
 [tool.setuptools.packages.find]
 where = ["src"]
