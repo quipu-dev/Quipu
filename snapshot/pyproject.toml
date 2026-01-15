@@ -5,6 +5,7 @@ description = "Quipu Development Monorepo"
 requires-python = ">=3.10"
 dependencies = [
     "pyquipu-application",
+    "pyquipu-bus",
     "pyquipu-cli",
     "pyquipu-common",
     "pyquipu-engine",
@@ -16,6 +17,7 @@ dependencies = [
 dev = [
     # Local workspace packages
     "pyquipu-application",
+    "pyquipu-bus",
     "pyquipu-cli",
     "pyquipu-common",
     "pyquipu-engine",
@@ -36,6 +38,7 @@ workspace.members = ["packages/*"]
 
 [tool.uv.sources]
 pyquipu-application = { workspace = true }
+pyquipu-bus = { workspace = true }
 pyquipu-cli = { workspace = true }
 pyquipu-common = { workspace = true }
 pyquipu-engine = { workspace = true }
