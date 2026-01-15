@@ -6,6 +6,7 @@ requires-python = ">=3.10"
 members = [
     "pyquipu",
     "pyquipu-application",
+    "pyquipu-bus",
     "pyquipu-cli",
     "pyquipu-common",
     "pyquipu-engine",
@@ -313,6 +314,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "pyquipu-application" },
+    { name = "pyquipu-bus" },
     { name = "pyquipu-cli" },
     { name = "pyquipu-common" },
     { name = "pyquipu-engine" },
@@ -324,6 +326,7 @@ dependencies = [
 dev = [
     { name = "pre-commit" },
     { name = "pyquipu-application" },
+    { name = "pyquipu-bus" },
     { name = "pyquipu-cli" },
     { name = "pyquipu-common" },
     { name = "pyquipu-engine" },
@@ -341,6 +344,8 @@ requires-dist = [
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "pyquipu-application", editable = "packages/pyquipu-application" },
     { name = "pyquipu-application", marker = "extra == 'dev'", editable = "packages/pyquipu-application" },
+    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
+    { name = "pyquipu-bus", marker = "extra == 'dev'", editable = "packages/pyquipu-bus" },
     { name = "pyquipu-cli", editable = "packages/pyquipu-cli" },
     { name = "pyquipu-cli", marker = "extra == 'dev'", editable = "packages/pyquipu-cli" },
     { name = "pyquipu-common", editable = "packages/pyquipu-common" },
@@ -377,6 +382,17 @@ requires-dist = [
     { name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" },
     { name = "pyquipu-runtime", editable = "packages/pyquipu-runtime" },
 ]
+
+[[package]]
+name = "pyquipu-bus"
+version = "0.1.0"
+source = { editable = "packages/pyquipu-bus" }
+dependencies = [
+    { name = "pyquipu-interfaces" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" }]
 
 [[package]]
 name = "pyquipu-cli"
