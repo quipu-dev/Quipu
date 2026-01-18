@@ -1,5 +1,10 @@
 {
   "fingerprints": {
+    "py://packages/pyquipu-common/src/pyquipu/common/identity.py#get_user_id_from_email": {
+      "baseline_code_signature_text": "def get_user_id_from_email(email: str) -> str:",
+      "baseline_code_structure_hash": "d723a96a189dae29395569c513bdcba3e16cfe339f26e0150eeee3ecfae1a353",
+      "baseline_yaml_content_hash": "78df8da7e4d8c493eb9924b724603425cfabb96f88029aa839df60b9affee620"
+    },
     "py://packages/quipu-common/src/pyquipu/common/identity.py#get_user_id_from_email": {
       "baseline_code_signature_text": "def get_user_id_from_email(email: str) -> str:",
       "baseline_code_structure_hash": "d723a96a189dae29395569c513bdcba3e16cfe339f26e0150eeee3ecfae1a353",

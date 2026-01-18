@@ -5,9 +5,6 @@ logger = logging.getLogger(__name__)
 
 
 def find_locales_dir() -> Path | None:
-    """
-    Locates the 'locales' directory which is stored in the pyquipu-common package.
-    """
     try:
         # pyquipu-bus stores its locales in its root directory
         bus_root = Path(__file__).parent.parent
