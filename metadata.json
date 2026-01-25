@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[COMMIT] feat(build): 实现基于 Scoped Tags 的多包独立发布基础设施", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769367494.5434647, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] refactor: 迁移构建后端至 Hatchling 并修复 PEP 639 许可证警告", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769367723.3751912, "duration_ms": 0}}
