@@ -93,6 +93,69 @@ class QuipuApplication:
 
         return executor
 
+    def checkout_by_tree_hash_prefix(self, tree_hash_prefix: str, force: bool = False) -> QuipuResult:
+        graph = self.engine.history_graph
+        matches = [node for node in graph.values() if node.output_tree.startswith(tree_hash_prefix)]
+
+        if not matches:
+            return QuipuResult(
+                success=False,
+                exit_code=1,
+                message="navigation.checkout.error.notFound",
+                msg_kwargs={"hash_prefix": tree_hash_prefix},
+            )
+        if len(matches) > 1:
+            return QuipuResult(
+                success=False,
+                exit_code=1,
+                message="navigation.checkout.error.notUnique",
+                msg_kwargs={"hash_prefix": tree_hash_prefix, "count": len(matches)},
+            )
+
+        target_node = matches[0]
+        target_output_tree_hash = target_node.output_tree
+        current_hash = self.engine.git_db.get_tree_hash()
+
+        if current_hash == target_output_tree_hash:
+            return QuipuResult(
+                success=True,
+                exit_code=0,
+                message="navigation.checkout.info.noAction",
+                msg_kwargs={"short_hash": target_node.short_hash},
+            )
+
+        is_dirty = self.engine.current_node is None or self.engine.current_node.output_tree != current_hash
+        if is_dirty:
+            # Here we need a message bus to inform the user.
+            # For now, we rely on the CLI to have a bus configured.
+            # A better solution would involve passing the bus into the app.
+            # bus.warning("navigation.checkout.info.capturingDrift")
+            self.engine.capture_drift(current_hash)
+            # bus.success("navigation.checkout.success.driftCaptured")
+            current_hash = self.engine.git_db.get_tree_hash()
+
+        diff_stat_str = self.engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
+
+        if not self.yolo and not force:
+            # Re-create prompt here as we don't have access to the bus directly yet.
+            # This highlights a future improvement area.
+            prompt = (
+                f"将工作区检出到快照 {target_node.short_hash} ({target_node.timestamp}) "
+                f"会覆盖当前未保存的变更。"
+            )
+            try:
+                self.confirmation_handler(diff_stat_str.splitlines(), prompt)
+            except OperationCancelledError:
+                raise  # Re-raise to be caught by the top-level handler
+
+        self.engine.visit(target_output_tree_hash)
+        return QuipuResult(
+            success=True,
+            exit_code=0,
+            message="navigation.success.visit",
+            msg_kwargs={"short_hash": target_output_tree_hash[:7]},
+        )
+
     def run(self, content: str, parser_name: str) -> QuipuResult:
         # --- Phase 1 & 2: Perception & Decision (Lazy Capture) ---
         input_tree_hash = self._prepare_workspace()

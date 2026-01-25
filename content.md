@@ -1,260 +1,248 @@
-很好。我们继续沿着这条正确的道路前进。
+Excellent point. This is a crucial architectural clarification. Your directive to distinguish between `commit_hash` and `tree_hash` goes to the heart of the **HFEA Ontological Correctness** principle. An operation should be explicit about the entity it acts upon.
 
-将 `axon` 的核心逻辑迁移到 `application` 层，将彻底净化 CLI 代码，使其成为一个纯粹的、符合 HFEA 原则的“意图翻译器”。它将不再关心业务流程的“如何做”，只关心“做什么”。
+-   A **commit** is an *event* in history.
+-   A **tree** is a *state* of the workspace.
 
-我将生成一个计划，用两个精确的 `patch_file` 操作完成这次重构。
+When a user says `checkout`, their intent is to restore the workspace to a specific *state*, therefore the operation should fundamentally be on a **tree hash**. By making the application layer's API explicit about this, we eliminate ambiguity and build a more robust and self-documenting system.
 
-## [WIP] refactor: 将 axon 执行流程迁移到 application 层
+I will proceed by refactoring the `checkout` command first, as it's a perfect example of this stateful migration.
+
+## [WIP] refactor: Migrate checkout logic to QuipuApplication
 
 ### 用户需求
 
-将 `quipu axon` 命令的主执行流程，从 CLI 层（`commands/axon.py`）完整地迁移到一个新的、位于 `application` 层的服务函数 `run_stateless_plan` 中。
+1.  将 `quipu checkout` 命令的业务逻辑从 CLI 层迁移到 `QuipuApplication` 类的一个新方法中。
+2.  根据用户指令，新的应用层 API 必须明确其操作的是 `tree_hash`, 而不是模糊的 `hash`。
 
 ### 评论
 
-这是本次重构的核心。通过这次迁移，我们将在 `application` 层建立一个清晰、可独立测试的无状态服务。CLI 层将彻底转变为该服务的瘦客户端 (thin client)，这使得架构边界变得如水晶般清晰，极大地提升了系统的可维护性和可测试性。
+这是实现我们架构目标的最后、也是最关键的一步。将有状态的 `engine` 操作封装在 `application` 层的方法中，可以使我们的核心业务逻辑（如导航、保存、查询）变得完全独立于 UI，从而可以被单元测试，也可以在未来被其他接口（如 Web API）复用。明确 `tree_hash` 的使用，是对系统语义的一次重要提纯。
 
 ### 目标
 
-1.  在 `pyquipu.application.controller` 中创建新的 `run_stateless_plan` 函数。
-2.  此函数将完整封装：`Executor` 初始化、插件加载、解析器选择、内容解析、指令执行以及异常处理的全过程。
-3.  `run_stateless_plan` 必须返回一个标准的 `QuipuResult` 对象，作为其与调用方（CLI）之间的稳定契约。
-4.  重构 `axon` 命令，移除所有业务逻辑，使其仅负责：解析参数、读取输入、调用 `run_stateless_plan`，并根据返回的 `QuipuResult` 渲染最终的用户反馈。
+1.  在 `QuipuApplication` 类中创建一个新的公共方法 `checkout_by_tree_hash_prefix(self, tree_hash_prefix: str, force: bool)`。
+2.  将 `navigation.py` 中 `checkout` 命令的所有业务逻辑——包括查找节点、处理歧义、检查工作区是否已是目标状态、检查工作区是否“脏”、捕获漂移、获取 diff、请求用户确认，以及最终执行 `visit`——全部迁移到这个新方法中。
+3.  确保新方法在其所有执行路径中都返回一个标准的 `QuipuResult` 对象，作为与 CLI 层的稳定契约。
+4.  彻底简化 `checkout` 命令，使其仅负责：
+    *   创建一个 `QuipuApplication` 实例。
+    *   调用 `app.checkout_by_tree_hash_prefix(...)`。
+    *   使用 `bus` 渲染返回的 `QuipuResult`。
 
 ### 基本原理
 
-我们正在应用**命令查询责任分离 (CQRS)** 的一个变体和**应用服务模式**。`run_stateless_plan` 是一个封装了完整业务用例的“命令处理器”。它接收一个命令（包含执行所需的所有数据），并返回一个结果。CLI 层作为表示层，其唯一职责是将用户的交互翻译成这个命令，并将结果呈现出来。这种分离是构建健壮、可演进系统的基石，完全符合 HFEA 的**严格分层与边界**原则。
+我们正在将 `QuipuApplication` 固化为一个**应用服务 Facade**。`checkout_by_tree_hash_prefix` 方法封装了一个完整的业务用例。CLI 层调用它时，不需要知道 `engine` 的存在，也不需要关心确认流程的细节（这些通过注入的 `confirmation_handler` 处理）。这种彻底的解耦是 HFEA **严格分层与边界**原则的终极体现。通过在方法命名中包含 `_by_tree_hash_prefix`，我们让 API 的意图变得不言自明，消除了任何猜测。
 
 ### 标签
 
-#intent/refine #flow/ready #priority/high #comp/cli #comp/application #scope/core #scope/dx #ai/instruct #task/domain/cli #task/object/axon-command #task/action/refactor #task/state/continue
+#intent/refine #flow/ready #priority/high #comp/cli #comp/application #concept/navigation #concept/state #scope/core #scope/api #scope/dx #ai/brainstorm #task/domain/cli #task/object/stateful-commands #task/action/refactor #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 在 `controller.py` 中创建 `run_stateless_plan` 服务
+#### Acts 1: 在 `QuipuApplication` 中创建 `checkout` 服务方法
 
-我们将 `axon.py` 中复杂的执行逻辑整体迁移到 `controller.py` 中，并将其封装在一个新的、独立的函数里。这个函数将拥有清晰的输入和输出，不依赖任何 CLI 特定的组件。
+我们将把 `navigation.py` 中的 `checkout` 逻辑移植到 `controller.py` 的 `QuipuApplication` 类中，并将其改造为一个健壮的、返回 `QuipuResult` 的方法。
 
 ~~~~~act
 patch_file
 packages/pyquipu-application/src/pyquipu/application/controller.py
 ~~~~~
 ~~~~~python.old
-        # 确保无论成功或失败，引擎资源都被关闭
-        if app and hasattr(app, "engine") and app.engine:
-            app.engine.close()
+    def run(self, content: str, parser_name: str) -> QuipuResult:
+        # --- Phase 1 & 2: Perception & Decision (Lazy Capture) ---
+        input_tree_hash = self._prepare_workspace()
 ~~~~~
 ~~~~~python.new
-        # 确保无论成功或失败，引擎资源都被关闭
-        if app and hasattr(app, "engine") and app.engine:
-            app.engine.close()
+    def checkout_by_tree_hash_prefix(self, tree_hash_prefix: str, force: bool = False) -> QuipuResult:
+        graph = self.engine.history_graph
+        matches = [node for node in graph.values() if node.output_tree.startswith(tree_hash_prefix)]
 
+        if not matches:
+            return QuipuResult(
+                success=False,
+                exit_code=1,
+                message="navigation.checkout.error.notFound",
+                msg_kwargs={"hash_prefix": tree_hash_prefix},
+            )
+        if len(matches) > 1:
+            return QuipuResult(
+                success=False,
+                exit_code=1,
+                message="navigation.checkout.error.notUnique",
+                msg_kwargs={"hash_prefix": tree_hash_prefix, "count": len(matches)},
+            )
 
-def run_stateless_plan(
-    content: str,
-    work_dir: Path,
-    confirmation_handler: ConfirmationHandler,
-    parser_name: str = "auto",
-    yolo: bool = False,
-) -> QuipuResult:
-    """
-    Executes a plan in a stateless manner, bypassing the Quipu engine.
+        target_node = matches[0]
+        target_output_tree_hash = target_node.output_tree
+        current_hash = self.engine.git_db.get_tree_hash()
 
-    This function sets up a temporary executor, loads plugins, parses the content,
-    and executes the statements against the specified working directory.
-
-    Args:
-        content: The string content of the plan to execute.
-        work_dir: The root directory for the execution.
-        confirmation_handler: A callable to handle user confirmations.
-        parser_name: The name of the parser to use ('auto' by default).
-        yolo: If True, skips all confirmation prompts.
-
-    Returns:
-        A QuipuResult object indicating the outcome of the execution.
-    """
-    try:
-        executor = Executor(
-            root_dir=work_dir,
-            yolo=yolo,
-            confirmation_handler=confirmation_handler,
-        )
-        register_core_acts(executor)
-        PluginManager().load_from_sources(executor, work_dir)
-
-        final_parser_name = parser_name
-        if parser_name == "auto":
-            final_parser_name = detect_best_parser(content)
-
-        parser = get_parser(final_parser_name)
-        statements = parser.parse(content)
-
-        if not statements:
+        if current_hash == target_output_tree_hash:
             return QuipuResult(
                 success=True,
                 exit_code=0,
-                message="axon.warning.noStatements",
-                msg_kwargs={"parser": final_parser_name},
+                message="navigation.checkout.info.noAction",
+                msg_kwargs={"short_hash": target_node.short_hash},
             )
 
-        executor.execute(statements)
-        return QuipuResult(success=True, exit_code=0, message="axon.success")
+        is_dirty = self.engine.current_node is None or self.engine.current_node.output_tree != current_hash
+        if is_dirty:
+            # Here we need a message bus to inform the user.
+            # For now, we rely on the CLI to have a bus configured.
+            # A better solution would involve passing the bus into the app.
+            # bus.warning("navigation.checkout.info.capturingDrift")
+            self.engine.capture_drift(current_hash)
+            # bus.success("navigation.checkout.success.driftCaptured")
+            current_hash = self.engine.git_db.get_tree_hash()
 
-    except CoreExecutionError as e:
-        logger.error(f"❌ 操作失败: {e}")
+        diff_stat_str = self.engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
+
+        if not self.yolo and not force:
+            # Re-create prompt here as we don't have access to the bus directly yet.
+            # This highlights a future improvement area.
+            prompt = (
+                f"将工作区检出到快照 {target_node.short_hash} ({target_node.timestamp}) "
+                f"会覆盖当前未保存的变更。"
+            )
+            try:
+                self.confirmation_handler(diff_stat_str.splitlines(), prompt)
+            except OperationCancelledError:
+                raise  # Re-raise to be caught by the top-level handler
+
+        self.engine.visit(target_output_tree_hash)
         return QuipuResult(
-            success=False, exit_code=1, message="run.error.execution", msg_kwargs={"error": str(e)}, error=e
+            success=True,
+            exit_code=0,
+            message="navigation.success.visit",
+            msg_kwargs={"short_hash": target_output_tree_hash[:7]},
         )
-    except Exception as e:
-        logger.error(f"运行时错误: {e}", exc_info=True)
-        return QuipuResult(
-            success=False, exit_code=1, message="run.error.system", msg_kwargs={"error": str(e)}, error=e
-        )
+
+    def run(self, content: str, parser_name: str) -> QuipuResult:
+        # --- Phase 1 & 2: Perception & Decision (Lazy Capture) ---
+        input_tree_hash = self._prepare_workspace()
 ~~~~~
 
-#### Acts 2: 简化 `axon` 命令，使其成为应用服务的客户端
+#### Acts 2: 简化 `checkout` CLI 命令
 
-现在 `application` 层已经提供了强大的服务，我们可以将 `axon.py` 大幅简化。它现在只负责处理用户输入和渲染结果，完全不再关心执行的细节。
+现在，`checkout` 命令的实现变得极其简单。它只负责收集用户输入，调用应用服务，然后渲染结果。
 
 ~~~~~act
 patch_file
-packages/pyquipu-cli/src/pyquipu/cli/commands/axon.py
+packages/pyquipu-cli/src/pyquipu/cli/commands/navigation.py
 ~~~~~
 ~~~~~python.old
-        logger.debug(f"axon started with file={file}, work_dir={work_dir}, parser={parser_name}, yolo={yolo}")
+def register(app: typer.Typer):
+    @app.command(help="检出指定状态的快照到工作区。")
+    def checkout(
+        ctx: typer.Context,
+        hash_prefix: Annotated[str, typer.Argument(help="目标状态节点 output_tree 的哈希前缀。")],
+        work_dir: Annotated[
+            Path,
+            typer.Option(
+                "--work-dir", "-w", help="操作执行的根目录（工作区）", file_okay=False, dir_okay=True, resolve_path=True
+            ),
+        ] = DEFAULT_WORK_DIR,
+        force: Annotated[bool, typer.Option("--force", "-f", help="强制执行，跳过确认提示。")] = False,
+    ):
+        with engine_context(work_dir) as engine:
+            graph = engine.history_graph
 
-        # 1. 初始化无状态 Executor, 复用 controller 中的标准确认处理器
-        # 注意：这里不初始化 Engine，因此没有历史记录功能
-        executor = Executor(
-            root_dir=work_dir,
-            yolo=yolo,
-            confirmation_handler=confirmation_handler_for_executor,
-        )
-        register_core_acts(executor)
-
-        # 3. 加载插件
-        # PluginManager 会尝试查找 Git 根目录加载项目级插件，如果找不到 Git 根目录则跳过，符合无状态设计
-        PluginManager().load_from_sources(executor, work_dir)
-
-        # 5. 获取输入内容 (文件 或 STDIN 或 默认文件)
-        content = ""
-        source_desc = ""
-        if file:
-            if not file.exists():
-                bus.error("common.error.fileNotFound", path=file)
+            matches = [node for node in graph.values() if node.output_tree.startswith(hash_prefix)]
+            if not matches:
+                bus.error("navigation.checkout.error.notFound", hash_prefix=hash_prefix)
                 ctx.exit(1)
-            content = file.read_text(encoding="utf-8")
-            source_desc = f"文件 ({file.name})"
-        elif not sys.stdin.isatty():
-            try:
-                stdin_content = sys.stdin.read()
-                if stdin_content:
-                    content = stdin_content
-                    source_desc = "STDIN (管道流)"
-            except Exception:
-                pass
+            if len(matches) > 1:
+                bus.error("navigation.checkout.error.notUnique", hash_prefix=hash_prefix, count=len(matches))
+                ctx.exit(1)
+            target_node = matches[0]
+            target_output_tree_hash = target_node.output_tree
 
-        # 如果没有指定文件且没有 STDIN，尝试读取当前目录下的默认入口文件 (如 o.md)
-        if not content and not file and DEFAULT_ENTRY_FILE.exists():
-            content = DEFAULT_ENTRY_FILE.read_text(encoding="utf-8")
-            source_desc = f"默认文件 ({DEFAULT_ENTRY_FILE.name})"
-
-        if not content.strip():
-            bus.warning("axon.warning.noInput")
-            ctx.exit(0)
-
-        logger.info(f"Axon 启动 | 源: {source_desc} | 工作区: {work_dir}")
-
-        # 6. 解析
-        final_parser_name = parser_name
-        if parser_name == "auto":
-            final_parser_name = detect_best_parser(content)
-
-        try:
-            parser = get_parser(final_parser_name)
-            statements = parser.parse(content)
-
-            if not statements:
-                bus.warning("axon.warning.noStatements", parser=final_parser_name)
+            current_hash = engine.git_db.get_tree_hash()
+            if current_hash == target_output_tree_hash:
+                bus.success("navigation.checkout.info.noAction", short_hash=target_node.short_hash)
                 ctx.exit(0)
 
-            # 7. 执行
-            executor.execute(statements)
-            bus.success("axon.success")
+            is_dirty = engine.current_node is None or engine.current_node.output_tree != current_hash
+            if is_dirty:
+                bus.warning("navigation.checkout.info.capturingDrift")
+                engine.capture_drift(current_hash)
+                bus.success("navigation.checkout.success.driftCaptured")
+                current_hash = engine.git_db.get_tree_hash()
 
-        except ExecutionError as e:
-            bus.error("axon.error.executionFailed", error=str(e))
-            ctx.exit(1)
-        except ValueError as e:
-            logger.error(f"无效的参数或配置: {e}", exc_info=True)
-            bus.error("common.error.invalidConfig", error=str(e))
-            ctx.exit(1)
-        except Exception as e:
-            logger.error(f"未预期的系统错误: {e}", exc_info=True)
-            bus.error("common.error.generic", error=str(e))
-            ctx.exit(1)
+            diff_stat_str = engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
+
+            if not force:
+                prompt = bus.get(
+                    "navigation.checkout.prompt.confirm",
+                    short_hash=target_node.short_hash,
+                    timestamp=target_node.timestamp,
+                )
+                if not prompt_for_confirmation(prompt, diff_lines=diff_stat_str.splitlines(), default=False):
+                    bus.warning("common.prompt.cancel")
+                    raise typer.Abort()
+
+            _execute_visit(
+                ctx,
+                engine,
+                target_output_tree_hash,
+                "navigation.info.navigating",
+                short_hash=target_node.short_hash,
+            )
+
+    @app.command(help="沿当前分支向上导航（回到父节点）。")
 ~~~~~
 ~~~~~python.new
-        logger.debug(f"axon started with file={file}, work_dir={work_dir}, parser={parser_name}, yolo={yolo}")
+from ..ui_utils import confirmation_handler_for_executor
 
-        # --- 1. 输入处理 (CLI 层职责) ---
-        content = ""
-        source_desc = ""
-        if file:
-            if not file.exists():
-                bus.error("common.error.fileNotFound", path=file)
-                ctx.exit(1)
-            content = file.read_text(encoding="utf-8")
-            source_desc = f"文件 ({file.name})"
-        elif not sys.stdin.isatty():
-            try:
-                stdin_content = sys.stdin.read()
-                if stdin_content:
-                    content = stdin_content
-                    source_desc = "STDIN (管道流)"
-            except Exception:
-                pass
 
-        if not content and not file and DEFAULT_ENTRY_FILE.exists():
-            content = DEFAULT_ENTRY_FILE.read_text(encoding="utf-8")
-            source_desc = f"默认文件 ({DEFAULT_ENTRY_FILE.name})"
+def register(app: typer.Typer):
+    @app.command(help="检出指定状态的快照到工作区。")
+    def checkout(
+        ctx: typer.Context,
+        tree_hash_prefix: Annotated[str, typer.Argument(help="目标状态快照 (tree) 的哈希前缀。")],
+        work_dir: Annotated[
+            Path,
+            typer.Option(
+                "--work-dir", "-w", help="操作执行的根目录（工作区）", file_okay=False, dir_okay=True, resolve_path=True
+            ),
+        ] = DEFAULT_WORK_DIR,
+        force: Annotated[bool, typer.Option("--force", "-f", help="强制执行，跳过确认提示。")] = False,
+    ):
+        from pyquipu.application.controller import QuipuApplication
+        from pyquipu.interfaces.exceptions import OperationCancelledError
 
-        if not content.strip():
-            bus.warning("axon.warning.noInput")
-            ctx.exit(0)
+        app_instance = None
+        try:
+            # The application instance manages the engine's lifecycle
+            app_instance = QuipuApplication(work_dir=work_dir, confirmation_handler=confirmation_handler_for_executor)
+            app_instance.engine.align()  # Ensure history is loaded
 
-        # --- 2. 委托给应用层服务 (核心重构) ---
-        from pyquipu.application.controller import run_stateless_plan
+            result = app_instance.checkout_by_tree_hash_prefix(tree_hash_prefix=tree_hash_prefix, force=force)
 
-        logger.info(f"Axon 启动 | 源: {source_desc} | 工作区: {work_dir}")
+            if result.message:
+                kwargs = result.msg_kwargs or {}
+                if not result.success:
+                    bus.error(result.message, **kwargs)
+                else:
+                    bus.success(result.message, **kwargs)
 
-        result = run_stateless_plan(
-            content=content,
-            work_dir=work_dir,
-            parser_name=parser_name,
-            yolo=yolo,
-            confirmation_handler=confirmation_handler_for_executor,
-        )
+            ctx.exit(result.exit_code)
 
-        # --- 3. 渲染结果 (CLI 层职责) ---
-        if result.message:
-            kwargs = result.msg_kwargs or {}
-            if result.exit_code == 2:
-                bus.warning(result.message, **kwargs)
-            elif not result.success:
-                bus.error(result.message, **kwargs)
-            else:
-                bus.success(result.message, **kwargs)
+        except OperationCancelledError:
+            bus.warning("common.prompt.cancel")
+            ctx.exit(2)
+        except Exception as e:
+            bus.error("common.error.generic", error=str(e))
+            ctx.exit(1)
+        finally:
+            if app_instance and app_instance.engine:
+                app_instance.engine.close()
 
-        ctx.exit(result.exit_code)
+    @app.command(help="沿当前分支向上导航（回到父节点）。")
 ~~~~~
 
 ### 下一步建议
 
-我们已经成功地将两个无状态的关注点（`list-acts` 和 `axon` 执行）从 CLI 层完全剥离，并固化为 `application` 层的稳定服务。
+我们已经为有状态命令的迁移建立了一个清晰、可重复的模式。
 
-现在，架构中最主要的边界模糊问题集中在那些**有状态**的 CLI 命令上（如 `checkout`, `log`, `save`, `discard` 等），它们仍然直接与 `engine` 交互。
-
-我提议，下一步我们将这些命令的逻辑逐一迁移为 `QuipuApplication` 类的方法。例如，创建一个 `QuipuApplication.checkout_node(hash_prefix: str) -> QuipuResult` 方法，并将 `checkout.py` 中的逻辑移入其中。这将是实现完全分层的最后一步。
+我建议我们按照这个模式，继续迁移剩余的有状态命令。下一个合适的候选者是 `workspace.py` 中的 `save` 和 `discard` 命令，因为它们是 `checkout` 的逻辑对应操作。完成后，我们将拥有一个几乎完全由应用层驱动的、干净的 CLI。

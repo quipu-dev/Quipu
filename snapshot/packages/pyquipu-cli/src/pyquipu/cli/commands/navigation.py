@@ -12,11 +12,14 @@ from .helpers import _execute_visit, _find_current_node, engine_context
 logger = logging.getLogger(__name__)
 
 
+from ..ui_utils import confirmation_handler_for_executor
+
+
 def register(app: typer.Typer):
     @app.command(help="检出指定状态的快照到工作区。")
     def checkout(
         ctx: typer.Context,
-        hash_prefix: Annotated[str, typer.Argument(help="目标状态节点 output_tree 的哈希前缀。")],
+        tree_hash_prefix: Annotated[str, typer.Argument(help="目标状态快照 (tree) 的哈希前缀。")],
         work_dir: Annotated[
             Path,
             typer.Option(
@@ -25,50 +28,35 @@ def register(app: typer.Typer):
         ] = DEFAULT_WORK_DIR,
         force: Annotated[bool, typer.Option("--force", "-f", help="强制执行，跳过确认提示。")] = False,
     ):
-        with engine_context(work_dir) as engine:
-            graph = engine.history_graph
+        from pyquipu.application.controller import QuipuApplication
+        from pyquipu.interfaces.exceptions import OperationCancelledError
 
-            matches = [node for node in graph.values() if node.output_tree.startswith(hash_prefix)]
-            if not matches:
-                bus.error("navigation.checkout.error.notFound", hash_prefix=hash_prefix)
-                ctx.exit(1)
-            if len(matches) > 1:
-                bus.error("navigation.checkout.error.notUnique", hash_prefix=hash_prefix, count=len(matches))
-                ctx.exit(1)
-            target_node = matches[0]
-            target_output_tree_hash = target_node.output_tree
+        app_instance = None
+        try:
+            # The application instance manages the engine's lifecycle
+            app_instance = QuipuApplication(work_dir=work_dir, confirmation_handler=confirmation_handler_for_executor)
+            app_instance.engine.align()  # Ensure history is loaded
 
-            current_hash = engine.git_db.get_tree_hash()
-            if current_hash == target_output_tree_hash:
-                bus.success("navigation.checkout.info.noAction", short_hash=target_node.short_hash)
-                ctx.exit(0)
+            result = app_instance.checkout_by_tree_hash_prefix(tree_hash_prefix=tree_hash_prefix, force=force)
 
-            is_dirty = engine.current_node is None or engine.current_node.output_tree != current_hash
-            if is_dirty:
-                bus.warning("navigation.checkout.info.capturingDrift")
-                engine.capture_drift(current_hash)
-                bus.success("navigation.checkout.success.driftCaptured")
-                current_hash = engine.git_db.get_tree_hash()
+            if result.message:
+                kwargs = result.msg_kwargs or {}
+                if not result.success:
+                    bus.error(result.message, **kwargs)
+                else:
+                    bus.success(result.message, **kwargs)
 
-            diff_stat_str = engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
+            ctx.exit(result.exit_code)
 
-            if not force:
-                prompt = bus.get(
-                    "navigation.checkout.prompt.confirm",
-                    short_hash=target_node.short_hash,
-                    timestamp=target_node.timestamp,
-                )
-                if not prompt_for_confirmation(prompt, diff_lines=diff_stat_str.splitlines(), default=False):
-                    bus.warning("common.prompt.cancel")
-                    raise typer.Abort()
-
-            _execute_visit(
-                ctx,
-                engine,
-                target_output_tree_hash,
-                "navigation.info.navigating",
-                short_hash=target_node.short_hash,
-            )
+        except OperationCancelledError:
+            bus.warning("common.prompt.cancel")
+            ctx.exit(2)
+        except Exception as e:
+            bus.error("common.error.generic", error=str(e))
+            ctx.exit(1)
+        finally:
+            if app_instance and app_instance.engine:
+                app_instance.engine.close()
 
     @app.command(help="沿当前分支向上导航（回到父节点）。")
     def undo(
