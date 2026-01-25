@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable, Dict, List
 
 from pyquipu.acts import register_core_acts
 from pyquipu.engine.state_machine import Engine
@@ -15,6 +15,31 @@ from .factory import create_engine
 from .plugin_manager import PluginManager
 
 logger = logging.getLogger(__name__)
+
+
+def get_available_acts(work_dir: Path) -> Dict[str, str]:
+    """
+    Statelessly discovers and returns all available acts.
+
+    This function initializes a temporary, stateless executor to discover
+    core acts and acts from plugins found relative to the working directory.
+
+    Args:
+        work_dir: The directory from which to discover project-level plugins.
+
+    Returns:
+        A dictionary mapping act names to their docstrings.
+    """
+    # A dummy confirmation handler is used as it's not required for listing.
+    # Yolo=True ensures no interactive prompts can be triggered.
+    executor = Executor(
+        root_dir=work_dir,
+        yolo=True,
+        confirmation_handler=lambda diff, prompt: True,
+    )
+    register_core_acts(executor)
+    PluginManager().load_from_sources(executor, work_dir)
+    return executor.get_registered_acts()
 
 # 定义 ConfirmationHandler 类型别名: (diff_lines, prompt) -> bool
 # 注意: Executor 期望如果不确认则抛出异常，或者返回 False (取决于 Executor 实现)。

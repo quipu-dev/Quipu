@@ -39,6 +39,21 @@ def register(app: typer.Typer):
         list_acts: Annotated[bool, typer.Option("--list-acts", "-l", help="列出所有可用的操作指令及其说明。")] = False,
     ):
         setup_logging()
+
+        # --list-acts 是一个独立的查询操作，应尽早处理并退出
+        if list_acts:
+            from pyquipu.application.controller import get_available_acts
+
+            bus.info("axon.listActs.ui.header")
+            acts = get_available_acts(work_dir)
+            for name in sorted(acts.keys()):
+                doc = acts[name]
+                clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
+                indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
+                item_header = bus.get("axon.listActs.ui.actItem", name=name)
+                bus.data(f"{item_header}\n{indented_doc}\n")
+            ctx.exit(0)
+
         logger.debug(f"axon started with file={file}, work_dir={work_dir}, parser={parser_name}, yolo={yolo}")
 
         # 1. 初始化无状态 Executor, 复用 controller 中的标准确认处理器
@@ -53,18 +68,6 @@ def register(app: typer.Typer):
         # 3. 加载插件
         # PluginManager 会尝试查找 Git 根目录加载项目级插件，如果找不到 Git 根目录则跳过，符合无状态设计
         PluginManager().load_from_sources(executor, work_dir)
-
-        # 4. 处理 --list-acts
-        if list_acts:
-            bus.info("axon.listActs.ui.header")
-            acts = executor.get_registered_acts()
-            for name in sorted(acts.keys()):
-                doc = acts[name]
-                clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
-                indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
-                item_header = bus.get("axon.listActs.ui.actItem", name=name)
-                bus.data(f"{item_header}\n{indented_doc}\n")
-            ctx.exit(0)
 
         # 5. 获取输入内容 (文件 或 STDIN 或 默认文件)
         content = ""
