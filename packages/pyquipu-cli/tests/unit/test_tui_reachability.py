@@ -2,9 +2,9 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from pyquipu.cli.tui import QuipuUiApp
-from pyquipu.cli.view_model import GraphViewModel
-from pyquipu.interfaces.models import QuipuNode
+from quipu.cli.tui import QuipuUiApp
+from quipu.cli.view_model import GraphViewModel
+from quipu.interfaces.models import QuipuNode
 from test_view_model import MockHistoryReader
 
 

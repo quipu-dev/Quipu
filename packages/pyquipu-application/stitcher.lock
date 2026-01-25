@@ -1,50 +1,60 @@
 {
   "fingerprints": {
-    "py://packages/pyquipu-application/src/pyquipu/application/controller.py#QuipuApplication": {
+    "py://packages/pyquipu-application/src/quipu/application/controller.py#QuipuApplication": {
       "baseline_code_signature_text": "class QuipuApplication:",
       "baseline_code_structure_hash": "d2fb5198cd42afc8c323a52537de5b33164c9a4bb8afa8c3405447eddbafe483",
       "baseline_yaml_content_hash": "2097b05b0863d0d255508bf524ec72afc5bb74f8a8472a9d5c42db1d78375647"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/controller.py#QuipuApplication.__init__": {
+    "py://packages/pyquipu-application/src/quipu/application/controller.py#QuipuApplication.__init__": {
       "baseline_code_signature_text": "def __init__(self, work_dir: Path, confirmation_handler: ConfirmationHandler, yolo: bool = False):",
       "baseline_code_structure_hash": "b2ac0b22c850eed01f7838721b9a9040bba40f58237545f3f86d306fa4327f22"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/controller.py#QuipuApplication._prepare_workspace": {
+    "py://packages/pyquipu-application/src/quipu/application/controller.py#QuipuApplication._prepare_workspace": {
       "baseline_code_signature_text": "def _prepare_workspace(self) -> str:",
       "baseline_code_structure_hash": "528a79ec9be83b31b3016bc3a8c5492b13b106464c5bcdca495b4fae187b574d",
       "baseline_yaml_content_hash": "81dd6b666cf091c621c87fe727fe2f20be9183179073f9c25993d0781ac9ac58"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/controller.py#QuipuApplication._setup_executor": {
+    "py://packages/pyquipu-application/src/quipu/application/controller.py#QuipuApplication._setup_executor": {
       "baseline_code_signature_text": "def _setup_executor(self) -> Executor:",
       "baseline_code_structure_hash": "2cccb8bc4e91794d693f8f3f1f9c53109587bcdd7f5b158ca72f92234e3d74cd",
       "baseline_yaml_content_hash": "9881f5ff456f048f0f958362c910fedcfb0738b4f461dd8a0e04d6fbc30d0944"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/controller.py#QuipuApplication.run": {
+    "py://packages/pyquipu-application/src/quipu/application/controller.py#QuipuApplication.run": {
       "baseline_code_signature_text": "def run(self, content: str, parser_name: str) -> QuipuResult:",
       "baseline_code_structure_hash": "458e8779b9f0df2331eada9d10d5fa4fe729a00ed7a5fde70b771d9beb5bfa8b",
       "baseline_yaml_content_hash": "ba87b5c38065687528f0d842b3c042da0e4c164a6019a46707ead5b7f2488997"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/controller.py#run_quipu": {
+    "py://packages/pyquipu-application/src/quipu/application/controller.py#get_available_acts": {
+      "baseline_code_signature_text": "def get_available_acts(work_dir: Path) -> Dict[str, str]:",
+      "baseline_code_structure_hash": "442aa8ba3388add2d240e0f9bc612bf35528e11d40c765c6ec3a44e4eb874f8b",
+      "baseline_yaml_content_hash": "bd97f637450a7cf01f330f5106a83d9e916dde59d64f2fe89ba667ea8e23e4ac"
+    },
+    "py://packages/pyquipu-application/src/quipu/application/controller.py#run_quipu": {
       "baseline_code_signature_text": "def run_quipu(content: str, work_dir: Path, confirmation_handler: ConfirmationHandler, parser_name: str = 'auto', yolo: bool = False) -> QuipuResult:",
       "baseline_code_structure_hash": "d977d58a9db1f2c9d7fb2d5fabb9cccc5edcdb1aeff988f1fa78442b229c699c",
       "baseline_yaml_content_hash": "316165fbe76e51b117eb3c9c983c8d479df4490b601609f2b0aa5176c9cbd96b"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/factory.py#create_engine": {
+    "py://packages/pyquipu-application/src/quipu/application/controller.py#run_stateless_plan": {
+      "baseline_code_signature_text": "def run_stateless_plan(content: str, work_dir: Path, confirmation_handler: ConfirmationHandler, parser_name: str = 'auto', yolo: bool = False) -> QuipuResult:",
+      "baseline_code_structure_hash": "58320dcc77cb54d7ab31bafcc383b0c8dd3953aaeaf9f8208dab0af5094ffd4e",
+      "baseline_yaml_content_hash": "aa58fd5cec8b7c127c3a729915c6d4f99c875e4405edba365a5f03f5dff992f7"
+    },
+    "py://packages/pyquipu-application/src/quipu/application/factory.py#create_engine": {
       "baseline_code_signature_text": "def create_engine(work_dir: Path, lazy: bool = False) -> Engine:",
       "baseline_code_structure_hash": "4565a1494d7662227444205f34a6e4458c80db2856e465388e6d987a15c015c2",
       "baseline_yaml_content_hash": "3dba786e050a1669e0b95d77fdb347afd214cb596dec260790fbfad6963db840"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/plugin_manager.py#PluginManager": {
+    "py://packages/pyquipu-application/src/quipu/application/plugin_manager.py#PluginManager": {
       "baseline_code_signature_text": "class PluginManager:",
       "baseline_code_structure_hash": "8d211ba7f4db76c8fa4afc820902583d5f7df5c7e482f99b988dba61ece4a2f5",
       "baseline_yaml_content_hash": "c22797fdf50ccd3ac64731ca93183e2f70839b0611a049639bdc77b4f8fe7f15"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/plugin_manager.py#PluginManager.load_from_sources": {
+    "py://packages/pyquipu-application/src/quipu/application/plugin_manager.py#PluginManager.load_from_sources": {
       "baseline_code_signature_text": "def load_from_sources(self, executor: Executor, work_dir: Path):",
       "baseline_code_structure_hash": "e1015eaa8d17516183baa58ec0239c567900a308ec70f60b9ce80fa9e1c72fd4",
       "baseline_yaml_content_hash": "34b1c59e7fa9a03d089fccdafa494a216e5a7746e0aff3b5891a262b88986369"
     },
-    "py://packages/pyquipu-application/src/pyquipu/application/utils.py#find_git_repository_root": {
+    "py://packages/pyquipu-application/src/quipu/application/utils.py#find_git_repository_root": {
       "baseline_code_signature_text": "def find_git_repository_root(start_path: Path) -> Optional[Path]:",
       "baseline_code_structure_hash": "9f19014baa92289d9b4f04d4ee8a92df475d31c38820edc4ffc20efc9ce218a8",
       "baseline_yaml_content_hash": "8ab446ed5e94789aede646cc369436537ffdd64fc5da3229937ba99d5bc83bb7"

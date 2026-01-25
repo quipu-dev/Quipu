@@ -1,9 +1,9 @@
 from pathlib import Path
 
 import pytest
-from pyquipu.interfaces.types import ActContext
-from pyquipu.runtime.executor import ExecutionError, Executor
-from pyquipu.runtime.parser import BacktickParser, TildeParser, get_parser
+from quipu.interfaces.types import ActContext
+from quipu.runtime.executor import ExecutionError, Executor
+from quipu.runtime.parser import BacktickParser, TildeParser, get_parser
 
 
 class TestParser:

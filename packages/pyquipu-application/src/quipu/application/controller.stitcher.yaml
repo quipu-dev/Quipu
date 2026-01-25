@@ -1,0 +1,41 @@
+"QuipuApplication": |-
+  封装了 Quipu 核心业务流程的高层应用对象。
+  负责协调 Engine, Parser, Executor。
+"QuipuApplication._prepare_workspace": |-
+  检查并准备工作区，处理状态漂移。
+  返回执行前的 input_tree_hash。
+"QuipuApplication._setup_executor": |-
+  创建、配置并返回一个 Executor 实例，并注入确认处理器。
+"QuipuApplication.run": |-
+  执行一个完整的 Plan。
+"run_quipu": |-
+  Quipu 核心业务逻辑的入口包装器。
+
+  实例化并运行 QuipuApplication，捕获所有异常并转化为 QuipuResult。
+  确保资源被安全释放。
+get_available_acts: |-
+  Statelessly discovers and returns all available acts.
+
+  This function initializes a temporary, stateless executor to discover
+  core acts and acts from plugins found relative to the working directory.
+
+  Args:
+      work_dir: The directory from which to discover project-level plugins.
+
+  Returns:
+      A dictionary mapping act names to their docstrings.
+run_stateless_plan: |-
+  Executes a plan in a stateless manner, bypassing the Quipu engine.
+
+  This function sets up a temporary executor, loads plugins, parses the content,
+  and executes the statements against the specified working directory.
+
+  Args:
+      content: The string content of the plan to execute.
+      work_dir: The root directory for the execution.
+      confirmation_handler: A callable to handle user confirmations.
+      parser_name: The name of the parser to use ('auto' by default).
+      yolo: If True, skips all confirmation prompts.
+
+  Returns:
+      A QuipuResult object indicating the outcome of the execution.

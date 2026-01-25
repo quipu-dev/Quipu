@@ -3,10 +3,10 @@ import time
 from typing import List
 
 import pytest
-from pyquipu.engine.git_db import GitDB
-from pyquipu.engine.sqlite_db import DatabaseManager
-from pyquipu.engine.sqlite_storage import SQLiteHistoryReader
-from pyquipu.interfaces.models import QuipuNode
+from quipu.engine.git_db import GitDB
+from quipu.engine.sqlite_db import DatabaseManager
+from quipu.engine.sqlite_storage import SQLiteHistoryReader
+from quipu.interfaces.models import QuipuNode
 
 
 @pytest.fixture

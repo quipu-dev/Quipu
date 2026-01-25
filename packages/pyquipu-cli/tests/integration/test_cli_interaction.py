@@ -1,13 +1,13 @@
 from unittest.mock import MagicMock
 
-from pyquipu.cli.main import app
+from quipu.cli.main import app
 from typer.testing import CliRunner
 
 
 def test_run_command_with_piped_input_and_confirmation(runner: CliRunner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.run.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.run.bus", mock_bus)
     output_file = work_dir / "output.txt"
 
     # Plan 内容: 执行一个 shell 命令

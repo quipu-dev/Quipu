@@ -1,5 +1,5 @@
 import pytest
-from pyquipu.test_utils.fixtures import executor, isolated_vault, mock_runtime_bus
+from quipu.test_utils.fixtures import executor, isolated_vault, mock_runtime_bus
 
 
 # 保持 autouse 生效

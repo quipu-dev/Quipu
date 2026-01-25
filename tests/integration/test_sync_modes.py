@@ -1,6 +1,6 @@
-from pyquipu.cli.main import app
-from pyquipu.common.identity import get_user_id_from_email
-from pyquipu.test_utils.helpers import create_node_via_cli, run_git_command
+from quipu.cli.main import app
+from quipu.common.identity import get_user_id_from_email
+from quipu.test_utils.helpers import create_node_via_cli, run_git_command
 from typer.testing import CliRunner
 
 runner = CliRunner()

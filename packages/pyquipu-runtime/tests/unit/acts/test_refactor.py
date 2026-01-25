@@ -1,10 +1,10 @@
 from pathlib import Path
 
 import pytest
-from pyquipu.acts.refactor import register as register_refactor_acts
-from pyquipu.interfaces.exceptions import ExecutionError
-from pyquipu.interfaces.types import ActContext
-from pyquipu.runtime.executor import Executor
+from quipu.acts.refactor import register as register_refactor_acts
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext
+from quipu.runtime.executor import Executor
 
 
 class TestRefactorActs:

@@ -2,8 +2,8 @@ from pathlib import Path
 from unittest.mock import ANY
 
 import pytest
-from pyquipu.runtime.executor import Executor
-from pyquipu.runtime.plugin_loader import load_plugins
+from quipu.runtime.executor import Executor
+from quipu.runtime.plugin_loader import load_plugins
 
 
 class TestPluginResilience:
@@ -18,7 +18,7 @@ class TestPluginResilience:
         return p_dir
 
     def test_load_plugin_with_syntax_error(self, executor: Executor, plugin_dir: Path, mock_runtime_bus):
-        from pyquipu.acts.basic import register as register_basic_acts
+        from quipu.acts.basic import register as register_basic_acts
 
         # 1. 创建一个有语法错误的插件
         bad_plugin_file = plugin_dir / "bad_syntax.py"

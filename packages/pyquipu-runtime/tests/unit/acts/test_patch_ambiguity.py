@@ -1,7 +1,7 @@
 import pytest
-from pyquipu.interfaces.exceptions import ExecutionError
-from pyquipu.interfaces.types import ActContext
-from pyquipu.runtime.executor import Executor
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext
+from quipu.runtime.executor import Executor
 
 
 class TestPatchAmbiguity:
