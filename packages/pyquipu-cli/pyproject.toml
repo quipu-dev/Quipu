@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "pyquipu-cli"
@@ -8,10 +8,9 @@ version = "0.1.0"
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "The command-line interface for Quipu."
 requires-python = ">=3.10"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -36,9 +35,7 @@ pyquipu-bus = { workspace = true }
 [project.scripts]
 quipu = "quipu.cli.main:app"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-namespaces = true
-
-[tool.setuptools.package-data]
-"pyquipu.cli" = ["*.css"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/quipu"]
+# Hatch 默认会自动包含 package_data，如果需要显式包含：
+# include = ["/src/quipu/cli/*.css"]
