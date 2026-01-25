@@ -7,7 +7,6 @@ from typing import Annotated, Optional
 import typer
 from pyquipu.application.controller import run_quipu
 from pyquipu.bus import bus
-from pyquipu.runtime.executor import Executor
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
 from ..logger_config import setup_logging
@@ -37,15 +36,10 @@ def register(app: typer.Typer):
     ):
         setup_logging()
         if list_acts:
-            from pyquipu.acts import register_core_acts
-            from pyquipu.application.plugin_manager import PluginManager
-
-            executor = Executor(root_dir=work_dir, yolo=True)
-            register_core_acts(executor)
-            PluginManager().load_from_sources(executor, work_dir)
+            from pyquipu.application.controller import get_available_acts
 
             bus.info("run.listActs.ui.header")
-            acts = executor.get_registered_acts()
+            acts = get_available_acts(work_dir)
             for name in sorted(acts.keys()):
                 doc = acts[name]
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"

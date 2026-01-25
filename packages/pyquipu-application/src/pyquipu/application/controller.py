@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable, Dict, List
 
 from pyquipu.acts import register_core_acts
 from pyquipu.engine.state_machine import Engine
@@ -15,6 +15,20 @@ from .factory import create_engine
 from .plugin_manager import PluginManager
 
 logger = logging.getLogger(__name__)
+
+
+def get_available_acts(work_dir: Path) -> Dict[str, str]:
+    # A dummy confirmation handler is used as it's not required for listing.
+    # Yolo=True ensures no interactive prompts can be triggered.
+    executor = Executor(
+        root_dir=work_dir,
+        yolo=True,
+        confirmation_handler=lambda diff, prompt: True,
+    )
+    register_core_acts(executor)
+    PluginManager().load_from_sources(executor, work_dir)
+    return executor.get_registered_acts()
+
 
 # 定义 ConfirmationHandler 类型别名: (diff_lines, prompt) -> bool
 # 注意: Executor 期望如果不确认则抛出异常，或者返回 False (取决于 Executor 实现)。
@@ -152,3 +166,49 @@ def run_quipu(
         # 确保无论成功或失败，引擎资源都被关闭
         if app and hasattr(app, "engine") and app.engine:
             app.engine.close()
+
+
+def run_stateless_plan(
+    content: str,
+    work_dir: Path,
+    confirmation_handler: ConfirmationHandler,
+    parser_name: str = "auto",
+    yolo: bool = False,
+) -> QuipuResult:
+    try:
+        executor = Executor(
+            root_dir=work_dir,
+            yolo=yolo,
+            confirmation_handler=confirmation_handler,
+        )
+        register_core_acts(executor)
+        PluginManager().load_from_sources(executor, work_dir)
+
+        final_parser_name = parser_name
+        if parser_name == "auto":
+            final_parser_name = detect_best_parser(content)
+
+        parser = get_parser(final_parser_name)
+        statements = parser.parse(content)
+
+        if not statements:
+            return QuipuResult(
+                success=True,
+                exit_code=0,
+                message="axon.warning.noStatements",
+                msg_kwargs={"parser": final_parser_name},
+            )
+
+        executor.execute(statements)
+        return QuipuResult(success=True, exit_code=0, message="axon.success")
+
+    except CoreExecutionError as e:
+        logger.error(f"❌ 操作失败: {e}")
+        return QuipuResult(
+            success=False, exit_code=1, message="run.error.execution", msg_kwargs={"error": str(e)}, error=e
+        )
+    except Exception as e:
+        logger.error(f"运行时错误: {e}", exc_info=True)
+        return QuipuResult(
+            success=False, exit_code=1, message="run.error.system", msg_kwargs={"error": str(e)}, error=e
+        )
