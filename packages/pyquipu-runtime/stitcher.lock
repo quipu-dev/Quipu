@@ -1,0 +1,1386 @@
+{
+  "fingerprints": {
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/__init__.py#register_core_acts": {
+      "baseline_code_signature_text": "def register_core_acts(executor):",
+      "baseline_code_structure_hash": "3d2b0a5f879d9532e0c919d4781b679a10f16b982edbfcafcd81fc786ec5a97c",
+      "baseline_yaml_content_hash": "9253c0d45b203fb94d037cffdb7d26fcdeb8700f3c007a489cf9169cbdb7e387"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#_append_file": {
+      "baseline_code_signature_text": "def _append_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "e78d8b8261306fbf565c2b49e91b086f26fca5fa768e332ba80adf86a70974fa",
+      "baseline_yaml_content_hash": "89c0330d1dcaa96a54d8892a8721e6fc54a0485695461fb478719ededdfc132e"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#_echo": {
+      "baseline_code_signature_text": "def _echo(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "cd0193521a527aaccf2210d079fb1b7c499a558c3fde1975c67c9184bf6b3e00",
+      "baseline_yaml_content_hash": "cbda2ba2b43f383db66c6cf4e24713ed2490116c59fe128d7125142fe3519e97"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#_end": {
+      "baseline_code_signature_text": "def _end(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "10f034ad868a5c083cca6c671d08cfff072493982871f2dc9e8c5ead83f5f262",
+      "baseline_yaml_content_hash": "ea86461eb080a7345d1b54199d1a1ce4b00b45f8fd937139d65e36e586a9f5e3"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#_patch_file": {
+      "baseline_code_signature_text": "def _patch_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "4eb4aac8aec94dbbf183c3bb4e7db0072bcb69a39c8c14985229361afe76763a",
+      "baseline_yaml_content_hash": "41bd903c2eec0271b0902ab578536690d83a9d836db35316b5d9fa2f55849d71"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#_summarize_append": {
+      "baseline_code_signature_text": "def _summarize_append(args: List[str], contexts: List[str]) -> str:",
+      "baseline_code_structure_hash": "48ef13978b4e76d8a06ee269ef8dbf9eb61273a8c50620b39772c187da366fbd"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#_summarize_patch_file": {
+      "baseline_code_signature_text": "def _summarize_patch_file(args: List[str], contexts: List[str]) -> str:",
+      "baseline_code_structure_hash": "900ab7217dc36a344556aad08ab2adcdbe7808be6dfa2d6f7f76c86591ad4b02"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#_summarize_write": {
+      "baseline_code_signature_text": "def _summarize_write(args: List[str], contexts: List[str]) -> str:",
+      "baseline_code_structure_hash": "c425846ca27d8fc0c7557063874e605e861defa666c93bd68b41ee5d61afc519"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#_write_file": {
+      "baseline_code_signature_text": "def _write_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "f9d1ddd4bd3133bb986ea3da57c13468a696244917adb9b4845765d0cce4f8e3",
+      "baseline_yaml_content_hash": "8d83f15d6fc18b957562ac34000abb148e537c42f1131e6705a99cd0dd9c3043"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/basic.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "67abe2573553cb05e2e6a7e38572dc51471d8d75d39426b7546392d0bb7530dc"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/check.py#_check_cwd_match": {
+      "baseline_code_signature_text": "def _check_cwd_match(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "b57357d0ddafe076f07a1e904bd7761553905d8375eb992c48c8a2083ee11dc6",
+      "baseline_yaml_content_hash": "3e021c1625a1d163a9723e56d9cbfd1b7032f211a059dfa09024ba389a8d1b11"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/check.py#_check_files_exist": {
+      "baseline_code_signature_text": "def _check_files_exist(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "f590c834c4eda6c9bb26a11ad704c5ae33ebcf6171539112540628d6c238eb57",
+      "baseline_yaml_content_hash": "b65a56e0e6155a7a38cf85a9128c14109f661985d85dd7c76c88bce2e7dc8216"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/check.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "135dc4e6adfc90cc3bddd760ae9c77757253d7710c04bb2da988cec0863df193"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/git.py#_git_add": {
+      "baseline_code_signature_text": "def _git_add(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "acc173a84cb14620cb9151a2b84f778b90291f831349d8ddcbc97c0d04190b29",
+      "baseline_yaml_content_hash": "6d0dd6d55be22990b46c85510d709d371f12c6e1a54818949745cc6cc2913919"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/git.py#_git_commit": {
+      "baseline_code_signature_text": "def _git_commit(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "4aaff9708e3cf2aedc7fa480477a39061c7cfdbb73177af0bde02e0ca7ee864a",
+      "baseline_yaml_content_hash": "47edb9170cc4c68fcf1361c8ccf3a1d43590f43af889e7883e3315c6cda23f00"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/git.py#_git_init": {
+      "baseline_code_signature_text": "def _git_init(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "914caf13af3cb6a639a96cbf5c339132f3764f7e28172d3cf7b806ef185f5642",
+      "baseline_yaml_content_hash": "9603e9475959f1d93720e90ec14e965764521c0fb9e3c27cc85671b5440c3a6a"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/git.py#_git_status": {
+      "baseline_code_signature_text": "def _git_status(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "0c7dc34d789f96fe973984f28167339ed1ad140c240597fb4d59230a5abe1159",
+      "baseline_yaml_content_hash": "a890ab31c1011d514a5177f0a6c79fe2dc4d3a9f2757f6b8fbc63a1cca9e4128"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/git.py#_run_git_cmd": {
+      "baseline_code_signature_text": "def _run_git_cmd(ctx: ActContext, cmd_args: List[str]) -> str:",
+      "baseline_code_structure_hash": "578c8c820674310f791c1b934b21a97506df3b16afe32e057e2c0d5176af5009",
+      "baseline_yaml_content_hash": "ecf8a72b7afb16ce17ac7734a7c1726c24d8ffc1d7920ad7fa811f2803b704b6"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/git.py#_summarize_commit": {
+      "baseline_code_signature_text": "def _summarize_commit(args: List[str], contexts: List[str]) -> str:",
+      "baseline_code_structure_hash": "a10b53c984403e40427719044705b1243996076c39f7b8e2d3d4b7c0d846220a"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/git.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "2d9ad92cb68fd2fb55e3145207c6e68e8dd5c2568b7fff24d85b37c8412e49b7"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/memory.py#_log_thought": {
+      "baseline_code_signature_text": "def _log_thought(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "39a6473c13602780dd4182c1c1c7128c2d74108ac22ace0ad7b24bbe325ab403",
+      "baseline_yaml_content_hash": "ad6b7f235ba1ed8c2a34ee32f40bc923f9225316a05fdb80cf879531dca0341c"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/memory.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "12783f087c2c57d2c9c804127e026ce55942268f34bc463827ec204941f5d163"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/read.py#SafeArgumentParser": {
+      "baseline_code_signature_text": "class SafeArgumentParser(argparse.ArgumentParser):",
+      "baseline_code_structure_hash": "cdc2844d6c21e8477ea8f2d24b4341cde49e993ca0c375e06cc5cf693528d6f5",
+      "baseline_yaml_content_hash": "ec247209f82d94c529981d0f51a0dfc3b0d8227e38e939c7a14affc2ce2e1ee1"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/read.py#SafeArgumentParser.error": {
+      "baseline_code_signature_text": "def error(self, message):",
+      "baseline_code_structure_hash": "f5d4b06a1f2ccb21a54181ab170905fd7dd4d90d233a2c336c2e0959b0faaae9"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/read.py#SafeArgumentParser.exit": {
+      "baseline_code_signature_text": "def exit(self, status = 0, message = None):",
+      "baseline_code_structure_hash": "b657e47efb3b0c259699a1b88e9a0b02d689b79453b7caa7ea080f8db420cc67"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/read.py#_list_files": {
+      "baseline_code_signature_text": "def _list_files(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "ea78bfb50fb17f905c21c6eb3799ae1b60e7778211e2d7058297acd3a27d798b",
+      "baseline_yaml_content_hash": "b5a0ac44601e6c19bb3f331772ff488828ccd583b4fa590938fb01868f84b85f"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/read.py#_python_search": {
+      "baseline_code_signature_text": "def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):",
+      "baseline_code_structure_hash": "b88fe69461db031536099e10d9a978a7baf4629f6bb8af5fc079dcfdd4b356e5"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/read.py#_read_file": {
+      "baseline_code_signature_text": "def _read_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "1c20c2eed414a164cfe41ead3c4eda34deb7181e426c7fed9213a471c313dcc0",
+      "baseline_yaml_content_hash": "29acf3f2e8b486ff12c1702fb3e85267d1a00c50e47969ab5f39ab070c4e96da"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/read.py#_search_files": {
+      "baseline_code_signature_text": "def _search_files(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "a96f37a1e686362d69ab00ddc5639de1c10e833d746cc43fbdfcf571dae8e467",
+      "baseline_yaml_content_hash": "67accecfd0d6dc97dad18f1ad0a7b1e94de1123f583a2be1607e8e47bfcdb6c7"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/read.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "247ee1eefe53040b0b3547e2d29d2fdab3faae0594660e403ef8aeedd4ceb8ea"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/refactor.py#_delete_file": {
+      "baseline_code_signature_text": "def _delete_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "88993539fc29b7b1278781b3cda0fb68112ab04b0f14b8d404d76d9dcc441bbf",
+      "baseline_yaml_content_hash": "6115bafe45c3fec826a8b003c875c0f657603b9b1fa180979be7f6be15c46f2b"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/refactor.py#_move_file": {
+      "baseline_code_signature_text": "def _move_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "c52b7410cdceb3b085175e469a59baa93679f5b851ecc835b27317577c473f52",
+      "baseline_yaml_content_hash": "1fd81d8e6f9bcf25ac4c0014dbed326bb0d71deabbc3aa10c8d6773329e9f30f"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/refactor.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "78123a0c8faa94a63b295b443ada6f87adc48338b6bb0a9c7f49b8ee8320b661"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/shell.py#_run_command": {
+      "baseline_code_signature_text": "def _run_command(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "4cbaf604e29ae42fd17eaabe5a7374f93e18b522609d454103a49b43ac3505c0",
+      "baseline_yaml_content_hash": "6d61936125f12951f0b92c4b0ee11ffcc753742d1c22bde225cdf4516b1b3ec5"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/acts/shell.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "6df5511fb0e342791ff8a9f875c1b5061f94033836be6162a49b496a5c23b9c4"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/executor.py#Executor": {
+      "baseline_code_signature_text": "class Executor:",
+      "baseline_code_structure_hash": "b0b89bb1df01fc07681c0086ffdff841178349557157f0c7827e1d39b6795e45",
+      "baseline_yaml_content_hash": "cbe2840a0a8c89cf7b9a978bd20bc1d326c86a798f15e8c79fe6de20f191f17e"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/executor.py#Executor.__init__": {
+      "baseline_code_signature_text": "def __init__(self, root_dir: Path, yolo: bool = False, confirmation_handler: Optional[ConfirmationHandler] = None):",
+      "baseline_code_structure_hash": "5dc8c461df1f75093077e29ed22d8468532ec5b0a0193d5e33c714d7db50060b"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/executor.py#Executor.execute": {
+      "baseline_code_signature_text": "def execute(self, statements: List[Statement]):",
+      "baseline_code_structure_hash": "7bd8035f21e80f8ae547d434157fa345ee0a0a64a07b6a96b925c2c9281544e8",
+      "baseline_yaml_content_hash": "e6815288ca8b4123f77f71bfad5efba6c0a3cdbd567032b8b6990cfa3b61f672"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/executor.py#Executor.get_registered_acts": {
+      "baseline_code_signature_text": "def get_registered_acts(self) -> Dict[str, str]:",
+      "baseline_code_structure_hash": "7724e91a9caa012c69cfbf4718b479eda77ac0d71616c5637dd4269e0553c84c",
+      "baseline_yaml_content_hash": "dfb803edb5758bc769a037591fa96bfdf5a1ffa21bfca1940c07873aedbc7e43"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/executor.py#Executor.register": {
+      "baseline_code_signature_text": "def register(self, name: str, func: ActFunction, arg_mode: str = 'hybrid', summarizer: Any = None):",
+      "baseline_code_structure_hash": "e48c261915f85c280d106b0c93b1cf98654e56b8e1fc2e5800cd9e426b735a0d",
+      "baseline_yaml_content_hash": "20561a461eab04ff642c53479fc850fbe4e44a46b24fa456d6ff060ee7e294d9"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/executor.py#Executor.request_confirmation": {
+      "baseline_code_signature_text": "def request_confirmation(self, file_path: Path, old_content: str, new_content: str):",
+      "baseline_code_structure_hash": "7de3ce6fcfd85ba1c5ecdf43522307ca6809807081e9eb4769c50a3615ef2db7",
+      "baseline_yaml_content_hash": "e7c0d4af93853cef124f33d2b826c3f61d3f104be4182bfd7f8c39512b3eb25b"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/executor.py#Executor.resolve_path": {
+      "baseline_code_signature_text": "def resolve_path(self, rel_path: str) -> Path:",
+      "baseline_code_structure_hash": "72f5dd33f74cb5de3c3603b501ffd27c15a1aa7ad04c772be50667efef35f981",
+      "baseline_yaml_content_hash": "ce5edec7c712176f8b186ae5c87976e5901eee7fe0f79dda6829bcf20768a84e"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/executor.py#Executor.summarize_statement": {
+      "baseline_code_signature_text": "def summarize_statement(self, stmt: Statement) -> str | None:",
+      "baseline_code_structure_hash": "cff09d68c9391966de6251a7aba7ba3a3ba2843a72e0e0a9f1e55fcf6e1dc504",
+      "baseline_yaml_content_hash": "e21fa54a784771b769e9a27571fa39765fcf9f0d89a61446043859ead7064d8d"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#BacktickParser": {
+      "baseline_code_signature_text": "class BacktickParser(StateBlockParser):",
+      "baseline_code_structure_hash": "62ab6ab3e0418b7b10b7dd198e4b603d6ce19bb039eebd1bcc8f433a84fc5725",
+      "baseline_yaml_content_hash": "93baac35b412734373c0af7e9801f1a82a90777d4bcc931492d9849f804eb3a8"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#BacktickParser.__init__": {
+      "baseline_code_signature_text": "def __init__(self):",
+      "baseline_code_structure_hash": "9bab2b1dd22fea04e58176b09f65ef4f673738c47abf25fca7e0c62af472206f"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#BaseParser": {
+      "baseline_code_signature_text": "class BaseParser(ABC):",
+      "baseline_code_structure_hash": "8fe7d17f038b0f58ccf36c037036ffa239c7e6af62ed57613d7e08f970c2bc92",
+      "baseline_yaml_content_hash": "07274cf2e5aa9ad62207ca19fbbebbb5065e4204e4ab93a02fbae390e6aaa0f7"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#BaseParser.parse": {
+      "baseline_code_signature_text": "def parse(self, text: str) -> List[Statement]:",
+      "baseline_code_structure_hash": "707b6f06d9e47b672e6523beff9a1e7699ff5ad4f4c930ad4aa87c75b18fbd7f",
+      "baseline_yaml_content_hash": "530154090468c19c97f3cee0a0f9bb29db633c32c7e3cbacd16f6f59d1a152ae"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#StateBlockParser": {
+      "baseline_code_signature_text": "class StateBlockParser(BaseParser):",
+      "baseline_code_structure_hash": "3bbe472eb7eb00ef257ea45515ee38cfbf460f394f159c0da65a9247d125164e",
+      "baseline_yaml_content_hash": "2f11686e0e90b7136f77b5324c6c795dee4ebed1d525bb879d0047b1cc094ea9"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#StateBlockParser.__init__": {
+      "baseline_code_signature_text": "def __init__(self, fence_char: str):",
+      "baseline_code_structure_hash": "18f2b958cf5f4c41f822cced13d1104a7e246f658c45199b0759f18cad3b2fe8"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#StateBlockParser.parse": {
+      "baseline_code_signature_text": "def parse(self, text: str) -> List[Statement]:",
+      "baseline_code_structure_hash": "707b6f06d9e47b672e6523beff9a1e7699ff5ad4f4c930ad4aa87c75b18fbd7f"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#TildeParser": {
+      "baseline_code_signature_text": "class TildeParser(StateBlockParser):",
+      "baseline_code_structure_hash": "7e4c0ae00e6f68f4457cfab5c0b4d935f4f5ab547fe89b66be08440c3e5051e9",
+      "baseline_yaml_content_hash": "1f0c2199c6da2c074fbdfff7d311f4da05118c49241e677be4d4b80f0923fb0d"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#TildeParser.__init__": {
+      "baseline_code_signature_text": "def __init__(self):",
+      "baseline_code_structure_hash": "9bab2b1dd22fea04e58176b09f65ef4f673738c47abf25fca7e0c62af472206f"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#detect_best_parser": {
+      "baseline_code_signature_text": "def detect_best_parser(text: str) -> str:",
+      "baseline_code_structure_hash": "c84de73594160642d37e1c7a3a95236da88fff14a4290ab7d76d25acbad93ad0",
+      "baseline_yaml_content_hash": "37e0ae616fded69e306b11e96ae3981eb37c007a699dadfc087c5605cf5c9b5b"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#get_parser": {
+      "baseline_code_signature_text": "def get_parser(name: str) -> BaseParser:",
+      "baseline_code_structure_hash": "51c51914d1fc7980f6b19116ebde6d8fffc7efeac97e2a3d8d0afb04897eba36",
+      "baseline_yaml_content_hash": "88229ce454e245be3f3740751e60c9152d154fdd622976fe97a16802ca699519"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/parser.py#list_parsers": {
+      "baseline_code_signature_text": "def list_parsers() -> List[str]:",
+      "baseline_code_structure_hash": "d7d0bd6033defde1d06cb358e0b106d9c18f0daba6e1d80536e2147c4ccb3372"
+    },
+    "py://packages/pyquipu-runtime/src/pyquipu/runtime/plugin_loader.py#load_plugins": {
+      "baseline_code_signature_text": "def load_plugins(executor: Executor, plugin_dir: Path):",
+      "baseline_code_structure_hash": "dc94bc92c7b5b86146bd107909b44e28cadfc9966257557ed44246e5293c8358",
+      "baseline_yaml_content_hash": "8d74b280b29ce9d51b6aaa20022f0a01ffd5ad8b09532244689d13c24bbeb36a"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_check.py#TestCheckActs": {
+      "baseline_code_signature_text": "class TestCheckActs:",
+      "baseline_code_structure_hash": "78d67d69d5cd20e97deaea31ce9fe96d22ed3a0c507dfa9988df442bb8332c8f"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894",
+      "baseline_yaml_content_hash": "bf6efd148017f8068ddf40f71eb15163dd25d06bce16607af58bb6feabffa4a7"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.test_check_cwd_match_fail": {
+      "baseline_code_signature_text": "def test_check_cwd_match_fail(self, executor: Executor):",
+      "baseline_code_structure_hash": "734c838854b285cf39549f55158000b1d9a7e0b136720775069f17042aeb7e87"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.test_check_cwd_match_success": {
+      "baseline_code_signature_text": "def test_check_cwd_match_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "6504eae1d087e3c877ed83490748e3ca4b48caa4fa0d8a31e2819158ed50a61a"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.test_check_files_exist_fail": {
+      "baseline_code_signature_text": "def test_check_files_exist_fail(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "799e1eeef81cf0e87c33ebecefa5f6589c61588d553cfb6e1b69bf6bbf76ed86"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.test_check_files_exist_success": {
+      "baseline_code_signature_text": "def test_check_files_exist_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "2b8feddd1970331acf4daf59445d49201ce813e16e62c23ce19cbd2624d289f1"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_git.py#TestGitActs": {
+      "baseline_code_signature_text": "class TestGitActs:",
+      "baseline_code_structure_hash": "4c0785de80872752f51107be97b9b8ee153cc9d3e948f8e7ae7fc0f50dfb747b"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_git.py#TestGitActs.setup_git_env": {
+      "baseline_code_signature_text": "def setup_git_env(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "31f95e6095ceebde9252e6dbd3124052d2351ec22e60f2dea2591cc1c973c41c",
+      "baseline_yaml_content_hash": "99d23b4b79acff2c63b6363f6298685c1ac25c4fe70d5127fe6c194b0f1fa66c"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_git.py#TestGitActs.test_git_init_idempotent": {
+      "baseline_code_signature_text": "def test_git_init_idempotent(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "2bacf4c6de0aad0e35f81a62f079cc317614de04632e0358f37e2a70c154adf5"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_git.py#TestGitActs.test_git_status_output_stream": {
+      "baseline_code_signature_text": "def test_git_status_output_stream(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "f2c544447e5549c796caa53ba4ac98bbd7d32db61ddd9cc1e403fcaeee952774",
+      "baseline_yaml_content_hash": "d1402035cd1ce46534383d5aae27f26077527638ae9c32117fa0483fa8c1da2e"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_git.py#TestGitActs.test_git_workflow": {
+      "baseline_code_signature_text": "def test_git_workflow(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "c61a6b39a70b097acfec7e02299928d58b0f9265d820ef3a2f7137076de33bb8"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs": {
+      "baseline_code_signature_text": "class TestMemoryActs:",
+      "baseline_code_structure_hash": "cc7104c248befc765252f25b826b44511b4cef23923849e4ad96087ba5bc7b34"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs.test_log_thought_missing_args": {
+      "baseline_code_signature_text": "def test_log_thought_missing_args(self, executor: Executor):",
+      "baseline_code_structure_hash": "41dfef59523af984fa88f4e980ce724c30b128def9ec6f4b6bc191ed7201b1cf"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs.test_log_thought_success": {
+      "baseline_code_signature_text": "def test_log_thought_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "800e8dc01d4e66d407af99a22f3dbca584c2d74630c6b20a15119107d6b80b55"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs.test_log_thought_write_error": {
+      "baseline_code_signature_text": "def test_log_thought_write_error(self, executor: Executor, isolated_vault: Path, monkeypatch):",
+      "baseline_code_structure_hash": "cddd8a34f94b6f8ec57364e2c8a5f95e2a0bfcb61abed24bcd3f58fb981d215b"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_patch_ambiguity.py#TestPatchAmbiguity": {
+      "baseline_code_signature_text": "class TestPatchAmbiguity:",
+      "baseline_code_structure_hash": "e2972febade6f585fa88150772ecc6eeab4adf289f6bd45a6044d3988217a08a"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_patch_ambiguity.py#TestPatchAmbiguity.test_patch_file_fails_on_ambiguous_multiline_content": {
+      "baseline_code_signature_text": "def test_patch_file_fails_on_ambiguous_multiline_content(self, executor: Executor, isolated_vault):",
+      "baseline_code_structure_hash": "c2177805bb8f954d166e5a5702694b3147aa22f4c0ce77e61bfaf8c9e8bb54be",
+      "baseline_yaml_content_hash": "6ffc03ba55fce1dafc423c20f6cac4dbe9f2367760f4c006b7c13e7084df7604"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_patch_ambiguity.py#TestPatchAmbiguity.test_patch_file_should_fail_on_ambiguous_content": {
+      "baseline_code_signature_text": "def test_patch_file_should_fail_on_ambiguous_content(self, executor: Executor, isolated_vault):",
+      "baseline_code_structure_hash": "1a06c91eb157f2cfb82c7cffcfc962cf129677c9240ae62ff6377153ca240def",
+      "baseline_yaml_content_hash": "24357fcce8c409c2ac9dcd2a86d0846cc2f9904f5d8f7a2f83cee9fa64fe4fd8"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs": {
+      "baseline_code_signature_text": "class TestReadActs:",
+      "baseline_code_structure_hash": "1b1cf32770aa76180fbd5166ed957d7e5634d939372a56ecd6382d761d9f0d08"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_read_file_is_dir": {
+      "baseline_code_signature_text": "def test_read_file_is_dir(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "8b179272dc02d18f8bab1098f5f1847b1fba677909eca142c2e7b1eab0bf830b"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_read_file_not_found": {
+      "baseline_code_signature_text": "def test_read_file_not_found(self, executor: Executor):",
+      "baseline_code_structure_hash": "ff8bea74f86d2994a8415e32a1610655d20f71ae385c0b98f25adab576cef112"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_args_error": {
+      "baseline_code_signature_text": "def test_search_args_error(self, executor: Executor):",
+      "baseline_code_structure_hash": "841e87b0bf984ef9b512deff8dd4f1636582f9449f488a19b6fb267431d4402e"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_binary_file_resilience": {
+      "baseline_code_signature_text": "def test_search_binary_file_resilience(self, executor: Executor, isolated_vault: Path, monkeypatch):",
+      "baseline_code_structure_hash": "a2bb813a77339061129bace244836f9544dca1dbc721cc57432d225f635b7df0"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_no_match": {
+      "baseline_code_signature_text": "def test_search_no_match(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):",
+      "baseline_code_structure_hash": "15fdc002d1f10ea0ce3975b5b477899003823e1d12cf6ca7aeab28a82f83a2cf"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_python_fallback": {
+      "baseline_code_signature_text": "def test_search_python_fallback(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):",
+      "baseline_code_structure_hash": "4f43e6a804cdf7b793006a50d712632da0c6cf598f2a81162e25142a4beb85dc"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_scoped_path": {
+      "baseline_code_signature_text": "def test_search_scoped_path(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):",
+      "baseline_code_structure_hash": "42e70a6cb5ba6019650e885fccd77cd90eee0c6621461a9911d0f3907f0eccae"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_with_ripgrep": {
+      "baseline_code_signature_text": "def test_search_with_ripgrep(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "5e8c33ce95171d311af88273b35c3bc4ce45d529fe7b2d658f82485a3a8deb81"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs": {
+      "baseline_code_signature_text": "class TestRefactorActs:",
+      "baseline_code_structure_hash": "89db72cc2d06394690b3386970e067fd230d905d02313e38919f166012938244"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_delete_dir_success": {
+      "baseline_code_signature_text": "def test_delete_dir_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "e29f582716b58ddb0a78b60e85fc964945e1b1117502b2d9154f98a8457674d1"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_delete_file_success": {
+      "baseline_code_signature_text": "def test_delete_file_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "2512eec7a88a72b36de2b071b8684dedf0c31157cacaff9ed7a7d4a6359203f6"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_delete_skipped": {
+      "baseline_code_signature_text": "def test_delete_skipped(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "e201453baabca3125e55f4c1ca1c99f08035f1fd02fa1e4e558fce99ea1af098"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_move_file_permission_error": {
+      "baseline_code_signature_text": "def test_move_file_permission_error(self, executor: Executor, isolated_vault: Path, monkeypatch):",
+      "baseline_code_structure_hash": "db93ca1e409a04142ed6fd6f75015e5f96d2ad5cec6a1c2a081f05db4622bc3e"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_move_file_src_not_found": {
+      "baseline_code_signature_text": "def test_move_file_src_not_found(self, executor: Executor):",
+      "baseline_code_structure_hash": "faac783f28c01d08fa0388c55a9eae2fe9499bec1ca568074e34027602351896"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_move_file_success": {
+      "baseline_code_signature_text": "def test_move_file_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "a81f48189a04a0823c984cdb0de2201fd2efdbac3cd8f4ac60833d759bcc348a"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_shell.py#TestShellActs": {
+      "baseline_code_signature_text": "class TestShellActs:",
+      "baseline_code_structure_hash": "0b3889e8bbdc6752cfe00af11d9272c8506c596054df5e377031f9465b7a9a27"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_does_not_swallow_blocks": {
+      "baseline_code_signature_text": "def test_run_command_does_not_swallow_blocks(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "4029d761584fe9c0654a98be5ccdeeff140c8a7466bc1f0725a86ca858bab18b",
+      "baseline_yaml_content_hash": "174a8786a73c4e53ab2f145b8e78fb49fc88213f728ca11ec8637f6f0dc85efa"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_failure": {
+      "baseline_code_signature_text": "def test_run_command_failure(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "e6366aed4e8c5dd2495a1a1471abdb8d2a88b697bdc64de1ec3068fa349ddf2a"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_missing_args": {
+      "baseline_code_signature_text": "def test_run_command_missing_args(self, executor: Executor):",
+      "baseline_code_structure_hash": "a2aacc9829413ff3fbeff6c90f3cc79d77b40bf178ea672917abf0d603293fa5"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_multiline_script": {
+      "baseline_code_signature_text": "def test_run_command_multiline_script(self, executor: Executor, isolated_vault, mock_runtime_bus):",
+      "baseline_code_structure_hash": "d6d96e9f525c407e13bec8caff6cb398994109a7c08964ad689a111a8ebbe9e2",
+      "baseline_yaml_content_hash": "dfe5d1ccc0101de043e63a8a7f4839b1bc93164721e94e4eda440f7344aa3051"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_stderr": {
+      "baseline_code_signature_text": "def test_run_command_stderr(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "844283e152b17c6a7d4149144eb953d309c0574c132d6824c785c10cb72f4a3f"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_success": {
+      "baseline_code_signature_text": "def test_run_command_success(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "be3b917226e82c9d2d410ac0e62e29cce058686ff7f30a9c9c73e988f028585e"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/conftest.py#_auto_mock_runtime_bus": {
+      "baseline_code_signature_text": "def _auto_mock_runtime_bus(mock_runtime_bus):",
+      "baseline_code_structure_hash": "83c93dce8d9710ad0f8868a102ce8d7357c40cbd9fe42d4cc1c6a05fbcf5d3b6"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/conftest.py#pytest_configure": {
+      "baseline_code_signature_text": "def pytest_configure(config):",
+      "baseline_code_structure_hash": "8033a723e2db4323d4998ec32f8f9c47549bda338ba8ac9f17f25bd465f26059",
+      "baseline_yaml_content_hash": "1ebeeca56ecfb62e9cb2dc9fc0bb877bc8bec2c382aa7d7f6e62b03b92b92c05"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy": {
+      "baseline_code_signature_text": "class TestArgStrategy:",
+      "baseline_code_structure_hash": "31133e02fb248cfa2da13827515ef2b2a5e3d8a08cb514f32dd79b4493ffe4a3"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.executor": {
+      "baseline_code_signature_text": "def executor(self, tmp_path):",
+      "baseline_code_structure_hash": "123856db28f7c5faed981fae18a6ab243518c60672257f999ba4807771bef7b1",
+      "baseline_yaml_content_hash": "3f8ce22e3b721df8ad3cb175a28d96c062ef9e269d6ed98fc4e4bcd4ccb96a23"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_block_only_mode": {
+      "baseline_code_signature_text": "def test_block_only_mode(self, executor):",
+      "baseline_code_structure_hash": "fc70df322add45a199826cd97571f093c4162ffae05aacdb44d01d1d51d405ee",
+      "baseline_yaml_content_hash": "633f64f8cc1c74e2860f411d47aaf995df7cb42c31fee088d43049c21d001d20"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_block_only_no_block": {
+      "baseline_code_signature_text": "def test_block_only_no_block(self, executor):",
+      "baseline_code_structure_hash": "9aadcf01e9964cec7a659368c6876748254dc80c54c6ea5b501b0c240bfd1493",
+      "baseline_yaml_content_hash": "9d6e11492f8b9c68540f81b5b8ec34ee0424def14edef25fe867736a78d33b8b"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_exclusive_mode_fallback_to_block": {
+      "baseline_code_signature_text": "def test_exclusive_mode_fallback_to_block(self, executor):",
+      "baseline_code_structure_hash": "7cb05a6c12160ac27edbf0d78296267afba61c0948f1c5ba0e65c3d5bcc84750",
+      "baseline_yaml_content_hash": "4a15e91042c79c8da75d309eb24bfdee8eca6a085b4c8e2958fc9a14adbaf2e2"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_exclusive_mode_inline_priority": {
+      "baseline_code_signature_text": "def test_exclusive_mode_inline_priority(self, executor):",
+      "baseline_code_structure_hash": "baaba24cd9cb0be3d585a33489491364a55f8893c50f6a18abed2aad19b87a9f",
+      "baseline_yaml_content_hash": "48d96f328a44ea3bb067dcf87ec96f76db2c24b3f3f77f92bb1fe4496e6c2385"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_hybrid_mode_merge": {
+      "baseline_code_signature_text": "def test_hybrid_mode_merge(self, executor):",
+      "baseline_code_structure_hash": "75b43e3df2f1ecd4c5ea6acd3321af4d49009339ce9821bde8109a35984eb79c",
+      "baseline_yaml_content_hash": "20e0f5ce17c7f23ffe12f2a5d8694c986c6905f602b5a86ca9e0199bd2c5cfa7"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_hybrid_mode_only_inline": {
+      "baseline_code_signature_text": "def test_hybrid_mode_only_inline(self, executor):",
+      "baseline_code_structure_hash": "9668efecb4bda20f0f590c2d84b2b80aeda2310667f737204ea0ca1986ee8c66",
+      "baseline_yaml_content_hash": "2938e9b52d3a43713f3caf84d61f56f3c8ffbd0af8ec90d9cddfed365520d3e5"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_invalid_mode_registration": {
+      "baseline_code_signature_text": "def test_invalid_mode_registration(self, executor):",
+      "baseline_code_structure_hash": "9257a54d5574e56edd39997f4091f9472d3e0514ef5202711e3a5c120d76b062",
+      "baseline_yaml_content_hash": "4c1c232703846f28df345dd3c1bcf72fcf685533b2499fdb2d42b4343c9e8644"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs": {
+      "baseline_code_signature_text": "class TestBasicActs:",
+      "baseline_code_structure_hash": "64dd72e9a3c0faae5e4cfa1f327f1a2821e322c1b400aa8d0267aceece67a1b4"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_append_fail_not_found": {
+      "baseline_code_signature_text": "def test_append_fail_not_found(self, executor: Executor):",
+      "baseline_code_structure_hash": "597c08122134cd2947a92ab2c385c78512b95c388a5e0d1ff355ca58bd6529f6"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_append_file": {
+      "baseline_code_signature_text": "def test_append_file(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "dc30f0724b2d5113a020de409a9aca3a225b2b035e8eb1b1f977724d70a975a6"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_patch_file_fail_not_found": {
+      "baseline_code_signature_text": "def test_patch_file_fail_not_found(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "89c3a7e47f56b8dbf0e9fa79591111730e8f2c36085b31880ca7112460a9d115"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_patch_file_text": {
+      "baseline_code_signature_text": "def test_patch_file_text(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "5bd8647411a8e8cb948510415d1f479c5a9c9788058114a43212a98f0e73e9f3"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_variable_lang_parser_recognition": {
+      "baseline_code_signature_text": "def test_variable_lang_parser_recognition(self):",
+      "baseline_code_structure_hash": "c7b4a3187fd31075101ddc0749416f40ce52168a50f6dc1147b911160d692b40",
+      "baseline_yaml_content_hash": "9719f495a74c7ad9ef9cf5dd04834415a5a38f6e3425ecc1dbaab96572ee7d72"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_write_file": {
+      "baseline_code_signature_text": "def test_write_file(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "6f8f21c0324c4f4d07e0efdb8cb36683434076f38f47a412030cc4c693c09bf6"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs": {
+      "baseline_code_signature_text": "class TestHybridArgs:",
+      "baseline_code_structure_hash": "e71eb281a53f9f12409bcf29e75260eab69f0215da1e12f01a7dab4e2feda94e"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs.test_act_parsing_error": {
+      "baseline_code_signature_text": "def test_act_parsing_error(self, executor: Executor):",
+      "baseline_code_structure_hash": "77c32863d1b007c582d9533a28fb0602de9f128a49b7c21602206dc06a0c4e35"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs.test_inline_quoted_args": {
+      "baseline_code_signature_text": "def test_inline_quoted_args(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "d34d3ba0196d7274303ccda19f87a16d3c8996a7bb2c6ce9c8d290d42975abb0"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs.test_inline_write_file": {
+      "baseline_code_signature_text": "def test_inline_write_file(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "781d11285553ffb23d961d0beaca8b03079bb94284014a560f8b88ab6301dac4"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs.test_mixed_git_commit": {
+      "baseline_code_signature_text": "def test_mixed_git_commit(self, executor: Executor):",
+      "baseline_code_structure_hash": "cdd2c300201cd0c859dee6760488f66646e9c7b0c296acb6621d17f5e65a97ba"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser": {
+      "baseline_code_signature_text": "class TestParser:",
+      "baseline_code_structure_hash": "d0a8b6f7335b357f78a04b59e06ba2b61f44ca737033f513f141ac68a33fea39"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser.test_backtick_parser": {
+      "baseline_code_signature_text": "def test_backtick_parser(self):",
+      "baseline_code_structure_hash": "679eb19cecbaf2af218b1c2cd3715e64407b0bea65429ab6e52213b43c6effc2"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser.test_end_block": {
+      "baseline_code_signature_text": "def test_end_block(self):",
+      "baseline_code_structure_hash": "d4375466b38509d9fe9eb6a330acc844c66aee2dd4019ebdcd3faaf4e72986aa"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser.test_factory": {
+      "baseline_code_signature_text": "def test_factory(self):",
+      "baseline_code_structure_hash": "99a3e899ce6291c70b4e4b9e1cd6684b4b115267707247d8abb3135df1a88aee"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser.test_tilde_parser": {
+      "baseline_code_signature_text": "def test_tilde_parser(self):",
+      "baseline_code_structure_hash": "11f29ff420672e04cc4d235d2555414c408c300306e8fa6c3b82161bb83055e6"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect": {
+      "baseline_code_signature_text": "class TestAutoDetect:",
+      "baseline_code_structure_hash": "8c245c4bdcd9720444c1cb9cfd6e9b0b07311fba8367d19354b4c821116cbe48"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_case_insensitivity": {
+      "baseline_code_signature_text": "def test_case_insensitivity(self):",
+      "baseline_code_structure_hash": "5021a28216c8e84c556785228accff0f4619ddd54da8c55d78988b480b9da144"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_default_fallback": {
+      "baseline_code_signature_text": "def test_default_fallback(self):",
+      "baseline_code_structure_hash": "8bfd12d175f802d7312b65723882fa9718c0e0d9d4cd7bbb44d79ad5d58702cf",
+      "baseline_yaml_content_hash": "27683d835ccd7770ba24beefda35516000261b200195d33cc807e26c5896bc1f"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_backtick_simple": {
+      "baseline_code_signature_text": "def test_detect_backtick_simple(self):",
+      "baseline_code_structure_hash": "5a0ed13b6a5eff6aae903ac773af07bf9040f1d82e35929f81034903ebc5a0e6"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_first_act_wins": {
+      "baseline_code_signature_text": "def test_detect_first_act_wins(self):",
+      "baseline_code_structure_hash": "8aff5ffc0c3acf1d910668f0673918895e4d7230fcfb2ff121c1447c89b009bf",
+      "baseline_yaml_content_hash": "13c74d4c1002bfba1827277bc2df8c6ba0830cc1c7db42e5c160ef753c24a963"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_tilde_simple": {
+      "baseline_code_signature_text": "def test_detect_tilde_simple(self):",
+      "baseline_code_structure_hash": "4b1063ec4d0d1192cda6a26d5a8f971ad19efc0d112e3e46604aa4347756a9b0"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_variable_length_backtick": {
+      "baseline_code_signature_text": "def test_detect_variable_length_backtick(self):",
+      "baseline_code_structure_hash": "b25857bed7acff4ede753f38cfe8c9a20c2a5fc9e14560cb1af3e8a204e936da",
+      "baseline_yaml_content_hash": "e6f7ce9069252f77ffffee70e3dc15fef6e619c174e4c8c7e181baa0fa52d58a"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_variable_length_tilde": {
+      "baseline_code_signature_text": "def test_detect_variable_length_tilde(self):",
+      "baseline_code_structure_hash": "84b0db591b888c83a209e5138eb2b93a7d907bb9e530e2e712ec8747b78a2d98",
+      "baseline_yaml_content_hash": "73eaf0e2dd6fc16de0a5fea7aba9d01b3af7a7a5f7e47f41f3184ed895fc234e"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_with_interference": {
+      "baseline_code_signature_text": "def test_detect_with_interference(self):",
+      "baseline_code_structure_hash": "ff2c09594694566b280fd3a92ed06b4ff7880a92df71e854272fa999e0c23c24",
+      "baseline_yaml_content_hash": "6d13ae7efe9d446b23ee75aeef737883ca14cd5e00666a8265027fef6f314b26"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_robustness.py#TestParserRobustness": {
+      "baseline_code_signature_text": "class TestParserRobustness:",
+      "baseline_code_structure_hash": "703eaba0dc86a06b7b7ae0eb81765d361411edcf3663942ae98f21011e0054d7"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_robustness.py#TestParserRobustness.test_parse_complex_language_tags": {
+      "baseline_code_signature_text": "def test_parse_complex_language_tags(self):",
+      "baseline_code_structure_hash": "4d9550612dc346dcb40b4e706b1b752fe585fcaa64668ba7e41b05d4dcbee1c5",
+      "baseline_yaml_content_hash": "a4bbc0b0608807fe83d0ba0fadfb75b04505ef38b8f09e6da330a77a518b4862"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_robustness.py#TestParserRobustness.test_parse_with_spaces_in_fence": {
+      "baseline_code_signature_text": "def test_parse_with_spaces_in_fence(self):",
+      "baseline_code_structure_hash": "48c14b3e07223b83cf5cb76f1f8fbf301264d9db8df730e25ffee18a65c54365",
+      "baseline_yaml_content_hash": "5035a9ec3ec03e18ca03712d2004c965e0596db3fad80375bd0ba2d5fad86ea0"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_parser_robustness.py#TestParserRobustness.test_unclosed_block_handling": {
+      "baseline_code_signature_text": "def test_unclosed_block_handling(self):",
+      "baseline_code_structure_hash": "0dc2616703f28f3f4ff2b8961f4ac64dfa2601c874281f424756dc4604de266b",
+      "baseline_yaml_content_hash": "6ac290117cc17d679756e8c9aadcc2c24024cf94949f7df76453ce351e1b4e80"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading": {
+      "baseline_code_signature_text": "class TestPluginLoading:",
+      "baseline_code_structure_hash": "3335e101dc8cc60e4d721f7007aadc88299a1f575b4503b5ad3eb56b6595c0fb"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading.custom_plugin_dir": {
+      "baseline_code_signature_text": "def custom_plugin_dir(self, tmp_path):",
+      "baseline_code_structure_hash": "1947ec9653c1fd32a634a897d4fb89b2d634001f563a982e6b5eb31ad741ba57",
+      "baseline_yaml_content_hash": "a5a0e017ba4016eb65552f1b2914e62785b6219b642cfcb545aa0d1b474cca1d"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading.test_find_git_repository_root": {
+      "baseline_code_signature_text": "def test_find_git_repository_root(self, tmp_path):",
+      "baseline_code_structure_hash": "4cef04fa8c2a84ce7987599b968b148cecc0f68e8995e03b39ea31e36326d762",
+      "baseline_yaml_content_hash": "7a9ebe39f4404626fe97bcb06507a896ac295648e12d4b96cc413e0bcd32fb0e"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading.test_ignore_invalid_files": {
+      "baseline_code_signature_text": "def test_ignore_invalid_files(self, executor: Executor, custom_plugin_dir):",
+      "baseline_code_structure_hash": "f156506c066e2e237ce688c5f25f360b8fb54f041c4c424933b8a4926b6c9973",
+      "baseline_yaml_content_hash": "95573d283e1b0c49b927a29fa7ca8369211ac9d022ad07d83c1c161049370869"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading.test_load_external_plugin": {
+      "baseline_code_signature_text": "def test_load_external_plugin(self, executor: Executor, custom_plugin_dir, mock_runtime_bus):",
+      "baseline_code_structure_hash": "9c2d0d1778d3106c2c5a955d4c946d3e821a22337873d555e660d86d64a6002f",
+      "baseline_yaml_content_hash": "e1492ffdbae8a2cd2c224fc2ecc7e2f1dbe3017167faf0f81a078c45c31ca194"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience": {
+      "baseline_code_signature_text": "class TestPluginResilience:",
+      "baseline_code_structure_hash": "05770b3426f409e2069fedef63d6aade7205f078bfd293593140ca939da35a4e"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience.executor": {
+      "baseline_code_signature_text": "def executor(self, tmp_path) -> Executor:",
+      "baseline_code_structure_hash": "540e12ca82f237df6806798a282d1589e6fd288c97405e3d2c3ce1b6538c3e2b"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience.plugin_dir": {
+      "baseline_code_signature_text": "def plugin_dir(self, tmp_path) -> Path:",
+      "baseline_code_structure_hash": "f1e791584929709e756beb4666086d2852f0bbd52ab99fd3b3bfaa7606c24f15"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience.test_load_plugin_with_registration_error": {
+      "baseline_code_signature_text": "def test_load_plugin_with_registration_error(self, executor: Executor, plugin_dir: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "8223411cec979a7cb5c96a7f4d319a22bff9a87fb03390d33bd154cfbbc55f93",
+      "baseline_yaml_content_hash": "9fb74dda05b2f6b30033ecd4c75076b57d6b945cfce3ad940ae70e5bf2ca7026"
+    },
+    "py://packages/pyquipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience.test_load_plugin_with_syntax_error": {
+      "baseline_code_signature_text": "def test_load_plugin_with_syntax_error(self, executor: Executor, plugin_dir: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "db20baccd41276d2ac86acf2ac67573d9b081495c4ba747a3621a5b4a4e58d5c",
+      "baseline_yaml_content_hash": "e1e50e4d9149bfc66101cac96f354305cdd2449bff905c61000b671080bbfa48"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/__init__.py#register_core_acts": {
+      "baseline_code_signature_text": "def register_core_acts(executor):",
+      "baseline_code_structure_hash": "3d2b0a5f879d9532e0c919d4781b679a10f16b982edbfcafcd81fc786ec5a97c",
+      "baseline_yaml_content_hash": "9253c0d45b203fb94d037cffdb7d26fcdeb8700f3c007a489cf9169cbdb7e387"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#_append_file": {
+      "baseline_code_signature_text": "def _append_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "e78d8b8261306fbf565c2b49e91b086f26fca5fa768e332ba80adf86a70974fa",
+      "baseline_yaml_content_hash": "89c0330d1dcaa96a54d8892a8721e6fc54a0485695461fb478719ededdfc132e"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#_echo": {
+      "baseline_code_signature_text": "def _echo(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "cd0193521a527aaccf2210d079fb1b7c499a558c3fde1975c67c9184bf6b3e00",
+      "baseline_yaml_content_hash": "cbda2ba2b43f383db66c6cf4e24713ed2490116c59fe128d7125142fe3519e97"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#_end": {
+      "baseline_code_signature_text": "def _end(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "10f034ad868a5c083cca6c671d08cfff072493982871f2dc9e8c5ead83f5f262",
+      "baseline_yaml_content_hash": "ea86461eb080a7345d1b54199d1a1ce4b00b45f8fd937139d65e36e586a9f5e3"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#_patch_file": {
+      "baseline_code_signature_text": "def _patch_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "4eb4aac8aec94dbbf183c3bb4e7db0072bcb69a39c8c14985229361afe76763a",
+      "baseline_yaml_content_hash": "41bd903c2eec0271b0902ab578536690d83a9d836db35316b5d9fa2f55849d71"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#_summarize_append": {
+      "baseline_code_signature_text": "def _summarize_append(args: List[str], contexts: List[str]) -> str:",
+      "baseline_code_structure_hash": "48ef13978b4e76d8a06ee269ef8dbf9eb61273a8c50620b39772c187da366fbd"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#_summarize_patch_file": {
+      "baseline_code_signature_text": "def _summarize_patch_file(args: List[str], contexts: List[str]) -> str:",
+      "baseline_code_structure_hash": "900ab7217dc36a344556aad08ab2adcdbe7808be6dfa2d6f7f76c86591ad4b02"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#_summarize_write": {
+      "baseline_code_signature_text": "def _summarize_write(args: List[str], contexts: List[str]) -> str:",
+      "baseline_code_structure_hash": "c425846ca27d8fc0c7557063874e605e861defa666c93bd68b41ee5d61afc519"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#_write_file": {
+      "baseline_code_signature_text": "def _write_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "f9d1ddd4bd3133bb986ea3da57c13468a696244917adb9b4845765d0cce4f8e3",
+      "baseline_yaml_content_hash": "8d83f15d6fc18b957562ac34000abb148e537c42f1131e6705a99cd0dd9c3043"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#logger": {},
+    "py://packages/quipu-runtime/src/pyquipu/acts/basic.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "67abe2573553cb05e2e6a7e38572dc51471d8d75d39426b7546392d0bb7530dc"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/check.py#_check_cwd_match": {
+      "baseline_code_signature_text": "def _check_cwd_match(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "b57357d0ddafe076f07a1e904bd7761553905d8375eb992c48c8a2083ee11dc6",
+      "baseline_yaml_content_hash": "3e021c1625a1d163a9723e56d9cbfd1b7032f211a059dfa09024ba389a8d1b11"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/check.py#_check_files_exist": {
+      "baseline_code_signature_text": "def _check_files_exist(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "f590c834c4eda6c9bb26a11ad704c5ae33ebcf6171539112540628d6c238eb57",
+      "baseline_yaml_content_hash": "b65a56e0e6155a7a38cf85a9128c14109f661985d85dd7c76c88bce2e7dc8216"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/check.py#logger": {},
+    "py://packages/quipu-runtime/src/pyquipu/acts/check.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "135dc4e6adfc90cc3bddd760ae9c77757253d7710c04bb2da988cec0863df193"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/git.py#_git_add": {
+      "baseline_code_signature_text": "def _git_add(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "acc173a84cb14620cb9151a2b84f778b90291f831349d8ddcbc97c0d04190b29",
+      "baseline_yaml_content_hash": "6d0dd6d55be22990b46c85510d709d371f12c6e1a54818949745cc6cc2913919"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/git.py#_git_commit": {
+      "baseline_code_signature_text": "def _git_commit(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "4aaff9708e3cf2aedc7fa480477a39061c7cfdbb73177af0bde02e0ca7ee864a",
+      "baseline_yaml_content_hash": "47edb9170cc4c68fcf1361c8ccf3a1d43590f43af889e7883e3315c6cda23f00"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/git.py#_git_init": {
+      "baseline_code_signature_text": "def _git_init(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "914caf13af3cb6a639a96cbf5c339132f3764f7e28172d3cf7b806ef185f5642",
+      "baseline_yaml_content_hash": "9603e9475959f1d93720e90ec14e965764521c0fb9e3c27cc85671b5440c3a6a"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/git.py#_git_status": {
+      "baseline_code_signature_text": "def _git_status(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "0c7dc34d789f96fe973984f28167339ed1ad140c240597fb4d59230a5abe1159",
+      "baseline_yaml_content_hash": "a890ab31c1011d514a5177f0a6c79fe2dc4d3a9f2757f6b8fbc63a1cca9e4128"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/git.py#_run_git_cmd": {
+      "baseline_code_signature_text": "def _run_git_cmd(ctx: ActContext, cmd_args: List[str]) -> str:",
+      "baseline_code_structure_hash": "578c8c820674310f791c1b934b21a97506df3b16afe32e057e2c0d5176af5009",
+      "baseline_yaml_content_hash": "ecf8a72b7afb16ce17ac7734a7c1726c24d8ffc1d7920ad7fa811f2803b704b6"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/git.py#_summarize_commit": {
+      "baseline_code_signature_text": "def _summarize_commit(args: List[str], contexts: List[str]) -> str:",
+      "baseline_code_structure_hash": "a10b53c984403e40427719044705b1243996076c39f7b8e2d3d4b7c0d846220a"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/git.py#logger": {},
+    "py://packages/quipu-runtime/src/pyquipu/acts/git.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "2d9ad92cb68fd2fb55e3145207c6e68e8dd5c2568b7fff24d85b37c8412e49b7"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/memory.py#_log_thought": {
+      "baseline_code_signature_text": "def _log_thought(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "39a6473c13602780dd4182c1c1c7128c2d74108ac22ace0ad7b24bbe325ab403",
+      "baseline_yaml_content_hash": "ad6b7f235ba1ed8c2a34ee32f40bc923f9225316a05fdb80cf879531dca0341c"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/memory.py#logger": {},
+    "py://packages/quipu-runtime/src/pyquipu/acts/memory.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "12783f087c2c57d2c9c804127e026ce55942268f34bc463827ec204941f5d163"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#SafeArgumentParser": {
+      "baseline_code_signature_text": "class SafeArgumentParser(argparse.ArgumentParser):",
+      "baseline_code_structure_hash": "cdc2844d6c21e8477ea8f2d24b4341cde49e993ca0c375e06cc5cf693528d6f5",
+      "baseline_yaml_content_hash": "ec247209f82d94c529981d0f51a0dfc3b0d8227e38e939c7a14affc2ce2e1ee1"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#SafeArgumentParser.error": {
+      "baseline_code_signature_text": "def error(self, message):",
+      "baseline_code_structure_hash": "f5d4b06a1f2ccb21a54181ab170905fd7dd4d90d233a2c336c2e0959b0faaae9"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#SafeArgumentParser.exit": {
+      "baseline_code_signature_text": "def exit(self, status = 0, message = None):",
+      "baseline_code_structure_hash": "b657e47efb3b0c259699a1b88e9a0b02d689b79453b7caa7ea080f8db420cc67"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#_list_files": {
+      "baseline_code_signature_text": "def _list_files(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "ea78bfb50fb17f905c21c6eb3799ae1b60e7778211e2d7058297acd3a27d798b",
+      "baseline_yaml_content_hash": "b5a0ac44601e6c19bb3f331772ff488828ccd583b4fa590938fb01868f84b85f"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#_python_search": {
+      "baseline_code_signature_text": "def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):",
+      "baseline_code_structure_hash": "b88fe69461db031536099e10d9a978a7baf4629f6bb8af5fc079dcfdd4b356e5"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#_read_file": {
+      "baseline_code_signature_text": "def _read_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "1c20c2eed414a164cfe41ead3c4eda34deb7181e426c7fed9213a471c313dcc0",
+      "baseline_yaml_content_hash": "29acf3f2e8b486ff12c1702fb3e85267d1a00c50e47969ab5f39ab070c4e96da"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#_search_files": {
+      "baseline_code_signature_text": "def _search_files(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "a96f37a1e686362d69ab00ddc5639de1c10e833d746cc43fbdfcf571dae8e467",
+      "baseline_yaml_content_hash": "67accecfd0d6dc97dad18f1ad0a7b1e94de1123f583a2be1607e8e47bfcdb6c7"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#logger": {},
+    "py://packages/quipu-runtime/src/pyquipu/acts/read.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "247ee1eefe53040b0b3547e2d29d2fdab3faae0594660e403ef8aeedd4ceb8ea"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/refactor.py#_delete_file": {
+      "baseline_code_signature_text": "def _delete_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "88993539fc29b7b1278781b3cda0fb68112ab04b0f14b8d404d76d9dcc441bbf",
+      "baseline_yaml_content_hash": "6115bafe45c3fec826a8b003c875c0f657603b9b1fa180979be7f6be15c46f2b"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/refactor.py#_move_file": {
+      "baseline_code_signature_text": "def _move_file(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "c52b7410cdceb3b085175e469a59baa93679f5b851ecc835b27317577c473f52",
+      "baseline_yaml_content_hash": "1fd81d8e6f9bcf25ac4c0014dbed326bb0d71deabbc3aa10c8d6773329e9f30f"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/refactor.py#logger": {},
+    "py://packages/quipu-runtime/src/pyquipu/acts/refactor.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "78123a0c8faa94a63b295b443ada6f87adc48338b6bb0a9c7f49b8ee8320b661"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/shell.py#_run_command": {
+      "baseline_code_signature_text": "def _run_command(ctx: ActContext, args: List[str]):",
+      "baseline_code_structure_hash": "4cbaf604e29ae42fd17eaabe5a7374f93e18b522609d454103a49b43ac3505c0",
+      "baseline_yaml_content_hash": "6d61936125f12951f0b92c4b0ee11ffcc753742d1c22bde225cdf4516b1b3ec5"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/acts/shell.py#logger": {},
+    "py://packages/quipu-runtime/src/pyquipu/acts/shell.py#register": {
+      "baseline_code_signature_text": "def register(executor: Executor):",
+      "baseline_code_structure_hash": "2f820b91d66bbffbd872983a23ae3830f6bb7d1787bab880348afb4f0ce71cb2",
+      "baseline_yaml_content_hash": "6df5511fb0e342791ff8a9f875c1b5061f94033836be6162a49b496a5c23b9c4"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#ConfirmationHandler": {},
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor": {
+      "baseline_code_signature_text": "class Executor:",
+      "baseline_code_structure_hash": "b0b89bb1df01fc07681c0086ffdff841178349557157f0c7827e1d39b6795e45",
+      "baseline_yaml_content_hash": "cbe2840a0a8c89cf7b9a978bd20bc1d326c86a798f15e8c79fe6de20f191f17e"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.__init__": {
+      "baseline_code_signature_text": "def __init__(self, root_dir: Path, yolo: bool = False, confirmation_handler: Optional[ConfirmationHandler] = None):",
+      "baseline_code_structure_hash": "5dc8c461df1f75093077e29ed22d8468532ec5b0a0193d5e33c714d7db50060b"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor._acts": {},
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.confirmation_handler": {},
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.execute": {
+      "baseline_code_signature_text": "def execute(self, statements: List[Statement]):",
+      "baseline_code_structure_hash": "7bd8035f21e80f8ae547d434157fa345ee0a0a64a07b6a96b925c2c9281544e8",
+      "baseline_yaml_content_hash": "e6815288ca8b4123f77f71bfad5efba6c0a3cdbd567032b8b6990cfa3b61f672"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.get_registered_acts": {
+      "baseline_code_signature_text": "def get_registered_acts(self) -> Dict[str, str]:",
+      "baseline_code_structure_hash": "7724e91a9caa012c69cfbf4718b479eda77ac0d71616c5637dd4269e0553c84c",
+      "baseline_yaml_content_hash": "dfb803edb5758bc769a037591fa96bfdf5a1ffa21bfca1940c07873aedbc7e43"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.register": {
+      "baseline_code_signature_text": "def register(self, name: str, func: ActFunction, arg_mode: str = 'hybrid', summarizer: Any = None):",
+      "baseline_code_structure_hash": "e48c261915f85c280d106b0c93b1cf98654e56b8e1fc2e5800cd9e426b735a0d",
+      "baseline_yaml_content_hash": "20561a461eab04ff642c53479fc850fbe4e44a46b24fa456d6ff060ee7e294d9"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.request_confirmation": {
+      "baseline_code_signature_text": "def request_confirmation(self, file_path: Path, old_content: str, new_content: str):",
+      "baseline_code_structure_hash": "7de3ce6fcfd85ba1c5ecdf43522307ca6809807081e9eb4769c50a3615ef2db7",
+      "baseline_yaml_content_hash": "e7c0d4af93853cef124f33d2b826c3f61d3f104be4182bfd7f8c39512b3eb25b"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.resolve_path": {
+      "baseline_code_signature_text": "def resolve_path(self, rel_path: str) -> Path:",
+      "baseline_code_structure_hash": "72f5dd33f74cb5de3c3603b501ffd27c15a1aa7ad04c772be50667efef35f981",
+      "baseline_yaml_content_hash": "ce5edec7c712176f8b186ae5c87976e5901eee7fe0f79dda6829bcf20768a84e"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.root_dir": {},
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.summarize_statement": {
+      "baseline_code_signature_text": "def summarize_statement(self, stmt: Statement) -> str | None:",
+      "baseline_code_structure_hash": "cff09d68c9391966de6251a7aba7ba3a3ba2843a72e0e0a9f1e55fcf6e1dc504",
+      "baseline_yaml_content_hash": "e21fa54a784771b769e9a27571fa39765fcf9f0d89a61446043859ead7064d8d"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#Executor.yolo": {},
+    "py://packages/quipu-runtime/src/pyquipu/runtime/executor.py#logger": {},
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#BacktickParser": {
+      "baseline_code_signature_text": "class BacktickParser(StateBlockParser):",
+      "baseline_code_structure_hash": "62ab6ab3e0418b7b10b7dd198e4b603d6ce19bb039eebd1bcc8f433a84fc5725",
+      "baseline_yaml_content_hash": "93baac35b412734373c0af7e9801f1a82a90777d4bcc931492d9849f804eb3a8"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#BacktickParser.__init__": {
+      "baseline_code_signature_text": "def __init__(self):",
+      "baseline_code_structure_hash": "9bab2b1dd22fea04e58176b09f65ef4f673738c47abf25fca7e0c62af472206f"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#BaseParser": {
+      "baseline_code_signature_text": "class BaseParser(ABC):",
+      "baseline_code_structure_hash": "8fe7d17f038b0f58ccf36c037036ffa239c7e6af62ed57613d7e08f970c2bc92",
+      "baseline_yaml_content_hash": "07274cf2e5aa9ad62207ca19fbbebbb5065e4204e4ab93a02fbae390e6aaa0f7"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#BaseParser.parse": {
+      "baseline_code_signature_text": "def parse(self, text: str) -> List[Statement]:",
+      "baseline_code_structure_hash": "707b6f06d9e47b672e6523beff9a1e7699ff5ad4f4c930ad4aa87c75b18fbd7f",
+      "baseline_yaml_content_hash": "530154090468c19c97f3cee0a0f9bb29db633c32c7e3cbacd16f6f59d1a152ae"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#StateBlockParser": {
+      "baseline_code_signature_text": "class StateBlockParser(BaseParser):",
+      "baseline_code_structure_hash": "3bbe472eb7eb00ef257ea45515ee38cfbf460f394f159c0da65a9247d125164e",
+      "baseline_yaml_content_hash": "2f11686e0e90b7136f77b5324c6c795dee4ebed1d525bb879d0047b1cc094ea9"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#StateBlockParser.__init__": {
+      "baseline_code_signature_text": "def __init__(self, fence_char: str):",
+      "baseline_code_structure_hash": "18f2b958cf5f4c41f822cced13d1104a7e246f658c45199b0759f18cad3b2fe8"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#StateBlockParser.fence_char": {},
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#StateBlockParser.parse": {
+      "baseline_code_signature_text": "def parse(self, text: str) -> List[Statement]:",
+      "baseline_code_structure_hash": "707b6f06d9e47b672e6523beff9a1e7699ff5ad4f4c930ad4aa87c75b18fbd7f"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#TildeParser": {
+      "baseline_code_signature_text": "class TildeParser(StateBlockParser):",
+      "baseline_code_structure_hash": "7e4c0ae00e6f68f4457cfab5c0b4d935f4f5ab547fe89b66be08440c3e5051e9",
+      "baseline_yaml_content_hash": "1f0c2199c6da2c074fbdfff7d311f4da05118c49241e677be4d4b80f0923fb0d"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#TildeParser.__init__": {
+      "baseline_code_signature_text": "def __init__(self):",
+      "baseline_code_structure_hash": "9bab2b1dd22fea04e58176b09f65ef4f673738c47abf25fca7e0c62af472206f"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#_PARSERS": {},
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#detect_best_parser": {
+      "baseline_code_signature_text": "def detect_best_parser(text: str) -> str:",
+      "baseline_code_structure_hash": "c84de73594160642d37e1c7a3a95236da88fff14a4290ab7d76d25acbad93ad0",
+      "baseline_yaml_content_hash": "37e0ae616fded69e306b11e96ae3981eb37c007a699dadfc087c5605cf5c9b5b"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#get_parser": {
+      "baseline_code_signature_text": "def get_parser(name: str) -> BaseParser:",
+      "baseline_code_structure_hash": "51c51914d1fc7980f6b19116ebde6d8fffc7efeac97e2a3d8d0afb04897eba36",
+      "baseline_yaml_content_hash": "88229ce454e245be3f3740751e60c9152d154fdd622976fe97a16802ca699519"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/parser.py#list_parsers": {
+      "baseline_code_signature_text": "def list_parsers() -> List[str]:",
+      "baseline_code_structure_hash": "d7d0bd6033defde1d06cb358e0b106d9c18f0daba6e1d80536e2147c4ccb3372"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/plugin_loader.py#load_plugins": {
+      "baseline_code_signature_text": "def load_plugins(executor: Executor, plugin_dir: Path):",
+      "baseline_code_structure_hash": "dc94bc92c7b5b86146bd107909b44e28cadfc9966257557ed44246e5293c8358",
+      "baseline_yaml_content_hash": "8d74b280b29ce9d51b6aaa20022f0a01ffd5ad8b09532244689d13c24bbeb36a"
+    },
+    "py://packages/quipu-runtime/src/pyquipu/runtime/plugin_loader.py#logger": {},
+    "py://packages/quipu-runtime/tests/unit/acts/test_check.py#TestCheckActs": {
+      "baseline_code_signature_text": "class TestCheckActs:",
+      "baseline_code_structure_hash": "78d67d69d5cd20e97deaea31ce9fe96d22ed3a0c507dfa9988df442bb8332c8f"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894",
+      "baseline_yaml_content_hash": "bf6efd148017f8068ddf40f71eb15163dd25d06bce16607af58bb6feabffa4a7"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.test_check_cwd_match_fail": {
+      "baseline_code_signature_text": "def test_check_cwd_match_fail(self, executor: Executor):",
+      "baseline_code_structure_hash": "734c838854b285cf39549f55158000b1d9a7e0b136720775069f17042aeb7e87"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.test_check_cwd_match_success": {
+      "baseline_code_signature_text": "def test_check_cwd_match_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "6504eae1d087e3c877ed83490748e3ca4b48caa4fa0d8a31e2819158ed50a61a"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.test_check_files_exist_fail": {
+      "baseline_code_signature_text": "def test_check_files_exist_fail(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "799e1eeef81cf0e87c33ebecefa5f6589c61588d553cfb6e1b69bf6bbf76ed86"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_check.py#TestCheckActs.test_check_files_exist_success": {
+      "baseline_code_signature_text": "def test_check_files_exist_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "2b8feddd1970331acf4daf59445d49201ce813e16e62c23ce19cbd2624d289f1"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_git.py#TestGitActs": {
+      "baseline_code_signature_text": "class TestGitActs:",
+      "baseline_code_structure_hash": "4c0785de80872752f51107be97b9b8ee153cc9d3e948f8e7ae7fc0f50dfb747b"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_git.py#TestGitActs.setup_git_env": {
+      "baseline_code_signature_text": "def setup_git_env(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "31f95e6095ceebde9252e6dbd3124052d2351ec22e60f2dea2591cc1c973c41c",
+      "baseline_yaml_content_hash": "99d23b4b79acff2c63b6363f6298685c1ac25c4fe70d5127fe6c194b0f1fa66c"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_git.py#TestGitActs.test_git_init_idempotent": {
+      "baseline_code_signature_text": "def test_git_init_idempotent(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "2bacf4c6de0aad0e35f81a62f079cc317614de04632e0358f37e2a70c154adf5"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_git.py#TestGitActs.test_git_status_output_stream": {
+      "baseline_code_signature_text": "def test_git_status_output_stream(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "f2c544447e5549c796caa53ba4ac98bbd7d32db61ddd9cc1e403fcaeee952774",
+      "baseline_yaml_content_hash": "d1402035cd1ce46534383d5aae27f26077527638ae9c32117fa0483fa8c1da2e"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_git.py#TestGitActs.test_git_workflow": {
+      "baseline_code_signature_text": "def test_git_workflow(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "c61a6b39a70b097acfec7e02299928d58b0f9265d820ef3a2f7137076de33bb8"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs": {
+      "baseline_code_signature_text": "class TestMemoryActs:",
+      "baseline_code_structure_hash": "cc7104c248befc765252f25b826b44511b4cef23923849e4ad96087ba5bc7b34"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs.test_log_thought_missing_args": {
+      "baseline_code_signature_text": "def test_log_thought_missing_args(self, executor: Executor):",
+      "baseline_code_structure_hash": "41dfef59523af984fa88f4e980ce724c30b128def9ec6f4b6bc191ed7201b1cf"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs.test_log_thought_success": {
+      "baseline_code_signature_text": "def test_log_thought_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "800e8dc01d4e66d407af99a22f3dbca584c2d74630c6b20a15119107d6b80b55"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_memory.py#TestMemoryActs.test_log_thought_write_error": {
+      "baseline_code_signature_text": "def test_log_thought_write_error(self, executor: Executor, isolated_vault: Path, monkeypatch):",
+      "baseline_code_structure_hash": "cddd8a34f94b6f8ec57364e2c8a5f95e2a0bfcb61abed24bcd3f58fb981d215b"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_patch_ambiguity.py#TestPatchAmbiguity": {
+      "baseline_code_signature_text": "class TestPatchAmbiguity:",
+      "baseline_code_structure_hash": "e2972febade6f585fa88150772ecc6eeab4adf289f6bd45a6044d3988217a08a"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_patch_ambiguity.py#TestPatchAmbiguity.test_patch_file_fails_on_ambiguous_multiline_content": {
+      "baseline_code_signature_text": "def test_patch_file_fails_on_ambiguous_multiline_content(self, executor: Executor, isolated_vault):",
+      "baseline_code_structure_hash": "c2177805bb8f954d166e5a5702694b3147aa22f4c0ce77e61bfaf8c9e8bb54be",
+      "baseline_yaml_content_hash": "6ffc03ba55fce1dafc423c20f6cac4dbe9f2367760f4c006b7c13e7084df7604"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_patch_ambiguity.py#TestPatchAmbiguity.test_patch_file_should_fail_on_ambiguous_content": {
+      "baseline_code_signature_text": "def test_patch_file_should_fail_on_ambiguous_content(self, executor: Executor, isolated_vault):",
+      "baseline_code_structure_hash": "1a06c91eb157f2cfb82c7cffcfc962cf129677c9240ae62ff6377153ca240def",
+      "baseline_yaml_content_hash": "24357fcce8c409c2ac9dcd2a86d0846cc2f9904f5d8f7a2f83cee9fa64fe4fd8"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs": {
+      "baseline_code_signature_text": "class TestReadActs:",
+      "baseline_code_structure_hash": "1b1cf32770aa76180fbd5166ed957d7e5634d939372a56ecd6382d761d9f0d08"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_read_file_is_dir": {
+      "baseline_code_signature_text": "def test_read_file_is_dir(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "8b179272dc02d18f8bab1098f5f1847b1fba677909eca142c2e7b1eab0bf830b"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_read_file_not_found": {
+      "baseline_code_signature_text": "def test_read_file_not_found(self, executor: Executor):",
+      "baseline_code_structure_hash": "ff8bea74f86d2994a8415e32a1610655d20f71ae385c0b98f25adab576cef112"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_args_error": {
+      "baseline_code_signature_text": "def test_search_args_error(self, executor: Executor):",
+      "baseline_code_structure_hash": "841e87b0bf984ef9b512deff8dd4f1636582f9449f488a19b6fb267431d4402e"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_binary_file_resilience": {
+      "baseline_code_signature_text": "def test_search_binary_file_resilience(self, executor: Executor, isolated_vault: Path, monkeypatch):",
+      "baseline_code_structure_hash": "a2bb813a77339061129bace244836f9544dca1dbc721cc57432d225f635b7df0"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_no_match": {
+      "baseline_code_signature_text": "def test_search_no_match(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):",
+      "baseline_code_structure_hash": "15fdc002d1f10ea0ce3975b5b477899003823e1d12cf6ca7aeab28a82f83a2cf"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_python_fallback": {
+      "baseline_code_signature_text": "def test_search_python_fallback(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):",
+      "baseline_code_structure_hash": "4f43e6a804cdf7b793006a50d712632da0c6cf598f2a81162e25142a4beb85dc"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_scoped_path": {
+      "baseline_code_signature_text": "def test_search_scoped_path(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):",
+      "baseline_code_structure_hash": "42e70a6cb5ba6019650e885fccd77cd90eee0c6621461a9911d0f3907f0eccae"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_read.py#TestReadActs.test_search_with_ripgrep": {
+      "baseline_code_signature_text": "def test_search_with_ripgrep(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "5e8c33ce95171d311af88273b35c3bc4ce45d529fe7b2d658f82485a3a8deb81"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs": {
+      "baseline_code_signature_text": "class TestRefactorActs:",
+      "baseline_code_structure_hash": "89db72cc2d06394690b3386970e067fd230d905d02313e38919f166012938244"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_delete_dir_success": {
+      "baseline_code_signature_text": "def test_delete_dir_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "e29f582716b58ddb0a78b60e85fc964945e1b1117502b2d9154f98a8457674d1"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_delete_file_success": {
+      "baseline_code_signature_text": "def test_delete_file_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "2512eec7a88a72b36de2b071b8684dedf0c31157cacaff9ed7a7d4a6359203f6"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_delete_skipped": {
+      "baseline_code_signature_text": "def test_delete_skipped(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "e201453baabca3125e55f4c1ca1c99f08035f1fd02fa1e4e558fce99ea1af098"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_move_file_permission_error": {
+      "baseline_code_signature_text": "def test_move_file_permission_error(self, executor: Executor, isolated_vault: Path, monkeypatch):",
+      "baseline_code_structure_hash": "db93ca1e409a04142ed6fd6f75015e5f96d2ad5cec6a1c2a081f05db4622bc3e"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_move_file_src_not_found": {
+      "baseline_code_signature_text": "def test_move_file_src_not_found(self, executor: Executor):",
+      "baseline_code_structure_hash": "faac783f28c01d08fa0388c55a9eae2fe9499bec1ca568074e34027602351896"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_refactor.py#TestRefactorActs.test_move_file_success": {
+      "baseline_code_signature_text": "def test_move_file_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "a81f48189a04a0823c984cdb0de2201fd2efdbac3cd8f4ac60833d759bcc348a"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_shell.py#TestShellActs": {
+      "baseline_code_signature_text": "class TestShellActs:",
+      "baseline_code_structure_hash": "0b3889e8bbdc6752cfe00af11d9272c8506c596054df5e377031f9465b7a9a27"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.setup_executor": {
+      "baseline_code_signature_text": "def setup_executor(self, executor: Executor):",
+      "baseline_code_structure_hash": "bf1dccc78029de0ea896a1ba97ad4f88c5165a2bfeb69e107331a276d11b0894"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_does_not_swallow_blocks": {
+      "baseline_code_signature_text": "def test_run_command_does_not_swallow_blocks(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "4029d761584fe9c0654a98be5ccdeeff140c8a7466bc1f0725a86ca858bab18b",
+      "baseline_yaml_content_hash": "174a8786a73c4e53ab2f145b8e78fb49fc88213f728ca11ec8637f6f0dc85efa"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_failure": {
+      "baseline_code_signature_text": "def test_run_command_failure(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "e6366aed4e8c5dd2495a1a1471abdb8d2a88b697bdc64de1ec3068fa349ddf2a"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_missing_args": {
+      "baseline_code_signature_text": "def test_run_command_missing_args(self, executor: Executor):",
+      "baseline_code_structure_hash": "a2aacc9829413ff3fbeff6c90f3cc79d77b40bf178ea672917abf0d603293fa5"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_multiline_script": {
+      "baseline_code_signature_text": "def test_run_command_multiline_script(self, executor: Executor, isolated_vault, mock_runtime_bus):",
+      "baseline_code_structure_hash": "d6d96e9f525c407e13bec8caff6cb398994109a7c08964ad689a111a8ebbe9e2",
+      "baseline_yaml_content_hash": "dfe5d1ccc0101de043e63a8a7f4839b1bc93164721e94e4eda440f7344aa3051"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_stderr": {
+      "baseline_code_signature_text": "def test_run_command_stderr(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "844283e152b17c6a7d4149144eb953d309c0574c132d6824c785c10cb72f4a3f"
+    },
+    "py://packages/quipu-runtime/tests/unit/acts/test_shell.py#TestShellActs.test_run_command_success": {
+      "baseline_code_signature_text": "def test_run_command_success(self, executor: Executor, mock_runtime_bus):",
+      "baseline_code_structure_hash": "be3b917226e82c9d2d410ac0e62e29cce058686ff7f30a9c9c73e988f028585e"
+    },
+    "py://packages/quipu-runtime/tests/unit/conftest.py#__all__": {},
+    "py://packages/quipu-runtime/tests/unit/conftest.py#_auto_mock_runtime_bus": {
+      "baseline_code_signature_text": "def _auto_mock_runtime_bus(mock_runtime_bus):",
+      "baseline_code_structure_hash": "83c93dce8d9710ad0f8868a102ce8d7357c40cbd9fe42d4cc1c6a05fbcf5d3b6"
+    },
+    "py://packages/quipu-runtime/tests/unit/conftest.py#pytest_configure": {
+      "baseline_code_signature_text": "def pytest_configure(config):",
+      "baseline_code_structure_hash": "8033a723e2db4323d4998ec32f8f9c47549bda338ba8ac9f17f25bd465f26059",
+      "baseline_yaml_content_hash": "1ebeeca56ecfb62e9cb2dc9fc0bb877bc8bec2c382aa7d7f6e62b03b92b92c05"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy": {
+      "baseline_code_signature_text": "class TestArgStrategy:",
+      "baseline_code_structure_hash": "31133e02fb248cfa2da13827515ef2b2a5e3d8a08cb514f32dd79b4493ffe4a3"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.executor": {
+      "baseline_code_signature_text": "def executor(self, tmp_path):",
+      "baseline_code_structure_hash": "123856db28f7c5faed981fae18a6ab243518c60672257f999ba4807771bef7b1",
+      "baseline_yaml_content_hash": "3f8ce22e3b721df8ad3cb175a28d96c062ef9e269d6ed98fc4e4bcd4ccb96a23"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_block_only_mode": {
+      "baseline_code_signature_text": "def test_block_only_mode(self, executor):",
+      "baseline_code_structure_hash": "fc70df322add45a199826cd97571f093c4162ffae05aacdb44d01d1d51d405ee",
+      "baseline_yaml_content_hash": "633f64f8cc1c74e2860f411d47aaf995df7cb42c31fee088d43049c21d001d20"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_block_only_no_block": {
+      "baseline_code_signature_text": "def test_block_only_no_block(self, executor):",
+      "baseline_code_structure_hash": "9aadcf01e9964cec7a659368c6876748254dc80c54c6ea5b501b0c240bfd1493",
+      "baseline_yaml_content_hash": "9d6e11492f8b9c68540f81b5b8ec34ee0424def14edef25fe867736a78d33b8b"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_exclusive_mode_fallback_to_block": {
+      "baseline_code_signature_text": "def test_exclusive_mode_fallback_to_block(self, executor):",
+      "baseline_code_structure_hash": "7cb05a6c12160ac27edbf0d78296267afba61c0948f1c5ba0e65c3d5bcc84750",
+      "baseline_yaml_content_hash": "4a15e91042c79c8da75d309eb24bfdee8eca6a085b4c8e2958fc9a14adbaf2e2"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_exclusive_mode_inline_priority": {
+      "baseline_code_signature_text": "def test_exclusive_mode_inline_priority(self, executor):",
+      "baseline_code_structure_hash": "baaba24cd9cb0be3d585a33489491364a55f8893c50f6a18abed2aad19b87a9f",
+      "baseline_yaml_content_hash": "48d96f328a44ea3bb067dcf87ec96f76db2c24b3f3f77f92bb1fe4496e6c2385"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_hybrid_mode_merge": {
+      "baseline_code_signature_text": "def test_hybrid_mode_merge(self, executor):",
+      "baseline_code_structure_hash": "75b43e3df2f1ecd4c5ea6acd3321af4d49009339ce9821bde8109a35984eb79c",
+      "baseline_yaml_content_hash": "20e0f5ce17c7f23ffe12f2a5d8694c986c6905f602b5a86ca9e0199bd2c5cfa7"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_hybrid_mode_only_inline": {
+      "baseline_code_signature_text": "def test_hybrid_mode_only_inline(self, executor):",
+      "baseline_code_structure_hash": "9668efecb4bda20f0f590c2d84b2b80aeda2310667f737204ea0ca1986ee8c66",
+      "baseline_yaml_content_hash": "2938e9b52d3a43713f3caf84d61f56f3c8ffbd0af8ec90d9cddfed365520d3e5"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_arg_strategy.py#TestArgStrategy.test_invalid_mode_registration": {
+      "baseline_code_signature_text": "def test_invalid_mode_registration(self, executor):",
+      "baseline_code_structure_hash": "9257a54d5574e56edd39997f4091f9472d3e0514ef5202711e3a5c120d76b062",
+      "baseline_yaml_content_hash": "4c1c232703846f28df345dd3c1bcf72fcf685533b2499fdb2d42b4343c9e8644"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs": {
+      "baseline_code_signature_text": "class TestBasicActs:",
+      "baseline_code_structure_hash": "64dd72e9a3c0faae5e4cfa1f327f1a2821e322c1b400aa8d0267aceece67a1b4"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_append_fail_not_found": {
+      "baseline_code_signature_text": "def test_append_fail_not_found(self, executor: Executor):",
+      "baseline_code_structure_hash": "597c08122134cd2947a92ab2c385c78512b95c388a5e0d1ff355ca58bd6529f6"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_append_file": {
+      "baseline_code_signature_text": "def test_append_file(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "dc30f0724b2d5113a020de409a9aca3a225b2b035e8eb1b1f977724d70a975a6"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_patch_file_fail_not_found": {
+      "baseline_code_signature_text": "def test_patch_file_fail_not_found(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "89c3a7e47f56b8dbf0e9fa79591111730e8f2c36085b31880ca7112460a9d115"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_patch_file_text": {
+      "baseline_code_signature_text": "def test_patch_file_text(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "5bd8647411a8e8cb948510415d1f479c5a9c9788058114a43212a98f0e73e9f3"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_variable_lang_parser_recognition": {
+      "baseline_code_signature_text": "def test_variable_lang_parser_recognition(self):",
+      "baseline_code_structure_hash": "c7b4a3187fd31075101ddc0749416f40ce52168a50f6dc1147b911160d692b40",
+      "baseline_yaml_content_hash": "9719f495a74c7ad9ef9cf5dd04834415a5a38f6e3425ecc1dbaab96572ee7d72"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestBasicActs.test_write_file": {
+      "baseline_code_signature_text": "def test_write_file(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "6f8f21c0324c4f4d07e0efdb8cb36683434076f38f47a412030cc4c693c09bf6"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs": {
+      "baseline_code_signature_text": "class TestHybridArgs:",
+      "baseline_code_structure_hash": "e71eb281a53f9f12409bcf29e75260eab69f0215da1e12f01a7dab4e2feda94e"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs.test_act_parsing_error": {
+      "baseline_code_signature_text": "def test_act_parsing_error(self, executor: Executor):",
+      "baseline_code_structure_hash": "77c32863d1b007c582d9533a28fb0602de9f128a49b7c21602206dc06a0c4e35"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs.test_inline_quoted_args": {
+      "baseline_code_signature_text": "def test_inline_quoted_args(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "d34d3ba0196d7274303ccda19f87a16d3c8996a7bb2c6ce9c8d290d42975abb0"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs.test_inline_write_file": {
+      "baseline_code_signature_text": "def test_inline_write_file(self, executor: Executor, isolated_vault: Path):",
+      "baseline_code_structure_hash": "781d11285553ffb23d961d0beaca8b03079bb94284014a560f8b88ab6301dac4"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestHybridArgs.test_mixed_git_commit": {
+      "baseline_code_signature_text": "def test_mixed_git_commit(self, executor: Executor):",
+      "baseline_code_structure_hash": "cdd2c300201cd0c859dee6760488f66646e9c7b0c296acb6621d17f5e65a97ba"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser": {
+      "baseline_code_signature_text": "class TestParser:",
+      "baseline_code_structure_hash": "d0a8b6f7335b357f78a04b59e06ba2b61f44ca737033f513f141ac68a33fea39"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser.test_backtick_parser": {
+      "baseline_code_signature_text": "def test_backtick_parser(self):",
+      "baseline_code_structure_hash": "679eb19cecbaf2af218b1c2cd3715e64407b0bea65429ab6e52213b43c6effc2"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser.test_end_block": {
+      "baseline_code_signature_text": "def test_end_block(self):",
+      "baseline_code_structure_hash": "d4375466b38509d9fe9eb6a330acc844c66aee2dd4019ebdcd3faaf4e72986aa"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser.test_factory": {
+      "baseline_code_signature_text": "def test_factory(self):",
+      "baseline_code_structure_hash": "99a3e899ce6291c70b4e4b9e1cd6684b4b115267707247d8abb3135df1a88aee"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_and_basic_acts.py#TestParser.test_tilde_parser": {
+      "baseline_code_signature_text": "def test_tilde_parser(self):",
+      "baseline_code_structure_hash": "11f29ff420672e04cc4d235d2555414c408c300306e8fa6c3b82161bb83055e6"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect": {
+      "baseline_code_signature_text": "class TestAutoDetect:",
+      "baseline_code_structure_hash": "8c245c4bdcd9720444c1cb9cfd6e9b0b07311fba8367d19354b4c821116cbe48"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_case_insensitivity": {
+      "baseline_code_signature_text": "def test_case_insensitivity(self):",
+      "baseline_code_structure_hash": "5021a28216c8e84c556785228accff0f4619ddd54da8c55d78988b480b9da144"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_default_fallback": {
+      "baseline_code_signature_text": "def test_default_fallback(self):",
+      "baseline_code_structure_hash": "8bfd12d175f802d7312b65723882fa9718c0e0d9d4cd7bbb44d79ad5d58702cf",
+      "baseline_yaml_content_hash": "27683d835ccd7770ba24beefda35516000261b200195d33cc807e26c5896bc1f"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_backtick_simple": {
+      "baseline_code_signature_text": "def test_detect_backtick_simple(self):",
+      "baseline_code_structure_hash": "5a0ed13b6a5eff6aae903ac773af07bf9040f1d82e35929f81034903ebc5a0e6"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_first_act_wins": {
+      "baseline_code_signature_text": "def test_detect_first_act_wins(self):",
+      "baseline_code_structure_hash": "8aff5ffc0c3acf1d910668f0673918895e4d7230fcfb2ff121c1447c89b009bf",
+      "baseline_yaml_content_hash": "13c74d4c1002bfba1827277bc2df8c6ba0830cc1c7db42e5c160ef753c24a963"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_tilde_simple": {
+      "baseline_code_signature_text": "def test_detect_tilde_simple(self):",
+      "baseline_code_structure_hash": "4b1063ec4d0d1192cda6a26d5a8f971ad19efc0d112e3e46604aa4347756a9b0"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_variable_length_backtick": {
+      "baseline_code_signature_text": "def test_detect_variable_length_backtick(self):",
+      "baseline_code_structure_hash": "b25857bed7acff4ede753f38cfe8c9a20c2a5fc9e14560cb1af3e8a204e936da",
+      "baseline_yaml_content_hash": "e6f7ce9069252f77ffffee70e3dc15fef6e619c174e4c8c7e181baa0fa52d58a"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_variable_length_tilde": {
+      "baseline_code_signature_text": "def test_detect_variable_length_tilde(self):",
+      "baseline_code_structure_hash": "84b0db591b888c83a209e5138eb2b93a7d907bb9e530e2e712ec8747b78a2d98",
+      "baseline_yaml_content_hash": "73eaf0e2dd6fc16de0a5fea7aba9d01b3af7a7a5f7e47f41f3184ed895fc234e"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_auto_detect.py#TestAutoDetect.test_detect_with_interference": {
+      "baseline_code_signature_text": "def test_detect_with_interference(self):",
+      "baseline_code_structure_hash": "ff2c09594694566b280fd3a92ed06b4ff7880a92df71e854272fa999e0c23c24",
+      "baseline_yaml_content_hash": "6d13ae7efe9d446b23ee75aeef737883ca14cd5e00666a8265027fef6f314b26"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_robustness.py#TestParserRobustness": {
+      "baseline_code_signature_text": "class TestParserRobustness:",
+      "baseline_code_structure_hash": "703eaba0dc86a06b7b7ae0eb81765d361411edcf3663942ae98f21011e0054d7"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_robustness.py#TestParserRobustness.test_parse_complex_language_tags": {
+      "baseline_code_signature_text": "def test_parse_complex_language_tags(self):",
+      "baseline_code_structure_hash": "4d9550612dc346dcb40b4e706b1b752fe585fcaa64668ba7e41b05d4dcbee1c5",
+      "baseline_yaml_content_hash": "a4bbc0b0608807fe83d0ba0fadfb75b04505ef38b8f09e6da330a77a518b4862"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_robustness.py#TestParserRobustness.test_parse_with_spaces_in_fence": {
+      "baseline_code_signature_text": "def test_parse_with_spaces_in_fence(self):",
+      "baseline_code_structure_hash": "48c14b3e07223b83cf5cb76f1f8fbf301264d9db8df730e25ffee18a65c54365",
+      "baseline_yaml_content_hash": "5035a9ec3ec03e18ca03712d2004c965e0596db3fad80375bd0ba2d5fad86ea0"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_parser_robustness.py#TestParserRobustness.test_unclosed_block_handling": {
+      "baseline_code_signature_text": "def test_unclosed_block_handling(self):",
+      "baseline_code_structure_hash": "0dc2616703f28f3f4ff2b8961f4ac64dfa2601c874281f424756dc4604de266b",
+      "baseline_yaml_content_hash": "6ac290117cc17d679756e8c9aadcc2c24024cf94949f7df76453ce351e1b4e80"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading": {
+      "baseline_code_signature_text": "class TestPluginLoading:",
+      "baseline_code_structure_hash": "3335e101dc8cc60e4d721f7007aadc88299a1f575b4503b5ad3eb56b6595c0fb"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading.custom_plugin_dir": {
+      "baseline_code_signature_text": "def custom_plugin_dir(self, tmp_path):",
+      "baseline_code_structure_hash": "1947ec9653c1fd32a634a897d4fb89b2d634001f563a982e6b5eb31ad741ba57",
+      "baseline_yaml_content_hash": "a5a0e017ba4016eb65552f1b2914e62785b6219b642cfcb545aa0d1b474cca1d"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading.test_find_git_repository_root": {
+      "baseline_code_signature_text": "def test_find_git_repository_root(self, tmp_path):",
+      "baseline_code_structure_hash": "4cef04fa8c2a84ce7987599b968b148cecc0f68e8995e03b39ea31e36326d762",
+      "baseline_yaml_content_hash": "7a9ebe39f4404626fe97bcb06507a896ac295648e12d4b96cc413e0bcd32fb0e"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading.test_ignore_invalid_files": {
+      "baseline_code_signature_text": "def test_ignore_invalid_files(self, executor: Executor, custom_plugin_dir):",
+      "baseline_code_structure_hash": "f156506c066e2e237ce688c5f25f360b8fb54f041c4c424933b8a4926b6c9973",
+      "baseline_yaml_content_hash": "95573d283e1b0c49b927a29fa7ca8369211ac9d022ad07d83c1c161049370869"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_loader.py#TestPluginLoading.test_load_external_plugin": {
+      "baseline_code_signature_text": "def test_load_external_plugin(self, executor: Executor, custom_plugin_dir, mock_runtime_bus):",
+      "baseline_code_structure_hash": "9c2d0d1778d3106c2c5a955d4c946d3e821a22337873d555e660d86d64a6002f",
+      "baseline_yaml_content_hash": "e1492ffdbae8a2cd2c224fc2ecc7e2f1dbe3017167faf0f81a078c45c31ca194"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience": {
+      "baseline_code_signature_text": "class TestPluginResilience:",
+      "baseline_code_structure_hash": "05770b3426f409e2069fedef63d6aade7205f078bfd293593140ca939da35a4e"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience.executor": {
+      "baseline_code_signature_text": "def executor(self, tmp_path) -> Executor:",
+      "baseline_code_structure_hash": "540e12ca82f237df6806798a282d1589e6fd288c97405e3d2c3ce1b6538c3e2b"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience.plugin_dir": {
+      "baseline_code_signature_text": "def plugin_dir(self, tmp_path) -> Path:",
+      "baseline_code_structure_hash": "f1e791584929709e756beb4666086d2852f0bbd52ab99fd3b3bfaa7606c24f15"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience.test_load_plugin_with_registration_error": {
+      "baseline_code_signature_text": "def test_load_plugin_with_registration_error(self, executor: Executor, plugin_dir: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "8223411cec979a7cb5c96a7f4d319a22bff9a87fb03390d33bd154cfbbc55f93",
+      "baseline_yaml_content_hash": "9fb74dda05b2f6b30033ecd4c75076b57d6b945cfce3ad940ae70e5bf2ca7026"
+    },
+    "py://packages/quipu-runtime/tests/unit/test_plugin_resilience.py#TestPluginResilience.test_load_plugin_with_syntax_error": {
+      "baseline_code_signature_text": "def test_load_plugin_with_syntax_error(self, executor: Executor, plugin_dir: Path, mock_runtime_bus):",
+      "baseline_code_structure_hash": "db20baccd41276d2ac86acf2ac67573d9b081495c4ba747a3621a5b4a4e58d5c",
+      "baseline_yaml_content_hash": "e1e50e4d9149bfc66101cac96f354305cdd2449bff905c61000b671080bbfa48"
+    }
+  },
+  "version": "1.0"
+}
