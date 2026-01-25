@@ -5,9 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyquipu-application"
 version = "0.1.0"
-authors = [
-  { name="doucx", email="doucxldh@gmail.com" },
-]
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "Core application logic for Quipu, orchestrating engine and runtime."
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -17,11 +15,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pyquipu-interfaces",
-    "pyquipu-engine",
-    "pyquipu-runtime",
-    "pyquipu-common",
-    "pyquipu-bus",
+    "pyquipu-interfaces ~= 0.1.0",
+    "pyquipu-engine ~= 0.1.0",
+    "pyquipu-runtime ~= 0.1.0",
+    "pyquipu-common ~= 0.1.0",
+    "pyquipu-bus ~= 0.1.0",
 ]
 
 [tool.uv.sources]

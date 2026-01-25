@@ -5,9 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyquipu-test-utils"
 version = "0.1.0"
-authors = [
-  { name="doucx", email="doucxldh@gmail.com" },
-]
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "Common testing utilities for the Quipu ecosystem."
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -18,9 +16,9 @@ classifiers = [
     "Framework :: Pytest",
 ]
 dependencies = [
-    "pyquipu-interfaces",
-    "pyquipu-engine",
-    "pyquipu-bus",
+    "pyquipu-interfaces ~= 0.1.0",
+    "pyquipu-engine ~= 0.1.0",
+    "pyquipu-bus ~= 0.1.0",
     "typer"
 ]
 

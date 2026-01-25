@@ -5,9 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyquipu-common"
 version = "0.1.0"
-authors = [
-  { name="doucx", email="doucxldh@gmail.com" },
-]
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "Common utilities and helpers for the Quipu ecosystem."
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -15,12 +13,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
+    "Typing :: Typed",
 ]
 dependencies = []
 
 [tool.setuptools.packages.find]
 where = ["src"]
 namespaces = true
-
-[tool.setuptools.package-data]
-"pyquipu.common" = ["locales/zh/*.json"]
