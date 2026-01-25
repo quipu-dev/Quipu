@@ -1,8 +1,8 @@
 import pytest
-from pyquipu.acts.shell import register as register_shell_acts
-from pyquipu.interfaces.exceptions import ExecutionError
-from pyquipu.interfaces.types import ActContext
-from pyquipu.runtime.executor import Executor
+from quipu.acts.shell import register as register_shell_acts
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext
+from quipu.runtime.executor import Executor
 
 
 class TestShellActs:

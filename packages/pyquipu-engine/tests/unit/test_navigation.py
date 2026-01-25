@@ -1,5 +1,5 @@
 import pytest
-from pyquipu.engine.state_machine import Engine
+from quipu.engine.state_machine import Engine
 
 
 @pytest.fixture

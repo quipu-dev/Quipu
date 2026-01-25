@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
-from pyquipu.application.controller import run_quipu
-from pyquipu.interfaces.exceptions import ExecutionError
+from quipu.application.controller import run_quipu
+from quipu.interfaces.exceptions import ExecutionError
 
 
 class TestControllerUnit:
@@ -25,8 +25,8 @@ hello
         # Patch 工厂函数和 Executor 类
         # 注意：controller 直接导入了 Executor 类，所以我们要 patch 这个类
         with (
-            patch("pyquipu.application.controller.create_engine", return_value=mock_engine) as mk_eng_fac,
-            patch("pyquipu.application.controller.Executor", return_value=mock_runtime) as mk_exec_cls,
+            patch("quipu.application.controller.create_engine", return_value=mock_engine) as mk_eng_fac,
+            patch("quipu.application.controller.Executor", return_value=mock_runtime) as mk_exec_cls,
         ):
             # 执行
             result = run_quipu(content=plan_content, work_dir=tmp_path, yolo=True, confirmation_handler=lambda *a: True)
@@ -62,8 +62,8 @@ fail_act
         mock_engine.current_node.output_tree = "hash_123"
 
         with (
-            patch("pyquipu.application.controller.create_engine", return_value=mock_engine),
-            patch("pyquipu.application.controller.Executor", return_value=mock_runtime),
+            patch("quipu.application.controller.create_engine", return_value=mock_engine),
+            patch("quipu.application.controller.Executor", return_value=mock_runtime),
         ):
             # 模拟 Runtime 抛出业务异常
             mock_runtime.execute.side_effect = ExecutionError("Task failed successfully")
@@ -86,8 +86,8 @@ fail_act
         mock_engine.current_node.output_tree = "hash_123"
 
         with (
-            patch("pyquipu.application.controller.create_engine", return_value=mock_engine),
-            patch("pyquipu.application.controller.Executor", return_value=mock_runtime),
+            patch("quipu.application.controller.create_engine", return_value=mock_engine),
+            patch("quipu.application.controller.Executor", return_value=mock_runtime),
         ):
             result = run_quipu(content=plan_content, work_dir=tmp_path, yolo=True, confirmation_handler=lambda *a: True)
 

@@ -1,4 +1,4 @@
-from pyquipu.runtime.parser import detect_best_parser, get_parser
+from quipu.runtime.parser import detect_best_parser, get_parser
 
 
 class TestParserRobustness:

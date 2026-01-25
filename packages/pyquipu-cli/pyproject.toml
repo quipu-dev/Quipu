@@ -36,7 +36,7 @@ pyquipu-application = { workspace = true }
 pyquipu-bus = { workspace = true }
 
 [project.scripts]
-quipu = "pyquipu.cli.main:app"
+quipu = "quipu.cli.main:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]

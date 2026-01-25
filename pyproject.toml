@@ -47,7 +47,7 @@ pyquipu-runtime = { workspace = true }
 pyquipu-test-utils = { workspace = true }
 
 [tool.pytest.ini_options]
-addopts = "-ra --cov=pyquipu --cov-report=term-missing"
+addopts = "-ra --cov=quipu --cov-report=term-missing"
 testpaths = "tests packages" # Scan both root tests and package tests
 pythonpath = [
   "packages/pyquipu-interfaces/src",

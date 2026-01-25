@@ -1,7 +1,7 @@
 import subprocess
 
 import pytest
-from pyquipu.cli.main import app
+from quipu.cli.main import app
 
 
 @pytest.fixture

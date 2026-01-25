@@ -1,370 +1,370 @@
 {
   "fingerprints": {
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/axon.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/axon.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/cache.py#cache_prune_refs": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/cache.py#cache_prune_refs": {
       "baseline_code_signature_text": "def cache_prune_refs(ctx: typer.Context, work_dir: Annotated[Path, typer.Option(--work - dir, -w, help='\u64cd\u4f5c\u6267\u884c\u7684\u6839\u76ee\u5f55\uff08\u5de5\u4f5c\u533a\uff09', file_okay=False, dir_okay=True, resolve_path=True)] = DEFAULT_WORK_DIR):",
       "baseline_code_structure_hash": "cd0d63937dc3ff829e901d88276fe134bbe8fca18c7d440a57fd8e4ff906731f",
       "baseline_yaml_content_hash": "ce52311498556ed2fd00d41a3d99dbc17e8d60e58aeea071764be855ed908a9f"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/cache.py#cache_rebuild": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/cache.py#cache_rebuild": {
       "baseline_code_signature_text": "def cache_rebuild(ctx: typer.Context, force: Annotated[bool, typer.Option(--force, -f, help='\u5f3a\u5236\u6267\u884c\uff0c\u8df3\u8fc7\u786e\u8ba4\u63d0\u793a\u3002')] = False, work_dir: Annotated[Path, typer.Option(--work - dir, -w, help='\u64cd\u4f5c\u6267\u884c\u7684\u6839\u76ee\u5f55\uff08\u5de5\u4f5c\u533a\uff09', file_okay=False, dir_okay=True, resolve_path=True)] = DEFAULT_WORK_DIR):",
       "baseline_code_structure_hash": "3c2c989314686512251ea8bd336220d89dad542401b8b6d91db123d4d0cac970",
       "baseline_yaml_content_hash": "3727dd998527dfca7e9983e6f592896563127f254f1ce7247971e5bd9488ad62"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/cache.py#cache_sync": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/cache.py#cache_sync": {
       "baseline_code_signature_text": "def cache_sync(ctx: typer.Context, work_dir: Annotated[Path, typer.Option(--work - dir, -w, help='\u64cd\u4f5c\u6267\u884c\u7684\u6839\u76ee\u5f55\uff08\u5de5\u4f5c\u533a\uff09', file_okay=False, dir_okay=True, resolve_path=True)] = DEFAULT_WORK_DIR):",
       "baseline_code_structure_hash": "6158299ce53d68611c515623da59839849d41841e16a10c1b64ed227d58ae544",
       "baseline_yaml_content_hash": "70b00fd61b2ef9a1b0ad0b25c0717109a4befd6c486b3f6ed5d4320c0293b6c4"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/export.py#_format_frontmatter": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_format_frontmatter": {
       "baseline_code_signature_text": "def _format_frontmatter(node: QuipuNode) -> str:",
       "baseline_code_structure_hash": "8240cf5ce3db751aae5dc355449a865be22aeb8d5f353c237b6a7aab9f6c6e23",
       "baseline_yaml_content_hash": "072213b865fe7346f0d15fb5dac39d87008c64d4c265f765d49a7e0a561a2b76"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/export.py#_generate_file_content": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_generate_file_content": {
       "baseline_code_signature_text": "def _generate_file_content(node: QuipuNode, engine: Engine, no_frontmatter: bool, no_nav: bool, exported_hashes_set: Set[str], filename_map: Dict[str, str], hidden_link_types: Set[str]) -> str:",
       "baseline_code_structure_hash": "a2069123e8ad2f8fb7669b759a07bf27d75408c680eb39d61909494f245e4270",
       "baseline_yaml_content_hash": "11e8b1b55093a75571b2f6321e13bd409eaf706cc11d05d7bc6f5ded73130d7b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/export.py#_generate_filename": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_generate_filename": {
       "baseline_code_signature_text": "def _generate_filename(node: QuipuNode) -> str:",
       "baseline_code_structure_hash": "c91e83f113e279a0adb6371a69aaee0b9aa60760bf994e76e61cd3e00c25d890",
       "baseline_yaml_content_hash": "92ba975530e3f064b4e863a873c946fd95e94b147efc977b7a7b8056b7cd54ba"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/export.py#_generate_navbar": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_generate_navbar": {
       "baseline_code_signature_text": "def _generate_navbar(current_node: QuipuNode, exported_hashes_set: Set[str], filename_map: Dict[str, str], hidden_link_types: Set[str]) -> str:",
       "baseline_code_structure_hash": "31730019d72095558dfbb0f1409ac592b3385282bd70b82d0e846ac04feb1425",
       "baseline_yaml_content_hash": "12f6b2229709ef9b30084a487dbce1e73f1dc18f9104a615883b25787bca2820"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/export.py#_sanitize_summary": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_sanitize_summary": {
       "baseline_code_signature_text": "def _sanitize_summary(summary: str) -> str:",
       "baseline_code_structure_hash": "c6aa66cd0f4041b9978c8262f712dec660248f7cdea7a5bccd18b52cb1f2920d",
       "baseline_yaml_content_hash": "09493d22842213e10aad397c75d0eb4443b8bb8fa644417bcc78cdf1d39ac01a"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/export.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/helpers.py#_execute_visit": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#_execute_visit": {
       "baseline_code_signature_text": "def _execute_visit(ctx: typer.Context, engine: Engine, target_hash: str, msg_id: str, **kwargs = {}):",
       "baseline_code_structure_hash": "745c49ce22068c74d026d6173f1a90e0ae12f292466fb39538ef7eab6b0f2466",
       "baseline_yaml_content_hash": "ae1ff41ba75c522fa2e42291e621ada5e1b02efe729959a460edc34a4a6f1c8a"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/helpers.py#_find_current_node": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#_find_current_node": {
       "baseline_code_signature_text": "def _find_current_node(engine: Engine, graph: Dict[str, QuipuNode]) -> Optional[QuipuNode]:",
       "baseline_code_structure_hash": "79b18f799ebe6139a1aed83fbf7ea5fa12335af0cc58e15219222451acc5449c",
       "baseline_yaml_content_hash": "0f66d45f4d99892cd3236244bdefbfaab2652961fb15ef3b74c735aada7f4eda"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/helpers.py#engine_context": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#engine_context": {
       "baseline_code_signature_text": "def engine_context(work_dir: Path) -> Generator[Engine, None, None]:",
       "baseline_code_structure_hash": "5ae9f94f24aae0e6885c2888a75ec9c9f51fc8a710a7c4dbb724a7c09c751e73",
       "baseline_yaml_content_hash": "a95bdec257bf9536a0f2b01704c7c08fdf356e43c0aec646290b1cbf0d6991aa"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/helpers.py#filter_nodes": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#filter_nodes": {
       "baseline_code_signature_text": "def filter_nodes(nodes: List[QuipuNode], limit: Optional[int], since: Optional[str], until: Optional[str]) -> List[QuipuNode]:",
       "baseline_code_structure_hash": "472289c4518baaa2c48f30f0852b7fdb847967b34df5e0d022aea2a86e43d562",
       "baseline_yaml_content_hash": "79ea525d26ab251901c03f43b61d5ad30cd35953a00202e75e81456000417054"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/helpers.py#filter_reachable_nodes": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#filter_reachable_nodes": {
       "baseline_code_signature_text": "def filter_reachable_nodes(engine: Engine, nodes: List[QuipuNode]) -> List[QuipuNode]:",
       "baseline_code_structure_hash": "39cedd34f3f1b02b3a1d49b07418cc71215c696ea3a8a5031a0e3ff5846f66f0",
       "baseline_yaml_content_hash": "1ef180ac9d0dc5c26fcd9531e469fcba9f07183977b6ddde67ef4b54b3afaac9"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/navigation.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/navigation.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/query.py#_nodes_to_json_str": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/query.py#_nodes_to_json_str": {
       "baseline_code_signature_text": "def _nodes_to_json_str(nodes: List[QuipuNode]) -> str:",
       "baseline_code_structure_hash": "61c41315aa76759f15d59b4b5b386c46e347d63f3ede0d2b3bb3ccce6f8b95a7",
       "baseline_yaml_content_hash": "e8fd6bcc24b3c636e78d61a66c4aeb44f31548851d618950ed80afaf75d0eef3"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/query.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/query.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/remote.py#SyncMode": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/remote.py#SyncMode": {
       "baseline_code_signature_text": "class SyncMode(str, Enum):",
       "baseline_code_structure_hash": "8faf852a104a3bfd38bd7486465ff7a380d3cccc0b3cf04c5050d0f10f89f45a"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/remote.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/remote.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/run.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/run.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/show.py#_find_target_node": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/show.py#_find_target_node": {
       "baseline_code_signature_text": "def _find_target_node(graph: Dict, hash_prefix: str):",
       "baseline_code_structure_hash": "a51821bc11889003f2fe8c9a531b48afb072f1c665e4539a08844792ed2a7dd5",
       "baseline_yaml_content_hash": "807e9066a944912816641ed1d209223dde8f450e116617142a0c032a9b55360e"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/show.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/show.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/ui.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/ui.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/commands/workspace.py#register": {
+    "py://packages/pyquipu-cli/src/quipu/cli/commands/workspace.py#register": {
       "baseline_code_signature_text": "def register(app: typer.Typer):",
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/config.py#_find_development_monorepo_root": {
+    "py://packages/pyquipu-cli/src/quipu/cli/config.py#_find_development_monorepo_root": {
       "baseline_code_signature_text": "def _find_development_monorepo_root() -> Path:",
       "baseline_code_structure_hash": "096a7df3dd33e9b5b982e03b29f0ebba51180926cc912aef4385f40ac0300cd0",
       "baseline_yaml_content_hash": "b42d5d9b04671c784d8e311c03bdc2041981f08780bb769781db749a14d1abbb"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/logger_config.py#configure_file_logging": {
+    "py://packages/pyquipu-cli/src/quipu/cli/logger_config.py#configure_file_logging": {
       "baseline_code_signature_text": "def configure_file_logging(log_path: Path):",
       "baseline_code_structure_hash": "7c35318a04de875a111ec6c77e08a6f0800bdc1b615857d62ebe367630b8bf2d",
       "baseline_yaml_content_hash": "177888287bc626cb30c780ebb95ecb2cc540579e755239c576433c565c3ca9b4"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/logger_config.py#setup_logging": {
+    "py://packages/pyquipu-cli/src/quipu/cli/logger_config.py#setup_logging": {
       "baseline_code_signature_text": "def setup_logging():",
       "baseline_code_structure_hash": "9f8fe4f78b0a37cb1fdcb7a71340369231210c17cf8aabd7932364e85e49558f",
       "baseline_yaml_content_hash": "661102cbe0d8b99976a010fa18584a63efc961471bd041664f794e0c03e75c4c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#Renderer": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer": {
       "baseline_code_signature_text": "class Renderer(Protocol):",
       "baseline_code_structure_hash": "8342694db8d308b36ba5d1ecf2dc07bba1460712ac3a9a9438c5abba24852b3d",
       "baseline_yaml_content_hash": "ae23277280453e2a0716632867589e7996fa372148b691fbef68ec54d5e75508"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#Renderer.data": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer.data": {
       "baseline_code_signature_text": "def data(self, data_string: str) -> None:",
       "baseline_code_structure_hash": "e24670692edbaa5b2b5efeb813dbb1f8c58794e5f10e72f7b92f5ee5d18f505c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#Renderer.error": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer.error": {
       "baseline_code_signature_text": "def error(self, message: str) -> None:",
       "baseline_code_structure_hash": "2cd45ec5cc7b5fb349714653e4b1c9f36712fc8adf7a7ef9e1eb8774b61e7f4c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#Renderer.info": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer.info": {
       "baseline_code_signature_text": "def info(self, message: str) -> None:",
       "baseline_code_structure_hash": "74013f04bbff01b4572176f4cdac1721665fcad57786891db1ea372e5ce7de3b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#Renderer.success": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer.success": {
       "baseline_code_signature_text": "def success(self, message: str) -> None:",
       "baseline_code_structure_hash": "17cccbfacd9894cee2db64164628e166abec8d66b260be2492fa5a812ad9d615"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#Renderer.warning": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer.warning": {
       "baseline_code_signature_text": "def warning(self, message: str) -> None:",
       "baseline_code_structure_hash": "122aef289ffd46f5b55b51ddb08da50008b03914266298a8a491fe22cbdaabe4"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#TyperRenderer": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer": {
       "baseline_code_signature_text": "class TyperRenderer:",
       "baseline_code_structure_hash": "a3639da04c7cb8a3a7b2c3376d9f32b964f0162f91469f27065f5c7081853f36",
       "baseline_yaml_content_hash": "f4e7c08f3707a6250b5935407149b0d9d829b809ac58b10514f2d1a2f882a78c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#TyperRenderer.data": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.data": {
       "baseline_code_signature_text": "def data(self, data_string: str) -> None:",
       "baseline_code_structure_hash": "e24670692edbaa5b2b5efeb813dbb1f8c58794e5f10e72f7b92f5ee5d18f505c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#TyperRenderer.error": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.error": {
       "baseline_code_signature_text": "def error(self, message: str) -> None:",
       "baseline_code_structure_hash": "2cd45ec5cc7b5fb349714653e4b1c9f36712fc8adf7a7ef9e1eb8774b61e7f4c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#TyperRenderer.info": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.info": {
       "baseline_code_signature_text": "def info(self, message: str) -> None:",
       "baseline_code_structure_hash": "74013f04bbff01b4572176f4cdac1721665fcad57786891db1ea372e5ce7de3b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#TyperRenderer.success": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.success": {
       "baseline_code_signature_text": "def success(self, message: str) -> None:",
       "baseline_code_structure_hash": "17cccbfacd9894cee2db64164628e166abec8d66b260be2492fa5a812ad9d615"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/rendering.py#TyperRenderer.warning": {
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.warning": {
       "baseline_code_signature_text": "def warning(self, message: str) -> None:",
       "baseline_code_structure_hash": "122aef289ffd46f5b55b51ddb08da50008b03914266298a8a491fe22cbdaabe4"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#ContentViewSate": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#ContentViewSate": {
       "baseline_code_signature_text": "class ContentViewSate(Enum):",
       "baseline_code_structure_hash": "b42ae08d89173d6c36f958bd504fdbe34d778e321cf0e748835e2c6efa55cb94"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp": {
       "baseline_code_signature_text": "class QuipuUiApp(App[Optional[UiResult]]):",
       "baseline_code_structure_hash": "9c2dac1a5f65d2d7aed0a6279874c528e0c17c99dd185dd812e3c590eefe5ed4"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.__init__": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.__init__": {
       "baseline_code_signature_text": "def __init__(self, work_dir: Path, initial_raw_mode: bool = False):",
       "baseline_code_structure_hash": "01289e979aa1706f5d24373f9ce01b36459ec8285f3bfa3678fa737278e19dc8"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._focus_current_node": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._focus_current_node": {
       "baseline_code_signature_text": "def _focus_current_node(self, table: DataTable):",
       "baseline_code_structure_hash": "3f14fec25010cd9d925d28f74c08f854c7054430a655402c717c1467abf39ece"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._get_graph_chars": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._get_graph_chars": {
       "baseline_code_signature_text": "def _get_graph_chars(self, tracks: list, node: QuipuNode, base_color: str, dim_tag: str, end_dim_tag: str) -> list[str]:",
       "baseline_code_structure_hash": "fe1b3643a1cd93cf866b6fd217fa89a9d950b748d0ddf9956d9b5d15eb288169"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._get_node_summary": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._get_node_summary": {
       "baseline_code_signature_text": "def _get_node_summary(self, node: QuipuNode) -> str:",
       "baseline_code_structure_hash": "e213009b7d93faa2848cb2327cb7c68bf1dc189eb02dc001eae4df755cd46dcb"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._load_page": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._load_page": {
       "baseline_code_signature_text": "def _load_page(self, page_number: int) -> None:",
       "baseline_code_structure_hash": "98b62932be33372d95dc93d62e67d1058ddf83d6594412dfe204991e90172aad",
       "baseline_yaml_content_hash": "ec832025570125af7007e679b664f333f6e83a0f71ecb5868ba964538b1ed8f0"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._on_timer_finished": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._on_timer_finished": {
       "baseline_code_signature_text": "def _on_timer_finished(self) -> None:",
       "baseline_code_structure_hash": "32df223f8eec8c74f8fe73b9398de6706ab16757bf4f177300d5656f5195f731",
       "baseline_yaml_content_hash": "32815db7c566b485e41dc7ea4d9d40e0d8924eca6e948f58ce4e55b439712a86"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._populate_table": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._populate_table": {
       "baseline_code_signature_text": "def _populate_table(self, table: DataTable, nodes: List[QuipuNode]):",
       "baseline_code_structure_hash": "f037273d62d065407745e04587e974714e2145a5c02ad16cbce19a59432bb60a"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._refresh_table": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._refresh_table": {
       "baseline_code_signature_text": "def _refresh_table(self):",
       "baseline_code_structure_hash": "d0f29982113d0c8b76cb1da8b9ec4b1cad9167be8fff537c2260bd9e8a8b9c5c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._set_state": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._set_state": {
       "baseline_code_signature_text": "def _set_state(self, new_state: ContentViewSate):",
       "baseline_code_structure_hash": "ec272fac2029963b9fc5683d8dc4d342c3266b71247926143eb173a10b33c471"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._update_header": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._update_header": {
       "baseline_code_signature_text": "def _update_header(self):",
       "baseline_code_structure_hash": "b99829eccbe22b74e9a7d1c1e07cbb1e9cc409d56f65fe2940d3e31dac70260f",
       "baseline_yaml_content_hash": "b4896449e53c4be83c0a2748144fc5efa03712b954f22d678c5985dd64771aaf"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp._update_loading_preview": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._update_loading_preview": {
       "baseline_code_signature_text": "def _update_loading_preview(self):",
       "baseline_code_structure_hash": "767c9290debf190f584a9436e23c2aa9982d5a60f1d6e290cad7659ea52fbdb9",
       "baseline_yaml_content_hash": "5abb727485f8246a01e1dea490c92ecd9b4c332c7cab5ad5b9eb9b8b61ea6dbf"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_checkout_node": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_checkout_node": {
       "baseline_code_signature_text": "def action_checkout_node(self) -> None:",
       "baseline_code_structure_hash": "6056a94daa90ec8a6a31754dfee8cc8520bc6445b36a7d57d2b7d9a2752733c0"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_dump_content": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_dump_content": {
       "baseline_code_signature_text": "def action_dump_content(self) -> None:",
       "baseline_code_structure_hash": "5a4fe927bc2135f38176a350e1c5e72e776d02a093a510fef635b209e4f32ed0"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_move_down": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_move_down": {
       "baseline_code_signature_text": "def action_move_down(self) -> None:",
       "baseline_code_structure_hash": "58c973119cc52d30536c8679cc3ad47e15f62a48556d382f0ca4e9946195ba5e"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_move_up": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_move_up": {
       "baseline_code_signature_text": "def action_move_up(self) -> None:",
       "baseline_code_structure_hash": "baad7e50849ff155e575cf20848d79c9d2e990d8b9ea64ef377244a9240a4f62"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_next_page": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_next_page": {
       "baseline_code_signature_text": "def action_next_page(self) -> None:",
       "baseline_code_structure_hash": "a011dcb10ba3a907630098bb7148047663f8dda37d56306a5d4867d70099587c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_previous_page": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_previous_page": {
       "baseline_code_signature_text": "def action_previous_page(self) -> None:",
       "baseline_code_structure_hash": "f936a4f0d94f61c8e5c5da4e7cc263b47cc2ab5501928e596cea1e8809c98484"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_toggle_hidden": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_toggle_hidden": {
       "baseline_code_signature_text": "def action_toggle_hidden(self) -> None:",
       "baseline_code_structure_hash": "d3e7cc55640e837653e783bf6e4e082300e4b5185e54d46e8f619b7ffac68469"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_toggle_markdown": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_toggle_markdown": {
       "baseline_code_signature_text": "def action_toggle_markdown(self) -> None:",
       "baseline_code_structure_hash": "04c4ce3ba00cef71f98a68b872df58b6e601f80663afcfc876ae2b7ef471ba44",
       "baseline_yaml_content_hash": "71fc37eb86b52e66ba28509f95e303d621c682f4f2ec9c0a60347506564e9e87"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.action_toggle_view": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.action_toggle_view": {
       "baseline_code_signature_text": "def action_toggle_view(self) -> None:",
       "baseline_code_structure_hash": "e55a4f61388ceb72baa7902977db9e45d76361b9610852bbc2f8ac4cf9cb013f",
       "baseline_yaml_content_hash": "cd254ecfde08f418aa6776c3b9af7dddb8852589e78e08bdae06f6588f43e2a1"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.compose": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.compose": {
       "baseline_code_signature_text": "def compose(self) -> ComposeResult:",
       "baseline_code_structure_hash": "9d0206bca01ed6c1f9c9e895dfccd721bd6d623042d848013c91bb94cecf9938"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.on_mount": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.on_mount": {
       "baseline_code_signature_text": "def on_mount(self) -> None:",
       "baseline_code_structure_hash": "429db3decbec78474f9e0da57f060cad9ff3818521b0955c7a1fd7970deafd80",
       "baseline_yaml_content_hash": "af695d27b22b8f9e3c80fc9aecf67ed55c429e5bcff834a7f1409dbc3cc32771"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.on_row_highlighted": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.on_row_highlighted": {
       "baseline_code_signature_text": "def on_row_highlighted(self, event: DataTable.RowHighlighted) -> None:",
       "baseline_code_structure_hash": "4bd495bb1f0a64af31b79518560668c996c9d3cf6bf7e0280a649365c3a16930"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/tui.py#QuipuUiApp.on_unmount": {
+    "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.on_unmount": {
       "baseline_code_signature_text": "def on_unmount(self) -> None:",
       "baseline_code_structure_hash": "3f8bce49d7664245df81a63bb5a291ccf0c3cd96c45f83e04d75aebf1d2d5e3d"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/ui_utils.py#confirmation_handler_for_executor": {
+    "py://packages/pyquipu-cli/src/quipu/cli/ui_utils.py#confirmation_handler_for_executor": {
       "baseline_code_signature_text": "def confirmation_handler_for_executor(diff_lines: List[str], prompt: str) -> bool:",
       "baseline_code_structure_hash": "eb9d0298ff9910ee57c22766b923ec519439fb7394e76c976bc46dd6870a27e7",
       "baseline_yaml_content_hash": "4eb68f7550569e0298c63e8d43e90f5b8434b8f6f4d6636f6f93978d74b08f84"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/ui_utils.py#prompt_for_confirmation": {
+    "py://packages/pyquipu-cli/src/quipu/cli/ui_utils.py#prompt_for_confirmation": {
       "baseline_code_signature_text": "def prompt_for_confirmation(prompt: str, diff_lines: Optional[List[str]] = None, default: bool = False) -> bool:",
       "baseline_code_structure_hash": "99d4f9db04ac7b8fa5eef940c0f467accb61eda08f412652efe21cee6cba508f",
       "baseline_yaml_content_hash": "3dc83b0a19984f5b60144f71d8978ac23b4c0daa4cde38b1926347f412644bfe"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel": {
       "baseline_code_signature_text": "class GraphViewModel:",
       "baseline_code_structure_hash": "316fe2b74c71350a8b5c0c6b4a0f640ad28559e47025b85a458fd1c1707c6fa6",
       "baseline_yaml_content_hash": "96759d61f739ca4964b341e970bfc7441bf01351bc836fa766e4e6b1cb55e69c"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.__init__": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.__init__": {
       "baseline_code_signature_text": "def __init__(self, reader: HistoryReader, current_output_tree_hash: Optional[str], page_size: int = 50):",
       "baseline_code_structure_hash": "5f9bf8cd0c755d6c2a699bd40cb713b8304c929ef917faf3c52993088465f73f"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.calculate_initial_page": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.calculate_initial_page": {
       "baseline_code_signature_text": "def calculate_initial_page(self) -> int:",
       "baseline_code_structure_hash": "d675a366880afff8c908598f899160f6a2567ea3e309ffbe311114b4cb7016e9",
       "baseline_yaml_content_hash": "884cbd51830d021cdf154ac297e95b5b955b6c458bf92279e170011eee797d5e"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.get_content_bundle": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.get_content_bundle": {
       "baseline_code_signature_text": "def get_content_bundle(self, node: QuipuNode) -> str:",
       "baseline_code_structure_hash": "75e0ce76bbf92545656acb45ae65b7fcd447a9152e0c043e23571f59018224f0",
       "baseline_yaml_content_hash": "a4ed01837de13f83a2e09fe379954c2b3943c52c2c6fbc12ebe2763d49f99ba3"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.get_nodes_to_render": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.get_nodes_to_render": {
       "baseline_code_signature_text": "def get_nodes_to_render(self) -> List[QuipuNode]:",
       "baseline_code_structure_hash": "da0b0ed8f69cdd68ccfe27757ac44a4d9526aff829f099bfe713a8083ecf0cb8",
       "baseline_yaml_content_hash": "0c4b0ab6fca1e2564718863cbb3e770ffbc94bb7cb9ce43e00e6a7758cb3a543"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.get_public_content": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.get_public_content": {
       "baseline_code_signature_text": "def get_public_content(self, node: QuipuNode) -> str:",
       "baseline_code_structure_hash": "2d7835d5afdddfe0e37ea399037423a9325dfff75d42ee4ba5ca9a91e5787b55",
       "baseline_yaml_content_hash": "c82cd6689891833f5df596acf5cc349d3dc989ae032d448a218521060efc01e1"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.get_selected_node": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.get_selected_node": {
       "baseline_code_signature_text": "def get_selected_node(self) -> Optional[QuipuNode]:",
       "baseline_code_structure_hash": "77129bc042abcc8c08c02066ae2bb63321091a511ca2827431ea19e789d4752e"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.initialize": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.initialize": {
       "baseline_code_signature_text": "def initialize(self):",
       "baseline_code_structure_hash": "660dd8ba1712b059eb1b260a44662cc496f281369fdc386c54a63081c6b647be",
       "baseline_yaml_content_hash": "927f74f1dc4436a77a27ce88608a95745add3712c5b39efbc5d6c33229e08c1b"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.is_reachable": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.is_reachable": {
       "baseline_code_signature_text": "def is_reachable(self, output_tree_hash: str) -> bool:",
       "baseline_code_structure_hash": "0e1cb3345b30ba6287b14299eb247fe4acdbd31285e1720e479302ebc6b84e91",
       "baseline_yaml_content_hash": "e76a7af9c807fb82b1397daacd8942c36ffc31eb26d9e05732fb5b2077949ab0"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.load_page": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.load_page": {
       "baseline_code_signature_text": "def load_page(self, page_number: int) -> List[QuipuNode]:",
       "baseline_code_structure_hash": "caae11a7a388ed6a9b10e5e091b2451af9ead1c79022bf9e0a0e525fc914b90e",
       "baseline_yaml_content_hash": "fe82bcfdadf90d6a216cf5cf3b49caf1049a42ed83d34f8cfcd8a389dab699f9"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.next_page": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.next_page": {
       "baseline_code_signature_text": "def next_page(self) -> List[QuipuNode]:",
       "baseline_code_structure_hash": "b94e50e356c7114a9c08852b28fe00f8fb6be7814d725e1444ecc19fdd7cb867",
       "baseline_yaml_content_hash": "1bcf43d112b504b11793b21ed9fe9206f3f75d852f9b3d23a71075f48becc845"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.previous_page": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.previous_page": {
       "baseline_code_signature_text": "def previous_page(self) -> List[QuipuNode]:",
       "baseline_code_structure_hash": "c2b6193078dda89a4bea9480faa371cc9da83986573d969a263c9f42368f9842",
       "baseline_yaml_content_hash": "42d56fe3ac79b9852ab639aa371b31ff732169536a50162c0c47c481a9ddf2e0"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.select_node_by_key": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.select_node_by_key": {
       "baseline_code_signature_text": "def select_node_by_key(self, key: str) -> Optional[QuipuNode]:",
       "baseline_code_structure_hash": "645748af52e71503a521c46a4ba9dcbe12ca5bca801c44384304fcbe8228bace",
       "baseline_yaml_content_hash": "e1578b6156c3311a4e524f7c899158b2badde72f9fab1562a3eda6cf4dde79ac"
     },
-    "py://packages/pyquipu-cli/src/pyquipu/cli/view_model.py#GraphViewModel.toggle_unreachable": {
+    "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.toggle_unreachable": {
       "baseline_code_signature_text": "def toggle_unreachable(self):",
       "baseline_code_structure_hash": "dcf240dcc0f9a202f747452a37682882b0b082e5504061f4a0cbf8d067e2d0f7",
       "baseline_yaml_content_hash": "bcd300b5c32978978215b64094fa764c2e63abefb77c986553d0f3366cb6b6d1"

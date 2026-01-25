@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import pytest
-from pyquipu.engine.state_machine import Engine
-from pyquipu.test_utils.helpers import EMPTY_TREE_HASH, InMemoryDB, InMemoryHistoryManager
+from quipu.engine.state_machine import Engine
+from quipu.test_utils.helpers import EMPTY_TREE_HASH, InMemoryDB, InMemoryHistoryManager
 
 
 @pytest.fixture

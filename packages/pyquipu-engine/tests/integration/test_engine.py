@@ -1,7 +1,7 @@
 import subprocess
 
 import pytest
-from pyquipu.engine.state_machine import Engine
+from quipu.engine.state_machine import Engine
 
 
 def test_align_orphan_state(engine_instance: Engine):
@@ -60,7 +60,7 @@ class TestEngineFindNodes:
     def populated_engine(self, engine_instance: Engine):
         import time
 
-        from pyquipu.test_utils.helpers import (
+        from quipu.test_utils.helpers import (
             EMPTY_TREE_HASH,
             create_capture_node_with_change,
             create_plan_node_with_change,

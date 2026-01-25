@@ -9,14 +9,6 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent.resolve()
 # 默认安装目标目录
 INSTALL_DIR = Path.home() / ".quipu_app"
-# Quipu 的核心包
-PACKAGES = [
-    "packages/quipu-interfaces",
-    "packages/quipu-common",
-    "packages/quipu-engine",
-    "packages/quipu-runtime",
-    "packages/quipu-cli",
-]
 
 
 def check_uv():
