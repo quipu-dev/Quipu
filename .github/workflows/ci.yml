@@ -46,12 +46,7 @@ jobs:
           uv venv .envs/dev
           # 安装开发和测试工具，以及所有本地包（可编辑模式）
           uv pip install -p .envs/dev \
-            -e packages/quipu-interfaces \
-            -e packages/quipu-common \
-            -e packages/quipu-engine \
-            -e packages/quipu-runtime \
-            -e packages/quipu-cli \
-            pytest pytest-cov ruff pytest-timeout
+            -e .[dev]
 
       # 步骤 5: 运行 Ruff (代码风格检查和静态分析)
       #   使用 --check 标志，如果代码格式不正确，CI 会失败

@@ -62,8 +62,8 @@ def register(app: typer.Typer):
                 doc = acts[name]
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
-                bus.info("axon.listActs.ui.actItem", name=name)
-                bus.data(f"{indented_doc}\n")
+                item_header = bus.get("axon.listActs.ui.actItem", name=name)
+                bus.data(f"{item_header}\n{indented_doc}\n")
             ctx.exit(0)
 
         # 5. 获取输入内容 (文件 或 STDIN 或 默认文件)
