@@ -24,10 +24,20 @@
       "baseline_code_structure_hash": "458e8779b9f0df2331eada9d10d5fa4fe729a00ed7a5fde70b771d9beb5bfa8b",
       "baseline_yaml_content_hash": "ba87b5c38065687528f0d842b3c042da0e4c164a6019a46707ead5b7f2488997"
     },
+    "py://packages/pyquipu-application/src/pyquipu/application/controller.py#get_available_acts": {
+      "baseline_code_signature_text": "def get_available_acts(work_dir: Path) -> Dict[str, str]:",
+      "baseline_code_structure_hash": "442aa8ba3388add2d240e0f9bc612bf35528e11d40c765c6ec3a44e4eb874f8b",
+      "baseline_yaml_content_hash": "bd97f637450a7cf01f330f5106a83d9e916dde59d64f2fe89ba667ea8e23e4ac"
+    },
     "py://packages/pyquipu-application/src/pyquipu/application/controller.py#run_quipu": {
       "baseline_code_signature_text": "def run_quipu(content: str, work_dir: Path, confirmation_handler: ConfirmationHandler, parser_name: str = 'auto', yolo: bool = False) -> QuipuResult:",
       "baseline_code_structure_hash": "d977d58a9db1f2c9d7fb2d5fabb9cccc5edcdb1aeff988f1fa78442b229c699c",
       "baseline_yaml_content_hash": "316165fbe76e51b117eb3c9c983c8d479df4490b601609f2b0aa5176c9cbd96b"
+    },
+    "py://packages/pyquipu-application/src/pyquipu/application/controller.py#run_stateless_plan": {
+      "baseline_code_signature_text": "def run_stateless_plan(content: str, work_dir: Path, confirmation_handler: ConfirmationHandler, parser_name: str = 'auto', yolo: bool = False) -> QuipuResult:",
+      "baseline_code_structure_hash": "58320dcc77cb54d7ab31bafcc383b0c8dd3953aaeaf9f8208dab0af5094ffd4e",
+      "baseline_yaml_content_hash": "aa58fd5cec8b7c127c3a729915c6d4f99c875e4405edba365a5f03f5dff992f7"
     },
     "py://packages/pyquipu-application/src/pyquipu/application/factory.py#create_engine": {
       "baseline_code_signature_text": "def create_engine(work_dir: Path, lazy: bool = False) -> Engine:",

@@ -18,18 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 def get_available_acts(work_dir: Path) -> Dict[str, str]:
-    """
-    Statelessly discovers and returns all available acts.
-
-    This function initializes a temporary, stateless executor to discover
-    core acts and acts from plugins found relative to the working directory.
-
-    Args:
-        work_dir: The directory from which to discover project-level plugins.
-
-    Returns:
-        A dictionary mapping act names to their docstrings.
-    """
     # A dummy confirmation handler is used as it's not required for listing.
     # Yolo=True ensures no interactive prompts can be triggered.
     executor = Executor(
@@ -40,6 +28,7 @@ def get_available_acts(work_dir: Path) -> Dict[str, str]:
     register_core_acts(executor)
     PluginManager().load_from_sources(executor, work_dir)
     return executor.get_registered_acts()
+
 
 # 定义 ConfirmationHandler 类型别名: (diff_lines, prompt) -> bool
 # 注意: Executor 期望如果不确认则抛出异常，或者返回 False (取决于 Executor 实现)。
@@ -186,22 +175,6 @@ def run_stateless_plan(
     parser_name: str = "auto",
     yolo: bool = False,
 ) -> QuipuResult:
-    """
-    Executes a plan in a stateless manner, bypassing the Quipu engine.
-
-    This function sets up a temporary executor, loads plugins, parses the content,
-    and executes the statements against the specified working directory.
-
-    Args:
-        content: The string content of the plan to execute.
-        work_dir: The root directory for the execution.
-        confirmation_handler: A callable to handle user confirmations.
-        parser_name: The name of the parser to use ('auto' by default).
-        yolo: If True, skips all confirmation prompts.
-
-    Returns:
-        A QuipuResult object indicating the outcome of the execution.
-    """
     try:
         executor = Executor(
             root_dir=work_dir,
