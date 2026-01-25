@@ -2,8 +2,8 @@ import logging
 from unittest.mock import ANY
 
 import pytest
-from pyquipu.application.controller import run_quipu
-from pyquipu.cli.main import app
+from quipu.application.controller import run_quipu
+from quipu.cli.main import app
 from typer.testing import CliRunner
 
 # --- Fixtures ---
@@ -84,7 +84,7 @@ class TestCLIWrapper:
         """测试无输入时显示用法"""
         # 1. 临时修改 run 命令模块中的默认入口文件引用，防止读取当前目录下的 o.md
         # 注意：必须 patch 'run' 模块，因为该模块通过 'from ... import' 引入了常量
-        from pyquipu.cli.commands import run
+        from quipu.cli.commands import run
 
         monkeypatch.setattr(run, "DEFAULT_ENTRY_FILE", tmp_path / "non_existent.md")
 
@@ -115,7 +115,7 @@ class TestCLIWrapper:
         mock_bus = MagicMock()
         # Mock bus to avoid dependency on specific UI text
         with pytest.MonkeyPatch.context() as m:
-            m.setattr("pyquipu.cli.commands.workspace.bus", mock_bus)
+            m.setattr("quipu.cli.commands.workspace.bus", mock_bus)
             result = runner.invoke(app, ["save", "-w", str(workspace)])
             assert result.exit_code == 0
             mock_bus.success.assert_called_with("workspace.save.noChanges")
@@ -126,7 +126,7 @@ class TestCLIWrapper:
 
         mock_bus = MagicMock()
         with pytest.MonkeyPatch.context() as m:
-            m.setattr("pyquipu.cli.commands.workspace.bus", mock_bus)
+            m.setattr("quipu.cli.commands.workspace.bus", mock_bus)
             result = runner.invoke(app, ["discard", "-f", "-w", str(workspace)])
             assert result.exit_code == 1
             mock_bus.error.assert_called_with("workspace.discard.error.noHistory")
@@ -141,7 +141,7 @@ class TestCheckoutCLI:
         State B contains only b.txt.
         This fixture is backend-agnostic.
         """
-        from pyquipu.application.factory import create_engine
+        from quipu.application.factory import create_engine
 
         # State A: Create a.txt
         plan_a = "```act\nwrite_file a.txt\n```\n```content\nState A\n```"
@@ -185,7 +185,7 @@ class TestCheckoutCLI:
 
     def test_cli_checkout_with_safety_capture(self, populated_workspace):
         """Test that a dirty state is captured before checkout."""
-        from pyquipu.application.factory import create_engine
+        from quipu.application.factory import create_engine
 
         workspace, hash_a, hash_b = populated_workspace
 
@@ -218,7 +218,7 @@ class TestCheckoutCLI:
 
         mock_bus = MagicMock()
         with pytest.MonkeyPatch.context() as m:
-            m.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
+            m.setattr("quipu.cli.commands.navigation.bus", mock_bus)
             result = runner.invoke(app, ["checkout", "deadbeef", "--work-dir", str(workspace), "--force"])
 
             assert result.exit_code == 1
@@ -232,7 +232,7 @@ class TestCheckoutCLI:
 
         mock_bus = MagicMock()
         with pytest.MonkeyPatch.context() as m:
-            m.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
+            m.setattr("quipu.cli.commands.navigation.bus", mock_bus)
 
             result = runner.invoke(app, ["checkout", hash_b[:8], "--work-dir", str(workspace), "--force"])
 

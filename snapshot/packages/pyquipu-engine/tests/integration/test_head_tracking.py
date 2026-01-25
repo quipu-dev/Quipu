@@ -1,6 +1,6 @@
 import pytest
-from pyquipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from pyquipu.engine.state_machine import Engine
+from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from quipu.engine.state_machine import Engine
 
 
 class TestHeadTracking:
@@ -15,7 +15,7 @@ class TestHeadTracking:
         subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo, check=True)
         subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo, check=True)
 
-        from pyquipu.engine.git_db import GitDB
+        from quipu.engine.git_db import GitDB
 
         git_db = GitDB(repo)
         reader = GitObjectHistoryReader(git_db)

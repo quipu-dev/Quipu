@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 
 import pytest
-from pyquipu.engine.git_db import GitDB
+from quipu.engine.git_db import GitDB
 
 
 @pytest.fixture

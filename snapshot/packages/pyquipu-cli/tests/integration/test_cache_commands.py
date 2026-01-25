@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock
 
 import pytest
-from pyquipu.cli.main import app
-from pyquipu.engine.state_machine import Engine
+from quipu.cli.main import app
+from quipu.engine.state_machine import Engine
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def history_with_redundant_refs(engine_instance: Engine):
 def test_cache_sync(runner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.cache.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     result = runner.invoke(app, ["cache", "sync", "-w", str(work_dir)])
 
@@ -55,7 +55,7 @@ def test_cache_sync(runner, quipu_workspace, monkeypatch):
 def test_cache_rebuild_no_db(runner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.cache.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     result = runner.invoke(app, ["cache", "rebuild", "-w", str(work_dir)])
 
@@ -69,7 +69,7 @@ def test_cache_prune_refs_with_redundancy(runner, history_with_redundant_refs, m
     engine = history_with_redundant_refs
     work_dir = engine.root_dir
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.cache.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     refs_dir = work_dir / ".git" / "refs" / "quipu" / "local" / "heads"
     assert len(list(refs_dir.iterdir())) == 5, "Pre-condition: 5 refs should exist before pruning"
@@ -87,7 +87,7 @@ def test_cache_prune_refs_no_redundancy(runner, history_with_redundant_refs, mon
     engine = history_with_redundant_refs
     work_dir = engine.root_dir
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.cache.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     # 第一次运行以清理
     runner.invoke(app, ["cache", "prune-refs", "-w", str(work_dir)])
@@ -104,7 +104,7 @@ def test_cache_prune_refs_no_redundancy(runner, history_with_redundant_refs, mon
 def test_cache_prune_refs_empty_repo(runner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.cache.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     result = runner.invoke(app, ["cache", "prune-refs", "-w", str(work_dir)])
 

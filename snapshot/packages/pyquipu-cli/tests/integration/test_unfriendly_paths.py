@@ -2,8 +2,8 @@ from unittest.mock import ANY, MagicMock, call
 
 import click
 import pytest
-from pyquipu.cli.main import app
-from pyquipu.test_utils.helpers import create_dirty_workspace_history
+from quipu.cli.main import app
+from quipu.test_utils.helpers import create_dirty_workspace_history
 from typer.testing import CliRunner
 
 
@@ -20,7 +20,7 @@ def dirty_workspace(quipu_workspace):
 def test_run_command_user_cancellation(runner: CliRunner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.run.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.run.bus", mock_bus)
     output_file = work_dir / "output.txt"
     assert not output_file.exists()
 
@@ -49,7 +49,7 @@ echo "Should not run" > {output_file.name}
 def test_run_command_in_non_interactive_env(runner: CliRunner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.run.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.run.bus", mock_bus)
     output_file = work_dir / "output.txt"
     assert not output_file.exists()
 
@@ -79,7 +79,7 @@ echo "Should not run" > {output_file.name}
 def test_discard_user_cancellation(runner: CliRunner, dirty_workspace, monkeypatch):
     work_dir, _, _ = dirty_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.workspace.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.workspace.bus", mock_bus)
 
     def mock_getchar_n(echo):
         click.echo("n", err=True)
@@ -96,7 +96,7 @@ def test_discard_user_cancellation(runner: CliRunner, dirty_workspace, monkeypat
 def test_discard_in_non_interactive_env(runner: CliRunner, dirty_workspace, monkeypatch):
     work_dir, _, _ = dirty_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.workspace.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.workspace.bus", mock_bus)
 
     def mock_getchar_fail(echo):
         raise EOFError("Simulating non-interactive environment")
@@ -115,7 +115,7 @@ def test_discard_in_non_interactive_env(runner: CliRunner, dirty_workspace, monk
 def test_checkout_user_cancellation(runner: CliRunner, dirty_workspace, monkeypatch):
     work_dir, _, hash_a = dirty_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.navigation.bus", mock_bus)
 
     def mock_getchar_n(echo):
         click.echo("n", err=True)
@@ -136,7 +136,7 @@ def test_checkout_user_cancellation(runner: CliRunner, dirty_workspace, monkeypa
 def test_checkout_in_non_interactive_env(runner: CliRunner, dirty_workspace, monkeypatch):
     work_dir, _, hash_a = dirty_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("pyquipu.cli.commands.navigation.bus", mock_bus)
+    monkeypatch.setattr("quipu.cli.commands.navigation.bus", mock_bus)
 
     def mock_getchar_fail(echo):
         raise EOFError("Simulating non-interactive environment")

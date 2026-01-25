@@ -7,7 +7,7 @@ from pathlib import Path
 # Script configuration
 ROOT_PATH = Path(__file__).parent.parent.resolve()
 SRC_DIRS = [ROOT_PATH / "packages"]
-LOCALES_PATH = ROOT_PATH / "packages/quipu-common/src/pyquipu/common/locales/zh"
+LOCALES_PATH = ROOT_PATH / "packages/quipu-common/src/quipu/common/locales/zh"
 BUS_METHODS = {"success", "info", "warning", "error", "get"}
 
 

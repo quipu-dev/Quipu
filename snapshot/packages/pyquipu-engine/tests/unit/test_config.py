@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from pyquipu.engine.config import ConfigManager
+from quipu.engine.config import ConfigManager
 
 
 # A pytest fixture to provide a clean work directory for each test

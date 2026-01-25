@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from pyquipu.cli.main import app
+from quipu.cli.main import app
 from typer.testing import CliRunner
 
 # A simple plan that creates one file

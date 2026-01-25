@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pyquipu.application.utils import find_git_repository_root
+from quipu.application.utils import find_git_repository_root
 
 
 class TestRootDiscovery:
