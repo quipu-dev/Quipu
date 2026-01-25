@@ -50,13 +50,13 @@ pyquipu-test-utils = { workspace = true }
 addopts = "-ra --cov=pyquipu --cov-report=term-missing"
 testpaths = "tests packages" # Scan both root tests and package tests
 pythonpath = [
-  "packages/quipu-interfaces/src",
-  "packages/quipu-engine/src",
-  "packages/quipu-runtime/src",
-  "packages/quipu-cli/src",
-  "packages/quipu-common/src",
-  "packages/quipu-application/src",
-  "packages/quipu-test-utils/src",
+  "packages/pyquipu-interfaces/src",
+  "packages/pyquipu-engine/src",
+  "packages/pyquipu-runtime/src",
+  "packages/pyquipu-cli/src",
+  "packages/pyquipu-common/src",
+  "packages/pyquipu-application/src",
+  "packages/pyquipu-test-utils/src",
 ]
 
 [build-system]
