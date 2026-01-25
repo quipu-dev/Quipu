@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] feat: 构建基于 Scoped Tags 的多包独立发布基础设施", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769367320.8661265, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] feat(build): 实现基于 Scoped Tags 的多包独立发布基础设施", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769367494.5434647, "duration_ms": 0}}
