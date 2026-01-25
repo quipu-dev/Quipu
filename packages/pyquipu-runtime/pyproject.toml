@@ -5,10 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyquipu-runtime"
 version = "0.1.0"
-authors = [
-  { name="doucx", email="doucxldh@gmail.com" },
-]
-description = "The stateless execution runtime for Quipu, responsible for parsing and executing instructions."
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "The stateless execution runtime for Quipu."
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 classifiers = [
@@ -17,10 +15,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pyquipu-interfaces",
-    "pyquipu-common",
-    "pyquipu-bus",
-    "typer>=0.9.0"
+    "pyquipu-interfaces ~= 0.1.0",
+    "pyquipu-common ~= 0.1.0",
+    "pyquipu-bus ~= 0.1.0",
+    "typer >= 0.9.0"
 ]
 
 [tool.uv.sources]
