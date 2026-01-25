@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] refactor: 将 axon 执行流程迁移到 application 层", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769352797.9681005, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] refactor(cli): 将无状态逻辑和 Acts 发现机制迁移至 application 层", "type": "plan", "generator": {"id": "manual", "tool": "pyquipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769353134.9611783, "duration_ms": 0}}
