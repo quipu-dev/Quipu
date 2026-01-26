@@ -311,7 +311,7 @@ wheels = [
 
 [[package]]
 name = "pyquipu"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "packages/pyquipu" }
 dependencies = [
     { name = "pyquipu-application" },
@@ -336,7 +336,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-application"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-application" }
 dependencies = [
     { name = "pyquipu-bus" },
@@ -357,7 +357,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-bus"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-bus" }
 dependencies = [
     { name = "pyquipu-common" },
@@ -368,7 +368,7 @@ requires-dist = [{ name = "pyquipu-common", editable = "packages/pyquipu-common"
 
 [[package]]
 name = "pyquipu-cli"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-cli" }
 dependencies = [
     { name = "pyquipu-application" },
@@ -395,12 +395,12 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-common"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-common" }
 
 [[package]]
 name = "pyquipu-engine"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-engine" }
 dependencies = [
     { name = "pyquipu-bus" },
@@ -419,7 +419,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-interfaces"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-interfaces" }
 
 [[package]]
@@ -456,7 +456,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-runtime"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-runtime" }
 dependencies = [
     { name = "pyquipu-bus" },
@@ -475,7 +475,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-test-utils"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-test-utils" }
 dependencies = [
     { name = "pyquipu-bus" },
@@ -602,15 +602,15 @@ wheels = [
 
 [[package]]
 name = "rich"
-version = "14.2.0"
+version = "14.3.1"
 source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
 dependencies = [
     { name = "markdown-it-py" },
     { name = "pygments" },
 ]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/fb/d2/8920e102050a0de7bfabeb4c4614a49248cf8d5d7a8d01885fbb24dc767a/rich-14.2.0.tar.gz", hash = "sha256:73ff50c7c0c1c77c8243079283f4edb376f0f6442433aecb8ce7e6d0b92d1fe4" }
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/a1/84/4831f881aa6ff3c976f6d6809b58cdfa350593ffc0dc3c58f5f6586780fb/rich-14.3.1.tar.gz", hash = "sha256:b8c5f568a3a749f9290ec6bddedf835cec33696bfc1e48bcfecb276c7386e4b8" }
 wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/25/7a/b0178788f8dc6cafce37a212c99565fa1fe7872c70c6c9c1e1a372d9d88f/rich-14.2.0-py3-none-any.whl", hash = "sha256:76bc51fe2e57d2b1be1f96c524b890b816e334ab4c1e45888799bfaab0021edd" },
+    { url = "https://mirrors.aliyun.com/pypi/packages/87/2a/a1810c8627b9ec8c57ec5ec325d306701ae7be50235e8fd81266e002a3cc/rich-14.3.1-py3-none-any.whl", hash = "sha256:da750b1aebbff0b372557426fb3f35ba56de8ef954b3190315eb64076d6fb54e" },
 ]
 
 [[package]]
@@ -650,7 +650,7 @@ wheels = [
 
 [[package]]
 name = "textual"
-version = "7.0.0"
+version = "7.4.0"
 source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
 dependencies = [
     { name = "markdown-it-py", extra = ["linkify"] },
@@ -660,9 +660,9 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/d4/9c/ebc9ca1f95366bef4c0e8360f4a77400d47a79aeecc08747de1990ef8bdc/textual-7.0.0.tar.gz", hash = "sha256:617638a2be74fb7507aff3ea6ec9374148be02e5a7bb1d02396d1d557b66c0a9" }
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/64/8d/2fbd6b8652f4cabf9cb0852d7af1aa45b6cad32d0f50735856e8f9e41719/textual-7.4.0.tar.gz", hash = "sha256:1a9598e485492f9a8f033c7ec5e59528df3ab0742fda925681acf78b0fb210de" }
 wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/63/f8/a1ef9034b2a7f334f91b2f673f2ec03020a2529bb30a9437a6beb855beee/textual-7.0.0-py3-none-any.whl", hash = "sha256:190de0f65e5f4bc820fae46f32f591e509621d76688b36400ce01fa63dc6b623" },
+    { url = "https://mirrors.aliyun.com/pypi/packages/ab/9c/4169ccffed6d53f78e3175eae0cd649990071c6e24b6ad8830812ebab726/textual-7.4.0-py3-none-any.whl", hash = "sha256:41a066cae649654d4ecfe53b8316f5737c0042d1693ce50690b769a7840780ac" },
 ]
 
 [[package]]
