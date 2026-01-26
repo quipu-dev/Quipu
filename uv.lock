@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10"
 
 [manifest]
@@ -11,6 +11,7 @@ members = [
     "pyquipu-common",
     "pyquipu-engine",
     "pyquipu-interfaces",
+    "pyquipu-monorepo",
     "pyquipu-runtime",
     "pyquipu-test-utils",
 ]
@@ -310,8 +311,8 @@ wheels = [
 
 [[package]]
 name = "pyquipu"
-version = "0.1.0"
-source = { editable = "." }
+version = "0.1.1"
+source = { editable = "packages/pyquipu" }
 dependencies = [
     { name = "pyquipu-application" },
     { name = "pyquipu-bus" },
@@ -322,47 +323,16 @@ dependencies = [
     { name = "pyquipu-runtime" },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "pre-commit" },
-    { name = "pyquipu-application" },
-    { name = "pyquipu-bus" },
-    { name = "pyquipu-cli" },
-    { name = "pyquipu-common" },
-    { name = "pyquipu-engine" },
-    { name = "pyquipu-interfaces" },
-    { name = "pyquipu-runtime" },
-    { name = "pyquipu-test-utils" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-timeout" },
-    { name = "ruff" },
-]
-
 [package.metadata]
 requires-dist = [
-    { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "pyquipu-application", editable = "packages/pyquipu-application" },
-    { name = "pyquipu-application", marker = "extra == 'dev'", editable = "packages/pyquipu-application" },
     { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
-    { name = "pyquipu-bus", marker = "extra == 'dev'", editable = "packages/pyquipu-bus" },
     { name = "pyquipu-cli", editable = "packages/pyquipu-cli" },
-    { name = "pyquipu-cli", marker = "extra == 'dev'", editable = "packages/pyquipu-cli" },
     { name = "pyquipu-common", editable = "packages/pyquipu-common" },
-    { name = "pyquipu-common", marker = "extra == 'dev'", editable = "packages/pyquipu-common" },
     { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
-    { name = "pyquipu-engine", marker = "extra == 'dev'", editable = "packages/pyquipu-engine" },
     { name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" },
-    { name = "pyquipu-interfaces", marker = "extra == 'dev'", editable = "packages/pyquipu-interfaces" },
     { name = "pyquipu-runtime", editable = "packages/pyquipu-runtime" },
-    { name = "pyquipu-runtime", marker = "extra == 'dev'", editable = "packages/pyquipu-runtime" },
-    { name = "pyquipu-test-utils", marker = "extra == 'dev'", editable = "packages/pyquipu-test-utils" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "pytest-cov", marker = "extra == 'dev'" },
-    { name = "pytest-timeout", marker = "extra == 'dev'" },
-    { name = "ruff", marker = "extra == 'dev'" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-application"
@@ -451,6 +421,38 @@ requires-dist = [
 name = "pyquipu-interfaces"
 version = "0.1.0"
 source = { editable = "packages/pyquipu-interfaces" }
+
+[[package]]
+name = "pyquipu-monorepo"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "pyquipu" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "pre-commit" },
+    { name = "pyquipu" },
+    { name = "pyquipu-test-utils" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-timeout" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pre-commit", marker = "extra == 'dev'" },
+    { name = "pyquipu", editable = "packages/pyquipu" },
+    { name = "pyquipu", marker = "extra == 'dev'", editable = "packages/pyquipu" },
+    { name = "pyquipu-test-utils", marker = "extra == 'dev'", editable = "packages/pyquipu-test-utils" },
+    { name = "pytest", marker = "extra == 'dev'" },
+    { name = "pytest-cov", marker = "extra == 'dev'" },
+    { name = "pytest-timeout", marker = "extra == 'dev'" },
+    { name = "ruff", marker = "extra == 'dev'" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-runtime"

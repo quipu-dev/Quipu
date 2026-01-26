@@ -1,5 +1,7 @@
 # Quipu: 面向 AI 时代的“过程考古学”
 
+[English](https://github.com/quipu-dev/pyquipu/blob/main/packages/pyquipu/README.md) | 中文
+
 **Quipu 不是一个版本控制系统。它是一个为 AI 而非人类设计的、旨在记录其所有成功与失败操作的“思维-现实”转录机。**
 
 <!--[![CI/CD](https://github.com/quipu-dev/pyquipu/actions/workflows/ci.yml/badge.svg)](https://github.com/quipu-dev/pyquipu/actions/workflows/ci.yml)
