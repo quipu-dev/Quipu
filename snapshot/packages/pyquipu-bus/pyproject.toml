@@ -22,13 +22,14 @@ classifiers = [
 ]
 keywords = ["quipu", "devops", "bus", "event"]
 
+dependencies = [
+    "pyquipu-common ~= 0.1.1",
+]
+
 [project.urls]
 Homepage = "https://github.com/quipu-dev/Quipu"
 Repository = "https://github.com/quipu-dev/Quipu"
 "Bug Tracker" = "https://github.com/quipu-dev/Quipu/issues"
-dependencies = [
-    "pyquipu-common ~= 0.1.0",
-]
 
 [tool.uv.sources]
 pyquipu-common = { workspace = true }

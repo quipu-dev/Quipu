@@ -25,16 +25,6 @@ Homepage = "https://github.com/quipu-dev/Quipu"
 Repository = "https://github.com/quipu-dev/Quipu"
 "Bug Tracker" = "https://github.com/quipu-dev/Quipu/issues"
 
-dependencies = [
-    "pyquipu-application ~= 0.1.1",
-    "pyquipu-bus ~= 0.1.1",
-    "pyquipu-cli ~= 0.1.1",
-    "pyquipu-common ~= 0.1.1",
-    "pyquipu-engine ~= 0.1.1",
-    "pyquipu-interfaces ~= 0.1.1",
-    "pyquipu-runtime ~= 0.1.1",
-]
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
