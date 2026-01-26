@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import subprocess
 import sys
 import shutil
@@ -8,8 +7,10 @@ from pathlib import Path
 import tomllib
 from packaging.version import parse as parse_version
 
+
 def get_workspace_root():
     return Path(__file__).parent.parent
+
 
 def get_pypi_version(package_name):
     url = f"https://pypi.org/pypi/{package_name}/json"
@@ -24,6 +25,7 @@ def get_pypi_version(package_name):
         print(f"Warning: Could not fetch version for {package_name}: {e}")
     return None
 
+
 def run_cmd(cmd, cwd=None, env=None):
     print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True)
@@ -33,18 +35,19 @@ def run_cmd(cmd, cwd=None, env=None):
         return False
     return True
 
+
 def release_package(pkg_path, pkg_name, local_version):
     print(f"--- Releasing {pkg_name} v{local_version} ---")
-    
+
     # 0. Clean old artifacts
     dist_dir = pkg_path / "dist"
     if dist_dir.exists():
         shutil.rmtree(dist_dir)
-    
+
     # 1. Build
     if not run_cmd(["uv", "build"], cwd=pkg_path):
         return False
-        
+
     # 2. Expand wildcards for twine
     # Twine needs a list of actual file paths
     dist_files = [str(f) for f in dist_dir.glob("*") if f.is_file()]
@@ -56,22 +59,23 @@ def release_package(pkg_path, pkg_name, local_version):
     upload_cmd = ["python3", "-m", "twine", "upload", "--skip-existing"] + dist_files
     if not run_cmd(upload_cmd):
         return False
-        
+
     # 4. Tag
     tag_name = f"{pkg_name}/v{local_version}"
     # Use --force to allow re-tagging if a previous run failed mid-way
     if not run_cmd(["git", "tag", "-f", tag_name]):
         print(f"Warning: Failed to create tag {tag_name}")
-    
+
     return True
+
 
 def main():
     root = get_workspace_root()
     root_toml_path = root / "pyproject.toml"
-    
+
     with open(root_toml_path, "rb") as f:
         root_toml = tomllib.load(f)
-        
+
     members_raw = root_toml.get("tool", {}).get("uv", {}).get("workspace", {}).get("members", [])
     pkg_dirs = []
     for member in members_raw:
@@ -89,19 +93,19 @@ def main():
         toml_path = pkg_dir / "pyproject.toml"
         if not toml_path.exists():
             continue
-            
+
         with open(toml_path, "rb") as f:
             pkg_toml = tomllib.load(f)
-            
+
         pkg_name = pkg_toml.get("project", {}).get("name")
         local_ver_str = pkg_toml.get("project", {}).get("version")
-        
+
         if not pkg_name or not local_ver_str:
             continue
-            
+
         local_ver = parse_version(local_ver_str)
         remote_ver = get_pypi_version(pkg_name)
-        
+
         if remote_ver is None or local_ver > remote_ver:
             reason = "New package" if remote_ver is None else f"Update ({remote_ver} -> {local_ver})"
             print(f"Found candidate: {pkg_name} ({reason})")
@@ -119,6 +123,7 @@ def main():
     print(f"\nSummary: {success_count} released, {fail_count} failed.")
     if fail_count > 0:
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
