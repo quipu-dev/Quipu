@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "Capture: M pyproject.toml", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769414513.6439927, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] feat(ci/cd): 实现基于主分支的幂等性 CD 架构 v2.0", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769414593.3778312, "duration_ms": 0}}
