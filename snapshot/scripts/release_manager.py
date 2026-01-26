@@ -45,7 +45,8 @@ def release_package(pkg_path, pkg_name, local_version):
         shutil.rmtree(dist_dir)
 
     # 1. Build
-    if not run_cmd(["uv", "build"], cwd=pkg_path):
+    # Explicitly set --out-dir to ensure artifacts are in the package's local dist/
+    if not run_cmd(["uv", "build", "--out-dir", "dist"], cwd=pkg_path):
         return False
 
     # 2. Expand wildcards for twine
