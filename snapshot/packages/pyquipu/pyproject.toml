@@ -20,6 +20,16 @@ classifiers = [
 ]
 keywords = ["quipu", "devops", "cli", "tui", "git", "history", "automation", "ai"]
 
+dependencies = [
+    "pyquipu-application ~= 0.1.1",
+    "pyquipu-bus ~= 0.1.1",
+    "pyquipu-cli ~= 0.1.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-engine ~= 0.1.1",
+    "pyquipu-interfaces ~= 0.1.1",
+    "pyquipu-runtime ~= 0.1.1",
+]
+
 [project.urls]
 Homepage = "https://github.com/quipu-dev/Quipu"
 Repository = "https://github.com/quipu-dev/Quipu"
