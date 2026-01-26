@@ -4,21 +4,35 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyquipu-runtime"
-version = "0.1.0"
+version = "0.1.1"
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "The stateless execution runtime for Quipu."
 requires-python = ">=3.10"
 license = "Apache-2.0"
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
+keywords = ["quipu", "devops", "runtime", "executor", "automation"]
+
 dependencies = [
-    "pyquipu-interfaces ~= 0.1.0",
-    "pyquipu-common ~= 0.1.0",
-    "pyquipu-bus ~= 0.1.0",
+    "pyquipu-interfaces ~= 0.1.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-bus ~= 0.1.1",
     "typer >= 0.9.0"
 ]
+
+[project.urls]
+Homepage = "https://github.com/quipu-dev/Quipu"
+Repository = "https://github.com/quipu-dev/Quipu"
+"Bug Tracker" = "https://github.com/quipu-dev/Quipu/issues"
 
 [tool.uv.sources]
 pyquipu-interfaces = { workspace = true }
