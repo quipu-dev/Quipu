@@ -22,11 +22,12 @@ classifiers = [
 ]
 keywords = ["quipu", "devops", "interfaces", "models", "api"]
 
+dependencies = []
+
 [project.urls]
 Homepage = "https://github.com/quipu-dev/Quipu"
 Repository = "https://github.com/quipu-dev/Quipu"
 "Bug Tracker" = "https://github.com/quipu-dev/Quipu/issues"
-dependencies = []
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quipu"]

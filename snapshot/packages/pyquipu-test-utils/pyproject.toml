@@ -23,16 +23,17 @@ classifiers = [
 ]
 keywords = ["quipu", "devops", "testing", "pytest"]
 
+dependencies = [
+    "pyquipu-interfaces ~= 0.1.1",
+    "pyquipu-engine ~= 0.1.1",
+    "pyquipu-bus ~= 0.1.1",
+    "typer"
+]
+
 [project.urls]
 Homepage = "https://github.com/quipu-dev/Quipu"
 Repository = "https://github.com/quipu-dev/Quipu"
 "Bug Tracker" = "https://github.com/quipu-dev/Quipu/issues"
-dependencies = [
-    "pyquipu-interfaces ~= 0.1.0",
-    "pyquipu-engine ~= 0.1.0",
-    "pyquipu-bus ~= 0.1.0",
-    "typer"
-]
 
 [tool.uv.sources]
 pyquipu-interfaces = { workspace = true }
