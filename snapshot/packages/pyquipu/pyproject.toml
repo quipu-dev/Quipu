@@ -1,0 +1,24 @@
+[project]
+name = "pyquipu"
+version = "0.1.0"
+description = "Quipu: Process Archaeology for the AI Era (Meta-package)"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+dependencies = [
+    "pyquipu-application ~= 0.1.0",
+    "pyquipu-bus ~= 0.1.0",
+    "pyquipu-cli ~= 0.1.0",
+    "pyquipu-common ~= 0.1.0",
+    "pyquipu-engine ~= 0.1.0",
+    "pyquipu-interfaces ~= 0.1.0",
+    "pyquipu-runtime ~= 0.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/quipu"]

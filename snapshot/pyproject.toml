@@ -1,5 +1,5 @@
 [project]
-name = "pyquipu"
+name = "pyquipu-monorepo"
 version = "0.1.0"
 description = "Quipu Development Monorepo - The complete toolkit."
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
