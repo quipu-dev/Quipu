@@ -11,25 +11,13 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pyquipu-application ~= 0.1.0",
-    "pyquipu-bus ~= 0.1.0",
-    "pyquipu-cli ~= 0.1.0",
-    "pyquipu-common ~= 0.1.0",
-    "pyquipu-engine ~= 0.1.0",
-    "pyquipu-interfaces ~= 0.1.0",
-    "pyquipu-runtime ~= 0.1.0",
+    "pyquipu",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pyquipu-application ~= 0.1.0",
-    "pyquipu-bus ~= 0.1.0",
-    "pyquipu-cli ~= 0.1.0",
-    "pyquipu-common ~= 0.1.0",
-    "pyquipu-engine ~= 0.1.0",
-    "pyquipu-interfaces ~= 0.1.0",
-    "pyquipu-runtime ~= 0.1.0",
-    "pyquipu-test-utils ~= 0.1.0",
+    "pyquipu",
+    "pyquipu-test-utils",
     "pytest",
     "pytest-cov",
     "pytest-timeout",
@@ -41,6 +29,7 @@ dev = [
 workspace.members = ["packages/*"]
 
 [tool.uv.sources]
+pyquipu = { workspace = true }
 pyquipu-application = { workspace = true }
 pyquipu-bus = { workspace = true }
 pyquipu-cli = { workspace = true }
@@ -54,6 +43,7 @@ pyquipu-test-utils = { workspace = true }
 addopts = "-ra --cov=quipu --cov-report=term-missing"
 testpaths = "tests packages"
 pythonpath = [
+  "packages/pyquipu/src",
   "packages/pyquipu-interfaces/src",
   "packages/pyquipu-engine/src",
   "packages/pyquipu-runtime/src",
