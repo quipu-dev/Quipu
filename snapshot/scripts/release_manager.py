@@ -54,7 +54,7 @@ def release_package(pkg_path, pkg_name, local_version):
     dist_files = []
     for pattern in ["*.whl", "*.tar.gz"]:
         dist_files.extend([str(f) for f in dist_dir.glob(pattern) if f.is_file()])
-        
+
     if not dist_files:
         print(f"Error: No build artifacts found in {dist_dir}")
         return False

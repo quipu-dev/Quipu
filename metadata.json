@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[COMMIT] fix(ci/cd): 修复 Release Manager 的构建路径与文件过滤逻辑", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769415854.6227884, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "Capture: M release_manager.py", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769416772.0931323, "duration_ms": 0}}
