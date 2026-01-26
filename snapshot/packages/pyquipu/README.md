@@ -1,5 +1,7 @@
 # Quipu: "Process Archaeology" for the AI Era
 
+English | [中文](https://github.com/quipu-dev/pyquipu/blob/main/packages/pyquipu/README.zh-CN.md)
+
 **Quipu is not a version control system. It is a "thought-to-reality" transcriber designed for AI, not humans, to record all its operations—successes and failures alike.**
 
 
