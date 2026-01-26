@@ -1,20 +1,18 @@
-你观察得非常准确。在 `uv` 工作区（Workspace）模式下，`uv build` 默认会将所有构建产物汇聚到工作区根目录的 `dist/` 下，或者即便在子包目录下运行，也可能因为工作区配置而产生预料之外的路径偏移。
+这是由于 `glob("*")` 过于贪婪，将 `dist/` 目录下的非构建文件（如 `.gitignore`）也包含进了上传列表。`twine` 无法识别这些非标准格式的文件，因此拒绝执行。
+1.  **路径匹配过宽**: `dist_dir.glob("*")` 会获取目录下所有的文件。
+2.  **无效分发格式**: `twine` 仅接受 `.whl`, `.tar.gz`, `.zip` 等格式。
+我们需要缩小匹配范围，仅选择标准的构建产物后缀名：`.whl` 和 `.tar.gz`。
 
-为了实现**确定性的构建与发布**，我们不应该依赖 `uv` 的默认行为，而应该显式地指定 `--out-dir`。
-
-修改 `scripts/release_manager.py` 中的 `release_package` 函数，在执行 `uv build` 时显式添加 `--out-dir dist` 参数。这样无论我们在哪里运行脚本，构建产物都将严格出现在该子包目录下的 `dist/` 文件夹内，从而与后续的 `glob` 逻辑对齐。
-
-## [WIP] fix: 显式指定 uv 构件输出目录以修复发布路径不匹配
+## [WIP] fix: 细化构建产物过滤逻辑以排除非发布文件
 
 ### 错误分析
-`uv build` 在 Monorepo 环境中默认可能将产物输出到根目录的 `dist/`，导致子包发布脚本在子包本地 `dist/` 目录下找不到文件。
+Release Manager 在收集待上传文件时包含了 `.gitignore`，导致 `twine` 因格式无效而报错。
 
 ### 用户需求
-修正 `release_manager.py`，确保构建产物出现在脚本预期的地方。
+修正脚本，使其仅上传有效的 Python 分发包。
 
 ### 目标
-1.  修改 `uv build` 指令，添加 `--out-dir dist`。
-2.  确保 `release_package` 函数逻辑的路径一致性。
+1.  修改 `scripts/release_manager.py`，将 `glob` 匹配范围限制在 `.whl` 和 `.tar.gz`。
 
 ### 标签
 #intent/fix #flow/ready #priority/high
@@ -25,24 +23,28 @@
 
 ### Script
 
-#### Acts 1: 修正 `scripts/release_manager.py` 中的构建指令
+#### Acts 1: 修正 `scripts/release_manager.py` 中的文件过滤逻辑
 
 ~~~~~act
 patch_file
 scripts/release_manager.py
 ~~~~~
 ~~~~~python.old
-    # 1. Build
-    if not run_cmd(["uv", "build"], cwd=pkg_path):
-        return False
+    # 2. Expand wildcards for twine
+    # Twine needs a list of actual file paths
+    dist_files = [str(f) for f in dist_dir.glob("*") if f.is_file()]
+    if not dist_files:
 ~~~~~
 ~~~~~python.new
-    # 1. Build
-    # Explicitly set --out-dir to ensure artifacts are in the package's local dist/
-    if not run_cmd(["uv", "build", "--out-dir", "dist"], cwd=pkg_path):
-        return False
+    # 2. Expand wildcards for twine
+    # Twine needs a list of actual file paths, only include valid distribution formats
+    dist_files = []
+    for pattern in ["*.whl", "*.tar.gz"]:
+        dist_files.extend([str(f) for f in dist_dir.glob(pattern) if f.is_file()])
+        
+    if not dist_files:
 ~~~~~
 
 ### 下一步建议
-- **本地再次运行**: 执行 `python scripts/release_manager.py` 验证修复。此时你应该能看到 `packages/pyquipu/dist/` 目录下出现了构件，且脚本能够成功识别并进入上传阶段。
-- **清理根目录**: 建议手动删除根目录下的 `dist/` 目录，以防止混淆。
+- **本地重试**: 再次运行 `python scripts/release_manager.py`。现在它应该只会选择 `.whl` 和 `.tar.gz` 文件进行上传。
+- **环境检查**: 确保本地 `dist/` 目录下不再有奇怪的隐藏文件（虽然新的过滤逻辑已经能规避它们）。

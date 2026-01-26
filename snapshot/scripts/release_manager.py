@@ -50,8 +50,11 @@ def release_package(pkg_path, pkg_name, local_version):
         return False
 
     # 2. Expand wildcards for twine
-    # Twine needs a list of actual file paths
-    dist_files = [str(f) for f in dist_dir.glob("*") if f.is_file()]
+    # Twine needs a list of actual file paths, only include valid distribution formats
+    dist_files = []
+    for pattern in ["*.whl", "*.tar.gz"]:
+        dist_files.extend([str(f) for f in dist_dir.glob(pattern) if f.is_file()])
+        
     if not dist_files:
         print(f"Error: No build artifacts found in {dist_dir}")
         return False
