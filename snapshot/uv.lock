@@ -26,18 +26,6 @@ wheels = [
 ]
 
 [[package]]
-name = "click"
-version = "8.3.1"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/3d/fa/656b739db8587d7b5dfa22e22ed02566950fbfbcdc20311993483657a5c0/click-8.3.1.tar.gz", hash = "sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/98/78/01c019cdb5d6498122777c1a43056ebb3ebfeef2076d9d026bfe15583b2b/click-8.3.1-py3-none-any.whl", hash = "sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6" },
-]
-
-[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
@@ -199,56 +187,6 @@ wheels = [
 ]
 
 [[package]]
-name = "linkify-it-py"
-version = "2.0.3"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-dependencies = [
-    { name = "uc-micro-py" },
-]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/2a/ae/bb56c6828e4797ba5a4821eec7c43b8bf40f69cda4d4f5f8c8a2810ec96a/linkify-it-py-2.0.3.tar.gz", hash = "sha256:68cda27e162e9215c17d786649d1da0021a451bdc436ef9e0fa0ba5234b9b048" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/04/1e/b832de447dee8b582cac175871d2f6c3d5077cc56d5575cadba1fd1cccfa/linkify_it_py-2.0.3-py3-none-any.whl", hash = "sha256:6bcbc417b0ac14323382aef5c5192c0075bf8a9d6b41820a2b66371eac6b6d79" },
-]
-
-[[package]]
-name = "markdown-it-py"
-version = "4.0.0"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-dependencies = [
-    { name = "mdurl" },
-]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/5b/f5/4ec618ed16cc4f8fb3b701563655a69816155e79e24a17b651541804721d/markdown_it_py-4.0.0.tar.gz", hash = "sha256:cb0a2b4aa34f932c007117b194e945bd74e0ec24133ceb5bac59009cda1cb9f3" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl", hash = "sha256:87327c59b172c5011896038353a81343b6754500a08cd7a4973bb48c6d578147" },
-]
-
-[package.optional-dependencies]
-linkify = [
-    { name = "linkify-it-py" },
-]
-
-[[package]]
-name = "mdit-py-plugins"
-version = "0.5.0"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-dependencies = [
-    { name = "markdown-it-py" },
-]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/b2/fd/a756d36c0bfba5f6e39a1cdbdbfdd448dc02692467d83816dff4592a1ebc/mdit_py_plugins-0.5.0.tar.gz", hash = "sha256:f4918cb50119f50446560513a8e311d574ff6aaed72606ddae6d35716fe809c6" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/fb/86/dd6e5db36df29e76c7a7699123569a4a18c1623ce68d826ed96c62643cae/mdit_py_plugins-0.5.0-py3-none-any.whl", hash = "sha256:07a08422fc1936a5d26d146759e9155ea466e842f5ab2f7d2266dd084c8dab1f" },
-]
-
-[[package]]
-name = "mdurl"
-version = "0.1.2"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8" },
-]
-
-[[package]]
 name = "nodeenv"
 version = "1.10.0"
 source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
@@ -311,115 +249,37 @@ wheels = [
 
 [[package]]
 name = "pyquipu"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "packages/pyquipu" }
-dependencies = [
-    { name = "pyquipu-application" },
-    { name = "pyquipu-bus" },
-    { name = "pyquipu-cli" },
-    { name = "pyquipu-common" },
-    { name = "pyquipu-engine" },
-    { name = "pyquipu-interfaces" },
-    { name = "pyquipu-runtime" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pyquipu-application", editable = "packages/pyquipu-application" },
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
-    { name = "pyquipu-cli", editable = "packages/pyquipu-cli" },
-    { name = "pyquipu-common", editable = "packages/pyquipu-common" },
-    { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
-    { name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" },
-    { name = "pyquipu-runtime", editable = "packages/pyquipu-runtime" },
-]
 
 [[package]]
 name = "pyquipu-application"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-application" }
-dependencies = [
-    { name = "pyquipu-bus" },
-    { name = "pyquipu-common" },
-    { name = "pyquipu-engine" },
-    { name = "pyquipu-interfaces" },
-    { name = "pyquipu-runtime" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
-    { name = "pyquipu-common", editable = "packages/pyquipu-common" },
-    { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
-    { name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" },
-    { name = "pyquipu-runtime", editable = "packages/pyquipu-runtime" },
-]
 
 [[package]]
 name = "pyquipu-bus"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-bus" }
-dependencies = [
-    { name = "pyquipu-common" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "pyquipu-common", editable = "packages/pyquipu-common" }]
 
 [[package]]
 name = "pyquipu-cli"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-cli" }
-dependencies = [
-    { name = "pyquipu-application" },
-    { name = "pyquipu-bus" },
-    { name = "pyquipu-common" },
-    { name = "pyquipu-engine" },
-    { name = "pyquipu-interfaces" },
-    { name = "pyquipu-runtime" },
-    { name = "textual" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pyquipu-application", editable = "packages/pyquipu-application" },
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
-    { name = "pyquipu-common", editable = "packages/pyquipu-common" },
-    { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
-    { name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" },
-    { name = "pyquipu-runtime", editable = "packages/pyquipu-runtime" },
-    { name = "textual", specifier = ">=0.58.0" },
-    { name = "typer", specifier = ">=0.9.0" },
-]
 
 [[package]]
 name = "pyquipu-common"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-common" }
 
 [[package]]
 name = "pyquipu-engine"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-engine" }
-dependencies = [
-    { name = "pyquipu-bus" },
-    { name = "pyquipu-common" },
-    { name = "pyquipu-interfaces" },
-    { name = "pyyaml" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
-    { name = "pyquipu-common", editable = "packages/pyquipu-common" },
-    { name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" },
-    { name = "pyyaml", specifier = ">=6.0" },
-]
 
 [[package]]
 name = "pyquipu-interfaces"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-interfaces" }
 
 [[package]]
@@ -456,41 +316,13 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-runtime"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-runtime" }
-dependencies = [
-    { name = "pyquipu-bus" },
-    { name = "pyquipu-common" },
-    { name = "pyquipu-interfaces" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
-    { name = "pyquipu-common", editable = "packages/pyquipu-common" },
-    { name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" },
-    { name = "typer", specifier = ">=0.9.0" },
-]
 
 [[package]]
 name = "pyquipu-test-utils"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-test-utils" }
-dependencies = [
-    { name = "pyquipu-bus" },
-    { name = "pyquipu-engine" },
-    { name = "pyquipu-interfaces" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
-    { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
-    { name = "pyquipu-interfaces", editable = "packages/pyquipu-interfaces" },
-    { name = "typer" },
-]
 
 [[package]]
 name = "pytest"
@@ -601,19 +433,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rich"
-version = "14.2.0"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-dependencies = [
-    { name = "markdown-it-py" },
-    { name = "pygments" },
-]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/fb/d2/8920e102050a0de7bfabeb4c4614a49248cf8d5d7a8d01885fbb24dc767a/rich-14.2.0.tar.gz", hash = "sha256:73ff50c7c0c1c77c8243079283f4edb376f0f6442433aecb8ce7e6d0b92d1fe4" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/25/7a/b0178788f8dc6cafce37a212c99565fa1fe7872c70c6c9c1e1a372d9d88f/rich-14.2.0-py3-none-any.whl", hash = "sha256:76bc51fe2e57d2b1be1f96c524b890b816e334ab4c1e45888799bfaab0021edd" },
-]
-
-[[package]]
 name = "ruff"
 version = "0.14.10"
 source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
@@ -637,32 +456,6 @@ wheels = [
     { url = "https://mirrors.aliyun.com/pypi/packages/f2/1c/d7b67ab43f30013b47c12b42d1acd354c195351a3f7a1d67f59e54227ede/ruff-0.14.10-py3-none-win32.whl", hash = "sha256:104c49fc7ab73f3f3a758039adea978869a918f31b73280db175b43a2d9b51d6" },
     { url = "https://mirrors.aliyun.com/pypi/packages/fb/9c/896c862e13886fae2af961bef3e6312db9ebc6adc2b156fe95e615dee8c1/ruff-0.14.10-py3-none-win_amd64.whl", hash = "sha256:466297bd73638c6bdf06485683e812db1c00c7ac96d4ddd0294a338c62fdc154" },
     { url = "https://mirrors.aliyun.com/pypi/packages/74/31/b0e29d572670dca3674eeee78e418f20bdf97fa8aa9ea71380885e175ca0/ruff-0.14.10-py3-none-win_arm64.whl", hash = "sha256:e51d046cf6dda98a4633b8a8a771451107413b0f07183b2bef03f075599e44e6" },
-]
-
-[[package]]
-name = "shellingham"
-version = "1.5.4"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/58/15/8b3609fd3830ef7b27b655beb4b4e9c62313a4e8da8c676e142cc210d58e/shellingham-1.5.4.tar.gz", hash = "sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl", hash = "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686" },
-]
-
-[[package]]
-name = "textual"
-version = "7.0.0"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-dependencies = [
-    { name = "markdown-it-py", extra = ["linkify"] },
-    { name = "mdit-py-plugins" },
-    { name = "platformdirs" },
-    { name = "pygments" },
-    { name = "rich" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/d4/9c/ebc9ca1f95366bef4c0e8360f4a77400d47a79aeecc08747de1990ef8bdc/textual-7.0.0.tar.gz", hash = "sha256:617638a2be74fb7507aff3ea6ec9374148be02e5a7bb1d02396d1d557b66c0a9" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/63/f8/a1ef9034b2a7f334f91b2f673f2ec03020a2529bb30a9437a6beb855beee/textual-7.0.0-py3-none-any.whl", hash = "sha256:190de0f65e5f4bc820fae46f32f591e509621d76688b36400ce01fa63dc6b623" },
 ]
 
 [[package]]
@@ -715,36 +508,12 @@ wheels = [
 ]
 
 [[package]]
-name = "typer"
-version = "0.21.1"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-dependencies = [
-    { name = "click" },
-    { name = "rich" },
-    { name = "shellingham" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/36/bf/8825b5929afd84d0dabd606c67cd57b8388cb3ec385f7ef19c5cc2202069/typer-0.21.1.tar.gz", hash = "sha256:ea835607cd752343b6b2b7ce676893e5a0324082268b48f27aa058bdb7d2145d" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/a0/1d/d9257dd49ff2ca23ea5f132edf1281a0c4f9de8a762b9ae399b670a59235/typer-0.21.1-py3-none-any.whl", hash = "sha256:7985e89081c636b88d172c2ee0cfe33c253160994d47bdfdc302defd7d1f1d01" },
-]
-
-[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
 sdist = { url = "https://mirrors.aliyun.com/pypi/packages/72/94/1a15dd82efb362ac84269196e94cf00f187f7ed21c242792a923cdb1c61f/typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466" }
 wheels = [
     { url = "https://mirrors.aliyun.com/pypi/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548" },
-]
-
-[[package]]
-name = "uc-micro-py"
-version = "1.0.3"
-source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/91/7a/146a99696aee0609e3712f2b44c6274566bc368dfe8375191278045186b8/uc-micro-py-1.0.3.tar.gz", hash = "sha256:d321b92cff673ec58027c04015fcaa8bb1e005478643ff4a500882eaab88c48a" }
-wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/37/87/1f677586e8ac487e29672e4b17455758fce261de06a0d086167bb760361a/uc_micro_py-1.0.3-py3-none-any.whl", hash = "sha256:db1dffff340817673d7b466ec86114a9dc0e9d4d9b5ba229d9d60e5c12600cd5" },
 ]
 
 [[package]]
