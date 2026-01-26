@@ -4,15 +4,28 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyquipu-application"
-version = "0.1.0"
+version = "0.1.1"
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "Core application logic for Quipu, orchestrating engine and runtime."
 requires-python = ">=3.10"
 license = "Apache-2.0"
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Build Tools",
+    "Typing :: Typed",
 ]
+keywords = ["quipu", "devops", "history", "git", "engine"]
+
+[project.urls]
+Homepage = "https://github.com/quipu-dev/Quipu"
+Repository = "https://github.com/quipu-dev/Quipu"
+"Bug Tracker" = "https://github.com/quipu-dev/Quipu/issues"
 dependencies = [
     "pyquipu-interfaces ~= 0.1.0",
     "pyquipu-engine ~= 0.1.0",
