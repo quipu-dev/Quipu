@@ -1,6 +1,6 @@
 [project]
 name = "pyquipu"
-version = "0.1.0"
+version = "0.1.1"
 description = "Quipu: Process Archaeology for the AI Era (Meta-package)"
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 readme = "README.md"
