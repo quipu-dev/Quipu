@@ -14,6 +14,7 @@ class QuipuNode:
     timestamp: datetime
     filename: Path
     node_type: str  # "plan" | "capture"
+    content: str = ""
     summary: str = ""
     owner_id: Optional[str] = None
 
