@@ -311,7 +311,7 @@ wheels = [
 
 [[package]]
 name = "pyquipu"
-version = "0.1.2"
+version = "0.2.0"
 source = { editable = "packages/pyquipu" }
 dependencies = [
     { name = "pyquipu-application" },
@@ -336,7 +336,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-application"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "packages/pyquipu-application" }
 dependencies = [
     { name = "pyquipu-bus" },
@@ -357,18 +357,22 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-bus"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "packages/pyquipu-bus" }
 dependencies = [
     { name = "pyquipu-common" },
+    { name = "pyquipu-spec" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pyquipu-common", editable = "packages/pyquipu-common" }]
+requires-dist = [
+    { name = "pyquipu-common", editable = "packages/pyquipu-common" },
+    { name = "pyquipu-spec", editable = "packages/pyquipu-spec" },
+]
 
 [[package]]
 name = "pyquipu-cli"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "packages/pyquipu-cli" }
 dependencies = [
     { name = "pyquipu-application" },
@@ -400,7 +404,7 @@ source = { editable = "packages/pyquipu-common" }
 
 [[package]]
 name = "pyquipu-engine"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "packages/pyquipu-engine" }
 dependencies = [
     { name = "pyquipu-bus" },
@@ -451,7 +455,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-runtime"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "packages/pyquipu-runtime" }
 dependencies = [
     { name = "pyquipu-bus" },
@@ -475,7 +479,7 @@ source = { editable = "packages/pyquipu-spec" }
 
 [[package]]
 name = "pyquipu-test-utils"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "packages/pyquipu-test-utils" }
 dependencies = [
     { name = "pyquipu-bus" },
