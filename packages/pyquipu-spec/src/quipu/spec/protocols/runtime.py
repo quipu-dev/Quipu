@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import Protocol, List, Callable, runtime_checkable
+from typing import Protocol, List, Callable, runtime_checkable, TypedDict
 from ..exceptions import ExecutionError
 
 
@@ -35,6 +35,16 @@ class ActContext:
 
     def fail(self, message: str):
         raise ExecutionError(message)
+
+
+# --- Runtime Type Definitions ---
+
+
+class Statement(TypedDict):
+    """表示解析后的单个操作语句"""
+
+    act: str
+    contexts: List[str]
 
 
 # Act 函数签名定义: (context, args) -> None
