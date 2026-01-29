@@ -10,13 +10,9 @@ from typer.testing import CliRunner
 
 from quipu.cli.main import app
 from quipu.engine.state_machine import Engine
+from quipu.spec.constants import EMPTY_TREE_HASH
 from quipu.spec.models.graph import QuipuNode
 from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
-
-# --- Constants ---
-
-# The correct hash for an empty git tree.
-EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 
 # --- Git-based Test Helpers ---

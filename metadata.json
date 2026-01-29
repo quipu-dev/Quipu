@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] fix: 修复 parser.py 中的 BaseParser 引用错误", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769681921.7311065, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] refactor: 统一全局常量与提取 Engine 协议", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769682113.4494758, "duration_ms": 0}}

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from quipu.engine.git_db import GitDB
+from quipu.spec.constants import EMPTY_TREE_HASH
 from quipu.spec.models.graph import QuipuNode
 
 logger = logging.getLogger(__name__)
@@ -155,7 +156,7 @@ class GitObjectHistoryReader:
                 parent_node.children.append(node)
                 node.input_tree = parent_node.output_tree
             else:
-                node.input_tree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+                node.input_tree = EMPTY_TREE_HASH
 
         # Sort children by timestamp
         for node in temp_nodes.values():
@@ -429,7 +430,7 @@ class GitObjectHistoryWriter:
 
         parents = [parent_commit] if parent_commit else None
 
-        if not parent_commit and input_tree != "4b825dc642cb6eb9a060e54bf8d69288fbee4904":
+        if not parent_commit and input_tree != EMPTY_TREE_HASH:
             logger.warning(
                 f"⚠️  Could not find parent commit for input state {input_tree[:7]}. This node may be detached."
             )

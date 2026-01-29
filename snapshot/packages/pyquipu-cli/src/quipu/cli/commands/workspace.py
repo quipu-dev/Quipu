@@ -3,6 +3,7 @@ from typing import Annotated, Optional
 
 import typer
 from quipu.bus import bus
+from quipu.spec.constants import EMPTY_TREE_HASH
 
 from ..config import DEFAULT_WORK_DIR
 from ..ui_utils import prompt_for_confirmation
@@ -24,7 +25,6 @@ def register(app: typer.Typer):
         with engine_context(work_dir) as engine:
             current_tree_hash = engine.git_db.get_tree_hash()
             is_node_clean = (engine.current_node is not None) and (engine.current_node.output_tree == current_tree_hash)
-            EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
             is_genesis_clean = (not engine.history_graph) and (current_tree_hash == EMPTY_TREE_HASH)
 
             if is_node_clean or is_genesis_clean:

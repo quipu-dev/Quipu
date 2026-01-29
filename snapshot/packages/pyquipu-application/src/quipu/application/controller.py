@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Callable, Dict, List
 
 from quipu.acts import register_core_acts
-from quipu.engine.state_machine import Engine
+from quipu.spec.constants import EMPTY_TREE_HASH
+from quipu.spec.protocols.engine import QuipuEngine
 from quipu.spec.exceptions import ExecutionError as CoreExecutionError
 from quipu.spec.exceptions import OperationCancelledError
 from quipu.spec.models.execution import QuipuResult
@@ -41,7 +42,7 @@ class QuipuApplication:
         self.work_dir = work_dir
         self.confirmation_handler = confirmation_handler
         self.yolo = yolo
-        self.engine: Engine = create_engine(work_dir)
+        self.engine: QuipuEngine = create_engine(work_dir)
         logger.info(f"Operation boundary set to: {self.work_dir}")
 
     def _prepare_workspace(self) -> str:
@@ -53,7 +54,6 @@ class QuipuApplication:
         )
 
         # 2. 创世 Clean: 历史为空 且 当前是空树 (即没有任何文件被追踪)
-        EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
         is_genesis_clean = (not self.engine.history_graph) and (current_hash == EMPTY_TREE_HASH)
 
         is_clean = is_node_clean or is_genesis_clean
