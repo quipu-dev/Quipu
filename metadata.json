@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] refactor: 将项目依赖从 pyquipu-interfaces 迁移到 pyquipu-spec", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769677025.4172437, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] fix: 修正所有遗留的 pyquipu-interfaces 导入路径", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769677871.3366718, "duration_ms": 0}}

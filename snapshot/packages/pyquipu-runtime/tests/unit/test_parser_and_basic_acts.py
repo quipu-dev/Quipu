@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from quipu.interfaces.types import ActContext
+from quipu.spec.protocols.runtime import ActContext
 from quipu.runtime.executor import ExecutionError, Executor
 from quipu.runtime.parser import BacktickParser, TildeParser, get_parser
 

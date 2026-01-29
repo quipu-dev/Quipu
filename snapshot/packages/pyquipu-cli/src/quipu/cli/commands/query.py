@@ -6,7 +6,7 @@ from typing import Annotated, List, Optional
 
 import typer
 from quipu.bus import bus
-from quipu.interfaces.models import QuipuNode
+from quipu.spec.models.graph import QuipuNode
 
 from ..config import DEFAULT_WORK_DIR
 from .helpers import engine_context, filter_nodes, filter_reachable_nodes

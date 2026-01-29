@@ -1,6 +1,6 @@
 import pytest
-from quipu.interfaces.exceptions import ExecutionError
-from quipu.interfaces.types import ActContext
+from quipu.spec.exceptions import ExecutionError
+from quipu.spec.protocols.runtime import ActContext
 from quipu.runtime.executor import Executor
 
 

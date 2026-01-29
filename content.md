@@ -1,31 +1,26 @@
-好的，我们现在执行重构路线图的**阶段二：物理迁移与链接重定向**。
+当然。感谢你指出这些遗漏之处，这正是架构重构中彻底审查的重要性所在。为了确保系统的**本体论正确性（Ontological Correctness）**，任何残留的旧接口引用都必须被根除。
 
-此计划将自动化执行所有必要的代码和配置修改，将整个项目对 `pyquipu-interfaces` 的依赖彻底切换到我们新创建的 `pyquipu-spec` 包，并最终移除旧包。
+我将生成一个计划，使用精确的 `patch_file` 操作来修正这些遗漏的导入。
 
-## [WIP] refactor: 将项目依赖从 pyquipu-interfaces 迁移到 pyquipu-spec
+## [WIP] fix: 修正所有遗留的 pyquipu-interfaces 导入路径
 
 ### 用户需求
-1.  修改所有 `pyproject.toml` 文件，将依赖项从 `pyquipu-interfaces` 替换为 `pyquipu-spec`。
-2.  更新所有 Python 源码文件中的 `import` 语句，使其指向 `quipu.spec` 下的新模块路径。
-3.  物理删除 `packages/pyquipu-interfaces` 目录。
+在之前的重构中，有多个文件（主要在 `tests` 和 `acts` 模块中）的 `import` 语句未被更新。需要将所有指向 `quipu.interfaces` 的引用都修正为新的 `quipu.spec` 路径。
 
 ### 评论
-这是一个典型的“大爆炸”式重构，通过自动化脚本一次性完成所有变更，可以最大限度地减少系统处于不一致状态的时间。这是实现 Clean Cut 策略的核心执行步骤。
+这是一个关键的清理步骤。这些遗漏的引用会导致构建失败和类型检查错误，破坏了我们创建 `spec` 包的初衷。通过一次性、自动化的修复，我们可以确保整个代码库的依赖关系恢复一致和正确。
 
 ### 目标
-1.  确保项目的构建配置（`pyproject.toml`）正确反映新的 `spec` 依赖。
-2.  保证所有 Python 代码的类型注解和导入都与新的 `spec` 包结构保持一致。
-3.  从文件系统中彻底移除已废弃的 `interfaces` 包，完成迁移。
+1.  定位并修复所有遗留的 `import from quipu.interfaces` 语句。
+2.  确保 `QuipuNode`, `ExecutionError`, `ActContext` 等核心类型都从 `quipu.spec` 导入。
+3.  处理 `Executor` 类型提示的特殊情况，将其指向 `ExecutorProtocol` 并使用别名以保持兼容。
 
 ### 基本原理
-我们将使用一系列精确的 `patch_file` 指令来修改配置文件和源码。这种方式比 `write_file` 更能保留文件原有的格式和注释。
-1.  **配置先行**: 首先修改 `pyproject.toml`，确保构建系统了解新的依赖关系。
-2.  **源码同步**: 接着修改 Python 代码的导入语句，使其与新的包结构和依赖关系对齐。
-3.  **清理收尾**: 最后，执行 `rm -rf` 命令删除旧包，完成整个迁移过程。
+我们将使用一系列 `patch_file` 指令，对每个文件进行外科手术式的精确修改。对于涉及 `Executor` 类型提示的 `acts` 模块，我们将采用 `from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor` 的方式，通过别名平滑地完成过渡，而无需修改函数签名中的类型注解。
 
 ### 标签
-#intent/refine #flow/ready #priority/critical
-#comp/build #comp/interfaces #scope/core #scope/dx
+#intent/fix #flow/ready #priority/critical
+#comp/build #comp/tests #scope/dx
 #ai/instruct
 #task/domain/architecture #task/object/spec-package #task/action/dependency-migration #task/state/continue
 
@@ -33,473 +28,237 @@
 
 ### Script
 
-#### Acts 1: 更新根构建配置
-
-修改项目根目录的 `pyproject.toml`，将 `uv` 的 workspace 配置和 `pytest` 的 pythonpath 指向 `spec` 包。
+#### Acts 1: 修正 Application 层测试
 
 ~~~~~act
 patch_file
-pyproject.toml
-~~~~~
-~~~~~toml.old
-[tool.uv.sources]
-pyquipu = { workspace = true }
-pyquipu-application = { workspace = true }
-pyquipu-bus = { workspace = true }
-pyquipu-cli = { workspace = true }
-pyquipu-common = { workspace = true }
-pyquipu-engine = { workspace = true }
-pyquipu-interfaces = { workspace = true }
-pyquipu-runtime = { workspace = true }
-pyquipu-test-utils = { workspace = true }
-
-[tool.pytest.ini_options]
-addopts = "-ra --cov=quipu --cov-report=term-missing"
-testpaths = "tests packages"
-pythonpath = [
-  "packages/pyquipu/src",
-  "packages/pyquipu-interfaces/src",
-  "packages/pyquipu-engine/src",
-  "packages/pyquipu-runtime/src",
-  "packages/pyquipu-cli/src",
-  "packages/pyquipu-common/src",
-  "packages/pyquipu-application/src",
-  "packages/pyquipu-test-utils/src",
-]
-~~~~~
-~~~~~toml.new
-[tool.uv.sources]
-pyquipu = { workspace = true }
-pyquipu-application = { workspace = true }
-pyquipu-bus = { workspace = true }
-pyquipu-cli = { workspace = true }
-pyquipu-common = { workspace = true }
-pyquipu-engine = { workspace = true }
-pyquipu-spec = { workspace = true }
-pyquipu-runtime = { workspace = true }
-pyquipu-test-utils = { workspace = true }
-
-[tool.pytest.ini_options]
-addopts = "-ra --cov=quipu --cov-report=term-missing"
-testpaths = "tests packages"
-pythonpath = [
-  "packages/pyquipu/src",
-  "packages/pyquipu-spec/src",
-  "packages/pyquipu-engine/src",
-  "packages/pyquipu-runtime/src",
-  "packages/pyquipu-cli/src",
-  "packages/pyquipu-common/src",
-  "packages/pyquipu-application/src",
-  "packages/pyquipu-test-utils/src",
-]
-~~~~~
-
-#### Acts 2: 更新子包构建配置
-
-遍历所有子包，将其 `pyproject.toml` 中的 `pyquipu-interfaces` 依赖替换为 `pyquipu-spec`。
-
-~~~~~act
-patch_file
-packages/pyquipu/pyproject.toml
-~~~~~
-~~~~~toml.old
-    "pyquipu-engine ~= 0.1.1",
-    "pyquipu-interfaces ~= 0.1.1",
-    "pyquipu-runtime ~= 0.1.1",
-]
-~~~~~
-~~~~~toml.new
-    "pyquipu-engine ~= 0.1.1",
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-runtime ~= 0.1.1",
-]
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-application/pyproject.toml
-~~~~~
-~~~~~toml.old
-dependencies = [
-    "pyquipu-interfaces ~= 0.1.1",
-    "pyquipu-engine ~= 0.1.1",
-~~~~~
-~~~~~toml.new
-dependencies = [
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-engine ~= 0.1.1",
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-application/pyproject.toml
-~~~~~
-~~~~~toml.old
-[tool.uv.sources]
-pyquipu-interfaces = { workspace = true }
-pyquipu-engine = { workspace = true }
-~~~~~
-~~~~~toml.new
-[tool.uv.sources]
-pyquipu-spec = { workspace = true }
-pyquipu-engine = { workspace = true }
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-cli/pyproject.toml
-~~~~~
-~~~~~toml.old
-dependencies = [
-    "pyquipu-interfaces ~= 0.1.1",
-    "pyquipu-engine ~= 0.1.1",
-~~~~~
-~~~~~toml.new
-dependencies = [
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-engine ~= 0.1.1",
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-cli/pyproject.toml
-~~~~~
-~~~~~toml.old
-[tool.uv.sources]
-pyquipu-interfaces = { workspace = true }
-pyquipu-engine = { workspace = true }
-~~~~~
-~~~~~toml.new
-[tool.uv.sources]
-pyquipu-spec = { workspace = true }
-pyquipu-engine = { workspace = true }
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-engine/pyproject.toml
-~~~~~
-~~~~~toml.old
-dependencies = [
-    "pyquipu-interfaces ~= 0.1.1",
-    "pyquipu-common ~= 0.1.1",
-~~~~~
-~~~~~toml.new
-dependencies = [
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-common ~= 0.1.1",
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-engine/pyproject.toml
-~~~~~
-~~~~~toml.old
-[tool.uv.sources]
-pyquipu-interfaces = { workspace = true }
-pyquipu-common = { workspace = true }
-~~~~~
-~~~~~toml.new
-[tool.uv.sources]
-pyquipu-spec = { workspace = true }
-pyquipu-common = { workspace = true }
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-runtime/pyproject.toml
-~~~~~
-~~~~~toml.old
-dependencies = [
-    "pyquipu-interfaces ~= 0.1.1",
-    "pyquipu-common ~= 0.1.1",
-~~~~~
-~~~~~toml.new
-dependencies = [
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-common ~= 0.1.1",
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-runtime/pyproject.toml
-~~~~~
-~~~~~toml.old
-[tool.uv.sources]
-pyquipu-interfaces = { workspace = true }
-pyquipu-common = { workspace = true }
-~~~~~
-~~~~~toml.new
-[tool.uv.sources]
-pyquipu-spec = { workspace = true }
-pyquipu-common = { workspace = true }
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-test-utils/pyproject.toml
-~~~~~
-~~~~~toml.old
-dependencies = [
-    "pyquipu-interfaces ~= 0.1.1",
-    "pyquipu-engine ~= 0.1.1",
-~~~~~
-~~~~~toml.new
-dependencies = [
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-engine ~= 0.1.1",
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-test-utils/pyproject.toml
-~~~~~
-~~~~~toml.old
-[tool.uv.sources]
-pyquipu-interfaces = { workspace = true }
-pyquipu-engine = { workspace = true }
-~~~~~
-~~~~~toml.new
-[tool.uv.sources]
-pyquipu-spec = { workspace = true }
-pyquipu-engine = { workspace = true }
-~~~~~
-
-#### Acts 3: 更新 Python 源码导入路径
-
-现在，我们修改所有 Python 文件，将 `import` 语句重定向到 `quipu.spec`。
-
-~~~~~act
-patch_file
-packages/pyquipu-application/src/quipu/application/controller.py
+packages/pyquipu-application/tests/unit/test_controller.py
 ~~~~~
 ~~~~~python.old
-from quipu.engine.state_machine import Engine
-from quipu.interfaces.exceptions import ExecutionError as CoreExecutionError
-from quipu.interfaces.exceptions import OperationCancelledError
-from quipu.interfaces.result import QuipuResult
-from quipu.runtime.executor import Executor
+from quipu.interfaces.exceptions import ExecutionError
 ~~~~~
 ~~~~~python.new
-from quipu.engine.state_machine import Engine
-from quipu.spec.exceptions import ExecutionError as CoreExecutionError
-from quipu.spec.exceptions import OperationCancelledError
-from quipu.spec.models.execution import QuipuResult
-from quipu.runtime.executor import Executor
+from quipu.spec.exceptions import ExecutionError
 ~~~~~
+
+#### Acts 2: 修正 CLI 层代码与测试
+
 ~~~~~act
 patch_file
-packages/pyquipu-cli/src/quipu/cli/commands/export.py
+packages/pyquipu-cli/src/quipu/cli/commands/query.py
 ~~~~~
 ~~~~~python.old
-import typer
-import yaml
-from quipu.bus import bus
-from quipu.engine.state_machine import Engine
 from quipu.interfaces.models import QuipuNode
 ~~~~~
 ~~~~~python.new
-import typer
-import yaml
-from quipu.bus import bus
-from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
 ~~~~~
 ~~~~~act
 patch_file
-packages/pyquipu-cli/src/quipu/cli/commands/helpers.py
+packages/pyquipu-cli/tests/unit/test_tui_logic.py
 ~~~~~
 ~~~~~python.old
-import typer
-from quipu.application.factory import create_engine
-from quipu.bus import bus
-from quipu.engine.state_machine import Engine
 from quipu.interfaces.models import QuipuNode
 ~~~~~
 ~~~~~python.new
-import typer
-from quipu.application.factory import create_engine
-from quipu.bus import bus
-from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
 ~~~~~
 ~~~~~act
 patch_file
-packages/pyquipu-cli/src/quipu/cli/tui.py
+packages/pyquipu-cli/tests/unit/test_tui_reachability.py
 ~~~~~
 ~~~~~python.old
-from quipu.application.factory import create_engine
-from quipu.engine.state_machine import Engine
 from quipu.interfaces.models import QuipuNode
-from textual import on
 ~~~~~
 ~~~~~python.new
-from quipu.application.factory import create_engine
-from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
-from textual import on
 ~~~~~
 ~~~~~act
 patch_file
-packages/pyquipu-cli/src/quipu/cli/ui_utils.py
+packages/pyquipu-cli/tests/unit/test_view_model.py
 ~~~~~
 ~~~~~python.old
-from typing import List, Optional
-
-import click
-import typer
-from quipu.bus import bus
-from quipu.interfaces.exceptions import OperationCancelledError
-~~~~~
-~~~~~python.new
-from typing import List, Optional
-
-import click
-import typer
-from quipu.bus import bus
-from quipu.spec.exceptions import OperationCancelledError
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-cli/src/quipu/cli/view_model.py
-~~~~~
-~~~~~python.old
-import math
-from typing import Dict, List, Optional, Set
-
 from quipu.interfaces.models import QuipuNode
 from quipu.interfaces.storage import HistoryReader
 ~~~~~
 ~~~~~python.new
-import math
-from typing import Dict, List, Optional, Set
-
 from quipu.spec.models.graph import QuipuNode
 from quipu.spec.protocols.storage import HistoryReader
 ~~~~~
+
+#### Acts 3: 修正 Engine 层测试
+
 ~~~~~act
 patch_file
-packages/pyquipu-engine/src/quipu/engine/git_db.py
+packages/pyquipu-engine/tests/unit/sqlite/test_reader_integrity.py
 ~~~~~
 ~~~~~python.old
-from quipu.bus import bus
+from quipu.interfaces.models import QuipuNode
+~~~~~
+~~~~~python.new
+from quipu.spec.models.graph import QuipuNode
+~~~~~
+
+#### Acts 4: 修正 Runtime 层核心 Acts 模块
+
+~~~~~act
+patch_file
+packages/pyquipu-runtime/src/quipu/acts/basic.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.types import ActContext, Executor
+~~~~~
+~~~~~python.new
+from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/src/quipu/acts/check.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.types import ActContext, Executor
+~~~~~
+~~~~~python.new
+from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/src/quipu/acts/git.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.types import ActContext, Executor
+~~~~~
+~~~~~python.new
+from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/src/quipu/acts/memory.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.types import ActContext, Executor
+~~~~~
+~~~~~python.new
+from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/src/quipu/acts/read.py
+~~~~~
+~~~~~python.old
 from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext, Executor
 ~~~~~
 ~~~~~python.new
-from quipu.bus import bus
 from quipu.spec.exceptions import ExecutionError
+from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 ~~~~~
 ~~~~~act
 patch_file
-packages/pyquipu-engine/src/quipu/engine/git_object_storage.py
+packages/pyquipu-runtime/src/quipu/acts/refactor.py
 ~~~~~
 ~~~~~python.old
-from quipu.engine.git_db import GitDB
-from quipu.interfaces.models import QuipuNode
-from quipu.interfaces.storage import HistoryReader, HistoryWriter
+from quipu.interfaces.types import ActContext, Executor
 ~~~~~
 ~~~~~python.new
-from quipu.engine.git_db import GitDB
-from quipu.spec.models.graph import QuipuNode
-from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
+from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 ~~~~~
 ~~~~~act
 patch_file
-packages/pyquipu-engine/src/quipu/engine/sqlite_storage.py
+packages/pyquipu-runtime/src/quipu/acts/shell.py
 ~~~~~
 ~~~~~python.old
-from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.interfaces.models import QuipuNode
-from quipu.interfaces.storage import HistoryReader, HistoryWriter
+from quipu.interfaces.types import ActContext, Executor
 ~~~~~
 ~~~~~python.new
-from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.spec.models.graph import QuipuNode
-from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-engine/src/quipu/engine/state_machine.py
-~~~~~
-~~~~~python.old
-from quipu.common.identity import get_user_id_from_email
-from quipu.interfaces.models import QuipuNode
-from quipu.interfaces.storage import HistoryReader, HistoryWriter
-~~~~~
-~~~~~python.new
-from quipu.common.identity import get_user_id_from_email
-from quipu.spec.models.graph import QuipuNode
-from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-runtime/src/quipu/runtime/executor.py
-~~~~~
-~~~~~python.old
-from quipu.bus import bus
-from quipu.interfaces.exceptions import ExecutionError, OperationCancelledError
-from quipu.interfaces.types import ActContext, ActFunction, Statement
-~~~~~
-~~~~~python.new
-from quipu.bus import bus
-from quipu.spec.exceptions import ExecutionError, OperationCancelledError
-from quipu.spec.protocols.runtime import ActContext, ActFunction
-from quipu.spec.models.execution import Statement
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-runtime/src/quipu/runtime/parser.py
-~~~~~
-~~~~~python.old
-import re
-from abc import ABC, abstractmethod
-from typing import List, Optional
-
-from quipu.interfaces.types import Statement
-~~~~~
-~~~~~python.new
-import re
-from abc import ABC, abstractmethod
-from typing import List, Optional
-
-from quipu.spec.models.execution import Statement
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-test-utils/src/quipu/test_utils/fixtures.py
-~~~~~
-~~~~~python.old
-from quipu.engine.git_db import GitDB
-from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.engine.state_machine import Engine
-from quipu.test_utils.helpers import run_git_command
-~~~~~
-~~~~~python.new
-from quipu.engine.git_db import GitDB
-from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.engine.state_machine import Engine
-from quipu.test_utils.helpers import run_git_command
-~~~~~
-~~~~~act
-patch_file
-packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py
-~~~~~
-~~~~~python.old
-from quipu.cli.main import app
-from quipu.engine.state_machine import Engine
-from quipu.interfaces.models import QuipuNode
-from quipu.interfaces.storage import HistoryReader, HistoryWriter
-~~~~~
-~~~~~python.new
-from quipu.cli.main import app
-from quipu.engine.state_machine import Engine
-from quipu.spec.models.graph import QuipuNode
-from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
+from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 ~~~~~
 
-#### Acts 4: 物理移除旧包
-
-最后，我们从文件系统中删除 `pyquipu-interfaces` 包。
+#### Acts 5: 修正 Runtime 层测试
 
 ~~~~~act
-run_command
+patch_file
+packages/pyquipu-runtime/tests/unit/test_parser_and_basic_acts.py
 ~~~~~
+~~~~~python.old
+from quipu.interfaces.types import ActContext
 ~~~~~
-rm -rf packages/pyquipu-interfaces
+~~~~~python.new
+from quipu.spec.protocols.runtime import ActContext
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/tests/unit/acts/test_refactor.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext
+~~~~~
+~~~~~python.new
+from quipu.spec.exceptions import ExecutionError
+from quipu.spec.protocols.runtime import ActContext
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/tests/unit/acts/test_shell.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext
+~~~~~
+~~~~~python.new
+from quipu.spec.exceptions import ExecutionError
+from quipu.spec.protocols.runtime import ActContext
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/tests/unit/acts/test_read.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.types import ActContext
+~~~~~
+~~~~~python.new
+from quipu.spec.protocols.runtime import ActContext
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/tests/unit/acts/test_memory.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext
+~~~~~
+~~~~~python.new
+from quipu.spec.exceptions import ExecutionError
+from quipu.spec.protocols.runtime import ActContext
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/tests/unit/acts/test_check.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext
+~~~~~
+~~~~~python.new
+from quipu.spec.exceptions import ExecutionError
+from quipu.spec.protocols.runtime import ActContext
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/tests/unit/acts/test_patch_ambiguity.py
+~~~~~
+~~~~~python.old
+from quipu.interfaces.exceptions import ExecutionError
+from quipu.interfaces.types import ActContext
+~~~~~
+~~~~~python.new
+from quipu.spec.exceptions import ExecutionError
+from quipu.spec.protocols.runtime import ActContext
 ~~~~~
 
 ### 下一步建议
 
-我们已经完成了 `spec` 包的创建和依赖迁移。现在整个项目应该可以正常构建和测试了。
+所有已知的 `interfaces` 引用都已被修正。现在是运行完整测试套件 (`pytest`) 的最佳时机，以验证重构的完整性和正确性。
 
-下一步是继续执行路线图的**阶段三：协议化改革 (Protocolization)**，将 `spec` 包内的 `ABC` 转换为 `Protocol`，并开始收拢散落在各处的协议定义，例如将 `bus` 和 `cli` 中的 `Renderer` Protocol 统一到 `spec` 中。
+一旦测试通过，我们就可以继续路线图的下一阶段：**收拢 Protocol**，将 `Renderer` 和 `PlanParser` 的定义也迁移到 `spec` 包中，进一步巩固其作为“系统宪法”的地位。
