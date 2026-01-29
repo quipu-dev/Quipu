@@ -7,6 +7,7 @@ from ..exceptions import ExecutionError
 @runtime_checkable
 class ExecutorProtocol(Protocol):
     """定义执行器的核心能力契约"""
+
     @property
     def root_dir(self) -> Path: ...
     def resolve_path(self, rel_path: str) -> Path: ...
@@ -15,9 +16,10 @@ class ExecutorProtocol(Protocol):
 
 class ActContext:
     """提供给插件函数的上下文 API。
-    
+
     它是插件与 ExecutorProtocol 之间的稳定接口。
     """
+
     def __init__(self, executor: ExecutorProtocol):
         self._executor = executor
 
