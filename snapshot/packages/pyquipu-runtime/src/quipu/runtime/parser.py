@@ -2,8 +2,7 @@ import re
 from typing import List, Optional
 
 from quipu.spec.protocols.runtime import Statement
-# PlanParser protocol is now defined in quipu.spec.protocols.parser
-# and implemented implicitly by classes here.
+from quipu.spec.protocols.parser import PlanParser
 
 
 class StateBlockParser:
@@ -120,7 +119,7 @@ _PARSERS = {
 }
 
 
-def get_parser(name: str) -> BaseParser:
+def get_parser(name: str) -> PlanParser:
     if name not in _PARSERS:
         raise ValueError(f"未知的解析器: {name}. 可用选项: {list(_PARSERS.keys())}")
     return _PARSERS[name]()
