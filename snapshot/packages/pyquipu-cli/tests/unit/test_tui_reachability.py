@@ -55,14 +55,14 @@ class TestUiReachability:
 
         ancestors = {"a", "root"}
         view_model = view_model_factory([node_root, node_a, node_b], current_hash="a", ancestors=ancestors)
-        app = QuipuUiApp(work_dir=Path("."))
-        app.view_model = view_model
-        app.show_unreachable = False
+        
+        # 模拟 TUI 切换视图以隐藏不可达节点
+        # ViewModel 默认 show_unreachable=True
+        view_model.toggle_unreachable()
+        assert view_model.show_unreachable is False
 
-        nodes_on_page = view_model.load_page(1)
-        rendered_nodes = [
-            node for node in nodes_on_page if app.show_unreachable or app.view_model.is_reachable(node.output_tree)
-        ]
+        view_model.load_page(1)
+        rendered_nodes = view_model.get_nodes_to_render()
 
         assert node_b not in rendered_nodes
         assert node_a in rendered_nodes

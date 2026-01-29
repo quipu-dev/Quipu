@@ -1,10 +1,12 @@
 import shutil
 import subprocess
 from pathlib import Path
+from typing import List
 
 import pytest
 from quipu.acts.git import register as register_git_acts
 from quipu.runtime.executor import Executor
+from quipu.spec.protocols.runtime import ActContext, Statement
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="Git 命令未找到，跳过 Git 测试")
@@ -15,7 +17,8 @@ class TestGitActs:
 
         # 执行初始化
         func, _, _ = executor._acts["git_init"]
-        func(executor, [])
+        ctx = ActContext(executor)
+        func(ctx, [])
 
         # 配置测试用的 user，防止 CI/Test 环境报错
         subprocess.run(["git", "config", "user.email", "quipu@test.com"], cwd=isolated_vault, check=True)
@@ -28,7 +31,8 @@ class TestGitActs:
 
         # 2. Git Add
         git_add, _, _ = executor._acts["git_add"]
-        git_add(executor, ["README.md"])
+        ctx = ActContext(executor)
+        git_add(ctx, ["README.md"])
         mock_runtime_bus.success.assert_called_with("acts.git.success.added", targets=["README.md"])
 
         # 验证状态 (porcelain 输出 ?? 代表未追踪，A 代表已添加)
@@ -37,7 +41,7 @@ class TestGitActs:
 
         # 3. Git Commit
         git_commit, _, _ = executor._acts["git_commit"]
-        git_commit(executor, ["Initial commit"])
+        git_commit(ctx, ["Initial commit"])
         mock_runtime_bus.success.assert_called_with("acts.git.success.committed", message="Initial commit")
 
         # 验证提交日志
@@ -47,7 +51,8 @@ class TestGitActs:
     def test_git_init_idempotent(self, executor: Executor, mock_runtime_bus):
         # setup_git_env 已经 init 过了，再次 init 应该提示跳过
         func, _, _ = executor._acts["git_init"]
-        func(executor, [])
+        ctx = ActContext(executor)
+        func(ctx, [])
         mock_runtime_bus.warning.assert_called_with("acts.git.warning.repoExists")
 
     def test_git_status_output_stream(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):
@@ -55,7 +60,7 @@ class TestGitActs:
         (isolated_vault / "untracked.txt").write_text("new file")
 
         # 2. 我们通过 executor.execute 来模拟完整的执行流程
-        stmts = [{"act": "git_status", "contexts": []}]
+        stmts: List[Statement] = [{"act": "git_status", "contexts": []}]
         executor.execute(stmts)
 
         # 3. 验证 bus 调用

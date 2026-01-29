@@ -1,7 +1,9 @@
 from pathlib import Path
 
+from typing import List
+
 import pytest
-from quipu.spec.protocols.runtime import ActContext
+from quipu.spec.protocols.runtime import ActContext, Statement
 from quipu.runtime.executor import ExecutionError, Executor
 from quipu.runtime.parser import BacktickParser, TildeParser, get_parser
 
@@ -176,13 +178,13 @@ class TestHybridArgs:
     # These tests use executor.execute(), which correctly creates the context,
     # so they don't need changes.
     def test_inline_write_file(self, executor: Executor, isolated_vault: Path):
-        stmts = [{"act": "write_file inline.txt", "contexts": ["Inline Content"]}]
+        stmts: List[Statement] = [{"act": "write_file inline.txt", "contexts": ["Inline Content"]}]
         executor.execute(stmts)
         f = isolated_vault / "inline.txt"
         assert f.read_text(encoding="utf-8") == "Inline Content"
 
     def test_inline_quoted_args(self, executor: Executor, isolated_vault: Path):
-        stmts = [{"act": 'write_file "name with spaces.txt"', "contexts": ["Hello"]}]
+        stmts: List[Statement] = [{"act": 'write_file "name with spaces.txt"', "contexts": ["Hello"]}]
         executor.execute(stmts)
         f = isolated_vault / "name with spaces.txt"
         assert f.exists()
@@ -194,12 +196,12 @@ class TestHybridArgs:
             called_args.extend(args)
 
         executor.register("mock_commit", mock_commit)
-        stmts = [{"act": 'mock_commit -m "fix bug"', "contexts": []}]
+        stmts: List[Statement] = [{"act": 'mock_commit -m "fix bug"', "contexts": []}]
         executor.execute(stmts)
         assert called_args == ["-m", "fix bug"]
 
     def test_act_parsing_error(self, executor: Executor):
-        stmts = [{"act": 'write_file "unclosed string', "contexts": []}]
+        stmts: List[Statement] = [{"act": 'write_file "unclosed string', "contexts": []}]
         with pytest.raises(ExecutionError) as exc:
             executor.execute(stmts)
         assert "Error parsing Act command line" in str(exc.value)
