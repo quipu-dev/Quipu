@@ -2,6 +2,7 @@ import subprocess
 
 import pytest
 from quipu.engine.state_machine import Engine
+from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 def test_align_orphan_state(engine_instance: Engine):
@@ -22,7 +23,7 @@ def test_capture_drift_git_object(engine_instance: Engine):
     (repo_path / "main.py").write_text("version = 1", "utf-8")
     initial_hash = engine.git_db.get_tree_hash()
     initial_node = engine.writer.create_node(
-        "plan", "4b825dc642cb6eb9a060e54bf8d69288fbee4904", initial_hash, "Initial content"
+        "plan", EMPTY_TREE_HASH, initial_hash, "Initial content"
     )
     engine.align()  # Load the new node into the engine's graph
 

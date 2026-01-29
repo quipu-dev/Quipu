@@ -5,6 +5,7 @@ from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryWriter
 from quipu.engine.sqlite_db import DatabaseManager
 from quipu.engine.sqlite_storage import SQLiteHistoryWriter
+from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 @pytest.fixture
@@ -30,7 +31,7 @@ def test_writer_handles_idempotent_operations_correctly(repo_with_sqlite_db):
     sqlite_writer = SQLiteHistoryWriter(git_writer, db_manager)
 
     # 2. Get initial state (Genesis)
-    genesis_tree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+    genesis_tree = EMPTY_TREE_HASH
 
     # 3. Create Node 1 (State A)
     # Since we are not actually changing files in the workdir, we manually specify input/output trees.
