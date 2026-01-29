@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] refactor: 全面清理测试中的硬编码 EMPTY_TREE_HASH", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769682312.3677762, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] refactor(spec): unify protocols and centralize global constants", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769682431.0088606, "duration_ms": 0}}
