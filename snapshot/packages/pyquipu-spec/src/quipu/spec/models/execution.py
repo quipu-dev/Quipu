@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, List, TypedDict
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -12,10 +12,3 @@ class QuipuResult:
     data: Any = None
     error: Optional[Exception] = None
     msg_kwargs: Dict[str, Any] = field(default_factory=dict)
-
-
-class Statement(TypedDict):
-    """表示解析后的单个操作语句"""
-
-    act: str
-    contexts: List[str]

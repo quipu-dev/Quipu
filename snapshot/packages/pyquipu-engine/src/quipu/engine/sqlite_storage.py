@@ -15,7 +15,7 @@ from .sqlite_db import DatabaseManager
 logger = logging.getLogger(__name__)
 
 
-class SQLiteHistoryReader(HistoryReader):
+class SQLiteHistoryReader:
     def __init__(self, db_manager: DatabaseManager, git_db: GitDB):
         self.db_manager = db_manager
         # git_reader 用于按需加载内容和解析二进制 tree
@@ -344,7 +344,7 @@ class SQLiteHistoryReader(HistoryReader):
         return results
 
 
-class SQLiteHistoryWriter(HistoryWriter):
+class SQLiteHistoryWriter:
     def __init__(self, git_writer: GitObjectHistoryWriter, db_manager: DatabaseManager):
         self.git_writer = git_writer
         self.db_manager = db_manager

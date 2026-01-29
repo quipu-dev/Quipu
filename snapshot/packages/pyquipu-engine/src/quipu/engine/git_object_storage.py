@@ -16,7 +16,7 @@ from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
 logger = logging.getLogger(__name__)
 
 
-class GitObjectHistoryReader(HistoryReader):
+class GitObjectHistoryReader:
     def __init__(self, git_db: GitDB):
         self.git_db = git_db
 
@@ -321,7 +321,7 @@ class GitObjectHistoryReader(HistoryReader):
         return candidates[:limit]
 
 
-class GitObjectHistoryWriter(HistoryWriter):
+class GitObjectHistoryWriter:
     def __init__(self, git_db: GitDB):
         self.git_db = git_db
 
