@@ -10,8 +10,8 @@ from typer.testing import CliRunner
 
 from quipu.cli.main import app
 from quipu.engine.state_machine import Engine
-from quipu.interfaces.models import QuipuNode
-from quipu.interfaces.storage import HistoryReader, HistoryWriter
+from quipu.spec.models.graph import QuipuNode
+from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
 
 # --- Constants ---
 

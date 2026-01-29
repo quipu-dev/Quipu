@@ -25,7 +25,7 @@ classifiers = [
 keywords = ["quipu", "devops", "cli", "tui", "git", "history"]
 
 dependencies = [
-    "pyquipu-interfaces ~= 0.1.1",
+    "pyquipu-spec ~= 0.1.0",
     "pyquipu-engine ~= 0.1.1",
     "pyquipu-runtime ~= 0.1.1",
     "pyquipu-common ~= 0.1.1",
@@ -41,7 +41,7 @@ Repository = "https://github.com/quipu-dev/Quipu"
 "Bug Tracker" = "https://github.com/quipu-dev/Quipu/issues"
 
 [tool.uv.sources]
-pyquipu-interfaces = { workspace = true }
+pyquipu-spec = { workspace = true }
 pyquipu-engine = { workspace = true }
 pyquipu-runtime = { workspace = true }
 pyquipu-common = { workspace = true }

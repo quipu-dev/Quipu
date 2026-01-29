@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.interfaces.models import QuipuNode
-from quipu.interfaces.storage import HistoryReader, HistoryWriter
+from quipu.spec.models.graph import QuipuNode
+from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
 
 from .git_db import GitDB
 from .sqlite_db import DatabaseManager
