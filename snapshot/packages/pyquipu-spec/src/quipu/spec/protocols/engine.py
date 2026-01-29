@@ -1,5 +1,4 @@
-from typing import Protocol, Dict, Optional, List, runtime_checkable
-from pathlib import Path
+from typing import Protocol, Dict, Optional, List, runtime_checkable, Any
 from ..models.graph import QuipuNode
 from .storage import HistoryReader, HistoryWriter
 
@@ -11,6 +10,7 @@ class QuipuEngine(Protocol):
     writer: HistoryWriter
     history_graph: Dict[str, QuipuNode]
     current_node: Optional[QuipuNode]
+    git_db: Any
 
     def align(self) -> str: ...
     def visit(self, target_hash: str) -> None: ...
