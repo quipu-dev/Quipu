@@ -4,6 +4,6 @@
 
 ### 📝 变更文件摘要:
 ```
-packages/pyquipu/pyproject.toml | 3 +++
- 1 file changed, 3 insertions(+)
+uv.lock | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 ```
