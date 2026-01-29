@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Protocol, Dict, Optional, List, runtime_checkable, Any
 from ..models.graph import QuipuNode
 from .storage import HistoryReader, HistoryWriter
