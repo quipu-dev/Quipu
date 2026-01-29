@@ -2,7 +2,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from quipu.interfaces.types import Statement
+from quipu.spec.models.execution import Statement
 
 
 class BaseParser(ABC):

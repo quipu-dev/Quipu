@@ -35,7 +35,7 @@ pyquipu-bus = { workspace = true }
 pyquipu-cli = { workspace = true }
 pyquipu-common = { workspace = true }
 pyquipu-engine = { workspace = true }
-pyquipu-interfaces = { workspace = true }
+pyquipu-spec = { workspace = true }
 pyquipu-runtime = { workspace = true }
 pyquipu-test-utils = { workspace = true }
 
@@ -44,7 +44,7 @@ addopts = "-ra --cov=quipu --cov-report=term-missing"
 testpaths = "tests packages"
 pythonpath = [
   "packages/pyquipu/src",
-  "packages/pyquipu-interfaces/src",
+  "packages/pyquipu-spec/src",
   "packages/pyquipu-engine/src",
   "packages/pyquipu-runtime/src",
   "packages/pyquipu-cli/src",

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from quipu.acts.read import register as register_read_acts
-from quipu.interfaces.types import ActContext
+from quipu.spec.protocols.runtime import ActContext
 from quipu.runtime.executor import ExecutionError, Executor
 
 

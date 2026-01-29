@@ -8,7 +8,7 @@ import typer
 import yaml
 from quipu.bus import bus
 from quipu.engine.state_machine import Engine
-from quipu.interfaces.models import QuipuNode
+from quipu.spec.models.graph import QuipuNode
 
 from ..config import DEFAULT_WORK_DIR
 from ..ui_utils import prompt_for_confirmation

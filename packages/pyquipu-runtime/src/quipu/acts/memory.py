@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 
 from quipu.bus import bus
-from quipu.interfaces.types import ActContext, Executor
+from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
 logger = logging.getLogger(__name__)
 

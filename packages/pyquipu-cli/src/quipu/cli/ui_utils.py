@@ -3,7 +3,7 @@ from typing import List, Optional
 import click
 import typer
 from quipu.bus import bus
-from quipu.interfaces.exceptions import OperationCancelledError
+from quipu.spec.exceptions import OperationCancelledError
 
 
 def confirmation_handler_for_executor(diff_lines: List[str], prompt: str) -> bool:

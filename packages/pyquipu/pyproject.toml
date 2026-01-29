@@ -26,7 +26,7 @@ dependencies = [
     "pyquipu-cli ~= 0.1.1",
     "pyquipu-common ~= 0.1.1",
     "pyquipu-engine ~= 0.1.1",
-    "pyquipu-interfaces ~= 0.1.1",
+    "pyquipu-spec ~= 0.1.0",
     "pyquipu-runtime ~= 0.1.1",
 ]
 

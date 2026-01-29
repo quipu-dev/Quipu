@@ -5,9 +5,9 @@ from typing import Callable, Dict, List
 
 from quipu.acts import register_core_acts
 from quipu.engine.state_machine import Engine
-from quipu.interfaces.exceptions import ExecutionError as CoreExecutionError
-from quipu.interfaces.exceptions import OperationCancelledError
-from quipu.interfaces.result import QuipuResult
+from quipu.spec.exceptions import ExecutionError as CoreExecutionError
+from quipu.spec.exceptions import OperationCancelledError
+from quipu.spec.models.execution import QuipuResult
 from quipu.runtime.executor import Executor
 from quipu.runtime.parser import detect_best_parser, get_parser
 

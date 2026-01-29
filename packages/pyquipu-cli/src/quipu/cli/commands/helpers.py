@@ -8,7 +8,7 @@ import typer
 from quipu.application.factory import create_engine
 from quipu.bus import bus
 from quipu.engine.state_machine import Engine
-from quipu.interfaces.models import QuipuNode
+from quipu.spec.models.graph import QuipuNode
 
 from ..logger_config import setup_logging
 
