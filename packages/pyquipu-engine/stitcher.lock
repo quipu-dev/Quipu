@@ -169,8 +169,8 @@
       "baseline_yaml_content_hash": "48ad87f1bf5092664184ee2eac33d472950621d5874c23aa974da981a09d81b2"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/git_object_storage.py#GitObjectHistoryReader": {
-      "baseline_code_signature_text": "class GitObjectHistoryReader(HistoryReader):",
-      "baseline_code_structure_hash": "04a768308030fbd1c5bf492734aa563a6d4f9c9ef3d9e87064c032d7ff435054",
+      "baseline_code_signature_text": "class GitObjectHistoryReader:",
+      "baseline_code_structure_hash": "5bbb93814d7ed7c2881002f0ab60c91c8bc72169daed5672b18476fb108a2f1f",
       "baseline_yaml_content_hash": "dc0a9c48950564bfc8ce16d24825396dd881b742acbd74d380e911cd55e58215"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/git_object_storage.py#GitObjectHistoryReader.__init__": {
@@ -237,8 +237,8 @@
       "baseline_yaml_content_hash": "6ca8c713a88a1037fab01e99c311152a4f544fd92b6aee729f8eb7c2ee29827f"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/git_object_storage.py#GitObjectHistoryWriter": {
-      "baseline_code_signature_text": "class GitObjectHistoryWriter(HistoryWriter):",
-      "baseline_code_structure_hash": "8d57e6f6286da91271c69c50bee3fb1322aa6f81cff85ec32f73906bd3ccf2b2",
+      "baseline_code_signature_text": "class GitObjectHistoryWriter:",
+      "baseline_code_structure_hash": "a6a4c19804e631c64236602fd5d146200b97645217ff80b1a6dc5dd8d97a5075",
       "baseline_yaml_content_hash": "cffa546dd7ac514b1fbdd2d6a2f660bb4aed11e940f762d4fb4471021e3f19d5"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/git_object_storage.py#GitObjectHistoryWriter.__init__": {
@@ -339,8 +339,8 @@
       "baseline_yaml_content_hash": "8edbdcc98b0942e6839230ac13bff282e425448957c98aa28575a8101d578c7a"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/sqlite_storage.py#SQLiteHistoryReader": {
-      "baseline_code_signature_text": "class SQLiteHistoryReader(HistoryReader):",
-      "baseline_code_structure_hash": "bba86c55077990229339157f2b748ce10cc7bcac71a579e3b29f2c6eee3561d4",
+      "baseline_code_signature_text": "class SQLiteHistoryReader:",
+      "baseline_code_structure_hash": "eef7088db34221133b8670ca4a23529fd02fcbe21bb4d418b081ab02d61e7fea",
       "baseline_yaml_content_hash": "cb413aaa8f0ce730b7f2d8565297c3f45a1cc1ec59f5f08c7730ab4a4c70ee7f"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/sqlite_storage.py#SQLiteHistoryReader.__init__": {
@@ -398,8 +398,8 @@
       "baseline_yaml_content_hash": "155d3b39c723aa1a7682a2e5de34f929b2c4623831cb2e94e0c4fb3a951d79c9"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/sqlite_storage.py#SQLiteHistoryWriter": {
-      "baseline_code_signature_text": "class SQLiteHistoryWriter(HistoryWriter):",
-      "baseline_code_structure_hash": "fae7390ffbc2d375ca3bae80e9917b19218cdf24e0a76307b60babd37d90f45d",
+      "baseline_code_signature_text": "class SQLiteHistoryWriter:",
+      "baseline_code_structure_hash": "27a5ba00a42489c42a52561325b499ffe7a3550a56c7c115247489623b272c86",
       "baseline_yaml_content_hash": "4c74b7290964150b3bf1f5765563a8a84dc7fd7ee8a912922ab215682fdb3d5f"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/sqlite_storage.py#SQLiteHistoryWriter.__init__": {

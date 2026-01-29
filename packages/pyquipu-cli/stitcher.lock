@@ -130,11 +130,6 @@
       "baseline_code_structure_hash": "9f8fe4f78b0a37cb1fdcb7a71340369231210c17cf8aabd7932364e85e49558f",
       "baseline_yaml_content_hash": "661102cbe0d8b99976a010fa18584a63efc961471bd041664f794e0c03e75c4c"
     },
-    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer": {
-      "baseline_code_signature_text": "class Renderer(Protocol):",
-      "baseline_code_structure_hash": "8342694db8d308b36ba5d1ecf2dc07bba1460712ac3a9a9438c5abba24852b3d",
-      "baseline_yaml_content_hash": "ae23277280453e2a0716632867589e7996fa372148b691fbef68ec54d5e75508"
-    },
     "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer.data": {
       "baseline_code_signature_text": "def data(self, data_string: str) -> None:",
       "baseline_code_structure_hash": "e24670692edbaa5b2b5efeb813dbb1f8c58794e5f10e72f7b92f5ee5d18f505c"

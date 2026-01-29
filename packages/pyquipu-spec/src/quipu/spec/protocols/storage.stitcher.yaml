@@ -1,0 +1,4 @@
+HistoryReader: |-
+  定义从存储后端读取历史图谱的行为契约
+HistoryWriter: |-
+  定义向历史存储后端写入新节点的行为契约
