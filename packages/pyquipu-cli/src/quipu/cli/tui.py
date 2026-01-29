@@ -102,10 +102,12 @@ class QuipuUiApp(App[Optional[UiResult]]):
             self.engine.close()
 
     def _update_header(self):
+        assert self.view_model is not None
         mode = "Markdown" if self.markdown_enabled else "Raw Text"
         self.sub_title = f"Page {self.view_model.current_page} / {self.view_model.total_pages} | View: {mode} (m)"
 
     def _load_page(self, page_number: int) -> None:
+        assert self.view_model is not None
         logger.debug(f"TUI: Loading page {page_number}")
         self.view_model.load_page(page_number)
         logger.debug(f"TUI: Page {page_number} loaded with {len(self.view_model.current_page_nodes)} nodes.")
@@ -124,6 +126,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
         self.query_one(DataTable).action_cursor_down()
 
     def action_toggle_hidden(self) -> None:
+        assert self.view_model is not None
         self.view_model.toggle_unreachable()
         self._refresh_table()
 
@@ -138,29 +141,34 @@ class QuipuUiApp(App[Optional[UiResult]]):
             pass
 
     def action_checkout_node(self) -> None:
+        assert self.view_model is not None
         selected_node = self.view_model.get_selected_node()
         if selected_node:
             self.exit(result=("checkout", selected_node.output_tree))
 
     def action_dump_content(self) -> None:
+        assert self.view_model is not None
         selected_node = self.view_model.get_selected_node()
         if selected_node:
             content = self.view_model.get_public_content(selected_node)
             self.exit(result=("dump", content))
 
     def action_previous_page(self) -> None:
+        assert self.view_model is not None
         if self.view_model.current_page > 1:
             self._load_page(self.view_model.current_page - 1)
         else:
             self.bell()
 
     def action_next_page(self) -> None:
+        assert self.view_model is not None
         if self.view_model.current_page < self.view_model.total_pages:
             self._load_page(self.view_model.current_page + 1)
         else:
             self.bell()
 
     def _refresh_table(self):
+        assert self.view_model is not None
         table = self.query_one(DataTable)
         table.clear()
         # 从 ViewModel 获取要渲染的节点
@@ -170,6 +178,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
         self._update_header()
 
     def _populate_table(self, table: DataTable, nodes: List[QuipuNode]):
+        assert self.view_model is not None
         # 移除了过滤逻辑，因为 ViewModel 已经处理
         tracks: list[Optional[str]] = []
 
@@ -228,6 +237,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
         return node.summary or "No description"
 
     def _focus_current_node(self, table: DataTable):
+        assert self.view_model is not None
         current_output_tree_hash = self.view_model.current_output_tree_hash
         logger.debug(f"DEBUG: Attempting focus. HEAD={current_output_tree_hash}")
 
@@ -273,6 +283,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
             logger.error(f"DEBUG: Failed to focus current node: {e}", exc_info=True)
 
     def _update_loading_preview(self):
+        assert self.view_model is not None
         node = self.view_model.get_selected_node()
         if not node:
             return
@@ -321,6 +332,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
 
             case ContentViewSate.SHOWING_CONTENT:
                 container.set_class(True, "split-mode")
+                assert self.view_model is not None
                 node = self.view_model.get_selected_node()
 
                 if node:
@@ -341,6 +353,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
 
     @on(DataTable.RowHighlighted)
     def on_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        assert self.view_model is not None
         # 1. Update data model
         if event.row_key.value:
             self.view_model.select_node_by_key(event.row_key.value)
@@ -367,6 +380,7 @@ class QuipuUiApp(App[Optional[UiResult]]):
 
     def action_toggle_view(self) -> None:
         if self.content_view_state == ContentViewSate.HIDDEN:
+            assert self.view_model is not None
             # If a node is selected, transition to loading, otherwise do nothing
             if self.view_model.get_selected_node():
                 self._set_state(ContentViewSate.LOADING)

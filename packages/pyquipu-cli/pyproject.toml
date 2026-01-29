@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyquipu-cli"
-version = "0.2.0"
+version = "0.2.1"
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "The command-line interface for Quipu."
 requires-python = ">=3.10"
@@ -25,11 +25,11 @@ classifiers = [
 keywords = ["quipu", "devops", "cli", "tui", "git", "history"]
 
 dependencies = [
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-engine ~= 0.2.0",
-    "pyquipu-runtime ~= 0.2.0",
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-runtime ~= 0.2.1",
     "pyquipu-common ~= 0.1.1",
-    "pyquipu-application ~= 0.2.0",
+    "pyquipu-application ~= 0.2.1",
     "pyquipu-bus ~= 0.2.0",
     "typer >= 0.9.0",
     "textual >= 0.58.0",

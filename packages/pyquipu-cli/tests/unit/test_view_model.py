@@ -12,9 +12,9 @@ class MockHistoryReader(HistoryReader):
     def __init__(
         self,
         nodes: List[QuipuNode],
-        ancestors: Set[str] = None,
-        descendants: Set[str] = None,
-        private_data: dict[str, str] = None,
+        ancestors: Optional[Set[str]] = None,
+        descendants: Optional[Set[str]] = None,
+        private_data: Optional[dict[str, str]] = None,
     ):
         self._nodes = sorted(nodes, key=lambda n: n.timestamp, reverse=True)
         self._ancestors = ancestors or set()

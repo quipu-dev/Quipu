@@ -74,6 +74,7 @@ def register(app: typer.Typer):
                 bus.success("workspace.discard.noChanges", short_hash=latest_node.short_hash)
                 ctx.exit(0)
 
+            assert target_tree_hash is not None
             diff_stat_str = engine.git_db.get_diff_stat(target_tree_hash, current_hash)
 
             if not force:

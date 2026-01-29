@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyquipu-application"
-version = "0.2.0"
+version = "0.2.1"
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "Core application logic for Quipu, orchestrating engine and runtime."
 requires-python = ">=3.10"
@@ -23,9 +23,9 @@ classifiers = [
 keywords = ["quipu", "devops", "history", "git", "engine"]
 
 dependencies = [
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-engine ~= 0.2.0",
-    "pyquipu-runtime ~= 0.2.0",
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-runtime ~= 0.2.1",
     "pyquipu-common ~= 0.1.1",
     "pyquipu-bus ~= 0.2.0",
 ]
