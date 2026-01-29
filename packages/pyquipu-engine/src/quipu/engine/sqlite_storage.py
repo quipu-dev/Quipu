@@ -6,16 +6,16 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
-from quipu.interfaces.models import QuipuNode
-from quipu.interfaces.storage import HistoryReader, HistoryWriter
+from quipu.spec.models.graph import QuipuNode
 
+from quipu.spec.constants import EMPTY_TREE_HASH
 from .git_db import GitDB
 from .sqlite_db import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
 
-class SQLiteHistoryReader(HistoryReader):
+class SQLiteHistoryReader:
     def __init__(self, db_manager: DatabaseManager, git_db: GitDB):
         self.db_manager = db_manager
         # git_reader 用于按需加载内容和解析二进制 tree
@@ -75,10 +75,9 @@ class SQLiteHistoryReader(HistoryReader):
                     logger.debug(f"节点 {child_hash[:7]} 已有父节点，忽略额外的父节点 {parent_hash[:7]}")
 
         # 4. 填充根节点的 input_tree 并排序子节点
-        genesis_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
         for node in temp_nodes.values():
             if node.parent is None:
-                node.input_tree = genesis_hash
+                node.input_tree = EMPTY_TREE_HASH
             node.children.sort(key=lambda n: n.timestamp)
 
         return list(temp_nodes.values())
@@ -159,8 +158,6 @@ class SQLiteHistoryReader(HistoryReader):
                 )
                 parent_info = {row["commit_hash"]: row["output_tree"] for row in p_cursor.fetchall()}
 
-            genesis_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-
             results = []
             for commit_hash in node_hashes:
                 node = nodes_map[commit_hash]
@@ -168,7 +165,7 @@ class SQLiteHistoryReader(HistoryReader):
 
                 if parent_hash:
                     # Set input_tree from parent's output_tree
-                    node.input_tree = parent_info.get(parent_hash, genesis_hash)
+                    node.input_tree = parent_info.get(parent_hash, EMPTY_TREE_HASH)
 
                     # Link objects if parent is in the same page
                     if parent_hash in nodes_map:
@@ -176,7 +173,7 @@ class SQLiteHistoryReader(HistoryReader):
                         node.parent = parent_node
                         parent_node.children.append(node)
                 else:
-                    node.input_tree = genesis_hash
+                    node.input_tree = EMPTY_TREE_HASH
 
                 results.append(node)
 
@@ -344,7 +341,7 @@ class SQLiteHistoryReader(HistoryReader):
         return results
 
 
-class SQLiteHistoryWriter(HistoryWriter):
+class SQLiteHistoryWriter:
     def __init__(self, git_writer: GitObjectHistoryWriter, db_manager: DatabaseManager):
         self.git_writer = git_writer
         self.db_manager = db_manager

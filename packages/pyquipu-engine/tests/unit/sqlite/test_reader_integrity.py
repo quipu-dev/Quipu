@@ -6,7 +6,7 @@ import pytest
 from quipu.engine.git_db import GitDB
 from quipu.engine.sqlite_db import DatabaseManager
 from quipu.engine.sqlite_storage import SQLiteHistoryReader
-from quipu.interfaces.models import QuipuNode
+from quipu.spec.models.graph import QuipuNode
 
 
 @pytest.fixture

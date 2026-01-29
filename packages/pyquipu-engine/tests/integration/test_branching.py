@@ -3,6 +3,7 @@ import subprocess
 import pytest
 from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 @pytest.fixture
@@ -26,7 +27,7 @@ def test_branching_creation(branching_env):
     # 1. Base Node A
     (repo / "f.txt").write_text("v1")
     hash_a = git_db.get_tree_hash()
-    writer.create_node("plan", "4b825dc642cb6eb9a060e54bf8d69288fbee4904", hash_a, "Node A")
+    writer.create_node("plan", EMPTY_TREE_HASH, hash_a, "Node A")
     heads_after_a = git_db.get_all_ref_heads(ref_prefix)
     assert len(heads_after_a) == 1
 

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryWriter
+from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 @pytest.fixture
@@ -64,7 +65,7 @@ class TestGitObjectHistoryWriterIntegration:
         plan_content = "# feat: Initial implementation\nThis is the first version."
         node = writer.create_node(
             node_type="plan",
-            input_tree="4b825dc642cb6eb9a060e54bf8d69288fbee4904",  # Empty tree
+            input_tree=EMPTY_TREE_HASH,  # Empty tree
             output_tree=output_tree,
             content=plan_content,
         )

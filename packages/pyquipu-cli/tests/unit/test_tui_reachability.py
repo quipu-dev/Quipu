@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from quipu.cli.tui import QuipuUiApp
 from quipu.cli.view_model import GraphViewModel
-from quipu.interfaces.models import QuipuNode
+from quipu.spec.models.graph import QuipuNode
 from test_view_model import MockHistoryReader
 
 

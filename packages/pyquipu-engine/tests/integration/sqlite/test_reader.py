@@ -8,6 +8,7 @@ from quipu.engine.git_object_storage import GitObjectHistoryWriter
 from quipu.engine.hydrator import Hydrator
 from quipu.engine.sqlite_db import DatabaseManager
 from quipu.engine.sqlite_storage import SQLiteHistoryReader
+from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 @pytest.fixture
@@ -39,7 +40,7 @@ class TestSQLiteHistoryReader:
         # 1. 在 Git 中创建两个节点
         (repo / "a.txt").touch()
         hash_a = git_db.get_tree_hash()
-        git_writer.create_node("plan", "4b825dc642cb6eb9a060e54bf8d69288fbee4904", hash_a, "Content A")
+        git_writer.create_node("plan", EMPTY_TREE_HASH, hash_a, "Content A")
 
         (repo / "b.txt").touch()
         hash_b = git_db.get_tree_hash()
@@ -69,9 +70,7 @@ class TestSQLiteHistoryReader:
         # 1. 在 Git 中创建节点
         (repo / "c.txt").touch()
         hash_c = git_db.get_tree_hash()
-        node_c_git = git_writer.create_node(
-            "plan", "4b825dc642cb6eb9a060e54bf8d69288fbee4904", hash_c, "Cache Test Content"
-        )
+        node_c_git = git_writer.create_node("plan", EMPTY_TREE_HASH, hash_c, "Cache Test Content")
         commit_hash_c = node_c_git.commit_hash
 
         # 2. 补水 (这将创建一个 plan_md_cache 为 NULL 的记录)
@@ -119,7 +118,7 @@ def populated_db(tmp_path_factory):
     # --- End of setup logic ---
 
     # --- Data population logic ---
-    parent_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+    parent_hash = EMPTY_TREE_HASH
     commit_hashes = []
     output_tree_hashes = []
 

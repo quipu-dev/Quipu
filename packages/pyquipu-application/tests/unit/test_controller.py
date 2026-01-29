@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from quipu.application.controller import run_quipu
-from quipu.interfaces.exceptions import ExecutionError
+from quipu.spec.exceptions import ExecutionError
 
 
 class TestControllerUnit:

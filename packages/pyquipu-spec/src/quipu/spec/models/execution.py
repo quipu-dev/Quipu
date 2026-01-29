@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 class QuipuResult:
     success: bool
     exit_code: int
-    message: str = ""  # Will hold the message ID for the bus
+    message: str = ""
     data: Any = None
     error: Optional[Exception] = None
     msg_kwargs: Dict[str, Any] = field(default_factory=dict)

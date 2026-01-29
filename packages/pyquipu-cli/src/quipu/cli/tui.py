@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from quipu.application.factory import create_engine
 from quipu.engine.state_machine import Engine
-from quipu.interfaces.models import QuipuNode
+from quipu.spec.models.graph import QuipuNode
 from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding

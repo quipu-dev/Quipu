@@ -5,8 +5,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from quipu.common.identity import get_user_id_from_email
-from quipu.interfaces.models import QuipuNode
-from quipu.interfaces.storage import HistoryReader, HistoryWriter
+from quipu.spec.constants import EMPTY_TREE_HASH
+from quipu.spec.models.graph import QuipuNode
+from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
 
 from .config import ConfigManager
 from .git_db import GitDB
@@ -227,7 +228,6 @@ class Engine:
             logger.info(f"从存储中加载了 {len(all_nodes)} 个历史事件，形成 {len(self.history_graph)} 个唯一状态节点。")
 
         current_hash = self.git_db.get_tree_hash()
-        EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
         if current_hash == EMPTY_TREE_HASH and not self.history_graph:
             logger.info("✅ 状态对齐：检测到创世状态 (空仓库)。")
             self.current_node = None
@@ -267,8 +267,7 @@ class Engine:
         log_message = f"📸 正在捕获工作区漂移 (Message: {message})" if message else "📸 正在捕获工作区漂移"
         logger.info(f"{log_message}，新状态 Hash: {current_hash[:7]}")
 
-        genesis_hash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-        input_hash = genesis_hash
+        input_hash = EMPTY_TREE_HASH
         head_tree_hash = self._read_head()
         parent_node = None
 

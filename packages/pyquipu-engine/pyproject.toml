@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyquipu-engine"
-version = "0.1.1"
+version = "0.2.0"
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "The state and history engine for Quipu, powered by Git plumbing."
 requires-python = ">=3.10"
@@ -23,9 +23,9 @@ classifiers = [
 keywords = ["quipu", "devops", "engine", "state", "git"]
 
 dependencies = [
-    "pyquipu-interfaces ~= 0.1.1",
+    "pyquipu-spec ~= 0.1.0",
     "pyquipu-common ~= 0.1.1",
-    "pyquipu-bus ~= 0.1.1",
+    "pyquipu-bus ~= 0.2.0",
     "pyyaml >= 6.0",
 ]
 
@@ -35,7 +35,7 @@ Repository = "https://github.com/quipu-dev/Quipu"
 "Bug Tracker" = "https://github.com/quipu-dev/Quipu/issues"
 
 [tool.uv.sources]
-pyquipu-interfaces = { workspace = true }
+pyquipu-spec = { workspace = true }
 pyquipu-common = { workspace = true }
 pyquipu-bus = { workspace = true }
 
