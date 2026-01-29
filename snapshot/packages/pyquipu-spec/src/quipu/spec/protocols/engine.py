@@ -1,4 +1,5 @@
 from typing import Protocol, Dict, Optional, List, runtime_checkable
+from pathlib import Path
 from ..models.graph import QuipuNode
 from .storage import HistoryReader, HistoryWriter
 
