@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "Capture: M uv.lock", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769417574.668099, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] feat: 创建 pyquipu-spec 包并定义核心协议骨架", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769676886.2336462, "duration_ms": 0}}
