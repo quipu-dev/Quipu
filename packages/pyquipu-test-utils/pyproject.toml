@@ -24,8 +24,8 @@ classifiers = [
 keywords = ["quipu", "devops", "testing", "pytest"]
 
 dependencies = [
-    "pyquipu-spec ~= 0.1.0",
-    "pyquipu-engine ~= 0.2.0",
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
     "pyquipu-bus ~= 0.2.0",
     "typer"
 ]

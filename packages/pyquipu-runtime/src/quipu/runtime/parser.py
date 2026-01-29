@@ -81,7 +81,7 @@ class StateBlockParser:
                     if current_lang == "act":
                         # 指令块：开始新语句
                         action_name = full_content.strip()
-                        new_stmt = {"act": action_name, "contexts": []}
+                        new_stmt: Statement = {"act": action_name, "contexts": []}
                         statements.append(new_stmt)
                         current_statement = new_stmt
                     else:

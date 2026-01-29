@@ -24,7 +24,7 @@ keywords = ["quipu", "devops", "bus", "event"]
 
 dependencies = [
     "pyquipu-common ~= 0.1.1",
-    "pyquipu-spec ~= 0.1.0",
+    "pyquipu-spec ~= 0.1.1",
 ]
 
 [project.urls]

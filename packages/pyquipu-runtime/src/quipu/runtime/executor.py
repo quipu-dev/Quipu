@@ -43,7 +43,7 @@ class Executor:
         logger.debug(f"注册 Act: {name} (Mode: {arg_mode})")
 
     def get_registered_acts(self) -> Dict[str, str]:
-        return {name: data[0].__doc__ for name, data in self._acts.items()}
+        return {name: data[0].__doc__ or "No documentation." for name, data in self._acts.items()}
 
     def summarize_statement(self, stmt: Statement) -> str | None:
         raw_act_line = stmt["act"]
