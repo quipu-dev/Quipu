@@ -1,6 +1,8 @@
 import json
 import logging
-from typing import Any, Dict, Optional, Protocol
+from typing import Any, Dict, Optional
+
+from quipu.spec.protocols.messaging import Renderer
 
 from .messages import find_locales_dir
 
@@ -39,12 +41,7 @@ class MessageStore:
         return self._messages.get(msg_id, default or f"<{msg_id}>")
 
 
-class Renderer(Protocol):
-    def success(self, message: str) -> None: ...
-    def info(self, message: str) -> None: ...
-    def warning(self, message: str) -> None: ...
-    def error(self, message: str) -> None: ...
-    def data(self, data_string: str) -> None: ...
+# Renderer protocol is now imported from quipu.spec.protocols.messaging
 
 
 class MessageBus:

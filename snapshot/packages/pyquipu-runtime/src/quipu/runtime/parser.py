@@ -1,17 +1,12 @@
 import re
-from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from quipu.spec.protocols.runtime import Statement
+# PlanParser protocol is now defined in quipu.spec.protocols.parser
+# and implemented implicitly by classes here.
 
 
-class BaseParser(ABC):
-    @abstractmethod
-    def parse(self, text: str) -> List[Statement]:
-        pass
-
-
-class StateBlockParser(BaseParser):
+class StateBlockParser:
     def __init__(self, fence_char: str):
         self.fence_char = fence_char
 

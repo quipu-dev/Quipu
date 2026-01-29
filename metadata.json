@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[COMMIT] refactor(spec): protocolize storage and runtime interfaces", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769678684.155632, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] refactor: 统一协议定义，确立 spec 包的 SSoT 地位", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769681854.838794, "duration_ms": 0}}
