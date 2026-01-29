@@ -55,7 +55,7 @@ class TestUiReachability:
 
         ancestors = {"a", "root"}
         view_model = view_model_factory([node_root, node_a, node_b], current_hash="a", ancestors=ancestors)
-        
+
         # 模拟 TUI 切换视图以隐藏不可达节点
         # ViewModel 默认 show_unreachable=True
         view_model.toggle_unreachable()
