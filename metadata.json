@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] chore: 在类型检查修复后提升包版本", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769684532.9404771, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] fix(typing): 解决全库 pyright 错误并提升包版本", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769684547.4720197, "duration_ms": 0}}
