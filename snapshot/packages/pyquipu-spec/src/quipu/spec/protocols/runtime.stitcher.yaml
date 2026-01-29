@@ -1,0 +1,8 @@
+ActContext: |-
+  提供给插件函数的上下文 API。
+
+  它是插件与 ExecutorProtocol 之间的稳定接口。
+ExecutorProtocol: |-
+  定义执行器的核心能力契约
+Statement: |-
+  表示解析后的单个操作语句

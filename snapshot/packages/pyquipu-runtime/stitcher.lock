@@ -216,19 +216,9 @@
       "baseline_code_signature_text": "def __init__(self):",
       "baseline_code_structure_hash": "9bab2b1dd22fea04e58176b09f65ef4f673738c47abf25fca7e0c62af472206f"
     },
-    "py://packages/pyquipu-runtime/src/quipu/runtime/parser.py#BaseParser": {
-      "baseline_code_signature_text": "class BaseParser(ABC):",
-      "baseline_code_structure_hash": "8fe7d17f038b0f58ccf36c037036ffa239c7e6af62ed57613d7e08f970c2bc92",
-      "baseline_yaml_content_hash": "07274cf2e5aa9ad62207ca19fbbebbb5065e4204e4ab93a02fbae390e6aaa0f7"
-    },
-    "py://packages/pyquipu-runtime/src/quipu/runtime/parser.py#BaseParser.parse": {
-      "baseline_code_signature_text": "def parse(self, text: str) -> List[Statement]:",
-      "baseline_code_structure_hash": "707b6f06d9e47b672e6523beff9a1e7699ff5ad4f4c930ad4aa87c75b18fbd7f",
-      "baseline_yaml_content_hash": "530154090468c19c97f3cee0a0f9bb29db633c32c7e3cbacd16f6f59d1a152ae"
-    },
     "py://packages/pyquipu-runtime/src/quipu/runtime/parser.py#StateBlockParser": {
-      "baseline_code_signature_text": "class StateBlockParser(BaseParser):",
-      "baseline_code_structure_hash": "3bbe472eb7eb00ef257ea45515ee38cfbf460f394f159c0da65a9247d125164e",
+      "baseline_code_signature_text": "class StateBlockParser:",
+      "baseline_code_structure_hash": "d10149c6b491ded15ac1dc914da88627099700d2b1c3cf8fa3275abfc2ba62aa",
       "baseline_yaml_content_hash": "2f11686e0e90b7136f77b5324c6c795dee4ebed1d525bb879d0047b1cc094ea9"
     },
     "py://packages/pyquipu-runtime/src/quipu/runtime/parser.py#StateBlockParser.__init__": {
@@ -254,8 +244,8 @@
       "baseline_yaml_content_hash": "37e0ae616fded69e306b11e96ae3981eb37c007a699dadfc087c5605cf5c9b5b"
     },
     "py://packages/pyquipu-runtime/src/quipu/runtime/parser.py#get_parser": {
-      "baseline_code_signature_text": "def get_parser(name: str) -> BaseParser:",
-      "baseline_code_structure_hash": "51c51914d1fc7980f6b19116ebde6d8fffc7efeac97e2a3d8d0afb04897eba36",
+      "baseline_code_signature_text": "def get_parser(name: str) -> PlanParser:",
+      "baseline_code_structure_hash": "56321e01027ca33f64f8c237673ee9d9d4204deefffe4d592ebf4d7495af6c8b",
       "baseline_yaml_content_hash": "88229ce454e245be3f3740751e60c9152d154fdd622976fe97a16802ca699519"
     },
     "py://packages/pyquipu-runtime/src/quipu/runtime/parser.py#list_parsers": {

@@ -1,0 +1,8 @@
+AIFSOpsError: |-
+  Quipu 生态系统的基础异常类
+ExecutionError: |-
+  Act 操作执行错误
+OperationCancelledError: |-
+  当用户取消一个需要确认的操作时引发
+ParseError: |-
+  Markdown 或指令解析错误

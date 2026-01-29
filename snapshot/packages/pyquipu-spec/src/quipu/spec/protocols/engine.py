@@ -6,8 +6,6 @@ from .storage import HistoryReader, HistoryWriter
 
 @runtime_checkable
 class QuipuEngine(Protocol):
-    """定义 Quipu 状态引擎的核心行为契约"""
-
     root_dir: Path
     reader: HistoryReader
     writer: HistoryWriter

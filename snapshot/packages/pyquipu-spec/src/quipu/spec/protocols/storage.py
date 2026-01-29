@@ -4,8 +4,6 @@ from ..models.graph import QuipuNode
 
 @runtime_checkable
 class HistoryReader(Protocol):
-    """定义从存储后端读取历史图谱的行为契约"""
-
     def load_all_nodes(self) -> List[QuipuNode]: ...
     def get_node_content(self, node: QuipuNode) -> str: ...
     def get_node_blobs(self, commit_hash: str) -> Dict[str, bytes]: ...
@@ -22,8 +20,6 @@ class HistoryReader(Protocol):
 
 @runtime_checkable
 class HistoryWriter(Protocol):
-    """定义向历史存储后端写入新节点的行为契约"""
-
     def create_node(
         self, node_type: str, input_tree: str, output_tree: str, content: str, **kwargs: Any
     ) -> QuipuNode: ...
