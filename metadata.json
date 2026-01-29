@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] fix: 恢复 QuipuNode 数据模型中缺失的 `content` 字段", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769678248.373893, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] refactor: 将核心接口与协议迁移至新的 pyquipu-spec 包", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769678344.3395293, "duration_ms": 0}}

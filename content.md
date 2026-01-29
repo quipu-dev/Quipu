@@ -1,60 +1,61 @@
-## [WIP] fix: 恢复 QuipuNode 数据模型中缺失的 `content` 字段
+太好了。既然测试已经全部通过，这意味着我们已经成功越过了重构过程中最危险的“断连期”，系统已在新的 `spec` 架构基础上恢复了功能一致性。
 
-### 错误分析
-测试 `TestEngineWithMemoryBackend::test_plan_node_creation` 失败的根本原因是：在将 `pyquipu-interfaces` 重构为 `pyquipu-spec` 的过程中，我从 `QuipuNode` dataclass 的定义中**错误地删除了 `content` 字段**。
+我将生成一个 `[COMMIT]` 计划，将这次重大的架构演进作为一个完整的逻辑单元提交到 Git 历史中。
 
-`content` 字段在系统中扮演着关键角色：
-1.  **直接填充**: 当一个新节点被创建时（例如在 `InMemoryHistoryManager` 或 `SQLiteHistoryWriter` 中），其 `content` 会被立即填充。
-2.  **懒加载缓存**: 对于从存储中读取的节点，`content` 字段作为懒加载内容的缓存位置。
-
-`InMemoryHistoryManager` 在其 `create_node` 方法中，依然试图使用 `content` 关键字参数来实例化 `QuipuNode`，而新的、不完整的 `spec` 定义中缺少该字段，这直接导致了 `TypeError`。这是一个典型的因规范与实现不符而导致的集成失败。
+## [COMMIT] refactor: 将核心接口与协议迁移至新的 pyquipu-spec 包
 
 ### 用户需求
-系统必须在重构后保持其核心数据模型的完整性，并通过所有现有的单元和集成测试。
+将目前完成的所有架构重构工作（创建 `spec` 包、迁移依赖、修正导入路径及修复模型缺陷）提交到 Git 仓库。
 
 ### 评论
-这是一个严重的疏忽，但也凸显了拥有像 `TestEngineWithMemoryBackend` 这样能够直接实例化数据模型的集成测试的重要性。它有效地捕获了在编译期或静态分析中可能被忽略的规范定义错误。
+这是 Quipu 项目的一个重要里程碑。通过这次重构，我们不仅优化了物理包结构，更在逻辑上确立了以 `Protocol` 为核心的契约驱动设计。这将极大地提升系统未来的可测试性和模块替换的灵活性。
 
 ### 目标
-1.  在 `packages/pyquipu-spec/src/quipu/spec/models/graph.py` 文件中，为 `QuipuNode` dataclass 重新添加 `content: str = ""` 字段。
+1.  将所有变更添加到 Git 暂存区。
+2.  创建一个内容详尽的提交记录，说明重构的动机、范围和结果。
 
 ### 基本原理
-恢复 `content` 字段是唯一的正确做法。该字段是 `QuipuNode` 状态的固有组成部分。通过将其添加回 dataclass 定义，我们可以确保所有依赖此字段的组件（无论是生产代码还是测试代码）都能恢复正常工作，从而使类型规范与系统实际行为重新保持一致。
+遵循 `d3-constraint-quipu-plan-script-rules-D3-P2` 约束，本计划仅包含 Git 操作，不包含任何文件内容的修改。我们将把新创建的 `pyquipu-spec` 目录、修改后的各包配置文件以及所有修正了导入路径的源码文件一并提交。
 
 ### 标签
-#intent/fix #flow/ready #priority/critical
-#comp/interfaces #concept/state #scope/core
-#ai/instruct
-#task/domain/architecture #task/object/spec-package #task/action/bug-fix #task/state/continue
+#intent/architect #flow/ready #priority/high 
+#comp/interfaces #comp/build #scope/core 
+#ai/instruct 
+#task/domain/architecture #task/object/spec-package #task/action/dependency-migration #task/state/end #task/status/completed
 
 ---
 
 ### Script
 
-#### Acts 1: 修复 QuipuNode 定义
+#### Acts 1: 提交架构重构成果
 
-我们将 `content: str = ""` 字段添加回 `QuipuNode` dataclass 中，紧邻 `summary` 字段之前。
+我们将变更加入暂存区并创建提交。
 
 ~~~~~act
-patch_file
-packages/pyquipu-spec/src/quipu/spec/models/graph.py
+git_add
 ~~~~~
-~~~~~python.old
-    filename: Path
-    node_type: str  # "plan" | "capture"
-    summary: str = ""
-    owner_id: Optional[str] = None
+
+~~~~~act
+git_commit
 ~~~~~
-~~~~~python.new
-    filename: Path
-    node_type: str  # "plan" | "capture"
-    content: str = ""
-    summary: str = ""
-    owner_id: Optional[str] = None
+~~~~~text
+refactor: migrate core interfaces to pyquipu-spec and embrace Protocols
+
+Major architectural shift from a loose 'interfaces' collection to a formal 'spec' package acting as the system's constitution.
+
+Key Changes:
+- Created 'pyquipu-spec' package with a structured layout (models, protocols, exceptions).
+- Replaced 'abc.ABC' with 'typing.Protocol' for all core interfaces (HistoryReader, HistoryWriter, etc.), enabling structural typing and decoupling.
+- Introduced 'ExecutorProtocol' in the spec to break the circular conceptual dependency between runtime and interfaces.
+- Migrated all internal packages to depend on 'pyquipu-spec' instead of 'pyquipu-interfaces'.
+- Performed a codebase-wide refactoring of import paths.
+- Restored the missing 'content' field in 'QuipuNode' model to fix regression in memory-backend tests.
+- Deleted the obsolete 'pyquipu-interfaces' package.
+
+This transition establishes a Single Source of Truth for system contracts and significantly improves mockability and architectural integrity.
 ~~~~~
 
 ### 下一步建议
-
-现在，`QuipuNode` 的定义已经恢复正确。请重新运行 `pytest`。我预计之前失败的测试现在应该能够通过。
-
-一旦所有测试都通过，我们就可以安全地继续执行重构路线图的后续步骤，即**收拢 `Renderer` 和 `PlanParser` 的 Protocol 定义**。
+1.  **收拢分布式的 Protocol**: 建议下一步将 `pyquipu-bus` 中的 `Renderer` 和 `pyquipu-runtime` 中的 `PlanParser` 协议也提取到 `quipu.spec.protocols` 中，彻底确立 `spec` 的中心地位。
+2.  **清理遗留的 ABC 导入**: 检查并移除各实现类（如 `GitObjectHistoryReader`）中已不再需要的 `ABC` 继承声明。
+3.  **完善规范文档**: 可以在 `pyquipu-spec` 中增加更详细的 docstring 和架构文档。
