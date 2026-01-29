@@ -22,9 +22,7 @@ def test_capture_drift_git_object(engine_instance: Engine):
     # 1. Create initial state and corresponding node
     (repo_path / "main.py").write_text("version = 1", "utf-8")
     initial_hash = engine.git_db.get_tree_hash()
-    initial_node = engine.writer.create_node(
-        "plan", EMPTY_TREE_HASH, initial_hash, "Initial content"
-    )
+    initial_node = engine.writer.create_node("plan", EMPTY_TREE_HASH, initial_hash, "Initial content")
     engine.align()  # Load the new node into the engine's graph
 
     # 2. Modify workspace to create a dirty state

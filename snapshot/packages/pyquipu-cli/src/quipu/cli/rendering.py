@@ -1,5 +1,4 @@
 import typer
-from quipu.spec.protocols.messaging import Renderer
 
 
 class TyperRenderer:

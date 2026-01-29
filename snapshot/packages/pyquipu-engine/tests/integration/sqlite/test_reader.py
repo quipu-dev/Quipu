@@ -70,9 +70,7 @@ class TestSQLiteHistoryReader:
         # 1. 在 Git 中创建节点
         (repo / "c.txt").touch()
         hash_c = git_db.get_tree_hash()
-        node_c_git = git_writer.create_node(
-            "plan", EMPTY_TREE_HASH, hash_c, "Cache Test Content"
-        )
+        node_c_git = git_writer.create_node("plan", EMPTY_TREE_HASH, hash_c, "Cache Test Content")
         commit_hash_c = node_c_git.commit_hash
 
         # 2. 补水 (这将创建一个 plan_md_cache 为 NULL 的记录)
