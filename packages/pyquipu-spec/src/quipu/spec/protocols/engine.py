@@ -1,0 +1,29 @@
+from typing import Protocol, Dict, Optional, List, runtime_checkable
+from pathlib import Path
+from ..models.graph import QuipuNode
+from .storage import HistoryReader, HistoryWriter
+
+
+@runtime_checkable
+class QuipuEngine(Protocol):
+    """定义 Quipu 状态引擎的核心行为契约"""
+
+    root_dir: Path
+    reader: HistoryReader
+    writer: HistoryWriter
+    history_graph: Dict[str, QuipuNode]
+    current_node: Optional[QuipuNode]
+
+    def align(self) -> str: ...
+    def visit(self, target_hash: str) -> None: ...
+    def capture_drift(self, current_hash: str, message: Optional[str] = None) -> QuipuNode: ...
+    def create_plan_node(
+        self, input_tree: str, output_tree: str, plan_content: str, summary_override: Optional[str] = None
+    ) -> QuipuNode: ...
+    def checkout(self, target_hash: str) -> None: ...
+    def back(self) -> Optional[str]: ...
+    def forward(self) -> Optional[str]: ...
+    def find_nodes(
+        self, summary_regex: Optional[str] = None, node_type: Optional[str] = None, limit: int = 10
+    ) -> List[QuipuNode]: ...
+    def close(self) -> None: ...

@@ -6,6 +6,7 @@ from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryWriter
 from quipu.engine.sqlite_db import DatabaseManager
 from quipu.engine.sqlite_storage import SQLiteHistoryWriter
+from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 @pytest.fixture
@@ -33,7 +34,7 @@ class TestSQLiteWriterIntegration:
     def test_dual_write_and_link(self, sqlite_setup):
         writer, db_manager, git_db, ws = sqlite_setup
 
-        EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+        EMPTY_TREE = EMPTY_TREE_HASH
 
         # --- Action 1: Create first node (Node A) ---
         # 模拟文件变更 A

@@ -5,6 +5,7 @@ import time
 import pytest
 from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
+from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 @pytest.fixture
@@ -31,7 +32,7 @@ class TestGitObjectHistoryReader:
     def test_load_linear_history(self, reader_setup):
         reader, writer, git_db, repo = reader_setup
 
-        h0 = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+        h0 = EMPTY_TREE_HASH
 
         (repo / "a").touch()
         h1 = git_db.get_tree_hash()
@@ -76,7 +77,7 @@ class TestGitObjectHistoryReader:
     def test_load_forked_history(self, reader_setup):
         reader, writer, git_db, repo = reader_setup
 
-        h0 = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+        h0 = EMPTY_TREE_HASH
         (repo / "base").touch()
         hash_a = git_db.get_tree_hash()
         writer.create_node("plan", h0, hash_a, "Plan A", start_time=1000)
@@ -143,7 +144,7 @@ class TestGitObjectHistoryReader:
     def test_parent_linking_with_gap(self, reader_setup):
         reader, writer, git_db, _ = reader_setup
 
-        h0 = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+        h0 = EMPTY_TREE_HASH
 
         # Helper to create a valid tree object in the ODB
         def make_valid_tree(content: bytes) -> str:
