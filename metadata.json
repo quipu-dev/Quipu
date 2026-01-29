@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "ruff Capture: M test_tui_reachability.py", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769684475.4827664, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] chore: 在类型检查修复后提升包版本", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769684532.9404771, "duration_ms": 0}}
