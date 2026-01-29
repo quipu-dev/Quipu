@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from quipu.bus import bus
-from quipu.bus import bus
 from quipu.spec.exceptions import ExecutionError, OperationCancelledError
 from quipu.spec.protocols.runtime import ActContext, ActFunction, Statement
 

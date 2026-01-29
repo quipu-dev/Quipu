@@ -11,7 +11,6 @@ from typing import Any, Dict, List, Optional, Set
 
 from quipu.engine.git_db import GitDB
 from quipu.spec.models.graph import QuipuNode
-from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
 
 logger = logging.getLogger(__name__)
 
