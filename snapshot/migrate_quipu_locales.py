@@ -1,24 +1,3 @@
-## [WIP] 这是一个用于将 Quipu 现有的扁平化（或简单嵌套）Locale JSON 迁移到 Needle 标准目录结构的脚本。
-
-### 迁移策略说明
-
-1.  **源头 (Source)**: 读取 `pyquipu-bus` 中的所有 JSON 文件，将其展平为 `key -> value` 的映射（例如 `acts.basic.success` -> `"..."`）。
-2.  **目标 (Target)**: `pyquipu-common` (模仿 Stitcher 的结构)。
-3.  **拆分规则 (Heuristic)**:
-    *   Needle 的 `FileSystemOperator` 将目录和文件名映射为语义指针的前缀。
-    *   我们将采用 **`Directory/File.json`** 的两层物理映射策略：
-        *   键的第一段（如 `acts`） -> **目录名**。
-        *   键的第二段（如 `basic`） -> **文件名** (`basic.json`)。
-        *   剩余部分（如 `success.fileWritten`） -> **JSON 内容结构**。
-    *   例如：`acts.basic.success.fileWritten` 将被写入 `acts/basic.json` 文件中，内容为 `{"success": {"fileWritten": "..."}}`。
-
-### 1. 创建迁移脚本
-
-~~~~~act
-write_file
-migrate_quipu_locales.py
-~~~~~
-~~~~~python
 import json
 import os
 from pathlib import Path
@@ -131,20 +110,3 @@ def migrate():
 
 if __name__ == "__main__":
     migrate()
-~~~~~
-
-### 2. 执行指令
-
-你可以使用以下命令运行此脚本，完成资源文件的物理迁移。迁移完成后，你可以删除该脚本。
-
-~~~~~
-python3 migrate_quipu_locales.py
-~~~~~
-
-### 3. 下一步建议
-
-资源文件到位后，你需要执行代码层面的改造（即你的计划的第一、二步）：
-
-1.  在 `packages/pyquipu-common/src/quipu/common` 中创建新的 `bus.py`。
-2.  更新所有包的依赖，引入 `pyneedle-bus`。
-3.  重构代码以使用新的 bus。
