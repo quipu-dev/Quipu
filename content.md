@@ -1,84 +1,283 @@
-## [WIP] feat: 创建 Quipu Common Bus
+## [WIP] refactor: 移除 pyquipu-bus 并更新依赖
 
 ### 用户需求
-在 `packages/pyquipu-common` 中创建新的 `bus.py`，作为 Quipu 系统基于 `pyneedle-bus` 的新总线入口，负责初始化和注册资源文件。
+1.  物理删除 `packages/pyquipu-bus` 包。
+2.  更新 `pyquipu-common` 的依赖，加入 `pyneedle-bus`。
+3.  更新所有其他包（cli, engine, runtime, application, test-utils, root）的 `pyproject.toml`，移除对 `pyquipu-bus` 的依赖。
 
 ### 评论
-这是从旧的 `stitcher-bus` (或 `pyquipu-bus`) 迁移到 `pyneedle-bus` 架构的关键一步。这个文件将成为整个 Quipu 生态系统的“喉舌”，负责加载我们在上一步迁移的 JSON 资源，并配置 Needle 的反馈总线。
+这是一次破坏性的架构调整，正式废弃了旧的总线实现，转向 Needle 生态。操作涉及文件系统的删除和多个配置文件的修改，需要确保依赖关系的正确转移（即原先依赖 `pyquipu-bus` 的包现在应通过 `pyquipu-common` 获取总线能力）。
 
 ### 目标
-1.  在 `packages/pyquipu-common/src/quipu/common/` 目录下创建 `bus.py`。
-2.  实现语言检测逻辑（默认为 `zh`）。
-3.  初始化 `pyneedle` 的 `I18NFactoryOperator` 并加载同级目录下的 `assets`。
-4.  将配置好的 Operator 注入到全局 `bus` 单例中。
+1.  删除 `packages/pyquipu-bus` 目录。
+2.  在 `packages/pyquipu-common/pyproject.toml` 中添加 `pyneedle-bus`。
+3.  从其余 7 个 `pyproject.toml` 文件中清理 `pyquipu-bus` 相关条目。
 
 ### 基本原理
-我们将遵循 Needle 的最佳实践，通过 `OverlayOperator` 将 Quipu 的本地资源 (`_quipu_i18n`) 叠加在全局 Nexus 之上。这样既保证了 Quipu 自身的国际化支持，也允许未来与其他 Needle 驱动的库共存。
+由于我们已经将资源文件和总线入口迁移到了 `pyquipu-common`，旧的包已无存在必要。清理依赖可以防止构建错误和混淆。`pyneedle-bus` 不需要作为 workspace member，而是作为外部依赖引入。
 
 ### 标签
-#intent/build #flow/ready #priority/high #comp/interfaces #concept/ui #task/domain/ui #task/object/bus #task/action/integration #task/state/continue
+#intent/refine #flow/ready #priority/high #comp/build #task/domain/ui #task/object/bus #task/action/cleanup #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 创建 bus.py
+#### Acts 1: 删除旧包
 
 ~~~~~act
-write_file
-packages/pyquipu-common/src/quipu/common/bus.py
+run_command
 ~~~~~
-~~~~~python
-import os
-from pathlib import Path
+~~~~~
+rm -rf packages/pyquipu-bus
+~~~~~
 
-from needle.bus import bus
-from needle.operators import I18NFactoryOperator, OverlayOperator
-from needle.runtime import nexus as global_nexus
+#### Acts 2: 更新 pyquipu-common 依赖
 
+~~~~~act
+patch_file
+packages/pyquipu-common/pyproject.toml
+~~~~~
+~~~~~toml
+dependencies = []
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyneedle-bus ~= 0.1.4",
+]
+~~~~~
 
-def _detect_lang() -> str:
-    """检测系统或环境变量中定义的语言。Quipu 默认为 zh。"""
-    # 1. 显式覆盖
-    env_lang = os.getenv("QUIPU_LANG") or os.getenv("NEEDLE_LANG")
-    if env_lang:
-        return env_lang
+#### Acts 3: 更新各子包依赖 (移除 pyquipu-bus)
 
-    # 2. 系统 LANG 变量
-    sys_lang = os.getenv("LANG")
-    if sys_lang:
-        base_lang = sys_lang.split(".")[0].split("_")[0]
-        if base_lang:
-            return base_lang
+**pyquipu-runtime**
+~~~~~act
+patch_file
+packages/pyquipu-runtime/pyproject.toml
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-bus ~= 0.2.0",
+    "typer >= 0.9.0"
+]
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-common ~= 0.1.1",
+    "typer >= 0.9.0"
+]
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-runtime/pyproject.toml
+~~~~~
+~~~~~toml
+[tool.uv.sources]
+pyquipu-spec = { workspace = true }
+pyquipu-common = { workspace = true }
+pyquipu-bus = { workspace = true }
+~~~~~
+~~~~~toml
+[tool.uv.sources]
+pyquipu-spec = { workspace = true }
+pyquipu-common = { workspace = true }
+~~~~~
 
-    return "zh"
+**pyquipu-engine**
+~~~~~act
+patch_file
+packages/pyquipu-engine/pyproject.toml
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-bus ~= 0.2.0",
+    "pyyaml >= 6.0",
+]
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyyaml >= 6.0",
+]
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-engine/pyproject.toml
+~~~~~
+~~~~~toml
+[tool.uv.sources]
+pyquipu-spec = { workspace = true }
+pyquipu-common = { workspace = true }
+pyquipu-bus = { workspace = true }
+~~~~~
+~~~~~toml
+[tool.uv.sources]
+pyquipu-spec = { workspace = true }
+pyquipu-common = { workspace = true }
+~~~~~
 
+**pyquipu-application**
+~~~~~act
+patch_file
+packages/pyquipu-application/pyproject.toml
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-runtime ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-bus ~= 0.2.0",
+]
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-runtime ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+]
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-application/pyproject.toml
+~~~~~
+~~~~~toml
+pyquipu-runtime = { workspace = true }
+pyquipu-common = { workspace = true }
+pyquipu-bus = { workspace = true }
+~~~~~
+~~~~~toml
+pyquipu-runtime = { workspace = true }
+pyquipu-common = { workspace = true }
+~~~~~
 
-# 1. 定位资产根目录与语言
-# 资产目录应由迁移脚本放置在此文件同级的 assets 目录下
-_assets_root = Path(__file__).parent / "assets"
-_lang = _detect_lang()
+**pyquipu-cli**
+~~~~~act
+patch_file
+packages/pyquipu-cli/pyproject.toml
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-runtime ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-application ~= 0.2.1",
+    "pyquipu-bus ~= 0.2.0",
+    "typer >= 0.9.0",
+    "textual >= 0.58.0",
+]
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-runtime ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-application ~= 0.2.1",
+    "typer >= 0.9.0",
+    "textual >= 0.58.0",
+]
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-cli/pyproject.toml
+~~~~~
+~~~~~toml
+pyquipu-application = { workspace = true }
+pyquipu-bus = { workspace = true }
+~~~~~
+~~~~~toml
+pyquipu-application = { workspace = true }
+~~~~~
 
-# 2. 组装 Quipu 专属的 Operator
-# I18NFactoryOperator 负责根据语言代码从资产目录加载 FileSystemOperator
-_factory = I18NFactoryOperator(_assets_root)
-_quipu_i18n = _factory(_lang)
+**pyquipu-test-utils**
+这里我们同时添加 `pyneedle-bus`，因为测试工具通常需要直接与总线类型交互（例如 Mock）。
 
-# 3. 构造 Nexus (层叠 Operator)
-# 优先级：Quipu 本地资产 > 全局默认 Nexus
-_nexus = OverlayOperator([_quipu_i18n, global_nexus])
+~~~~~act
+patch_file
+packages/pyquipu-test-utils/pyproject.toml
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-bus ~= 0.2.0",
+    "typer"
+]
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyneedle-bus ~= 0.1.4",
+    "typer"
+]
+~~~~~
+~~~~~act
+patch_file
+packages/pyquipu-test-utils/pyproject.toml
+~~~~~
+~~~~~toml
+[tool.uv.sources]
+pyquipu-spec = { workspace = true }
+pyquipu-engine = { workspace = true }
+pyquipu-bus = { workspace = true }
+~~~~~
+~~~~~toml
+[tool.uv.sources]
+pyquipu-spec = { workspace = true }
+pyquipu-engine = { workspace = true }
+~~~~~
 
-# 4. 注入到全局反馈总线
-# 这样 bus.present(), bus.info() 等方法就能使用组装好的解析逻辑
-bus.set_operator(_nexus)
+**pyquipu (meta)**
+~~~~~act
+patch_file
+packages/pyquipu/pyproject.toml
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-application ~= 0.2.1",
+    "pyquipu-bus ~= 0.2.0",
+    "pyquipu-cli ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-runtime ~= 0.2.1",
+]
+~~~~~
+~~~~~toml
+dependencies = [
+    "pyquipu-application ~= 0.2.1",
+    "pyquipu-cli ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-runtime ~= 0.2.1",
+]
+~~~~~
 
-# 5. 导出全局单例
-__all__ = ["bus"]
+#### Acts 4: 更新根目录配置
+
+~~~~~act
+patch_file
+pyproject.toml
+~~~~~
+~~~~~toml
+pyquipu-application = { workspace = true }
+pyquipu-bus = { workspace = true }
+pyquipu-cli = { workspace = true }
+~~~~~
+~~~~~toml
+pyquipu-application = { workspace = true }
+pyquipu-cli = { workspace = true }
 ~~~~~
 
 ### 下一步建议
-
-现在新的总线入口已经建立，接下来的工作是：
-1.  **更新依赖**: 修改 `packages/pyquipu-common/pyproject.toml`，添加 `pyneedle-bus` 依赖。
-2.  **清理旧包**: 删除 `packages/pyquipu-bus`。
-3.  **全局重构**: 将项目中所有引用旧 bus 的地方（`from quipu.bus import bus`）修改为新路径（`from quipu.common.bus import bus`），并使用 `L` 指针替换硬编码的字符串 ID。
+依赖关系已经清理完毕。下一步是代码层面的重构：全局搜索代码库，将所有 `from quipu.bus import bus` 替换为 `from quipu.common.bus import bus`。同时，由于 `pyneedle-bus` 的 `bus` 对象 API 与旧的 `MessageBus` 有所不同（主要是 `get` 方法变为了 `render_to_string`，以及支持 `L` 指针），我们需要修复相应的调用点。
