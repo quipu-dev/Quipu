@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] refactor: 将 bus 消息 ID 迁移至 L 指针", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769892211.1644485, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "ruff Capture: M navigation.py, M show.py, M basic.py ... and 3 more files", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769892341.6459246, "duration_ms": 0}}

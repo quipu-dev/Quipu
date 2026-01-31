@@ -76,7 +76,8 @@ def _write_file(ctx: ActContext, args: List[str]):
 def _patch_file(ctx: ActContext, args: List[str]):
     if len(args) < 3:
         ctx.fail(
-            bus.render_to_string(L.acts.error.missingArgs, act_name="patch_file", count=3, signature="[path, old_string, new_string]"
+            bus.render_to_string(
+                L.acts.error.missingArgs, act_name="patch_file", count=3, signature="[path, old_string, new_string]"
             )
         )
 

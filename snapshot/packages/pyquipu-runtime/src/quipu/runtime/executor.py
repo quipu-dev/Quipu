@@ -132,7 +132,8 @@ class Executor:
             inline_args = tokens[1:]
 
             if act_name not in self._acts:
-                bus.warning(L.runtime.executor.warning.skipUnknown,
+                bus.warning(
+                    L.runtime.executor.warning.skipUnknown,
                     current=i + 1,
                     total=len(statements),
                     act_name=act_name,
@@ -160,7 +161,8 @@ class Executor:
                 final_args = block_contexts
 
             try:
-                bus.info(L.runtime.executor.info.executing,
+                bus.info(
+                    L.runtime.executor.info.executing,
                     current=i + 1,
                     total=len(statements),
                     act_name=act_name,

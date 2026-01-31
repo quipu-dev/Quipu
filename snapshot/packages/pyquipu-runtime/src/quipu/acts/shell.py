@@ -16,7 +16,8 @@ def register(executor: Executor):
 def _run_command(ctx: ActContext, args: List[str]):
     if len(args) < 1:
         ctx.fail(
-            bus.render_to_string(L.acts.error.missingArgs, act_name="run_command", count=1, signature="[command_string]"
+            bus.render_to_string(
+                L.acts.error.missingArgs, act_name="run_command", count=1, signature="[command_string]"
             )
         )
 

@@ -92,7 +92,8 @@ def register(app: typer.Typer):
                     ts = target_node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                     tag = f"[{target_node.node_type.upper()}]"
                     bus.data(
-                        bus.render_to_string(L.show.ui.header,
+                        bus.render_to_string(
+                            L.show.ui.header,
                             ts=ts,
                             tag=f"{tag:<9}",
                             short_hash=target_node.short_hash,

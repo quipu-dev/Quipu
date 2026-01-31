@@ -54,7 +54,8 @@ def register(app: typer.Typer):
             diff_stat_str = engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
 
             if not force:
-                prompt = bus.render_to_string(L.navigation.checkout.prompt.confirm,
+                prompt = bus.render_to_string(
+                    L.navigation.checkout.prompt.confirm,
                     short_hash=target_node.short_hash,
                     timestamp=target_node.timestamp,
                 )

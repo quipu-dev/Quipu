@@ -18,7 +18,8 @@ def register(executor: Executor):
 def _check_files_exist(ctx: ActContext, args: List[str]):
     if len(args) < 1:
         ctx.fail(
-            bus.render_to_string(L.acts.error.missingArgs, act_name="check_files_exist", count=1, signature="[file_list_string]"
+            bus.render_to_string(
+                L.acts.error.missingArgs, act_name="check_files_exist", count=1, signature="[file_list_string]"
             )
         )
 
@@ -44,7 +45,8 @@ def _check_files_exist(ctx: ActContext, args: List[str]):
 def _check_cwd_match(ctx: ActContext, args: List[str]):
     if len(args) < 1:
         ctx.fail(
-            bus.render_to_string(L.acts.error.missingArgs, act_name="check_cwd_match", count=1, signature="[expected_absolute_path]"
+            bus.render_to_string(
+                L.acts.error.missingArgs, act_name="check_cwd_match", count=1, signature="[expected_absolute_path]"
             )
         )
 
