@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
@@ -36,7 +37,7 @@ def _end(ctx: ActContext, args: List[str]):
 
 def _echo(ctx: ActContext, args: List[str]):
     if len(args) < 1:
-        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="echo", count=1, signature="[content]"))
+        ctx.fail(bus.render_to_string(L.acts.error.missingArgs, act_name="echo", count=1, signature="[content]"))
 
     bus.data(args[0])
 
@@ -44,7 +45,7 @@ def _echo(ctx: ActContext, args: List[str]):
 def _write_file(ctx: ActContext, args: List[str]):
     if len(args) < 2:
         ctx.fail(
-            bus.render_to_string("acts.error.missingArgs", act_name="write_file", count=2, signature="[path, content]")
+            bus.render_to_string(L.acts.error.missingArgs, act_name="write_file", count=2, signature="[path, content]")
         )
 
     raw_path = args[0]
@@ -65,11 +66,11 @@ def _write_file(ctx: ActContext, args: List[str]):
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(content, encoding="utf-8")
     except PermissionError:
-        ctx.fail(bus.render_to_string("acts.basic.error.writePermission", path=raw_path))
+        ctx.fail(bus.render_to_string(L.acts.basic.error.writePermission, path=raw_path))
     except Exception as e:
-        ctx.fail(bus.render_to_string("acts.basic.error.writeUnknown", error=e))
+        ctx.fail(bus.render_to_string(L.acts.basic.error.writeUnknown, error=e))
 
-    bus.success("acts.basic.success.fileWritten", path=target_path.relative_to(ctx.root_dir))
+    bus.success(L.acts.basic.success.fileWritten, path=target_path.relative_to(ctx.root_dir))
 
 
 def _patch_file(ctx: ActContext, args: List[str]):

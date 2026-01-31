@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.spec.exceptions import ExecutionError
 
@@ -72,7 +73,7 @@ class GitDB:
             try:
                 shutil.copy2(user_index_path, index_path)
             except OSError as e:
-                bus.warning("engine.git.warning.copyIndexFailed", error=str(e))
+                bus.warning(L.engine.git.warning.copyIndexFailed, error=str(e))
 
         # 定义隔离的环境变量
         env = {"GIT_INDEX_FILE": str(index_path)}
@@ -181,7 +182,7 @@ class GitDB:
         return changes
 
     def checkout_tree(self, new_tree_hash: str, old_tree_hash: Optional[str] = None):
-        bus.info("engine.git.info.checkoutStarted", short_hash=new_tree_hash[:7])
+        bus.info(L.engine.git.info.checkoutStarted, short_hash=new_tree_hash[:7])
 
         # 1. 高性能检出核心
         # --reset: 类似于 git reset --hard，强制覆盖本地未提交的变更，解决 "not uptodate" 冲突。

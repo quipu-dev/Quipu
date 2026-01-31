@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from typing import List
 
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
@@ -18,7 +19,7 @@ def _check_files_exist(ctx: ActContext, args: List[str]):
     if len(args) < 1:
         ctx.fail(
             bus.render_to_string(
-                "acts.error.missingArgs", act_name="check_files_exist", count=1, signature="[file_list_string]"
+                (L.acts.error.missingArgs), act_name="check_files_exist", count=1, signature="[file_list_string]"
             )
         )
 
