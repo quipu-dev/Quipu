@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
 from ..logger_config import setup_logging

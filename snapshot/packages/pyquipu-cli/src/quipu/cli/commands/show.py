@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Annotated, Dict, List, Optional
 
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 from rich.console import Console
 from rich.syntax import Syntax
 

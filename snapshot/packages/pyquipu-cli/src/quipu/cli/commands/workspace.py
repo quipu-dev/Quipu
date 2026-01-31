@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.constants import EMPTY_TREE_HASH
 
 from ..config import DEFAULT_WORK_DIR

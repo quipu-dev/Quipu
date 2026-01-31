@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from typing import List
 
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
 logger = logging.getLogger(__name__)

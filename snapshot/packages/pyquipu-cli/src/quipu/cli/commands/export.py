@@ -6,7 +6,7 @@ from typing import Annotated, Dict, List, Optional, Set
 
 import typer
 import yaml
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
 

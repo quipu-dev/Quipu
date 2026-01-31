@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import click
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.exceptions import OperationCancelledError
 
 

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 
 from ..config import DEFAULT_WORK_DIR
 from ..ui_utils import prompt_for_confirmation

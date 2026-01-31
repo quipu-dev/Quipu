@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "Capture: M uv.lock", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769889490.5844388, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] refactor: 全局替换 Bus 导入路径", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769889500.7548022, "duration_ms": 0}}
