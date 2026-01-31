@@ -27,7 +27,6 @@ dependencies = [
     "pyquipu-engine ~= 0.2.1",
     "pyquipu-runtime ~= 0.2.1",
     "pyquipu-common ~= 0.1.1",
-    "pyquipu-bus ~= 0.2.0",
 ]
 
 [project.urls]
@@ -40,7 +39,6 @@ pyquipu-spec = { workspace = true }
 pyquipu-engine = { workspace = true }
 pyquipu-runtime = { workspace = true }
 pyquipu-common = { workspace = true }
-pyquipu-bus = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quipu"]

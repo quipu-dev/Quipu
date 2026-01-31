@@ -1,0 +1,14 @@
+{
+  "info": {
+    "starting": "🚀 正在开始执行 {count} 个操作...",
+    "executing": "⚙️  正在执行 [{current}/{total}]: {act_name} (模式: {mode}, 参数: {arg_count})",
+    "noChange": "🤷 内容无变化，操作已跳过。"
+  },
+  "warning": {
+    "createRootDirFailed": "⚠️  无法创建根目录 {path}: {error}",
+    "noConfirmHandler": "⚠️  无确认处理器，已跳过需要用户确认的操作。",
+    "skipEmpty": "⚠️  跳过空指令 [{current}/{total}]",
+    "skipUnknown": "⚠️  跳过未知操作 [{current}/{total}]: {act_name}",
+    "ignoreInlineArgs": "⚠️  [{act_name}] 模式为 block_only，已忽略行内参数: {args}"
+  }
+}

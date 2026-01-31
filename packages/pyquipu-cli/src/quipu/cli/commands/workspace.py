@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.constants import EMPTY_TREE_HASH
 
 from ..config import DEFAULT_WORK_DIR
@@ -78,7 +78,7 @@ def register(app: typer.Typer):
             diff_stat_str = engine.git_db.get_diff_stat(target_tree_hash, current_hash)
 
             if not force:
-                prompt = bus.get("workspace.discard.prompt.confirm", short_hash=latest_node.short_hash)
+                prompt = bus.render_to_string("workspace.discard.prompt.confirm", short_hash=latest_node.short_hash)
                 if not prompt_for_confirmation(prompt, diff_lines=diff_stat_str.splitlines(), default=False):
                     bus.warning("common.prompt.cancel")
                     raise typer.Abort()

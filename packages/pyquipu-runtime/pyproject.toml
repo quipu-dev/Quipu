@@ -25,7 +25,6 @@ keywords = ["quipu", "devops", "runtime", "executor", "automation"]
 dependencies = [
     "pyquipu-spec ~= 0.1.1",
     "pyquipu-common ~= 0.1.1",
-    "pyquipu-bus ~= 0.2.0",
     "typer >= 0.9.0"
 ]
 
@@ -37,7 +36,6 @@ Repository = "https://github.com/quipu-dev/Quipu"
 [tool.uv.sources]
 pyquipu-spec = { workspace = true }
 pyquipu-common = { workspace = true }
-pyquipu-bus = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quipu"]

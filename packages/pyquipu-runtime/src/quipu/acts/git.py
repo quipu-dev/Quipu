@@ -3,7 +3,7 @@ import os
 import subprocess
 from typing import List
 
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
 logger = logging.getLogger(__name__)
@@ -33,9 +33,9 @@ def _run_git_cmd(ctx: ActContext, cmd_args: List[str]) -> str:
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         error_msg = e.stderr.strip()
-        ctx.fail(bus.get("acts.git.error.cmdFailed", args=" ".join(cmd_args), error=error_msg))
+        ctx.fail(bus.render_to_string("acts.git.error.cmdFailed", args=" ".join(cmd_args), error=error_msg))
     except FileNotFoundError:
-        ctx.fail(bus.get("acts.git.error.gitNotFound"))
+        ctx.fail(bus.render_to_string("acts.git.error.gitNotFound"))
     return ""
 
 
@@ -62,7 +62,7 @@ def _git_add(ctx: ActContext, args: List[str]):
 
 def _git_commit(ctx: ActContext, args: List[str]):
     if len(args) < 1:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="git_commit", count=1, signature="[message]"))
+        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="git_commit", count=1, signature="[message]"))
 
     message = args[0]
 

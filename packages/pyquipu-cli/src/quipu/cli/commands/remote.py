@@ -5,7 +5,7 @@ from typing import Annotated, Optional
 
 import typer
 from quipu.application.utils import find_git_repository_root
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.common.identity import get_user_id_from_email
 from quipu.engine.config import ConfigManager
 from quipu.engine.git_db import GitDB

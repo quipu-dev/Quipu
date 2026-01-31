@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
 logger = logging.getLogger(__name__)
@@ -36,14 +36,16 @@ def _end(ctx: ActContext, args: List[str]):
 
 def _echo(ctx: ActContext, args: List[str]):
     if len(args) < 1:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="echo", count=1, signature="[content]"))
+        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="echo", count=1, signature="[content]"))
 
     bus.data(args[0])
 
 
 def _write_file(ctx: ActContext, args: List[str]):
     if len(args) < 2:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="write_file", count=2, signature="[path, content]"))
+        ctx.fail(
+            bus.render_to_string("acts.error.missingArgs", act_name="write_file", count=2, signature="[path, content]")
+        )
 
     raw_path = args[0]
     content = args[1]
@@ -63,9 +65,9 @@ def _write_file(ctx: ActContext, args: List[str]):
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(content, encoding="utf-8")
     except PermissionError:
-        ctx.fail(bus.get("acts.basic.error.writePermission", path=raw_path))
+        ctx.fail(bus.render_to_string("acts.basic.error.writePermission", path=raw_path))
     except Exception as e:
-        ctx.fail(bus.get("acts.basic.error.writeUnknown", error=e))
+        ctx.fail(bus.render_to_string("acts.basic.error.writeUnknown", error=e))
 
     bus.success("acts.basic.success.fileWritten", path=target_path.relative_to(ctx.root_dir))
 
@@ -73,7 +75,7 @@ def _write_file(ctx: ActContext, args: List[str]):
 def _patch_file(ctx: ActContext, args: List[str]):
     if len(args) < 3:
         ctx.fail(
-            bus.get(
+            bus.render_to_string(
                 "acts.error.missingArgs", act_name="patch_file", count=3, signature="[path, old_string, new_string]"
             )
         )
@@ -82,18 +84,18 @@ def _patch_file(ctx: ActContext, args: List[str]):
     target_path = ctx.resolve_path(raw_path)
 
     if not target_path.exists():
-        ctx.fail(bus.get("acts.basic.error.fileNotFound", path=raw_path))
+        ctx.fail(bus.render_to_string("acts.basic.error.fileNotFound", path=raw_path))
 
     try:
         content = target_path.read_text(encoding="utf-8")
     except Exception as e:
-        ctx.fail(bus.get("acts.basic.error.readFailed", path=raw_path, error=e))
+        ctx.fail(bus.render_to_string("acts.basic.error.readFailed", path=raw_path, error=e))
 
     match_count = content.count(old_str)
     if match_count == 0:
-        ctx.fail(bus.get("acts.basic.error.patchContentMismatch", path=raw_path))
+        ctx.fail(bus.render_to_string("acts.basic.error.patchContentMismatch", path=raw_path))
     elif match_count > 1:
-        ctx.fail(bus.get("acts.basic.error.patchContentAmbiguous", path=raw_path, count=match_count))
+        ctx.fail(bus.render_to_string("acts.basic.error.patchContentAmbiguous", path=raw_path, count=match_count))
 
     new_content = content.replace(old_str, new_str, 1)
 
@@ -102,22 +104,24 @@ def _patch_file(ctx: ActContext, args: List[str]):
     try:
         target_path.write_text(new_content, encoding="utf-8")
     except PermissionError:
-        ctx.fail(bus.get("acts.basic.error.patchPermission", path=raw_path))
+        ctx.fail(bus.render_to_string("acts.basic.error.patchPermission", path=raw_path))
     except Exception as e:
-        ctx.fail(bus.get("acts.basic.error.patchUnknown", error=e))
+        ctx.fail(bus.render_to_string("acts.basic.error.patchUnknown", error=e))
 
     bus.success("acts.basic.success.filePatched", path=target_path.relative_to(ctx.root_dir))
 
 
 def _append_file(ctx: ActContext, args: List[str]):
     if len(args) < 2:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="append_file", count=2, signature="[path, content]"))
+        ctx.fail(
+            bus.render_to_string("acts.error.missingArgs", act_name="append_file", count=2, signature="[path, content]")
+        )
 
     raw_path, content_to_append = args[0], args[1]
     target_path = ctx.resolve_path(raw_path)
 
     if not target_path.exists():
-        ctx.fail(bus.get("acts.basic.error.fileNotFound", path=raw_path))
+        ctx.fail(bus.render_to_string("acts.basic.error.fileNotFound", path=raw_path))
 
     old_content = ""
     try:
@@ -133,8 +137,8 @@ def _append_file(ctx: ActContext, args: List[str]):
         with open(target_path, "a", encoding="utf-8") as f:
             f.write(content_to_append)
     except PermissionError:
-        ctx.fail(bus.get("acts.basic.error.appendPermission", path=raw_path))
+        ctx.fail(bus.render_to_string("acts.basic.error.appendPermission", path=raw_path))
     except Exception as e:
-        ctx.fail(bus.get("acts.basic.error.appendUnknown", error=e))
+        ctx.fail(bus.render_to_string("acts.basic.error.appendUnknown", error=e))
 
     bus.success("acts.basic.success.fileAppended", path=target_path.relative_to(ctx.root_dir))

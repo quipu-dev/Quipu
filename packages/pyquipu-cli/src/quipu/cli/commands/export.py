@@ -6,7 +6,7 @@ from typing import Annotated, Dict, List, Optional, Set
 
 import typer
 import yaml
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
 
@@ -179,7 +179,7 @@ def register(app: typer.Typer):
                 ctx.exit(0)
 
             if output_dir.exists() and any(output_dir.iterdir()):
-                prompt = bus.get("export.prompt.overwrite", path=output_dir)
+                prompt = bus.render_to_string("export.prompt.overwrite", path=output_dir)
                 if not prompt_for_confirmation(prompt, default=False):
                     bus.warning("common.prompt.cancel")
                     raise typer.Abort()

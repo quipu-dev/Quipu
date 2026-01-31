@@ -1,7 +1,7 @@
 import logging
 
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 
 from .commands import axon, cache, export, navigation, query, remote, run, show, ui, workspace
 from .rendering import TyperRenderer

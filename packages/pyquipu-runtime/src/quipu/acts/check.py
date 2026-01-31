@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import List
 
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,9 @@ def register(executor: Executor):
 def _check_files_exist(ctx: ActContext, args: List[str]):
     if len(args) < 1:
         ctx.fail(
-            bus.get("acts.error.missingArgs", act_name="check_files_exist", count=1, signature="[file_list_string]")
+            bus.render_to_string(
+                "acts.error.missingArgs", act_name="check_files_exist", count=1, signature="[file_list_string]"
+            )
         )
 
     raw_files = args[0].strip().split("\n")
@@ -34,7 +36,7 @@ def _check_files_exist(ctx: ActContext, args: List[str]):
 
     if missing_files:
         file_list_str = "\n".join(f"  - {f}" for f in missing_files)
-        ctx.fail(bus.get("acts.check.error.filesMissing", file_list=file_list_str))
+        ctx.fail(bus.render_to_string("acts.check.error.filesMissing", file_list=file_list_str))
 
     bus.success("acts.check.success.filesExist")
 
@@ -42,7 +44,9 @@ def _check_files_exist(ctx: ActContext, args: List[str]):
 def _check_cwd_match(ctx: ActContext, args: List[str]):
     if len(args) < 1:
         ctx.fail(
-            bus.get("acts.error.missingArgs", act_name="check_cwd_match", count=1, signature="[expected_absolute_path]")
+            bus.render_to_string(
+                "acts.error.missingArgs", act_name="check_cwd_match", count=1, signature="[expected_absolute_path]"
+            )
         )
 
     expected_path_str = args[0].strip()
@@ -50,6 +54,6 @@ def _check_cwd_match(ctx: ActContext, args: List[str]):
     expected_path = Path(os.path.expanduser(expected_path_str)).resolve()
 
     if current_root != expected_path:
-        ctx.fail(bus.get("acts.check.error.cwdMismatch", expected=expected_path, actual=current_root))
+        ctx.fail(bus.render_to_string("acts.check.error.cwdMismatch", expected=expected_path, actual=current_root))
 
     bus.success("acts.check.success.cwdMatched", path=current_root)

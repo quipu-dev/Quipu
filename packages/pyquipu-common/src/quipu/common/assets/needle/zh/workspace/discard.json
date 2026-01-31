@@ -1,0 +1,17 @@
+{
+  "success": "✅ 工作区已成功恢复到节点 {short_hash}。",
+  "noChanges": "✅ 工作区已经是干净状态 ({short_hash})，无需操作。",
+  "error": {
+    "noHistory": "❌ 错误: 找不到任何历史记录，无法确定要恢复到哪个状态。",
+    "generic": "❌ 恢复状态失败: {error}"
+  },
+  "warning": {
+    "headMissing": "⚠️  HEAD 指针丢失或无效，将恢复到最新历史节点: {short_hash}"
+  },
+  "ui": {
+    "diffHeader": "\n以下是即将被丢弃的变更:"
+  },
+  "prompt": {
+    "confirm": "🚨 即将丢弃上述所有变更，并恢复到状态 {short_hash}。\n此操作不可逆。是否继续？"
+  }
+}

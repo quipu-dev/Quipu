@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Annotated, Dict, List, Optional
 
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 from rich.console import Console
 from rich.syntax import Syntax
 
@@ -91,7 +91,7 @@ def register(app: typer.Typer):
                     ts = target_node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                     tag = f"[{target_node.node_type.upper()}]"
                     bus.data(
-                        bus.get(
+                        bus.render_to_string(
                             "show.ui.header",
                             ts=ts,
                             tag=f"{tag:<9}",

@@ -1,5 +1,27 @@
 {
   "fingerprints": {
+    "py://packages/pyquipu-common/src/quipu/common/bus.py#QuipuBus": {
+      "baseline_code_signature_text": "class QuipuBus(FeedbackBus):",
+      "baseline_code_structure_hash": "8938d8d5dd2bc618d8dc53265b2b250b6d61073afa20883073357f75e2a04dd6"
+    },
+    "py://packages/pyquipu-common/src/quipu/common/bus.py#QuipuBus.data": {
+      "baseline_code_signature_text": "def data(self, data_string: str) -> None:",
+      "baseline_code_structure_hash": "e24670692edbaa5b2b5efeb813dbb1f8c58794e5f10e72f7b92f5ee5d18f505c",
+      "baseline_yaml_content_hash": "eaafca938aa799d1fb209f1929b03d8f14681dfed4c77459f83e1af3cdcedfc2"
+    },
+    "py://packages/pyquipu-common/src/quipu/common/bus.py#QuipuRendererProtocol": {
+      "baseline_code_signature_text": "class QuipuRendererProtocol(RendererProtocol, Protocol):",
+      "baseline_code_structure_hash": "c09b1bdc595592bbf3ae70f76300dc06608d3bcd50836aaa2372a787dd4d7b1f"
+    },
+    "py://packages/pyquipu-common/src/quipu/common/bus.py#QuipuRendererProtocol.data": {
+      "baseline_code_signature_text": "def data(self, data_string: str) -> None:",
+      "baseline_code_structure_hash": "e24670692edbaa5b2b5efeb813dbb1f8c58794e5f10e72f7b92f5ee5d18f505c"
+    },
+    "py://packages/pyquipu-common/src/quipu/common/bus.py#_detect_lang": {
+      "baseline_code_signature_text": "def _detect_lang() -> str:",
+      "baseline_code_structure_hash": "29d68989a36b5b512bdf941a43b9c622f7519b84013b58f5caa0735eb7219220",
+      "baseline_yaml_content_hash": "64f2b339c2d3efbd08a563669a6b874bedbe4d43738773fd426a81086f32be90"
+    },
     "py://packages/pyquipu-common/src/quipu/common/identity.py#get_user_id_from_email": {
       "baseline_code_signature_text": "def get_user_id_from_email(email: str) -> str:",
       "baseline_code_structure_hash": "d723a96a189dae29395569c513bdcba3e16cfe339f26e0150eeee3ecfae1a353",

@@ -2,7 +2,7 @@ import logging
 import subprocess
 from typing import List
 
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,11 @@ def register(executor: Executor):
 
 def _run_command(ctx: ActContext, args: List[str]):
     if len(args) < 1:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="run_command", count=1, signature="[command_string]"))
+        ctx.fail(
+            bus.render_to_string(
+                "acts.error.missingArgs", act_name="run_command", count=1, signature="[command_string]"
+            )
+        )
 
     command = "\n".join(args)
 
@@ -26,7 +30,7 @@ def _run_command(ctx: ActContext, args: List[str]):
     try:
         result = subprocess.run(command, cwd=ctx.root_dir, shell=True, capture_output=True, text=True)
     except Exception as e:
-        ctx.fail(bus.get("acts.shell.error.exception", error=e))
+        ctx.fail(bus.render_to_string("acts.shell.error.exception", error=e))
         return
 
     if result.stdout:
@@ -35,4 +39,4 @@ def _run_command(ctx: ActContext, args: List[str]):
         bus.warning("acts.shell.warning.stderrOutput", output=result.stderr.strip())
 
     if result.returncode != 0:
-        ctx.fail(bus.get("acts.shell.error.failed", code=result.returncode))
+        ctx.fail(bus.render_to_string("acts.shell.error.failed", code=result.returncode))

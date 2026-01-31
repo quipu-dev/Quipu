@@ -22,7 +22,6 @@ keywords = ["quipu", "devops", "cli", "tui", "git", "history", "automation", "ai
 
 dependencies = [
     "pyquipu-application ~= 0.2.1",
-    "pyquipu-bus ~= 0.2.0",
     "pyquipu-cli ~= 0.2.1",
     "pyquipu-common ~= 0.1.1",
     "pyquipu-engine ~= 0.2.1",

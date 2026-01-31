@@ -1,0 +1,15 @@
+{
+  "error": {
+    "cmdFailed": "Git 命令执行失败: git {args}\n错误信息: {error}",
+    "gitNotFound": "未找到 git 命令，请确保系统已安装 Git。"
+  },
+  "success": {
+    "initialized": "✅ [Git] 已初始化仓库: {path}",
+    "added": "✅ [Git] 已添加文件: {targets}",
+    "committed": "✅ [Git] 提交成功: {message}"
+  },
+  "warning": {
+    "repoExists": "⚠️  Git 仓库已存在，跳过初始化。",
+    "commitSkipped": "⚠️  [Git] 没有暂存的更改，跳过提交。"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "error": {
+    "filesMissing": "❌ [Check] 以下文件在工作区中未找到:\n{file_list}",
+    "cwdMismatch": "❌ [Check] 工作区目录不匹配!\n  预期: {expected}\n  实际: {actual}"
+  },
+  "success": {
+    "filesExist": "✅ [Check] 所有指定文件均存在。",
+    "cwdMatched": "✅ [Check] 工作区目录匹配: {path}"
+  }
+}

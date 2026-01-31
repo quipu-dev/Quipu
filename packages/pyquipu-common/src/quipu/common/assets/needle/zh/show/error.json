@@ -1,0 +1,5 @@
+{
+  "notFound": "❌ 错误: 未找到哈希前缀为 '{hash_prefix}' 的历史节点。",
+  "notUnique": "❌ 错误: 哈希前缀 '{hash_prefix}' 不唯一，匹配到 {count} 个节点。",
+  "fileNotInNode": "❌ 错误: 在节点内未找到文件 '{filename}'。"
+}
