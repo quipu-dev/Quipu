@@ -2,13 +2,14 @@ import logging
 import sqlite3
 from pathlib import Path
 from typing import List, Optional, Set, Tuple
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
 
 class DatabaseManager:
     def __init__(self, work_dir: Path):
-        self.db_path = work_dir / ".quipu" / "history.sqlite"
+        self.db_path = work_dir / ".quipu" / L.history.sqlite
         self.db_path.parent.mkdir(exist_ok=True)
         self._conn: Optional[sqlite3.Connection] = None
 

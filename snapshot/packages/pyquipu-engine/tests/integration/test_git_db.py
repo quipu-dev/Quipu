@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from quipu.engine.git_db import GitDB
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -13,8 +14,8 @@ def git_repo(tmp_path):
     subprocess.run(["git", "init"], cwd=root, check=True)
 
     # 配置 User，防止 Commit 报错
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=root, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=root, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=root, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=root, check=True)
 
     return root
 
@@ -26,7 +27,7 @@ def db(git_repo):
 
 class TestGitDBPlumbing:
     def test_get_tree_hash_stability(self, git_repo, db):
-        f = git_repo / "test.txt"
+        f = git_repo / L.test.txt
         f.write_text("hello", encoding="utf-8")
 
         hash1 = db.get_tree_hash()
@@ -36,7 +37,7 @@ class TestGitDBPlumbing:
         assert hash1 == hash2
 
     def test_get_tree_hash_sensitivity(self, git_repo, db):
-        f = git_repo / "test.txt"
+        f = git_repo / L.test.txt
         f.write_text("v1", encoding="utf-8")
         hash1 = db.get_tree_hash()
 
@@ -46,7 +47,7 @@ class TestGitDBPlumbing:
         assert hash1 != hash2
 
     def test_shadow_index_isolation(self, git_repo, db):
-        f = git_repo / "wip.txt"
+        f = git_repo / L.wip.txt
         f.write_text("working in progress", encoding="utf-8")
 
         # 1. 确保用户暂存区是空的
@@ -65,20 +66,20 @@ class TestGitDBPlumbing:
         assert not (git_repo / ".quipu" / "tmp_index").exists()
 
     def test_exclude_quipu_dir(self, git_repo, db):
-        (git_repo / "main.py").touch()
+        (git_repo / L.main.py).touch()
         hash_base = db.get_tree_hash()
 
         # 在 .quipu 目录下乱写东西
         quipu_dir = git_repo / ".quipu"
         quipu_dir.mkdir(exist_ok=True)
-        (quipu_dir / "history.md").write_text("some history", encoding="utf-8")
+        (quipu_dir / L.history.md).write_text("some history", encoding="utf-8")
 
         hash_new = db.get_tree_hash()
 
         assert hash_base == hash_new
 
     def test_anchor_commit_persistence(self, git_repo, db):
-        (git_repo / "f.txt").write_text("content")
+        (git_repo / L.f.txt).write_text("content")
         tree_hash = db.get_tree_hash()
 
         # 创建锚点
@@ -119,7 +120,7 @@ class TestGitDBPlumbing:
         # Verify tree content using git command
         ls_tree_output = subprocess.check_output(["git", "ls-tree", tree_hash], cwd=db.root).decode()
         assert blob_hash in ls_tree_output
-        assert "file.txt" in ls_tree_output
+        assert L.file.txt in ls_tree_output
 
         # 3. Create a commit
         commit_message = "feat: Initial commit via commit_tree\n\nThis is the body."
@@ -157,50 +158,50 @@ class TestGitDBPlumbing:
 
     def test_checkout_tree(self, git_repo: Path, db: GitDB):
         # 1. Create State A
-        (git_repo / "file1.txt").write_text("version 1", "utf-8")
-        (git_repo / "common.txt").write_text("shared", "utf-8")
+        (git_repo / L.file1.txt).write_text("version 1", "utf-8")
+        (git_repo / L.common.txt).write_text("shared", "utf-8")
         hash_a = db.get_tree_hash()
 
         # Create a file inside .quipu to ensure it's not deleted
         quipu_dir = git_repo / ".quipu"
         quipu_dir.mkdir(exist_ok=True)
-        (quipu_dir / "preserve.me").touch()
+        (quipu_dir / L.preserve.me).touch()
 
         # 2. Create State B
-        (git_repo / "file1.txt").write_text("version 2", "utf-8")
-        (git_repo / "file2.txt").write_text("new file", "utf-8")
+        (git_repo / L.file1.txt).write_text("version 2", "utf-8")
+        (git_repo / L.file2.txt).write_text("new file", "utf-8")
 
         # 3. Checkout to State A
         db.checkout_tree(hash_a)
 
         # 4. Assertions
-        assert (git_repo / "file1.txt").read_text("utf-8") == "version 1"
-        assert (git_repo / "common.txt").exists()
-        assert not (git_repo / "file2.txt").exists(), "file2.txt should have been cleaned"
-        assert (quipu_dir / "preserve.me").exists(), ".quipu directory should be preserved"
+        assert (git_repo / L.file1.txt).read_text("utf-8") == "version 1"
+        assert (git_repo / L.common.txt).exists()
+        assert not (git_repo / L.file2.txt).exists(), "file2.txt should have been cleaned"
+        assert (quipu_dir / L.preserve.me).exists(), ".quipu directory should be preserved"
 
     def test_checkout_tree_messaging(self, git_repo: Path, db: GitDB, monkeypatch):
         mock_bus = MagicMock()
-        monkeypatch.setattr("quipu.engine.git_db.bus", mock_bus)
+        monkeypatch.setattr(L.quipu.engine.git_db.bus, mock_bus)
 
-        (git_repo / "file1.txt").write_text("v1")
+        (git_repo / L.file1.txt).write_text("v1")
         hash_a = db.get_tree_hash()
 
         db.checkout_tree(hash_a)
 
-        mock_bus.info.assert_called_once_with("engine.git.info.checkoutStarted", short_hash=hash_a[:7])
-        mock_bus.success.assert_called_once_with("engine.git.success.checkoutComplete")
+        mock_bus.info.assert_called_once_with(L.engine.git.info.checkoutStarted, short_hash=hash_a[:7])
+        mock_bus.success.assert_called_once_with(L.engine.git.success.checkoutComplete)
 
     def test_get_diff_name_status(self, git_repo: Path, db: GitDB):
         # State A
-        (git_repo / "modified.txt").write_text("v1", "utf-8")
-        (git_repo / "deleted.txt").write_text("delete me", "utf-8")
+        (git_repo / L.modified.txt).write_text("v1", "utf-8")
+        (git_repo / L.deleted.txt).write_text("delete me", "utf-8")
         hash_a = db.get_tree_hash()
 
         # State B
-        (git_repo / "modified.txt").write_text("v2", "utf-8")
-        (git_repo / "deleted.txt").unlink()
-        (git_repo / "added.txt").write_text("new file", "utf-8")
+        (git_repo / L.modified.txt).write_text("v2", "utf-8")
+        (git_repo / L.deleted.txt).unlink()
+        (git_repo / L.added.txt).write_text("new file", "utf-8")
         hash_b = db.get_tree_hash()
 
         changes = db.get_diff_name_status(hash_a, hash_b)
@@ -208,9 +209,9 @@ class TestGitDBPlumbing:
         # Convert to a dictionary for easier assertion
         changes_dict = {path: status for status, path in changes}
 
-        assert "M" == changes_dict.get("modified.txt")
-        assert "A" == changes_dict.get("added.txt")
-        assert "D" == changes_dict.get("deleted.txt")
+        assert "M" == changes_dict.get(L.modified.txt)
+        assert "A" == changes_dict.get(L.added.txt)
+        assert "D" == changes_dict.get(L.deleted.txt)
         assert len(changes) == 3
 
     def test_log_ref_basic(self, git_repo, db):

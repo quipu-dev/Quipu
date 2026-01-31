@@ -1,5 +1,6 @@
 import pytest
 from quipu.engine.state_machine import Engine
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -9,7 +10,7 @@ def nav_workspace(engine_instance: Engine):
 
     # Helper to create distinct states
     def create_state(content: str) -> str:
-        (repo_path / "file.txt").write_text(content)
+        (repo_path / L.file.txt).write_text(content)
         return engine.git_db.get_tree_hash()
 
     return engine, create_state
@@ -27,11 +28,11 @@ class TestNavigationEngine:
 
         # We are at B, go back to A
         engine.back()
-        assert (engine.root_dir / "file.txt").read_text() == "A"
+        assert (engine.root_dir / L.file.txt).read_text() == "A"
 
         # We are at A, go forward to B
         engine.forward()
-        assert (engine.root_dir / "file.txt").read_text() == "B"
+        assert (engine.root_dir / L.file.txt).read_text() == "B"
 
     def test_boundary_conditions(self, nav_workspace):
         engine, create_state = nav_workspace
@@ -41,11 +42,11 @@ class TestNavigationEngine:
 
         # At the end, forward should do nothing
         assert engine.forward() is None
-        assert (engine.root_dir / "file.txt").read_text() == "A"
+        assert (engine.root_dir / L.file.txt).read_text() == "A"
 
         # At the beginning, back should do nothing
         assert engine.back() is None
-        assert (engine.root_dir / "file.txt").read_text() == "A"
+        assert (engine.root_dir / L.file.txt).read_text() == "A"
 
     def test_history_truncation_on_new_visit(self, nav_workspace):
         engine, create_state = nav_workspace
@@ -70,16 +71,16 @@ class TestNavigationEngine:
         # History: [A, B, D], ptr at D
 
         # Verify state
-        assert (engine.root_dir / "file.txt").read_text() == "D"
+        assert (engine.root_dir / L.file.txt).read_text() == "D"
 
         # Verify that forward is now impossible
         assert engine.forward() is None
 
         # Go back twice to verify the new history
         engine.back()  # -> B
-        assert (engine.root_dir / "file.txt").read_text() == "B"
+        assert (engine.root_dir / L.file.txt).read_text() == "B"
         engine.back()  # -> A
-        assert (engine.root_dir / "file.txt").read_text() == "A"
+        assert (engine.root_dir / L.file.txt).read_text() == "A"
 
     def test_visit_idempotency(self, nav_workspace):
         engine, create_state = nav_workspace

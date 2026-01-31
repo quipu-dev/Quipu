@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from quipu.common.bus import bus
 from quipu.spec.exceptions import ExecutionError
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class GitDB:
             try:
                 shutil.copy2(user_index_path, index_path)
             except OSError as e:
-                bus.warning("engine.git.warning.copyIndexFailed", error=str(e))
+                bus.warning(L.engine.git.warning.copyIndexFailed, error=str(e))
 
         # 定义隔离的环境变量
         env = {"GIT_INDEX_FILE": str(index_path)}
@@ -181,7 +182,7 @@ class GitDB:
         return changes
 
     def checkout_tree(self, new_tree_hash: str, old_tree_hash: Optional[str] = None):
-        bus.info("engine.git.info.checkoutStarted", short_hash=new_tree_hash[:7])
+        bus.info(L.engine.git.info.checkoutStarted, short_hash=new_tree_hash[:7])
 
         # 1. 高性能检出核心
         # --reset: 类似于 git reset --hard，强制覆盖本地未提交的变更，解决 "not uptodate" 冲突。
@@ -197,7 +198,7 @@ class GitDB:
         # -e .quipu: 排除 .quipu 目录，防止自毁
         self._run(["clean", "-df", "-e", ".quipu"])
 
-        bus.success("engine.git.success.checkoutComplete")
+        bus.success(L.engine.git.success.checkoutComplete)
 
     def cat_file(self, object_hash: str, object_type: str) -> bytes:
         cmd = ["cat-file", object_type, object_hash]
@@ -355,7 +356,7 @@ class GitDB:
     def push_quipu_refs(self, remote: str, user_id: str, force: bool = False):
         refspec = f"refs/quipu/local/heads/*:refs/quipu/users/{user_id}/heads/*"
         action = "Force-pushing" if force else "Pushing"
-        bus.info("engine.git.info.pushing", action=action, remote=remote, user_id=user_id)
+        bus.info(L.engine.git.info.pushing, action=action, remote=remote, user_id=user_id)
 
         cmd = ["push", remote, refspec]
         if force:
@@ -364,7 +365,7 @@ class GitDB:
 
     def fetch_quipu_refs(self, remote: str, user_id: str):
         refspec = f"refs/quipu/users/{user_id}/heads/*:refs/quipu/remotes/{remote}/{user_id}/heads/*"
-        bus.info("engine.git.info.fetching", remote=remote, user_id=user_id)
+        bus.info(L.engine.git.info.fetching, remote=remote, user_id=user_id)
         self._run(["fetch", remote, "--prune", refspec])
 
     def reconcile_local_with_remote(self, remote: str, user_id: str):
@@ -388,10 +389,10 @@ class GitDB:
                 # 本地不存在此 ref，从远程镜像创建它
                 self.update_ref(local_ref, commit_hash)
                 reconciled_count += 1
-                bus.info("engine.git.info.reconciledNewBranch", short_hash=commit_hash[:7])
+                bus.info(L.engine.git.info.reconciledNewBranch, short_hash=commit_hash[:7])
 
         if reconciled_count > 0:
-            bus.success("engine.git.success.reconciliationComplete", count=reconciled_count)
+            bus.success(L.engine.git.success.reconciliationComplete, count=reconciled_count)
         else:
             logger.debug("✅ Local history is already up-to-date with remote.")
 
@@ -412,7 +413,7 @@ class GitDB:
             local_ref_to_delete = local_prefix + ref_suffix
             self.delete_ref(local_ref_to_delete)
             deleted_count += 1
-            bus.info("engine.git.info.prunedRef", ref=local_ref_to_delete)
+            bus.info(L.engine.git.info.prunedRef, ref=local_ref_to_delete)
 
         if deleted_count > 0:
-            bus.success("engine.git.success.pruningComplete", count=deleted_count)
+            bus.success(L.engine.git.success.pruningComplete, count=deleted_count)

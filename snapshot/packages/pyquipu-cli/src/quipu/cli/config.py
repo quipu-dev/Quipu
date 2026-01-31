@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from needle.pointer import L
 
 # 全局配置中心
 
@@ -7,12 +8,12 @@ from pathlib import Path
 def _find_development_monorepo_root() -> Path:
     current = Path(__file__).resolve()
     for parent in [current] + list(current.parents):
-        if (parent / "packages").exists() and (parent / "pyproject.toml").exists():
+        if (parent / "packages").exists() and (parent / L.pyproject.toml).exists():
             return parent
-        if (parent / "pyproject.toml").exists():
+        if (parent / L.pyproject.toml).exists():
             # 简单的检查，看是否是顶层配置
             try:
-                content = (parent / "pyproject.toml").read_text()
+                content = (parent / L.pyproject.toml).read_text()
                 if 'name = "quipu-dev"' in content:
                     return parent
             except Exception:
@@ -31,7 +32,7 @@ DEFAULT_WORK_DIR: Path = Path(os.getenv("AI_FS_WORK_DIR", "."))
 
 # 默认的指令入口文件
 # 用户可以在此修改默认值，或通过环境变量 AXON_ENTRY_FILE 覆盖
-DEFAULT_ENTRY_FILE: Path = Path(os.getenv("AXON_ENTRY_FILE", "o.md"))
+DEFAULT_ENTRY_FILE: Path = Path(os.getenv("AXON_ENTRY_FILE", L.o.md))
 
 # 日志级别
 # 使用项目特定的环境变量 QUIPU_LOG_LEVEL，并确保其值为大写

@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Set
 from quipu.engine.git_db import GitDB
 from quipu.spec.constants import EMPTY_TREE_HASH
 from quipu.spec.models.graph import QuipuNode
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +81,8 @@ class GitObjectHistoryReader:
             try:
                 # 使用二进制解析器
                 entries = self._parse_tree_binary(content_bytes)
-                if "metadata.json" in entries:
-                    blob_hash = entries["metadata.json"]
+                if L.metadata.json in entries:
+                    blob_hash = entries[L.metadata.json]
                     tree_to_meta_blob[tree_hash] = blob_hash
                     meta_blob_hashes.append(blob_hash)
             except Exception as e:
@@ -278,7 +279,7 @@ class GitObjectHistoryReader:
             tree_content = tree_content_map[tree_hash]
             entries = self._parse_tree_binary(tree_content)
 
-            blob_hash = entries.get("content.md")
+            blob_hash = entries.get(L.content.md)
 
             if not blob_hash:
                 return ""  # No content found
@@ -398,7 +399,7 @@ class GitObjectHistoryWriter:
         summary = self._generate_summary(node_type, content, input_tree, output_tree, **kwargs)
 
         metadata = {
-            "meta_version": "1.0",
+            "meta_version": L.1.0,
             "summary": summary,
             "type": node_type,
             "generator": self._get_generator_info(),

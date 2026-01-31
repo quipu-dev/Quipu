@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 import yaml
 from quipu.common.bus import bus
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ DEFAULTS = {
     },
     "sync": {
         "remote_name": "origin",
-        "persistent_ignores": [".idea", ".vscode", ".envs", "__pycache__", "node_modules", "o.md"],
+        "persistent_ignores": [".idea", ".vscode", ".envs", "__pycache__", "node_modules", L.o.md],
         "user_id": None,
         "subscriptions": [],
     },
@@ -24,7 +25,7 @@ DEFAULTS = {
 
 class ConfigManager:
     def __init__(self, work_dir: Path):
-        self.config_path = work_dir.resolve() / ".quipu" / "config.yml"
+        self.config_path = work_dir.resolve() / ".quipu" / L.config.yml
         self.user_config: Dict[str, Any] = self._load_config()
 
     def _load_config(self) -> Dict[str, Any]:
@@ -35,14 +36,14 @@ class ConfigManager:
             with open(self.config_path, "r", encoding="utf-8") as f:
                 config_data = yaml.safe_load(f)
                 if not isinstance(config_data, dict):
-                    bus.warning("engine.config.warning.invalidFormat", path=self.config_path)
+                    bus.warning(L.engine.config.warning.invalidFormat, path=self.config_path)
                     return {}
                 return config_data
         except yaml.YAMLError as e:
-            bus.error("engine.config.error.parseFailed", path=self.config_path, error=str(e))
+            bus.error(L.engine.config.error.parseFailed, path=self.config_path, error=str(e))
             return {}
         except Exception as e:
-            bus.error("engine.config.error.readFailed", error=str(e))
+            bus.error(L.engine.config.error.readFailed, error=str(e))
             return {}
 
     def get(self, key: str, fallback: Any = None) -> Any:
@@ -82,7 +83,7 @@ class ConfigManager:
             self.config_path.parent.mkdir(exist_ok=True)
             with open(self.config_path, "w", encoding="utf-8") as f:
                 yaml.dump(self.user_config, f, default_flow_style=False, allow_unicode=True)
-            bus.success("engine.config.success.saved", path=self.config_path)
+            bus.success(L.engine.config.success.saved, path=self.config_path)
         except Exception as e:
-            bus.error("engine.config.error.saveFailed", error=str(e))
+            bus.error(L.engine.config.error.saveFailed, error=str(e))
             raise

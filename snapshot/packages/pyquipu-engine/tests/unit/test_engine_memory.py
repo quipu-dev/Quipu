@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from quipu.engine.state_machine import Engine
 from quipu.test_utils.helpers import EMPTY_TREE_HASH, InMemoryDB, InMemoryHistoryManager
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -22,7 +23,7 @@ class TestEngineWithMemoryBackend:
 
     def test_capture_drift_from_genesis(self, memory_engine: Engine):
         # 1. 模拟文件变更
-        memory_engine.git_db.vfs.write("a.txt", "hello")
+        memory_engine.git_db.vfs.write(L.a.txt, "hello")
         current_hash = memory_engine.git_db.get_tree_hash()
         assert current_hash != EMPTY_TREE_HASH
 
@@ -44,12 +45,12 @@ class TestEngineWithMemoryBackend:
 
     def test_plan_node_creation(self, memory_engine: Engine):
         # State A
-        memory_engine.git_db.vfs.write("a.txt", "v1")
+        memory_engine.git_db.vfs.write(L.a.txt, "v1")
         hash_a = memory_engine.git_db.get_tree_hash()
         node_a = memory_engine.create_plan_node(EMPTY_TREE_HASH, hash_a, "Plan A")
 
         # State B
-        memory_engine.git_db.vfs.write("a.txt", "v2")
+        memory_engine.git_db.vfs.write(L.a.txt, "v2")
         hash_b = memory_engine.git_db.get_tree_hash()
         node_b = memory_engine.create_plan_node(hash_a, hash_b, "Plan B")
 
@@ -59,4 +60,4 @@ class TestEngineWithMemoryBackend:
 
         # 验证 checkout
         memory_engine.checkout(hash_a)
-        assert memory_engine.git_db.vfs.read("a.txt") == "v1"
+        assert memory_engine.git_db.vfs.read(L.a.txt) == "v1"

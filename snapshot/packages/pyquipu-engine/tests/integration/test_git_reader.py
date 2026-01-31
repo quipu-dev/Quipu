@@ -6,6 +6,7 @@ import pytest
 from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from quipu.spec.constants import EMPTY_TREE_HASH
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -13,8 +14,8 @@ def reader_setup(tmp_path):
     repo_path = tmp_path / "read_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "reader@quipu.dev"], cwd=repo_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Reader"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "reader@quipu.dev"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Reader"], cwd=repo_path, check=True)
 
     git_db = GitDB(repo_path)
     writer = GitObjectHistoryWriter(git_db)

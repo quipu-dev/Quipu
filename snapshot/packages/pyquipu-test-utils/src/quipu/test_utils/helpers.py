@@ -13,6 +13,7 @@ from quipu.engine.state_machine import Engine
 from quipu.spec.constants import EMPTY_TREE_HASH
 from quipu.spec.models.graph import QuipuNode
 from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
+from needle.pointer import L
 
 
 # --- Git-based Test Helpers ---
@@ -275,23 +276,23 @@ def create_node_via_cli(runner: CliRunner, work_dir: Path, content: str) -> str:
 
 def create_branching_history(engine: Engine) -> Engine:
     ws = engine.root_dir
-    (ws / "file.txt").write_text("v0")
+    (ws / L.file.txt).write_text("v0")
     h0 = engine.git_db.get_tree_hash()
     engine.create_plan_node(EMPTY_TREE_HASH, h0, "plan 0", summary_override="Root Node")
-    (ws / "file.txt").write_text("v1")
+    (ws / L.file.txt).write_text("v1")
     h1 = engine.git_db.get_tree_hash()
     engine.create_plan_node(h0, h1, "plan 1", summary_override="Linear Node 1")
-    (ws / "file.txt").write_text("v2")
+    (ws / L.file.txt).write_text("v2")
     h2 = engine.git_db.get_tree_hash()
     engine.create_plan_node(h1, h2, "plan 2", summary_override="Branch Point")
     engine.visit(h2)
-    (ws / "branch_a.txt").touch()
+    (ws / L.branch_a.txt).touch()
     h3a = engine.git_db.get_tree_hash()
     engine.create_plan_node(h2, h3a, "plan 3a", summary_override="Branch A change")
     engine.visit(h3a)
     engine.create_plan_node(h3a, h3a, "plan 4", summary_override="Summary Node")
     engine.visit(h2)
-    (ws / "branch_b.txt").touch()
+    (ws / L.branch_b.txt).touch()
     h3b = engine.git_db.get_tree_hash()
     engine.create_plan_node(h2, h3b, "plan 3b", summary_override="Branch B change")
     return engine
@@ -329,13 +330,13 @@ def create_linear_history(engine: Engine) -> Tuple[Engine, Dict[str, str]]:
     ws = engine.root_dir
 
     # State A
-    (ws / "a.txt").write_text("A")
+    (ws / L.a.txt).write_text("A")
     hash_a = engine.git_db.get_tree_hash()
     engine.create_plan_node(EMPTY_TREE_HASH, hash_a, "Plan A", summary_override="State A")
 
     # State B
-    (ws / "b.txt").write_text("B")
-    (ws / "a.txt").unlink()
+    (ws / L.b.txt).write_text("B")
+    (ws / L.a.txt).unlink()
     hash_b = engine.git_db.get_tree_hash()
     engine.create_plan_node(hash_a, hash_b, "Plan B", summary_override="State B")
 
@@ -345,7 +346,7 @@ def create_linear_history(engine: Engine) -> Tuple[Engine, Dict[str, str]]:
 
 def create_dirty_workspace_history(engine: Engine) -> Tuple[Engine, str]:
     work_dir = engine.root_dir
-    file_path = work_dir / "file.txt"
+    file_path = work_dir / L.file.txt
 
     # State A
     file_path.write_text("v1")

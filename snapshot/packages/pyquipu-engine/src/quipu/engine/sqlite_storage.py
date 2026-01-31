@@ -11,6 +11,7 @@ from quipu.spec.models.graph import QuipuNode
 from quipu.spec.constants import EMPTY_TREE_HASH
 from .git_db import GitDB
 from .sqlite_db import DatabaseManager
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
@@ -366,7 +367,7 @@ class SQLiteHistoryWriter:
             start_time = kwargs.get("start_time", git_node.timestamp.timestamp())
             summary = self.git_writer._generate_summary(node_type, content, input_tree, output_tree, **kwargs)
             metadata = {
-                "meta_version": "1.0",
+                "meta_version": L.1.0,
                 "summary": summary,
                 "type": node_type,
                 "generator": self.git_writer._get_generator_info(),

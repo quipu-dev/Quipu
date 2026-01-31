@@ -8,6 +8,7 @@ from quipu.common.bus import bus
 from ..config import DEFAULT_WORK_DIR
 from ..logger_config import setup_logging
 from .helpers import engine_context
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +25,14 @@ def cache_sync(
         ),
     ] = DEFAULT_WORK_DIR,
 ):
-    bus.info("cache.sync.info.hydrating")
+    bus.info(L.cache.sync.info.hydrating)
     try:
         with engine_context(work_dir):
             pass
-        bus.success("cache.sync.success")
+        bus.success(L.cache.sync.success)
     except Exception as e:
         logger.error("数据同步失败", exc_info=True)
-        bus.error("cache.sync.error", error=str(e))
+        bus.error(L.cache.sync.error, error=str(e))
         ctx.exit(1)
 
 
@@ -47,9 +48,9 @@ def cache_rebuild(
     ] = DEFAULT_WORK_DIR,
 ):
     setup_logging()
-    db_path = work_dir.resolve() / ".quipu" / "history.sqlite"
+    db_path = work_dir.resolve() / ".quipu" / L.history.sqlite
     if not db_path.exists():
-        bus.warning("cache.rebuild.info.dbNotFound")
+        bus.warning(L.cache.rebuild.info.dbNotFound)
         cache_sync(ctx, work_dir)
 
 
@@ -66,12 +67,12 @@ def cache_prune_refs(
     setup_logging()
 
     with engine_context(work_dir) as engine:
-        bus.info("cache.prune.info.scanning")
+        bus.info(L.cache.prune.info.scanning)
 
         # 1. 获取所有本地 heads
         local_heads = engine.git_db.get_all_ref_heads("refs/quipu/local/heads/")
         if not local_heads:
-            bus.success("cache.prune.info.noRedundant")
+            bus.success(L.cache.prune.info.noRedundant)
             return
 
         head_commits = {h[0] for h in local_heads}
@@ -93,7 +94,7 @@ def cache_prune_refs(
         redundant_commits = head_commits.intersection(parents_of_heads)
 
         if not redundant_commits:
-            bus.success("cache.prune.info.noRedundant")
+            bus.success(L.cache.prune.info.noRedundant)
             return
 
         # 4. 找出对应的 ref names 并删除
@@ -102,12 +103,12 @@ def cache_prune_refs(
             if c_hash in redundant_commits:
                 refs_to_delete.append(ref_name)
 
-        bus.info("cache.prune.info.found", count=len(refs_to_delete), total=len(local_heads))
+        bus.info(L.cache.prune.info.found, count=len(refs_to_delete), total=len(local_heads))
 
         deleted_count = 0
         for ref in refs_to_delete:
             engine.git_db.delete_ref(ref)
             deleted_count += 1
 
-        bus.success("cache.prune.success", count=deleted_count)
+        bus.success(L.cache.prune.success, count=deleted_count)
         return

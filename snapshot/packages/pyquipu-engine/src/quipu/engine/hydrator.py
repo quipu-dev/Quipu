@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 from .git_db import GitDB
 from .git_object_storage import GitObjectHistoryReader  # Reuse parsing logic
 from .sqlite_db import DatabaseManager
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +108,8 @@ class Hydrator:
         meta_blob_hashes: List[str] = []
         for tree_hash, content_bytes in trees_content.items():
             entries = self._parser._parse_tree_binary(content_bytes)
-            if "metadata.json" in entries:
-                blob_hash = entries["metadata.json"]
+            if L.metadata.json in entries:
+                blob_hash = entries[L.metadata.json]
                 tree_to_meta_blob[tree_hash] = blob_hash
                 meta_blob_hashes.append(blob_hash)
         metas_content = self.git_db.batch_cat_file(meta_blob_hashes)

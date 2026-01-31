@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Optional
 from quipu.common.bus import bus
 from quipu.spec.exceptions import ExecutionError, OperationCancelledError
 from quipu.spec.protocols.runtime import ActContext, ActFunction, Statement
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class Executor:
             try:
                 self.root_dir.mkdir(parents=True, exist_ok=True)
             except Exception as e:
-                bus.warning("runtime.executor.warning.createRootDirFailed", path=self.root_dir, error=e)
+                bus.warning(L.runtime.executor.warning.createRootDirFailed, path=self.root_dir, error=e)
 
     def register(self, name: str, func: ActFunction, arg_mode: str = "hybrid", summarizer: Any = None):
         valid_modes = {"hybrid", "exclusive", "block_only"}
@@ -97,11 +98,11 @@ class Executor:
         )
 
         if not diff:
-            bus.info("runtime.executor.info.noChange")
+            bus.info(L.runtime.executor.info.noChange)
             return
 
         if not self.confirmation_handler:
-            bus.warning("runtime.executor.warning.noConfirmHandler")
+            bus.warning(L.runtime.executor.warning.noConfirmHandler)
             raise OperationCancelledError("No confirmation handler is configured.")
 
         prompt = f"❓ 是否对 {file_path.name} 执行上述修改?"
@@ -109,7 +110,7 @@ class Executor:
         self.confirmation_handler(diff, prompt)
 
     def execute(self, statements: List[Statement]):
-        bus.info("runtime.executor.info.starting", count=len(statements))
+        bus.info(L.runtime.executor.info.starting, count=len(statements))
 
         # 创建一个可重用的上下文对象
         ctx = ActContext(self)
@@ -124,7 +125,7 @@ class Executor:
                 raise ExecutionError(f"Error parsing Act command line: {raw_act_line} ({e})")
 
             if not tokens:
-                bus.warning("runtime.executor.warning.skipEmpty", current=i + 1, total=len(statements))
+                bus.warning(L.runtime.executor.warning.skipEmpty, current=i + 1, total=len(statements))
                 continue
 
             act_name = tokens[0]
@@ -132,7 +133,7 @@ class Executor:
 
             if act_name not in self._acts:
                 bus.warning(
-                    "runtime.executor.warning.skipUnknown",
+                    L.runtime.executor.warning.skipUnknown,
                     current=i + 1,
                     total=len(statements),
                     act_name=act_name,
@@ -156,12 +157,12 @@ class Executor:
                     final_args = block_contexts
             elif arg_mode == "block_only":
                 if inline_args:
-                    bus.warning("runtime.executor.warning.ignoreInlineArgs", act_name=act_name, args=inline_args)
+                    bus.warning(L.runtime.executor.warning.ignoreInlineArgs, act_name=act_name, args=inline_args)
                 final_args = block_contexts
 
             try:
                 bus.info(
-                    "runtime.executor.info.executing",
+                    L.runtime.executor.info.executing,
                     current=i + 1,
                     total=len(statements),
                     act_name=act_name,

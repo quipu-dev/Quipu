@@ -7,6 +7,7 @@ from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHis
 from quipu.engine.state_machine import Engine
 
 from .utils import find_git_repository_root
+from needle.pointer import L
 
 # 迟延导入以避免循环依赖
 try:
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 def create_engine(work_dir: Path, lazy: bool = False) -> Engine:
     project_root = find_git_repository_root(work_dir) or work_dir
     config = ConfigManager(project_root)
-    storage_type = config.get("storage.type", "git_object")
+    storage_type = config.get(L.storage.type, "git_object")
     logger.debug(f"Engine factory configured with storage type: '{storage_type}'")
     git_db = GitDB(project_root)
     db_manager = None

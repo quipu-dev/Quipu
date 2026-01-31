@@ -6,6 +6,7 @@ from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryWriter
 from quipu.engine.hydrator import Hydrator
 from quipu.engine.sqlite_db import DatabaseManager
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -13,8 +14,8 @@ def hydrator_setup(tmp_path: Path):
     repo_path = tmp_path / "hydro_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=repo_path, check=True)
 
     git_db = GitDB(repo_path)
     db_manager = DatabaseManager(repo_path)
@@ -31,11 +32,11 @@ class TestHydration:
         hydrator, writer, git_db, db_manager, repo = hydrator_setup
 
         # 1. 在 Git 中创建两个节点
-        (repo / "a.txt").touch()
+        (repo / L.a.txt).touch()
         hash_a = git_db.get_tree_hash()
         writer.create_node("plan", "genesis", hash_a, "Node A")
 
-        (repo / "b.txt").touch()
+        (repo / L.b.txt).touch()
         hash_b = git_db.get_tree_hash()
         writer.create_node("plan", hash_a, hash_b, "Node B")
 
@@ -63,14 +64,14 @@ class TestHydration:
         hydrator, writer, git_db, db_manager, repo = hydrator_setup
 
         # 1. 创建节点 A 并立即补水
-        (repo / "a.txt").touch()
+        (repo / L.a.txt).touch()
         hash_a = git_db.get_tree_hash()
         writer.create_node("plan", "genesis", hash_a, "Node A")
         hydrator.sync("test-user")
         assert len(db_manager.get_all_node_hashes()) == 1
 
         # 2. 创建节点 B
-        (repo / "b.txt").touch()
+        (repo / L.b.txt).touch()
         hash_b = git_db.get_tree_hash()
         writer.create_node("plan", hash_a, hash_b, "Node B")
 
@@ -87,7 +88,7 @@ class TestHydration:
     def test_hydration_idempotency(self, hydrator_setup):
         hydrator, writer, git_db, db_manager, repo = hydrator_setup
 
-        (repo / "a.txt").touch()
+        (repo / L.a.txt).touch()
         hash_a = git_db.get_tree_hash()
         writer.create_node("plan", "genesis", hash_a, "Node A")
 

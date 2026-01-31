@@ -15,6 +15,7 @@ from textual.timer import Timer
 from textual.widgets import DataTable, Footer, Header, Markdown, Static
 
 from .view_model import GraphViewModel
+from needle.pointer import L
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class ContentViewSate(Enum):
 
 
 class QuipuUiApp(App[Optional[UiResult]]):
-    CSS_PATH = "tui.css"
+    CSS_PATH = L.tui.css
     TITLE = "Quipu History Explorer"
 
     BINDINGS = [

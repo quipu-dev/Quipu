@@ -5,6 +5,7 @@ from quipu.acts.shell import register as register_shell_acts
 from quipu.spec.exceptions import ExecutionError
 from quipu.spec.protocols.runtime import ActContext, Statement
 from quipu.runtime.executor import Executor
+from needle.pointer import L
 
 
 class TestShellActs:
@@ -17,7 +18,7 @@ class TestShellActs:
         ctx = ActContext(executor)
         func(ctx, ["echo 'Hello Shell'"])
 
-        mock_runtime_bus.info.assert_called_with("acts.shell.info.executing", command="echo 'Hello Shell'")
+        mock_runtime_bus.info.assert_called_with(L.acts.shell.info.executing, command="echo 'Hello Shell'")
         mock_runtime_bus.data.assert_called_with("Hello Shell")
 
     def test_run_command_multiline_script(self, executor: Executor, isolated_vault, mock_runtime_bus):
@@ -26,9 +27,9 @@ class TestShellActs:
         ctx = ActContext(executor)
         func(ctx, [script])
 
-        assert not (isolated_vault / "file_a.txt").exists()
-        assert (isolated_vault / "file_b.txt").exists()
-        mock_runtime_bus.info.assert_called_with("acts.shell.info.executing", command=script)
+        assert not (isolated_vault / L.file_a.txt).exists()
+        assert (isolated_vault / L.file_b.txt).exists()
+        mock_runtime_bus.info.assert_called_with(L.acts.shell.info.executing, command=script)
 
     def test_run_command_does_not_swallow_blocks(self, executor: Executor, mock_runtime_bus):
         # 模拟解析器输出两个独立的指令
@@ -49,7 +50,7 @@ class TestShellActs:
         ctx = ActContext(executor)
 
         # 验证失败返回码
-        with pytest.raises(ExecutionError, match="acts.shell.error.failed"):
+        with pytest.raises(ExecutionError, match=L.acts.shell.error.failed):
             func(ctx, ["exit 1"])
 
     def test_run_command_stderr(self, executor: Executor, mock_runtime_bus):
@@ -63,11 +64,11 @@ class TestShellActs:
         # 检查是否捕获了 warning
         assert mock_runtime_bus.warning.called
         args, kwargs = mock_runtime_bus.warning.call_args
-        assert args[0] == "acts.shell.warning.stderrOutput"
+        assert args[0] == L.acts.shell.warning.stderrOutput
         assert "error msg" in kwargs["output"]
 
     def test_run_command_missing_args(self, executor: Executor):
         func, _, _ = executor._acts["run_command"]
         ctx = ActContext(executor)
-        with pytest.raises(ExecutionError, match="acts.error.missingArgs"):
+        with pytest.raises(ExecutionError, match=L.acts.error.missingArgs):
             func(ctx, [])

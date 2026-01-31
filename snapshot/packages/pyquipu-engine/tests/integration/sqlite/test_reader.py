@@ -9,6 +9,7 @@ from quipu.engine.hydrator import Hydrator
 from quipu.engine.sqlite_db import DatabaseManager
 from quipu.engine.sqlite_storage import SQLiteHistoryReader
 from quipu.spec.constants import EMPTY_TREE_HASH
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -16,8 +17,8 @@ def sqlite_reader_setup(tmp_path: Path):
     repo_path = tmp_path / "sql_read_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=repo_path, check=True)
 
     git_db = GitDB(repo_path)
     db_manager = DatabaseManager(repo_path)
@@ -38,11 +39,11 @@ class TestSQLiteHistoryReader:
         reader, git_writer, hydrator, _, repo, git_db = sqlite_reader_setup
 
         # 1. 在 Git 中创建两个节点
-        (repo / "a.txt").touch()
+        (repo / L.a.txt).touch()
         hash_a = git_db.get_tree_hash()
         git_writer.create_node("plan", EMPTY_TREE_HASH, hash_a, "Content A")
 
-        (repo / "b.txt").touch()
+        (repo / L.b.txt).touch()
         hash_b = git_db.get_tree_hash()
         git_writer.create_node("plan", hash_a, hash_b, "Content B")
 
@@ -68,7 +69,7 @@ class TestSQLiteHistoryReader:
         reader, git_writer, hydrator, db_manager, repo, git_db = sqlite_reader_setup
 
         # 1. 在 Git 中创建节点
-        (repo / "c.txt").touch()
+        (repo / L.c.txt).touch()
         hash_c = git_db.get_tree_hash()
         node_c_git = git_writer.create_node("plan", EMPTY_TREE_HASH, hash_c, "Cache Test Content")
         commit_hash_c = node_c_git.commit_hash
@@ -106,8 +107,8 @@ def populated_db(tmp_path_factory):
     repo_path = class_tmp_path / "sql_read_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=repo_path, check=True)
 
     git_db = GitDB(repo_path)
     db_manager = DatabaseManager(repo_path)

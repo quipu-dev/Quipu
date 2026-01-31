@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from quipu.spec.protocols.runtime import Statement
 from quipu.spec.protocols.parser import PlanParser
+from needle.pointer import L
 
 
 class StateBlockParser:
@@ -29,7 +30,7 @@ class StateBlockParser:
                 # 规则：以 fence_char 开头，至少 3 个字符
                 if stripped_line.startswith(self.fence_char * 3):
                     # 分离 fence 和 language tag
-                    # 例如: "~~~~ python.old" -> fence="~~~~", lang="python.old"
+                    # 例如: "~~~~ python.old" -> fence="~~~~", lang=L.python.old
 
                     # 计算 fence 长度
                     fence_len = 0

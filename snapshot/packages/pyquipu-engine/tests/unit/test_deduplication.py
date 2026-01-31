@@ -1,5 +1,6 @@
 from quipu.engine.state_machine import Engine
 from quipu.test_utils.helpers import EMPTY_TREE_HASH
+from needle.pointer import L
 
 
 class TestDeduplication:
@@ -8,7 +9,7 @@ class TestDeduplication:
         root_dir = engine.root_dir
 
         # 1. State A: Create a file
-        (root_dir / "a.txt").write_text("A")
+        (root_dir / L.a.txt).write_text("A")
         hash_a = engine.git_db.get_tree_hash()
 
         # 通过 Engine 创建第一个节点

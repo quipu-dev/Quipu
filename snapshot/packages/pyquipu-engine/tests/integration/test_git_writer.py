@@ -6,6 +6,7 @@ import pytest
 from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryWriter
 from quipu.spec.constants import EMPTY_TREE_HASH
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -13,8 +14,8 @@ def git_writer_setup(tmp_path):
     repo_path = tmp_path / "test_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=repo_path, check=True)
 
     git_db = GitDB(repo_path)
     writer = GitObjectHistoryWriter(git_db)
@@ -32,13 +33,13 @@ class TestGitObjectHistoryWriterUnit:
             # Capture with no changes
             ("capture", "", {"message": "Initial capture"}, [], "Initial capture Capture: No changes detected"),
             # Capture with changes (<= 3 files)
-            ("capture", "", {}, [("M", "f1.py"), ("A", "f2.js")], "Capture: M f1.py, A f2.js"),
+            ("capture", "", {}, [("M", L.f1.py), ("A", L.f2.js)], "Capture: M f1.py, A f2.js"),
             # Capture with changes (> 3 files, should truncate)
             (
                 "capture",
                 "",
                 {"message": "Big change"},
-                [("M", "f1.py"), ("A", "f2.js"), ("D", "f3.css"), ("A", "f4.html")],
+                [("M", L.f1.py), ("A", L.f2.js), ("D", L.f3.css), ("A", L.f4.html)],
                 "Big change Capture: M f1.py, A f2.js, D f3.css ... and 1 more files",
             ),
         ],
@@ -58,7 +59,7 @@ class TestGitObjectHistoryWriterIntegration:
         writer, git_db, repo_path = git_writer_setup
 
         # 1. 准备工作区状态
-        (repo_path / "main.py").write_text("print('hello')", "utf-8")
+        (repo_path / L.main.py).write_text("print('hello')", "utf-8")
         output_tree = git_db.get_tree_hash()
 
         # 2. 调用 create_node
@@ -88,17 +89,17 @@ class TestGitObjectHistoryWriterIntegration:
         # 3.3 检查 Tree 内容
         tree_hash = commit_data.splitlines()[0].split(" ")[1]
         tree_data = subprocess.check_output(["git", "ls-tree", tree_hash], cwd=repo_path, text=True)
-        assert "metadata.json" in tree_data
-        assert "content.md" in tree_data
+        assert L.metadata.json in tree_data
+        assert L.content.md in tree_data
 
         # 3.4 检查 Blob 内容
-        meta_blob_hash = [line.split()[2] for line in tree_data.splitlines() if "metadata.json" in line][0]
+        meta_blob_hash = [line.split()[2] for line in tree_data.splitlines() if L.metadata.json in line][0]
         meta_content_str = subprocess.check_output(
             ["git", "cat-file", "blob", meta_blob_hash], cwd=repo_path, text=True
         )
         meta_data = json.loads(meta_content_str)
 
-        assert meta_data["meta_version"] == "1.0"
+        assert meta_data["meta_version"] == L.1.0
         assert meta_data["type"] == "plan"
         assert meta_data["summary"] == "feat: Initial implementation"
         assert meta_data["generator"]["id"] == "manual"

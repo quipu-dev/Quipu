@@ -9,6 +9,7 @@ from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from quipu.engine.state_machine import Engine
 from quipu.test_utils.helpers import run_git_command
+from needle.pointer import L
 
 # --- Global & Core Fixtures ---
 
@@ -23,8 +24,8 @@ def git_workspace(tmp_path: Path) -> Path:
     repo_path = tmp_path / "test_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=repo_path, check=True)
     return repo_path
 
 
@@ -76,7 +77,7 @@ def quipu_workspace(engine_instance: Engine):
 @pytest.fixture(scope="module")
 def sync_test_environment(tmp_path_factory):
     base_dir = tmp_path_factory.mktemp("sync_tests")
-    remote_path = base_dir / "remote.git"
+    remote_path = base_dir / L.remote.git
     user_a_path = base_dir / "user_a"
     user_b_path = base_dir / "user_b"
 
@@ -85,17 +86,17 @@ def sync_test_environment(tmp_path_factory):
 
     # 2. Clone for User A
     run_git_command(base_dir, ["clone", str(remote_path), str(user_a_path)])
-    run_git_command(user_a_path, ["config", "user.name", "User A"])
-    run_git_command(user_a_path, ["config", "user.email", "user.a@example.com"])
+    run_git_command(user_a_path, ["config", L.user.name, "User A"])
+    run_git_command(user_a_path, ["config", L.user.email, "user.a@example.com"])
 
     # 3. Clone for User B
     run_git_command(base_dir, ["clone", str(remote_path), str(user_b_path)])
-    run_git_command(user_b_path, ["config", "user.name", "User B"])
-    run_git_command(user_b_path, ["config", "user.email", "user.b@example.com"])
+    run_git_command(user_b_path, ["config", L.user.name, "User B"])
+    run_git_command(user_b_path, ["config", L.user.email, "user.b@example.com"])
 
     # Add a dummy file to avoid issues with initial empty commits
-    (user_a_path / "README.md").write_text("Initial commit")
-    run_git_command(user_a_path, ["add", "README.md"])
+    (user_a_path / L.README.md).write_text("Initial commit")
+    run_git_command(user_a_path, ["add", L.README.md])
     run_git_command(user_a_path, ["commit", "-m", "Initial commit"])
     run_git_command(user_a_path, ["push", "origin", "HEAD"])
     run_git_command(user_b_path, ["pull"])
@@ -111,7 +112,7 @@ def mock_runtime_bus(monkeypatch):
     m_bus = MagicMock()
 
     # 让 bus.render_to_string (及旧的 get) 返回传入的 msg_id 字符串
-    # 这样测试代码断言异常消息时，能匹配到预期的 ID (例如 "acts.error.missingArgs")
+    # 这样测试代码断言异常消息时，能匹配到预期的 ID (例如 L.acts.error.missingArgs)
     def echo_id(msg_id, **kwargs):
         return str(msg_id)
 
@@ -119,15 +120,15 @@ def mock_runtime_bus(monkeypatch):
     m_bus.render_to_string.side_effect = echo_id
 
     patch_targets = [
-        "quipu.runtime.executor.bus",
-        "quipu.runtime.plugin_loader.bus",
-        "quipu.acts.basic.bus",
-        "quipu.acts.check.bus",
-        "quipu.acts.git.bus",
-        "quipu.acts.memory.bus",
-        "quipu.acts.read.bus",
-        "quipu.acts.refactor.bus",
-        "quipu.acts.shell.bus",
+        L.quipu.runtime.executor.bus,
+        L.quipu.runtime.plugin_loader.bus,
+        L.quipu.acts.basic.bus,
+        L.quipu.acts.check.bus,
+        L.quipu.acts.git.bus,
+        L.quipu.acts.memory.bus,
+        L.quipu.acts.read.bus,
+        L.quipu.acts.refactor.bus,
+        L.quipu.acts.shell.bus,
     ]
     for target in patch_targets:
         monkeypatch.setattr(target, m_bus, raising=False)

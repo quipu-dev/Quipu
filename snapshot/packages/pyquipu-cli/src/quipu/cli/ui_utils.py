@@ -4,6 +4,7 @@ import click
 import typer
 from quipu.common.bus import bus
 from quipu.spec.exceptions import OperationCancelledError
+from needle.pointer import L
 
 
 def confirmation_handler_for_executor(diff_lines: List[str], prompt: str) -> bool:
@@ -18,7 +19,7 @@ def confirmation_handler_for_executor(diff_lines: List[str], prompt: str) -> boo
 
 def prompt_for_confirmation(prompt: str, diff_lines: Optional[List[str]] = None, default: bool = False) -> bool:
     if diff_lines:
-        bus.info("prompt.ui.diffHeader")
+        bus.info(L.prompt.ui.diffHeader)
         for line in diff_lines:
             if line.startswith("+"):
                 typer.secho(line.strip("\n"), fg=typer.colors.GREEN, err=True)
@@ -31,7 +32,7 @@ def prompt_for_confirmation(prompt: str, diff_lines: Optional[List[str]] = None,
         typer.echo("", err=True)
 
     prompt_suffix = (
-        bus.render_to_string("prompt.suffix.yesDefault") if default else bus.render_to_string("prompt.suffix.noDefault")
+        bus.render_to_string(L.prompt.suffix.yesDefault) if default else bus.render_to_string(L.prompt.suffix.noDefault)
     )
     typer.secho(prompt + prompt_suffix, nl=False, err=True)
 
@@ -41,7 +42,7 @@ def prompt_for_confirmation(prompt: str, diff_lines: Optional[List[str]] = None,
         click.echo(char, err=True)  # 手动回显到 stderr
     except (OSError, EOFError):
         # 在完全没有 tty 的环境中 (例如 CI runner)，会抛出异常
-        bus.info("prompt.info.nonInteractive")
+        bus.info(L.prompt.info.nonInteractive)
         return False  # 非交互式环境应安全失败
 
     if not char or char == "\r" or char == "\n":

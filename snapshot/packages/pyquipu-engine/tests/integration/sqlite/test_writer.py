@@ -7,6 +7,7 @@ from quipu.engine.git_object_storage import GitObjectHistoryWriter
 from quipu.engine.sqlite_db import DatabaseManager
 from quipu.engine.sqlite_storage import SQLiteHistoryWriter
 from quipu.spec.constants import EMPTY_TREE_HASH
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -16,8 +17,8 @@ def sqlite_setup(tmp_path: Path):
 
     # Init Git
     subprocess.run(["git", "init"], cwd=ws, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=ws, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=ws, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=ws, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=ws, check=True)
 
     git_db = GitDB(ws)
     db_manager = DatabaseManager(ws)
@@ -38,7 +39,7 @@ class TestSQLiteWriterIntegration:
 
         # --- Action 1: Create first node (Node A) ---
         # 模拟文件变更 A
-        (ws / "a.txt").write_text("File A content")
+        (ws / L.a.txt).write_text("File A content")
         hash_a = git_db.get_tree_hash()
 
         node_a = writer.create_node(
@@ -52,7 +53,7 @@ class TestSQLiteWriterIntegration:
 
         # --- Action 2: Create second node (Node B) ---
         # 模拟文件变更 B
-        (ws / "b.txt").write_text("File B content")
+        (ws / L.b.txt).write_text("File B content")
         hash_b = git_db.get_tree_hash()
 
         node_b = writer.create_node(

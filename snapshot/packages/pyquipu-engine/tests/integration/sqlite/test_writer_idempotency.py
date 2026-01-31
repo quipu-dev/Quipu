@@ -6,13 +6,14 @@ from quipu.engine.git_object_storage import GitObjectHistoryWriter
 from quipu.engine.sqlite_db import DatabaseManager
 from quipu.engine.sqlite_storage import SQLiteHistoryWriter
 from quipu.spec.constants import EMPTY_TREE_HASH
+from needle.pointer import L
 
 
 @pytest.fixture
 def repo_with_sqlite_db(tmp_path):
     subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Test User"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Test User"], cwd=tmp_path, check=True)
 
     git_db = GitDB(tmp_path)
     db_manager = DatabaseManager(tmp_path)

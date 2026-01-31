@@ -8,6 +8,7 @@ from quipu.spec.constants import EMPTY_TREE_HASH
 from ..config import DEFAULT_WORK_DIR
 from ..ui_utils import prompt_for_confirmation
 from .helpers import engine_context
+from needle.pointer import L
 
 
 def register(app: typer.Typer):
@@ -28,15 +29,15 @@ def register(app: typer.Typer):
             is_genesis_clean = (not engine.history_graph) and (current_tree_hash == EMPTY_TREE_HASH)
 
             if is_node_clean or is_genesis_clean:
-                bus.success("workspace.save.noChanges")
+                bus.success(L.workspace.save.noChanges)
                 ctx.exit(0)
 
             try:
                 node = engine.capture_drift(current_tree_hash, message=message)
                 msg_suffix = f" ({message})" if message else ""
-                bus.success("workspace.save.success", short_hash=node.short_hash, msg_suffix=msg_suffix)
+                bus.success(L.workspace.save.success, short_hash=node.short_hash, msg_suffix=msg_suffix)
             except Exception as e:
-                bus.error("workspace.save.error", error=str(e))
+                bus.error(L.workspace.save.error, error=str(e))
                 ctx.exit(1)
 
     @app.command(help="丢弃当前工作区的所有变更，恢复到上一个快照状态。")
@@ -53,7 +54,7 @@ def register(app: typer.Typer):
         with engine_context(work_dir) as engine:
             graph = engine.history_graph
             if not graph:
-                bus.error("workspace.discard.error.noHistory")
+                bus.error(L.workspace.discard.error.noHistory)
                 ctx.exit(1)
 
             target_tree_hash = engine._read_head()
@@ -67,25 +68,25 @@ def register(app: typer.Typer):
             if not latest_node:
                 latest_node = max(graph.values(), key=lambda n: n.timestamp)
                 target_tree_hash = latest_node.output_tree
-                bus.warning("workspace.discard.warning.headMissing", short_hash=latest_node.short_hash)
+                bus.warning(L.workspace.discard.warning.headMissing, short_hash=latest_node.short_hash)
 
             current_hash = engine.git_db.get_tree_hash()
             if current_hash == target_tree_hash:
-                bus.success("workspace.discard.noChanges", short_hash=latest_node.short_hash)
+                bus.success(L.workspace.discard.noChanges, short_hash=latest_node.short_hash)
                 ctx.exit(0)
 
             assert target_tree_hash is not None
             diff_stat_str = engine.git_db.get_diff_stat(target_tree_hash, current_hash)
 
             if not force:
-                prompt = bus.render_to_string("workspace.discard.prompt.confirm", short_hash=latest_node.short_hash)
+                prompt = bus.render_to_string(L.workspace.discard.prompt.confirm, short_hash=latest_node.short_hash)
                 if not prompt_for_confirmation(prompt, diff_lines=diff_stat_str.splitlines(), default=False):
-                    bus.warning("common.prompt.cancel")
+                    bus.warning(L.common.prompt.cancel)
                     raise typer.Abort()
 
             try:
                 engine.visit(target_tree_hash)
-                bus.success("workspace.discard.success", short_hash=latest_node.short_hash)
+                bus.success(L.workspace.discard.success, short_hash=latest_node.short_hash)
             except Exception as e:
-                bus.error("workspace.discard.error.generic", error=str(e))
+                bus.error(L.workspace.discard.error.generic, error=str(e))
                 ctx.exit(1)

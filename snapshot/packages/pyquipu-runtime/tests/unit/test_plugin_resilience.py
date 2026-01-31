@@ -4,6 +4,7 @@ from unittest.mock import ANY
 import pytest
 from quipu.runtime.executor import Executor
 from quipu.runtime.plugin_loader import load_plugins
+from needle.pointer import L
 
 
 class TestPluginResilience:
@@ -21,7 +22,7 @@ class TestPluginResilience:
         from quipu.acts.basic import register as register_basic_acts
 
         # 1. 创建一个有语法错误的插件
-        bad_plugin_file = plugin_dir / "bad_syntax.py"
+        bad_plugin_file = plugin_dir / L.bad_syntax.py
         bad_plugin_file.write_text("def register(executor):\n  print('unbalanced parentheses'", encoding="utf-8")
 
         # 2. 注册核心 Acts
@@ -33,7 +34,7 @@ class TestPluginResilience:
 
         # 4. 验证
         mock_runtime_bus.error.assert_called_with(
-            "runtime.plugin.error.loadFailed", plugin_name="bad_syntax.py", error=ANY
+            L.runtime.plugin.error.loadFailed, plugin_name=L.bad_syntax.py, error=ANY
         )
 
         num_acts_after = len(executor.get_registered_acts())
@@ -42,7 +43,7 @@ class TestPluginResilience:
 
     def test_load_plugin_with_registration_error(self, executor: Executor, plugin_dir: Path, mock_runtime_bus):
         # 1. 创建一个在注册时会失败的插件
-        bad_plugin_file = plugin_dir / "fail_on_register.py"
+        bad_plugin_file = plugin_dir / L.fail_on_register.py
         plugin_content = """
 def register(executor):
     raise ValueError("Something went wrong during registration")
@@ -54,6 +55,6 @@ def register(executor):
 
         # 3. 验证
         mock_runtime_bus.error.assert_called_with(
-            "runtime.plugin.error.loadFailed", plugin_name="fail_on_register.py", error=ANY
+            L.runtime.plugin.error.loadFailed, plugin_name=L.fail_on_register.py, error=ANY
         )
         assert len(executor.get_registered_acts()) == 0

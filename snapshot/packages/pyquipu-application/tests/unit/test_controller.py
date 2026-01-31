@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch
 
 from quipu.application.controller import run_quipu
 from quipu.spec.exceptions import ExecutionError
+from needle.pointer import L
 
 
 class TestControllerUnit:
@@ -25,8 +26,8 @@ hello
         # Patch 工厂函数和 Executor 类
         # 注意：controller 直接导入了 Executor 类，所以我们要 patch 这个类
         with (
-            patch("quipu.application.controller.create_engine", return_value=mock_engine) as mk_eng_fac,
-            patch("quipu.application.controller.Executor", return_value=mock_runtime) as mk_exec_cls,
+            patch(L.quipu.application.controller.create_engine, return_value=mock_engine) as mk_eng_fac,
+            patch(L.quipu.application.controller.Executor, return_value=mock_runtime) as mk_exec_cls,
         ):
             # 执行
             result = run_quipu(content=plan_content, work_dir=tmp_path, yolo=True, confirmation_handler=lambda *a: True)
@@ -62,8 +63,8 @@ fail_act
         mock_engine.current_node.output_tree = "hash_123"
 
         with (
-            patch("quipu.application.controller.create_engine", return_value=mock_engine),
-            patch("quipu.application.controller.Executor", return_value=mock_runtime),
+            patch(L.quipu.application.controller.create_engine, return_value=mock_engine),
+            patch(L.quipu.application.controller.Executor, return_value=mock_runtime),
         ):
             # 模拟 Runtime 抛出业务异常
             mock_runtime.execute.side_effect = ExecutionError("Task failed successfully")
@@ -73,7 +74,7 @@ fail_act
             # 验证错误被捕获并封装到 Result 中
             assert result.success is False
             assert result.exit_code == 1
-            assert result.message == "run.error.execution"
+            assert result.message == L.run.error.execution
             assert isinstance(result.error, ExecutionError)
             assert "Task failed successfully" in str(result.error)
 
@@ -86,15 +87,15 @@ fail_act
         mock_engine.current_node.output_tree = "hash_123"
 
         with (
-            patch("quipu.application.controller.create_engine", return_value=mock_engine),
-            patch("quipu.application.controller.Executor", return_value=mock_runtime),
+            patch(L.quipu.application.controller.create_engine, return_value=mock_engine),
+            patch(L.quipu.application.controller.Executor, return_value=mock_runtime),
         ):
             result = run_quipu(content=plan_content, work_dir=tmp_path, yolo=True, confirmation_handler=lambda *a: True)
 
             # 空计划通常不算失败，但也没有副作用
             assert result.success is True
             assert result.exit_code == 0
-            assert result.message == "axon.warning.noStatements"
+            assert result.message == L.axon.warning.noStatements
 
             # 验证没有调用 execute
             mock_runtime.execute.assert_not_called()

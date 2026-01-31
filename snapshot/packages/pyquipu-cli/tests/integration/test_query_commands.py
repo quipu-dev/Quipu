@@ -3,22 +3,23 @@ from unittest.mock import MagicMock
 
 from quipu.cli.main import app
 from quipu.test_utils.helpers import create_linear_history_from_specs, create_query_branching_history
+from needle.pointer import L
 
 
 def test_log_empty(runner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.query.bus", mock_bus)
+    monkeypatch.setattr(L.quipu.cli.commands.query.bus, mock_bus)
 
     result = runner.invoke(app, ["log", "-w", str(work_dir)])
     assert result.exit_code == 0
-    mock_bus.info.assert_called_once_with("query.info.emptyHistory")
+    mock_bus.info.assert_called_once_with(L.query.info.emptyHistory)
 
 
 def test_log_output(runner, quipu_workspace, monkeypatch):
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.query.bus", mock_bus)
+    monkeypatch.setattr(L.quipu.cli.commands.query.bus, mock_bus)
 
     specs = [
         {"type": "capture", "summary": "Node 1"},
@@ -28,7 +29,7 @@ def test_log_output(runner, quipu_workspace, monkeypatch):
 
     result = runner.invoke(app, ["log", "-w", str(work_dir)])
     assert result.exit_code == 0
-    mock_bus.info.assert_called_once_with("query.log.ui.header")
+    mock_bus.info.assert_called_once_with(L.query.log.ui.header)
     # The log is in reverse chronological order, so Node 2 comes first.
     assert "Node 2" in mock_bus.data.call_args_list[0].args[0]
     assert "Node 1" in mock_bus.data.call_args_list[1].args[0]
@@ -37,7 +38,7 @@ def test_log_output(runner, quipu_workspace, monkeypatch):
 def test_find_command(runner, quipu_workspace, monkeypatch):
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.query.bus", mock_bus)
+    monkeypatch.setattr(L.quipu.cli.commands.query.bus, mock_bus)
 
     specs = [
         {"type": "capture", "summary": "Fix bug"},
@@ -47,7 +48,7 @@ def test_find_command(runner, quipu_workspace, monkeypatch):
 
     result = runner.invoke(app, ["find", "-s", "Fix", "-w", str(work_dir)])
     assert result.exit_code == 0
-    mock_bus.info.assert_called_once_with("query.find.ui.header")
+    mock_bus.info.assert_called_once_with(L.query.find.ui.header)
     mock_bus.data.assert_called_once()
     assert "Fix bug" in mock_bus.data.call_args.args[0]
 
@@ -55,7 +56,7 @@ def test_find_command(runner, quipu_workspace, monkeypatch):
 def test_log_json_output(runner, quipu_workspace, monkeypatch):
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.query.bus", mock_bus)
+    monkeypatch.setattr(L.quipu.cli.commands.query.bus, mock_bus)
 
     create_linear_history_from_specs(engine, [{"type": "capture", "summary": "Node 1"}])
 
@@ -73,7 +74,7 @@ def test_log_json_output(runner, quipu_workspace, monkeypatch):
 def test_find_json_output(runner, quipu_workspace, monkeypatch):
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.query.bus", mock_bus)
+    monkeypatch.setattr(L.quipu.cli.commands.query.bus, mock_bus)
 
     specs = [
         {"type": "capture", "summary": "Feature A"},
@@ -94,7 +95,7 @@ def test_find_json_output(runner, quipu_workspace, monkeypatch):
 def test_log_json_empty(runner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.query.bus", mock_bus)
+    monkeypatch.setattr(L.quipu.cli.commands.query.bus, mock_bus)
 
     result = runner.invoke(app, ["log", "--json", "-w", str(work_dir)])
     assert result.exit_code == 0
@@ -104,7 +105,7 @@ def test_log_json_empty(runner, quipu_workspace, monkeypatch):
 def test_log_filtering(runner, quipu_workspace, monkeypatch):
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.query.bus", mock_bus)
+    monkeypatch.setattr(L.quipu.cli.commands.query.bus, mock_bus)
 
     specs = [
         {"type": "capture", "summary": "Node 1"},
@@ -125,13 +126,13 @@ def test_log_filtering(runner, quipu_workspace, monkeypatch):
     # Using a future date
     result = runner.invoke(app, ["log", "--since", "2099-01-01 00:00", "-w", str(work_dir)])
     assert result.exit_code == 0
-    mock_bus.info.assert_called_with("query.info.noResults")
+    mock_bus.info.assert_called_with(L.query.info.noResults)
 
 
 def test_log_reachable_only(runner, quipu_workspace, monkeypatch):
     work_dir, _, engine = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.query.bus", mock_bus)
+    monkeypatch.setattr(L.quipu.cli.commands.query.bus, mock_bus)
 
     create_query_branching_history(engine)
 

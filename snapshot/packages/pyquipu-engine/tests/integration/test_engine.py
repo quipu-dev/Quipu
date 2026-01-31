@@ -3,12 +3,13 @@ import subprocess
 import pytest
 from quipu.engine.state_machine import Engine
 from quipu.spec.constants import EMPTY_TREE_HASH
+from needle.pointer import L
 
 
 def test_align_orphan_state(engine_instance: Engine):
     engine, repo_path = engine_instance, engine_instance.root_dir
 
-    (repo_path / "main.py").write_text("print('new project')", "utf-8")
+    (repo_path / L.main.py).write_text("print('new project')", "utf-8")
 
     status = engine.align()
 
@@ -20,13 +21,13 @@ def test_capture_drift_git_object(engine_instance: Engine):
     engine, repo_path = engine_instance, engine_instance.root_dir
 
     # 1. Create initial state and corresponding node
-    (repo_path / "main.py").write_text("version = 1", "utf-8")
+    (repo_path / L.main.py).write_text("version = 1", "utf-8")
     initial_hash = engine.git_db.get_tree_hash()
     initial_node = engine.writer.create_node("plan", EMPTY_TREE_HASH, initial_hash, "Initial content")
     engine.align()  # Load the new node into the engine's graph
 
     # 2. Modify workspace to create a dirty state
-    (repo_path / "main.py").write_text("version = 2", "utf-8")
+    (repo_path / L.main.py).write_text("version = 2", "utf-8")
     dirty_hash = engine.git_db.get_tree_hash()
     assert initial_hash != dirty_hash
 
@@ -69,15 +70,15 @@ class TestEngineFindNodes:
         parent = EMPTY_TREE_HASH
 
         # Node 1 (Plan)
-        parent = create_plan_node_with_change(engine, parent, "f_a.txt", "content_a", "# feat: Add feature A")
+        parent = create_plan_node_with_change(engine, parent, L.f_a.txt, "content_a", "# feat: Add feature A")
         time.sleep(0.01)  # Ensure unique timestamps for ordering
 
         # Node 2 (Capture) - Parented to Node 1's state
-        parent = create_capture_node_with_change(engine, "f_b.txt", "content_b", "Snapshot after feature A")
+        parent = create_capture_node_with_change(engine, L.f_b.txt, "content_b", "Snapshot after feature A")
         time.sleep(0.01)
 
         # Node 3 (Plan) - Parented to Node 2's state
-        parent = create_plan_node_with_change(engine, parent, "f_c.txt", "content_c", "refactor: Cleanup code")
+        parent = create_plan_node_with_change(engine, parent, L.f_c.txt, "content_c", "refactor: Cleanup code")
 
         # Re-align to load the full graph into the reader component for testing
         engine.align()
@@ -148,7 +149,7 @@ class TestPersistentIgnores:
         content = exclude_file.read_text("utf-8")
         assert user_content in content
         assert "# --- Managed by Quipu ---" in content
-        assert "o.md" in content
+        assert L.o.md in content
 
     def test_sync_updates_existing_block(self, engine_instance: Engine):
         engine, repo_path = engine_instance, engine_instance.root_dir
@@ -176,7 +177,7 @@ class TestPersistentIgnores:
 
         config_dir = repo_path / ".quipu"
         config_dir.mkdir(exist_ok=True)
-        config_file = config_dir / "config.yml"
+        config_file = config_dir / L.config.yml
 
         user_ignores = {"sync": {"persistent_ignores": ["custom_dir/", "*.tmp"]}}
         config_file.write_text(yaml.dump(user_ignores), "utf-8")

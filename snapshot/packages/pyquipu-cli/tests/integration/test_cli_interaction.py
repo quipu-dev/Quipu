@@ -2,13 +2,14 @@ from unittest.mock import MagicMock
 
 from quipu.cli.main import app
 from typer.testing import CliRunner
+from needle.pointer import L
 
 
 def test_run_command_with_piped_input_and_confirmation(runner: CliRunner, quipu_workspace, monkeypatch):
     work_dir, _, _ = quipu_workspace
     mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.run.bus", mock_bus)
-    output_file = work_dir / "output.txt"
+    monkeypatch.setattr(L.quipu.cli.commands.run.bus, mock_bus)
+    output_file = work_dir / L.output.txt
 
     # Plan 内容: 执行一个 shell 命令
     plan_content = f"""
@@ -26,6 +27,6 @@ echo "Success" > {output_file.name}
     result = runner.invoke(app, ["run", "-w", str(work_dir)], input=plan_content + user_input)
 
     assert result.exit_code == 0
-    mock_bus.success.assert_called_once_with("run.success")
+    mock_bus.success.assert_called_once_with(L.run.success)
     assert output_file.exists(), "The command did not create the output file."
     assert output_file.read_text().strip() == "Success"

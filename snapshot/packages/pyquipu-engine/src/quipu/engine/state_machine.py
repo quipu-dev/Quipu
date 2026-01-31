@@ -12,6 +12,7 @@ from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
 from .config import ConfigManager
 from .git_db import GitDB
 from .hydrator import Hydrator
+from needle.pointer import L
 
 # 导入类型以进行类型提示
 try:
@@ -26,7 +27,7 @@ class Engine:
     def _sync_persistent_ignores(self):
         try:
             config = ConfigManager(self.root_dir)
-            patterns = config.get("sync.persistent_ignores", [])
+            patterns = config.get(L.sync.persistent_ignores, [])
             if not patterns:
                 return
 
@@ -98,14 +99,14 @@ class Engine:
     def _get_current_user_id(self) -> str:
         # 1. 尝试从 Quipu 配置中读取
         config = ConfigManager(self.root_dir)
-        user_id = config.get("sync.user_id")
+        user_id = config.get(L.sync.user_id)
         if user_id:
             return user_id
 
         # 2. 如果配置中没有，则回退到 Git 配置
         try:
             result = subprocess.run(
-                ["git", "config", "user.email"],
+                ["git", "config", L.user.email],
                 cwd=self.root_dir,
                 capture_output=True,
                 text=True,

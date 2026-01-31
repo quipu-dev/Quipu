@@ -2,6 +2,7 @@ import pytest
 from quipu.spec.exceptions import ExecutionError
 from quipu.spec.protocols.runtime import ActContext
 from quipu.runtime.executor import Executor
+from needle.pointer import L
 
 
 class TestPatchAmbiguity:
@@ -17,7 +18,7 @@ def function_b():
     # It serves as an anchor.
     print("hello")
 """
-        target_file = isolated_vault / "source.py"
+        target_file = isolated_vault / L.source.py
         target_file.write_text(content)
 
         old_str = """    # This is a unique block of text.
@@ -26,7 +27,7 @@ def function_b():
 
         new_str = """    # This block has been modified."""
 
-        with pytest.raises(ExecutionError, match="acts.basic.error.patchContentAmbiguous"):
+        with pytest.raises(ExecutionError, match=L.acts.basic.error.patchContentAmbiguous):
             patch_func, _, _ = executor._acts["patch_file"]
             ctx = ActContext(executor)
             patch_func(ctx, [str(target_file), old_str, new_str])
@@ -36,11 +37,11 @@ def function_b():
 
     def test_patch_file_should_fail_on_ambiguous_content(self, executor: Executor, isolated_vault):
         content = "repeat\nrepeat\n"
-        target_file = isolated_vault / "ambiguous.txt"
+        target_file = isolated_vault / L.ambiguous.txt
         target_file.write_text(content)
 
         # 期望 `patch_file` 在检测到多个 "repeat" 时抛出 ExecutionError
-        with pytest.raises(ExecutionError, match="acts.basic.error.patchContentAmbiguous"):
+        with pytest.raises(ExecutionError, match=L.acts.basic.error.patchContentAmbiguous):
             patch_func, _, _ = executor._acts["patch_file"]
             ctx = ActContext(executor)
             # 我们期望这里会失败，因为它无法确定要 patch 哪个 "repeat"

@@ -5,6 +5,7 @@ from quipu.acts.check import register as register_check_acts
 from quipu.spec.exceptions import ExecutionError
 from quipu.spec.protocols.runtime import ActContext
 from quipu.runtime.executor import Executor
+from needle.pointer import L
 
 
 class TestCheckActs:
@@ -13,7 +14,7 @@ class TestCheckActs:
         register_check_acts(executor)
 
     def test_check_files_exist_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):
-        (isolated_vault / "config.json").touch()
+        (isolated_vault / L.config.json).touch()
         (isolated_vault / "src").mkdir()
         (isolated_vault / "src/main.py").touch()
 
@@ -22,14 +23,14 @@ class TestCheckActs:
         ctx = ActContext(executor)
         func(ctx, [file_list])
 
-        mock_runtime_bus.success.assert_called_with("acts.check.success.filesExist")
+        mock_runtime_bus.success.assert_called_with(L.acts.check.success.filesExist)
 
     def test_check_files_exist_fail(self, executor: Executor, isolated_vault: Path):
-        (isolated_vault / "exists.txt").touch()
+        (isolated_vault / L.exists.txt).touch()
         file_list = "exists.txt\nmissing.txt"
 
         # 断言 msg_id
-        with pytest.raises(ExecutionError, match="acts.check.error.filesMissing"):
+        with pytest.raises(ExecutionError, match=L.acts.check.error.filesMissing):
             func, _, _ = executor._acts["check_files_exist"]
             ctx = ActContext(executor)
             func(ctx, [file_list])
@@ -40,12 +41,12 @@ class TestCheckActs:
         ctx = ActContext(executor)
         func(ctx, [real_path])
 
-        mock_runtime_bus.success.assert_called_with("acts.check.success.cwdMatched", path=isolated_vault.resolve())
+        mock_runtime_bus.success.assert_called_with(L.acts.check.success.cwdMatched, path=isolated_vault.resolve())
 
     def test_check_cwd_match_fail(self, executor: Executor):
         wrong_path = "/this/path/does/not/exist"
 
-        with pytest.raises(ExecutionError, match="acts.check.error.cwdMismatch"):
+        with pytest.raises(ExecutionError, match=L.acts.check.error.cwdMismatch):
             func, _, _ = executor._acts["check_cwd_match"]
             ctx = ActContext(executor)
             func(ctx, [wrong_path])

@@ -4,6 +4,7 @@ import pytest
 from quipu.application.utils import find_git_repository_root
 from quipu.runtime.executor import Executor
 from quipu.runtime.plugin_loader import load_plugins
+from needle.pointer import L
 
 
 class TestPluginLoading:
@@ -15,7 +16,7 @@ class TestPluginLoading:
 
     def test_load_external_plugin(self, executor: Executor, custom_plugin_dir, mock_runtime_bus):
         # 1. 创建一个动态插件文件
-        plugin_file = custom_plugin_dir / "hello_world.py"
+        plugin_file = custom_plugin_dir / L.hello_world.py
         plugin_content = """
 def register(executor):
     executor.register("hello_world", lambda exc, args: print("Hello!"))
@@ -29,7 +30,7 @@ def register(executor):
         assert "hello_world" in executor._acts
 
         # 验证消息
-        mock_runtime_bus.info.assert_called_with("runtime.plugin.info.loading", plugin_dir=custom_plugin_dir)
+        mock_runtime_bus.info.assert_called_with(L.runtime.plugin.info.loading, plugin_dir=custom_plugin_dir)
 
         # 验证模块是否被正确隔离加载
         loaded_modules = [m for m in sys.modules.keys() if "quipu_plugin_hello_world" in m]
@@ -37,10 +38,10 @@ def register(executor):
 
     def test_ignore_invalid_files(self, executor: Executor, custom_plugin_dir):
         # 非 py 文件
-        (custom_plugin_dir / "readme.md").write_text("# Readme")
+        (custom_plugin_dir / L.readme.md).write_text("# Readme")
 
         # 无 register 的 py 文件
-        (custom_plugin_dir / "helper.py").write_text("def foo(): pass")
+        (custom_plugin_dir / L.helper.py).write_text("def foo(): pass")
 
         load_plugins(executor, custom_plugin_dir)
 

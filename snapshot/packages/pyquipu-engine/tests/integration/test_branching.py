@@ -4,6 +4,7 @@ import pytest
 from quipu.engine.git_db import GitDB
 from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from quipu.spec.constants import EMPTY_TREE_HASH
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -11,8 +12,8 @@ def branching_env(tmp_path):
     repo_path = tmp_path / "branch_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=repo_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=repo_path, check=True)
 
     git_db = GitDB(repo_path)
     writer = GitObjectHistoryWriter(git_db)
@@ -25,21 +26,21 @@ def test_branching_creation(branching_env):
     ref_prefix = "refs/quipu/local/heads"
 
     # 1. Base Node A
-    (repo / "f.txt").write_text("v1")
+    (repo / L.f.txt).write_text("v1")
     hash_a = git_db.get_tree_hash()
     writer.create_node("plan", EMPTY_TREE_HASH, hash_a, "Node A")
     heads_after_a = git_db.get_all_ref_heads(ref_prefix)
     assert len(heads_after_a) == 1
 
     # 2. Node B (Child of A)
-    (repo / "f.txt").write_text("v2")
+    (repo / L.f.txt).write_text("v2")
     hash_b = git_db.get_tree_hash()
     writer.create_node("plan", hash_a, hash_b, "Node B")
     heads_after_b = git_db.get_all_ref_heads(ref_prefix)
     assert len(heads_after_b) == 2, "创建子节点后，父节点的 head 不应被删除"
 
     # 3. Branching: Create C from A (Simulate Checkout A then Save C)
-    (repo / "f.txt").write_text("v3")
+    (repo / L.f.txt).write_text("v3")
     hash_c = git_db.get_tree_hash()
     writer.create_node("plan", hash_a, hash_c, "Node C")
 

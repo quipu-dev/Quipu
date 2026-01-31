@@ -6,6 +6,7 @@ import pytest
 from quipu.spec.protocols.runtime import ActContext, Statement
 from quipu.runtime.executor import ExecutionError, Executor
 from quipu.runtime.parser import BacktickParser, TildeParser, get_parser
+from needle.pointer import L
 
 
 class TestParser:
@@ -25,7 +26,7 @@ hello
         stmts = parser.parse(md)
         assert len(stmts) == 1
         assert stmts[0]["act"] == "write_file"
-        assert stmts[0]["contexts"][0].strip() == "test.txt"
+        assert stmts[0]["contexts"][0].strip() == L.test.txt
 
     def test_end_block(self):
         md = """
@@ -98,32 +99,32 @@ class TestBasicActs:
         assert expected_file.read_text(encoding="utf-8") == "# Hello"
 
     def test_patch_file_text(self, executor: Executor, isolated_vault: Path):
-        f = isolated_vault / "main.py"
+        f = isolated_vault / L.main.py
         f.write_text('print("Hello World")', encoding="utf-8")
 
         patch_file_func, _, _ = executor._acts["patch_file"]
         ctx = ActContext(executor)
-        patch_file_func(ctx, ["main.py", 'print("Hello World")', 'print("Hello AI")'])
+        patch_file_func(ctx, [L.main.py, 'print("Hello World")', 'print("Hello AI")'])
 
         assert f.read_text(encoding="utf-8") == 'print("Hello AI")'
 
     def test_patch_file_fail_not_found(self, executor: Executor, isolated_vault: Path):
-        f = isolated_vault / "wrong.txt"
+        f = isolated_vault / L.wrong.txt
         f.write_text("AAA", encoding="utf-8")
 
         patch_file_func, _, _ = executor._acts["patch_file"]
         ctx = ActContext(executor)
 
-        with pytest.raises(ExecutionError, match="acts.basic.error.patchContentMismatch"):
-            patch_file_func(ctx, ["wrong.txt", "BBB", "CCC"])
+        with pytest.raises(ExecutionError, match=L.acts.basic.error.patchContentMismatch):
+            patch_file_func(ctx, [L.wrong.txt, "BBB", "CCC"])
 
     def test_append_file(self, executor: Executor, isolated_vault: Path):
-        f = isolated_vault / "log.txt"
+        f = isolated_vault / L.log.txt
         f.write_text("Line 1\n", encoding="utf-8")
 
         append_func, _, _ = executor._acts["append_file"]
         ctx = ActContext(executor)
-        append_func(ctx, ["log.txt", "Line 2"])
+        append_func(ctx, [L.log.txt, "Line 2"])
 
         assert f.read_text(encoding="utf-8") == "Line 1\nLine 2"
 
@@ -131,8 +132,8 @@ class TestBasicActs:
         append_func, _, _ = executor._acts["append_file"]
         ctx = ActContext(executor)
 
-        with pytest.raises(ExecutionError, match="acts.basic.error.fileNotFound"):
-            append_func(ctx, ["ghost.txt", "content"])
+        with pytest.raises(ExecutionError, match=L.acts.basic.error.fileNotFound):
+            append_func(ctx, [L.ghost.txt, "content"])
 
     def test_variable_lang_parser_recognition(self):
         md_backtick_with_act = """
@@ -180,7 +181,7 @@ class TestHybridArgs:
     def test_inline_write_file(self, executor: Executor, isolated_vault: Path):
         stmts: List[Statement] = [{"act": "write_file inline.txt", "contexts": ["Inline Content"]}]
         executor.execute(stmts)
-        f = isolated_vault / "inline.txt"
+        f = isolated_vault / L.inline.txt
         assert f.read_text(encoding="utf-8") == "Inline Content"
 
     def test_inline_quoted_args(self, executor: Executor, isolated_vault: Path):

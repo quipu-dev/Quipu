@@ -7,6 +7,7 @@ from quipu.engine.git_db import GitDB
 from quipu.engine.sqlite_db import DatabaseManager
 from quipu.engine.sqlite_storage import SQLiteHistoryReader
 from quipu.spec.models.graph import QuipuNode
+from needle.pointer import L
 
 
 @pytest.fixture
@@ -14,8 +15,8 @@ def repo_with_sqlite_db(tmp_path):
     # 1. Initialize Git repo
     subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
     # Configure user for commits (needed if we were making commits, good practice anyway)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "config", "user.name", "Test User"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", L.user.email, "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", L.user.name, "Test User"], cwd=tmp_path, check=True)
 
     # 2. Initialize GitDB
     git_db = GitDB(tmp_path)

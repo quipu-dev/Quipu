@@ -1,6 +1,7 @@
 import pytest
 from quipu.engine.git_object_storage import GitObjectHistoryReader, GitObjectHistoryWriter
 from quipu.engine.state_machine import Engine
+from needle.pointer import L
 
 
 class TestHeadTracking:
@@ -12,8 +13,8 @@ class TestHeadTracking:
 
         subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
         # Config git user
-        subprocess.run(["git", "config", "user.email", "test@quipu.dev"], cwd=repo, check=True)
-        subprocess.run(["git", "config", "user.name", "Quipu Test"], cwd=repo, check=True)
+        subprocess.run(["git", "config", L.user.email, "test@quipu.dev"], cwd=repo, check=True)
+        subprocess.run(["git", "config", L.user.name, "Quipu Test"], cwd=repo, check=True)
 
         from quipu.engine.git_db import GitDB
 
@@ -31,7 +32,7 @@ class TestHeadTracking:
 
         # 2. 创建一个 Plan 节点
         # 这会自动更新 HEAD
-        (engine.root_dir / "a.txt").touch()
+        (engine.root_dir / L.a.txt).touch()
         tree1 = engine.git_db.get_tree_hash()
         engine.create_plan_node("genesis", tree1, "plan content")
 
@@ -46,13 +47,13 @@ class TestHeadTracking:
         engine = engine_with_repo
 
         # 1. 建立 State A 并确立 HEAD
-        (engine.root_dir / "f.txt").write_text("v1")
+        (engine.root_dir / L.f.txt).write_text("v1")
         hash_a = engine.git_db.get_tree_hash()
         engine.create_plan_node("genesis", hash_a, "setup")
         assert engine._read_head() == hash_a
 
         # 2. 制造漂移 (State B)
-        (engine.root_dir / "f.txt").write_text("v2")
+        (engine.root_dir / L.f.txt).write_text("v2")
         hash_b = engine.git_db.get_tree_hash()
 
         # 3. 捕获漂移
@@ -69,12 +70,12 @@ class TestHeadTracking:
         engine = engine_with_repo
 
         # 1. Create State A (Plan)
-        (engine.root_dir / "f.txt").write_text("v1")
+        (engine.root_dir / L.f.txt).write_text("v1")
         hash_a = engine.git_db.get_tree_hash()
         engine.create_plan_node("genesis", hash_a, "State A")
 
         # 2. Create State B (Plan)
-        (engine.root_dir / "f.txt").write_text("v2")
+        (engine.root_dir / L.f.txt).write_text("v2")
         hash_b = engine.git_db.get_tree_hash()
         engine.create_plan_node(hash_a, hash_b, "State B")
 
@@ -84,7 +85,7 @@ class TestHeadTracking:
         engine.checkout(hash_a)
 
         # 4. Assert Physical State
-        assert (engine.root_dir / "f.txt").read_text() == "v1"
+        assert (engine.root_dir / L.f.txt).read_text() == "v1"
 
         # 5. Assert Logical State (HEAD)
         assert engine._read_head() == hash_a
@@ -94,11 +95,11 @@ class TestHeadTracking:
         engine.align()
 
         # 1. Create linear history A -> B
-        (engine.root_dir / "f.txt").write_text("state A")
+        (engine.root_dir / L.f.txt).write_text("state A")
         hash_a = engine.git_db.get_tree_hash()
         engine.create_plan_node("genesis", hash_a, "State A")
 
-        (engine.root_dir / "f.txt").write_text("state B")
+        (engine.root_dir / L.f.txt).write_text("state B")
         hash_b = engine.git_db.get_tree_hash()
         engine.create_plan_node(hash_a, hash_b, "State B")
         engine.align()  # History graph is now loaded, B is the latest node
@@ -108,7 +109,7 @@ class TestHeadTracking:
         assert engine._read_head() == hash_a
 
         # 3. Create a new change (State C) based on State A
-        (engine.root_dir / "f.txt").write_text("state C")
+        (engine.root_dir / L.f.txt).write_text("state C")
         hash_c = engine.git_db.get_tree_hash()
 
         # 4. Capture the drift. This should create Node C parented to A.
