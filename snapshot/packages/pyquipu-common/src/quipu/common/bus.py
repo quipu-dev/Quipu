@@ -1,11 +1,11 @@
 import os
 from pathlib import Path
-from typing import Any, Optional, Protocol, Union
+from typing import Optional, Protocol
 
 from needle.bus import FeedbackBus
 from needle.operators import I18NFactoryOperator, OverlayOperator
 from needle.runtime import nexus as global_nexus
-from needle.spec import RendererProtocol, SemanticPointerProtocol
+from needle.spec import RendererProtocol
 
 
 # --- 1. 定义扩展协议 ---
@@ -19,13 +19,11 @@ class QuipuBus(FeedbackBus):
     _renderer: Optional[QuipuRendererProtocol]  # type: ignore
 
     def data(self, data_string: str) -> None:
-        """输出原始数据（如 JSON, Diff 等），通常去往 stdout。"""
         if self._renderer and hasattr(self._renderer, "data"):
             self._renderer.data(data_string)
 
 
 def _detect_lang() -> str:
-    """检测系统或环境变量中定义的语言。Quipu 默认为 zh。"""
     env_lang = os.getenv("QUIPU_LANG") or os.getenv("NEEDLE_LANG")
     if env_lang:
         return env_lang

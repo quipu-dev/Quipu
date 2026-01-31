@@ -4,14 +4,7 @@ import typer
 
 
 class TyperRenderer:
-    """
-    适配 Needle 的 RendererProtocol，并支持 Quipu 特有的 data() 输出。
-    """
-
     def render(self, message: str, level: str = "info", **kwargs: Any) -> None:
-        """
-        实现 Needle 的标准渲染接口。
-        """
         color = None
         err = True  # 默认输出到 stderr (反馈信息)
 
@@ -32,7 +25,4 @@ class TyperRenderer:
         typer.secho(message, fg=color, err=err)
 
     def data(self, data_string: str) -> None:
-        """
-        Quipu 特有接口：输出原始数据到 stdout。
-        """
         typer.echo(data_string, err=False)

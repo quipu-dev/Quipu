@@ -43,7 +43,9 @@ def _echo(ctx: ActContext, args: List[str]):
 
 def _write_file(ctx: ActContext, args: List[str]):
     if len(args) < 2:
-        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="write_file", count=2, signature="[path, content]"))
+        ctx.fail(
+            bus.render_to_string("acts.error.missingArgs", act_name="write_file", count=2, signature="[path, content]")
+        )
 
     raw_path = args[0]
     content = args[1]
@@ -111,7 +113,9 @@ def _patch_file(ctx: ActContext, args: List[str]):
 
 def _append_file(ctx: ActContext, args: List[str]):
     if len(args) < 2:
-        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="append_file", count=2, signature="[path, content]"))
+        ctx.fail(
+            bus.render_to_string("acts.error.missingArgs", act_name="append_file", count=2, signature="[path, content]")
+        )
 
     raw_path, content_to_append = args[0], args[1]
     target_path = ctx.resolve_path(raw_path)

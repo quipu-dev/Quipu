@@ -153,11 +153,12 @@
     "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer": {
       "baseline_code_signature_text": "class TyperRenderer:",
       "baseline_code_structure_hash": "a3639da04c7cb8a3a7b2c3376d9f32b964f0162f91469f27065f5c7081853f36",
-      "baseline_yaml_content_hash": "f4e7c08f3707a6250b5935407149b0d9d829b809ac58b10514f2d1a2f882a78c"
+      "baseline_yaml_content_hash": "e0bc576acb3e9d43c935d0042c58ce7c9e8cfcbd8c65887b58416461bc4431a5"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.data": {
       "baseline_code_signature_text": "def data(self, data_string: str) -> None:",
-      "baseline_code_structure_hash": "e24670692edbaa5b2b5efeb813dbb1f8c58794e5f10e72f7b92f5ee5d18f505c"
+      "baseline_code_structure_hash": "e24670692edbaa5b2b5efeb813dbb1f8c58794e5f10e72f7b92f5ee5d18f505c",
+      "baseline_yaml_content_hash": "30f34a99c5d0e850f53c907c8c4f1425ed6f39d734dd91b8ac1925923b4932d7"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.error": {
       "baseline_code_signature_text": "def error(self, message: str) -> None:",
@@ -166,6 +167,11 @@
     "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.info": {
       "baseline_code_signature_text": "def info(self, message: str) -> None:",
       "baseline_code_structure_hash": "74013f04bbff01b4572176f4cdac1721665fcad57786891db1ea372e5ce7de3b"
+    },
+    "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.render": {
+      "baseline_code_signature_text": "def render(self, message: str, level: str = 'info', **kwargs: Any = {}) -> None:",
+      "baseline_code_structure_hash": "57bc7dbe344574c09b6a51360029a7c9507a664bc79fc7f97bd18d5e14875205",
+      "baseline_yaml_content_hash": "3d091d6f09b4504c32d5f4ccda9ff0968af5d54f778c659d651cdf76b2b75b3d"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#TyperRenderer.success": {
       "baseline_code_signature_text": "def success(self, message: str) -> None:",
@@ -599,8 +605,8 @@
       "baseline_yaml_content_hash": "2581c4597d154e14157a1ca4f1e6689818bc75cac6c6c982154246996a68ba66"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.__init__": {
-      "baseline_code_signature_text": "def __init__(self, nodes: List[QuipuNode], ancestors: Set[str] = None, descendants: Set[str] = None, private_data: dict[str, str] = None):",
-      "baseline_code_structure_hash": "ef2b1458e8279e4155b891ed741aa6dad62608b6712181437373333eb1de1da5"
+      "baseline_code_signature_text": "def __init__(self, nodes: List[QuipuNode], ancestors: Optional[Set[str]] = None, descendants: Optional[Set[str]] = None, private_data: Optional[dict[str, str]] = None):",
+      "baseline_code_structure_hash": "3ddcaa8c8a300064a165de433720cbfc92926faf9f9f2036582ae70fe5af1d5f"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.find_nodes": {
       "baseline_code_signature_text": "def find_nodes(self, summary_regex: Optional[str] = None, node_type: Optional[str] = None, limit: int = 10) -> List[QuipuNode]:",
