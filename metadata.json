@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "Capture: M uv.lock", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769892801.4083104, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] chore: 升级版本至 0.3.0 并添加 pyneedle-pointer 依赖", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769892801.9295225, "duration_ms": 0}}
