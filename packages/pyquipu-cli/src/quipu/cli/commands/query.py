@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Annotated, List, Optional
 
 import typer
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.spec.models.graph import QuipuNode
 
@@ -58,7 +59,7 @@ def register(app: typer.Typer):
                 if json_output:
                     bus.data("[]")
                 else:
-                    bus.info("query.info.emptyHistory")
+                    bus.info(L.query.info.emptyHistory)
                 raise typer.Exit(0)
 
             nodes_to_process = sorted(graph.values(), key=lambda n: n.timestamp, reverse=True)
@@ -69,21 +70,21 @@ def register(app: typer.Typer):
             try:
                 nodes = filter_nodes(nodes_to_process, limit, since, until)
             except typer.BadParameter as e:
-                bus.error("common.error.invalidConfig", error=str(e))
+                bus.error(L.common.error.invalidConfig, error=str(e))
                 ctx.exit(1)
 
             if not nodes:
                 if json_output:
                     bus.data("[]")
                 else:
-                    bus.info("query.info.noResults")
+                    bus.info(L.query.info.noResults)
                 raise typer.Exit(0)
 
             if json_output:
                 bus.data(_nodes_to_json_str(nodes))
                 raise typer.Exit(0)
 
-            bus.info("query.log.ui.header")
+            bus.info(L.query.log.ui.header)
             for node in nodes:
                 ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 tag = f"[{node.node_type.upper()}]"
@@ -111,7 +112,7 @@ def register(app: typer.Typer):
                 if json_output:
                     bus.data("[]")
                 else:
-                    bus.info("query.info.emptyHistory")
+                    bus.info(L.query.info.emptyHistory)
                 ctx.exit(0)
 
             nodes = engine.find_nodes(summary_regex=summary_regex, node_type=node_type, limit=limit)
@@ -120,14 +121,14 @@ def register(app: typer.Typer):
                 if json_output:
                     bus.data("[]")
                 else:
-                    bus.info("query.info.noResults")
+                    bus.info(L.query.info.noResults)
                 ctx.exit(0)
 
             if json_output:
                 bus.data(_nodes_to_json_str(nodes))
                 ctx.exit(0)
 
-            bus.info("query.find.ui.header")
+            bus.info(L.query.find.ui.header)
             for node in nodes:
                 ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 tag = f"[{node.node_type.upper()}]"

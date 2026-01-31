@@ -6,6 +6,7 @@ from typing import Annotated, Optional
 
 import typer
 from quipu.application.controller import run_quipu
+from needle.pointer import L
 from quipu.common.bus import bus
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
@@ -38,13 +39,13 @@ def register(app: typer.Typer):
         if list_acts:
             from quipu.application.controller import get_available_acts
 
-            bus.info("run.listActs.ui.header")
+            bus.info(L.run.listActs.ui.header)
             acts = get_available_acts(work_dir)
             for name in sorted(acts.keys()):
                 doc = acts[name]
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
-                item_header = bus.render_to_string("run.listActs.ui.actItem", name=name)
+                item_header = bus.render_to_string(L.run.listActs.ui.actItem, name=name)
                 bus.data(f"{item_header}\n{indented_doc}\n")
             ctx.exit(0)
 
@@ -52,10 +53,10 @@ def register(app: typer.Typer):
         source_desc = ""
         if file:
             if not file.exists():
-                bus.error("common.error.fileNotFound", path=file)
+                bus.error(L.common.error.fileNotFound, path=file)
                 ctx.exit(1)
             if not file.is_file():
-                bus.error("common.error.pathNotFile", path=file)
+                bus.error(L.common.error.pathNotFile, path=file)
                 ctx.exit(1)
             content = file.read_text(encoding="utf-8")
             source_desc = f"文件 ({file.name})"
@@ -71,19 +72,19 @@ def register(app: typer.Typer):
             content = DEFAULT_ENTRY_FILE.read_text(encoding="utf-8")
             source_desc = f"默认文件 ({DEFAULT_ENTRY_FILE.name})"
         if file and not file.exists() and file.name in ["log", "checkout", "sync", "init", "ui", "find"]:
-            bus.error("common.error.fileNotFound", path=file)
-            bus.warning("run.error.ambiguousCommand", command=file.name)
+            bus.error(L.common.error.fileNotFound, path=file)
+            bus.warning(L.run.error.ambiguousCommand, command=file.name)
             ctx.exit(1)
         if not content.strip():
             if not file:
-                bus.warning("run.warning.noInput", filename=DEFAULT_ENTRY_FILE.name)
-                bus.info("run.info.usageHint")
+                bus.warning(L.run.warning.noInput, filename=DEFAULT_ENTRY_FILE.name)
+                bus.info(L.run.info.usageHint)
                 ctx.exit(0)
 
         logger.info(f"已加载指令源: {source_desc}")
         logger.info(f"工作区根目录: {work_dir}")
         if yolo:
-            bus.warning("run.warning.yoloEnabled")
+            bus.warning(L.run.warning.yoloEnabled)
         result = run_quipu(
             content=content,
             work_dir=work_dir,

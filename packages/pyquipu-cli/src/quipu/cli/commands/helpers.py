@@ -6,6 +6,7 @@ from typing import Dict, Generator, List, Optional
 
 import typer
 from quipu.application.factory import create_engine
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
@@ -34,8 +35,8 @@ def _find_current_node(engine: Engine, graph: Dict[str, QuipuNode]) -> Optional[
         if node.output_tree == current_hash:
             return node
 
-    bus.warning("navigation.warning.workspaceDirty")
-    bus.info("navigation.info.saveHint")
+    bus.warning(L.navigation.warning.workspaceDirty)
+    bus.info(L.navigation.info.saveHint)
     return None
 
 
@@ -43,10 +44,10 @@ def _execute_visit(ctx: typer.Context, engine: Engine, target_hash: str, msg_id:
     bus.info(msg_id, **kwargs)
     try:
         engine.visit(target_hash)
-        bus.success("navigation.success.visit", short_hash=target_hash[:7])
+        bus.success(L.navigation.success.visit, short_hash=target_hash[:7])
     except Exception as e:
         logger.error(f"导航操作失败 (目标哈希: {target_hash[:12]})", exc_info=True)
-        bus.error("navigation.error.generic", error=str(e))
+        bus.error(L.navigation.error.generic, error=str(e))
         ctx.exit(1)
 
 

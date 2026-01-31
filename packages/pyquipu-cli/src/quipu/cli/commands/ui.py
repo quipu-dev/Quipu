@@ -4,6 +4,7 @@ from typing import Annotated
 
 import typer
 from quipu.application.factory import create_engine
+from needle.pointer import L
 from quipu.common.bus import bus
 
 from ..config import DEFAULT_WORK_DIR, LOG_LEVEL
@@ -28,8 +29,8 @@ def register(app: typer.Typer):
         try:
             from ..tui import QuipuUiApp
         except ImportError:
-            bus.error("ui.error.depMissing")
-            bus.info("ui.info.depHint")
+            bus.error(L.ui.error.depMissing)
+            bus.info(L.ui.info.depHint)
             ctx.exit(1)
 
         if LOG_LEVEL == "DEBUG":
@@ -44,7 +45,7 @@ def register(app: typer.Typer):
         try:
             count = temp_engine.reader.get_node_count()
             if count == 0:
-                bus.info("ui.info.emptyHistory")
+                bus.info(L.ui.info.emptyHistory)
                 ctx.exit(0)
         finally:
             temp_engine.close()
@@ -57,7 +58,7 @@ def register(app: typer.Typer):
             if action == "checkout":
                 target_hash = data
                 with engine_context(work_dir) as action_engine:
-                    bus.info("ui.info.checkoutRequest", short_hash=target_hash[:7])
+                    bus.info(L.ui.info.checkoutRequest, short_hash=target_hash[:7])
                     _execute_visit(
                         ctx, action_engine, target_hash, "navigation.info.navigating", short_hash=target_hash[:7]
                     )

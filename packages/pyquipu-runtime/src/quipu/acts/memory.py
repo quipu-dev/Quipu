@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from typing import List
 
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
@@ -14,7 +15,7 @@ def register(executor: Executor):
 
 def _log_thought(ctx: ActContext, args: List[str]):
     if len(args) < 1:
-        ctx.fail(bus.render_to_string("acts.memory.error.missingContent"))
+        ctx.fail(bus.render_to_string(L.acts.memory.error.missingContent))
 
     content = args[0]
 
@@ -30,6 +31,6 @@ def _log_thought(ctx: ActContext, args: List[str]):
         with open(memory_file, "a", encoding="utf-8") as f:
             f.write(entry)
     except Exception as e:
-        ctx.fail(bus.render_to_string("acts.memory.error.writeFailed", error=e))
+        ctx.fail(bus.render_to_string(L.acts.memory.error.writeFailed, error=e))
 
-    bus.success("acts.memory.success.thoughtLogged")
+    bus.success(L.acts.memory.success.thoughtLogged)

@@ -3,6 +3,7 @@ import os
 import subprocess
 from typing import List
 
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
 
@@ -33,18 +34,18 @@ def _run_git_cmd(ctx: ActContext, cmd_args: List[str]) -> str:
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         error_msg = e.stderr.strip()
-        ctx.fail(bus.render_to_string("acts.git.error.cmdFailed", args=" ".join(cmd_args), error=error_msg))
+        ctx.fail(bus.render_to_string(L.acts.git.error.cmdFailed, args=" ".join(cmd_args), error=error_msg))
     except FileNotFoundError:
-        ctx.fail(bus.render_to_string("acts.git.error.gitNotFound"))
+        ctx.fail(bus.render_to_string(L.acts.git.error.gitNotFound))
     return ""
 
 
 def _git_init(ctx: ActContext, args: List[str]):
     if (ctx.root_dir / ".git").exists():
-        bus.warning("acts.git.warning.repoExists")
+        bus.warning(L.acts.git.warning.repoExists)
         return
     _run_git_cmd(ctx, ["init"])
-    bus.success("acts.git.success.initialized", path=ctx.root_dir)
+    bus.success(L.acts.git.success.initialized, path=ctx.root_dir)
 
 
 def _git_add(ctx: ActContext, args: List[str]):
@@ -57,24 +58,24 @@ def _git_add(ctx: ActContext, args: List[str]):
     if not targets:
         targets = ["."]
     _run_git_cmd(ctx, ["add"] + targets)
-    bus.success("acts.git.success.added", targets=targets)
+    bus.success(L.acts.git.success.added, targets=targets)
 
 
 def _git_commit(ctx: ActContext, args: List[str]):
     if len(args) < 1:
-        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="git_commit", count=1, signature="[message]"))
+        ctx.fail(bus.render_to_string(L.acts.error.missingArgs, act_name="git_commit", count=1, signature="[message]"))
 
     message = args[0]
 
     status = _run_git_cmd(ctx, ["status", "--porcelain"])
     if not status:
-        bus.warning("acts.git.warning.commitSkipped")
+        bus.warning(L.acts.git.warning.commitSkipped)
         return
 
     ctx.request_confirmation(ctx.root_dir / ".git", "Staged Changes", f"Commit Message: {message}")
 
     _run_git_cmd(ctx, ["commit", "-m", message])
-    bus.success("acts.git.success.committed", message=message)
+    bus.success(L.acts.git.success.committed, message=message)
 
 
 def _git_status(ctx: ActContext, args: List[str]):
