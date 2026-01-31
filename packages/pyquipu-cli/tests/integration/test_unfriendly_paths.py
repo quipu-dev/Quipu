@@ -2,6 +2,7 @@ from unittest.mock import ANY, MagicMock, call
 
 import click
 import pytest
+from needle.pointer import L
 from quipu.cli.main import app
 from quipu.test_utils.helpers import create_dirty_workspace_history
 from typer.testing import CliRunner
@@ -42,7 +43,7 @@ echo "Should not run" > {output_file.name}
     result = runner.invoke(app, ["run", "-w", str(work_dir)], input=plan_content)
 
     assert result.exit_code == 2
-    mock_bus.warning.assert_called_once_with("run.error.cancelled", error=ANY)
+    mock_bus.warning.assert_called_once_with(L.run.error.cancelled, error=ANY)
     assert not output_file.exists()
 
 
@@ -69,7 +70,7 @@ echo "Should not run" > {output_file.name}
     result = runner.invoke(app, ["run", "-w", str(work_dir)], input=plan_content)
 
     assert result.exit_code == 2
-    mock_bus.warning.assert_called_once_with("run.error.cancelled", error=ANY)
+    mock_bus.warning.assert_called_once_with(L.run.error.cancelled, error=ANY)
     assert not output_file.exists()
 
 
@@ -89,7 +90,7 @@ def test_discard_user_cancellation(runner: CliRunner, dirty_workspace, monkeypat
     result = runner.invoke(app, ["discard", "-w", str(work_dir)])
 
     assert result.exit_code == 1  # typer.Abort exits with 1
-    mock_bus.warning.assert_called_once_with("common.prompt.cancel")
+    mock_bus.warning.assert_called_once_with(L.common.prompt.cancel)
     assert (work_dir / "file.txt").read_text() == "v3", "File should not be changed."
 
 
@@ -105,7 +106,7 @@ def test_discard_in_non_interactive_env(runner: CliRunner, dirty_workspace, monk
     result = runner.invoke(app, ["discard", "-w", str(work_dir)])
 
     assert result.exit_code == 1  # typer.Abort exits with 1
-    mock_bus.warning.assert_called_once_with("common.prompt.cancel")
+    mock_bus.warning.assert_called_once_with(L.common.prompt.cancel)
     assert (work_dir / "file.txt").read_text() == "v3", "File should not be changed."
 
 

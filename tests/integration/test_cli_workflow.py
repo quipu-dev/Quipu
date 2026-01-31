@@ -2,6 +2,7 @@ import logging
 from unittest.mock import ANY
 
 import pytest
+from needle.pointer import L
 from quipu.application.controller import run_quipu
 from quipu.cli.main import app
 from typer.testing import CliRunner
@@ -118,7 +119,7 @@ class TestCLIWrapper:
             m.setattr("quipu.cli.commands.workspace.bus", mock_bus)
             result = runner.invoke(app, ["save", "-w", str(workspace)])
             assert result.exit_code == 0
-            mock_bus.success.assert_called_with("workspace.save.noChanges")
+            mock_bus.success.assert_called_with(L.workspace.save.noChanges)
 
     def test_cli_discard_no_history(self, workspace):
         """测试 `discard` 命令在没有历史记录时的行为"""
@@ -129,7 +130,7 @@ class TestCLIWrapper:
             m.setattr("quipu.cli.commands.workspace.bus", mock_bus)
             result = runner.invoke(app, ["discard", "-f", "-w", str(workspace)])
             assert result.exit_code == 1
-            mock_bus.error.assert_called_with("workspace.discard.error.noHistory")
+            mock_bus.error.assert_called_with(L.workspace.discard.error.noHistory)
 
 
 class TestCheckoutCLI:
@@ -222,7 +223,7 @@ class TestCheckoutCLI:
             result = runner.invoke(app, ["checkout", "deadbeef", "--work-dir", str(workspace), "--force"])
 
             assert result.exit_code == 1
-            mock_bus.error.assert_called_with("navigation.checkout.error.notFound", hash_prefix="deadbeef")
+            mock_bus.error.assert_called_with(L.navigation.checkout.error.notFound, hash_prefix="deadbeef")
 
     def test_cli_checkout_already_on_state(self, populated_workspace):
         """Test checking out to the current state does nothing."""
@@ -237,4 +238,4 @@ class TestCheckoutCLI:
             result = runner.invoke(app, ["checkout", hash_b[:8], "--work-dir", str(workspace), "--force"])
 
             assert result.exit_code == 0
-            mock_bus.success.assert_called_with("navigation.checkout.info.noAction", short_hash=ANY)
+            mock_bus.success.assert_called_with(L.navigation.checkout.info.noAction, short_hash=ANY)
