@@ -109,8 +109,13 @@ def sync_test_environment(tmp_path_factory):
 @pytest.fixture
 def mock_runtime_bus(monkeypatch):
     m_bus = MagicMock()
-    # 让 bus.get 返回传入的 msg_id，方便测试断言语义
-    m_bus.get.side_effect = lambda msg_id, **kwargs: msg_id
+    # 让 bus.render_to_string (及旧的 get) 返回传入的 msg_id 字符串
+    # 这样测试代码断言异常消息时，能匹配到预期的 ID (例如 "acts.error.missingArgs")
+    def echo_id(msg_id, **kwargs):
+        return str(msg_id)
+
+    m_bus.get.side_effect = echo_id
+    m_bus.render_to_string.side_effect = echo_id
 
     patch_targets = [
         "quipu.runtime.executor.bus",
