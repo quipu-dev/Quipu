@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from needle.pointer import L
 from quipu.engine.git_db import GitDB
 
 
@@ -188,8 +189,8 @@ class TestGitDBPlumbing:
 
         db.checkout_tree(hash_a)
 
-        mock_bus.info.assert_called_once_with("engine.git.info.checkoutStarted", short_hash=hash_a[:7])
-        mock_bus.success.assert_called_once_with("engine.git.success.checkoutComplete")
+        mock_bus.info.assert_called_once_with(L.engine.git.info.checkoutStarted, short_hash=hash_a[:7])
+        mock_bus.success.assert_called_once_with(L.engine.git.success.checkoutComplete)
 
     def test_get_diff_name_status(self, git_repo: Path, db: GitDB):
         # State A

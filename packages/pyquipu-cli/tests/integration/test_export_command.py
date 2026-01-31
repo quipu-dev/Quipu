@@ -2,6 +2,7 @@ import zipfile
 from unittest.mock import ANY, MagicMock
 
 import pytest
+from needle.pointer import L
 from quipu.cli.main import app
 from quipu.engine.state_machine import Engine
 from quipu.test_utils.helpers import create_branching_history, create_complex_link_history
@@ -26,7 +27,7 @@ def test_export_basic(runner, populated_history, monkeypatch):
     result = runner.invoke(app, ["export", "-w", str(engine.root_dir), "-o", str(output_dir)])
 
     assert result.exit_code == 0
-    mock_bus.success.assert_called_once_with("export.success.dir")
+    mock_bus.success.assert_called_once_with(L.export.success.dir)
 
     assert output_dir.exists()
     files = list(output_dir.glob("*.md"))
@@ -46,7 +47,7 @@ def test_export_filtering(runner, populated_history, monkeypatch):
     result = runner.invoke(app, ["export", "-w", str(engine.root_dir), "-o", str(output_dir), "-n", "2"])
 
     assert result.exit_code == 0
-    mock_bus.success.assert_called_once_with("export.success.dir")
+    mock_bus.success.assert_called_once_with(L.export.success.dir)
     assert len(list(output_dir.glob("*.md"))) == 2
 
 
@@ -58,7 +59,7 @@ def test_export_edge_cases(runner, quipu_workspace, monkeypatch):
     # Empty history
     result = runner.invoke(app, ["export", "-w", str(work_dir)])
     assert result.exit_code == 0
-    mock_bus.info.assert_called_with("export.info.emptyHistory")
+    mock_bus.info.assert_called_with(L.export.info.emptyHistory)
 
     # No matching nodes
     (work_dir / "f").touch()
@@ -69,7 +70,7 @@ def test_export_edge_cases(runner, quipu_workspace, monkeypatch):
 
     result = runner.invoke(app, ["export", "-w", str(work_dir), "--since", "2099-01-01 00:00"])
     assert result.exit_code == 0
-    mock_bus.info.assert_called_with("export.info.noMatchingNodes")
+    mock_bus.info.assert_called_with(L.export.info.noMatchingNodes)
 
 
 def test_export_no_frontmatter(runner, populated_history, monkeypatch):
@@ -103,8 +104,8 @@ def test_export_zip(runner, populated_history, monkeypatch):
     result = runner.invoke(app, ["export", "-w", str(engine.root_dir), "-o", str(output_dir), "--zip"])
 
     assert result.exit_code == 0
-    mock_bus.info.assert_any_call("export.info.zipping")
-    mock_bus.success.assert_called_with("export.success.zip", path=ANY)
+    mock_bus.info.assert_any_call(L.export.info.zipping)
+    mock_bus.success.assert_called_with(L.export.success.zip, path=ANY)
 
     zip_path = output_dir.with_suffix(".zip")
     assert not output_dir.exists() and zip_path.exists()
