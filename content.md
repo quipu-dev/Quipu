@@ -1,52 +1,482 @@
-好的，测试用例的断言也已同步重构完毕。现在我们将这些测试层面的改进提交，完成 `L` 指针迁移任务的闭环。
+好的，现在 L 指针已经在代码中全面使用，我们需要更新项目的依赖项和版本号来反映这一变化。
 
-[COMMIT] 计划将把所有受影响的测试文件添加到 Git 暂存区并创建提交。
+我将生成一个计划，通过一系列 `patch_file` 操作来更新所有 `pyproject.toml` 文件，添加对 `pyneedle-pointer` 的依赖，并相应地提升所有受影响包的版本。
 
-## [COMMIT] test(refactor): 迁移测试断言中的消息 ID 至 L 指针
+## [WIP] chore: 添加 pyneedle-pointer 依赖并更新版本
 
 ### 用户需求
-正式提交将测试用例中的 Mock 断言 ID 字符串重构为 `needle.pointer.L` 对象的变更。
+在所有 `pyproject.toml` 文件中添加对 `pyneedle-pointer` 的依赖，并更新所有 Quipu 包的版本号以反映此次重构。
 
 ### 评论
-通过这次同步，我们确保了测试代码与生产代码共享同一套“语义字典”。这意味着任何对消息 ID 路径的修改，都能通过 IDE 的重构工具在整个代码库（包括测试）中瞬间完成同步，极大地降低了维护成本。
+这是一个关键的依赖管理步骤。通过在 `pyquipu-common` 中引入 `pyneedle-pointer`，我们正式确立了 `L` 指针作为项目的一等公民。版本号的统一提升（从 `0.2.x` 到 `0.3.0`）清晰地向用户表明这是一个包含新特性和重要内部改进的版本。
 
 ### 目标
-1.  将所有被脚本修改的测试文件（`packages/**/tests/` 和 `tests/`）添加到 Git 暂存区。
-2.  创建一个清晰、描述性的 Git 提交。
+1.  在 `pyquipu-common` 和 `pyquipu-test-utils` 中添加对 `pyneedle-pointer` 的依赖。
+2.  将 `pyquipu-common` 的版本提升至 `0.2.0`。
+3.  将所有其他受影响的 Quipu 包（`engine`, `runtime`, `application`, `cli`, `test-utils`, `pyquipu`）的版本提升至 `0.3.0`。
+4.  在所有包中同步更新对其他 Quipu 包的版本约束。
 
 ### 基本原理
-遵循 `d3-constraint-quipu-plan-script-rules`，将提交操作与脚本执行物理隔离。通过 `L` 指针的引入，我们不仅改进了生产代码的质量，也让测试用例变得更加类型安全和易于重构。
+我们将对每个 `pyproject.toml` 文件进行精确的 `patch` 操作。首先修改最底层的 `pyquipu-common`，然后逐层向上修改依赖它的包，确保整个依赖图的一致性。这个过程是机械的，但对于保持 monorepo 的健康至关重要。
 
 ### 标签
-#intent/tooling #flow/ready #priority/medium #comp/tests #concept/ui #scope/dx #ai/instruct #task/domain/testing #task/object/l-pointer #task/action/refactor-assertions #task/state/end #task/status/completed
+#intent/tooling #flow/ready #priority/high #comp/build #scope/dx #ai/instruct #task/domain/dependency-management #task/object/versions #task/action/update #task/state/begin
 
 ---
 
 ### Script
 
-#### Acts 1: 提交测试重构变更
-将所有更新后的测试文件加入暂存区并创建提交。
+#### Acts 1: 更新 `pyquipu-common`
+这是最基础的包，我们在这里引入 `pyneedle-pointer`。
 
 ~~~~~act
-git_add
-.
+patch_file
+packages/pyquipu-common/pyproject.toml
+~~~~~
+~~~~~toml.old
+[project]
+name = "pyquipu-common"
+version = "0.1.1"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "Common utilities and helpers for the Quipu ecosystem."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "common", "utils"]
+
+dependencies = [
+    "pyneedle-bus ~= 0.1.4",
+]
+~~~~~
+~~~~~toml.new
+[project]
+name = "pyquipu-common"
+version = "0.2.0"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "Common utilities and helpers for the Quipu ecosystem."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "common", "utils"]
+
+dependencies = [
+    "pyneedle-bus ~= 0.1.4",
+    "pyneedle-pointer ~= 0.2.1",
+]
+~~~~~
+
+#### Acts 2: 更新依赖 `common` 的核心包
+
+~~~~~act
+patch_file
+packages/pyquipu-engine/pyproject.toml
+~~~~~
+~~~~~toml.old
+[project]
+name = "pyquipu-engine"
+version = "0.2.1"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "The state and history engine for Quipu, powered by Git plumbing."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Version Control",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "engine", "state", "git"]
+
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyyaml >= 6.0",
+]
+~~~~~
+~~~~~toml.new
+[project]
+name = "pyquipu-engine"
+version = "0.3.0"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "The state and history engine for Quipu, powered by Git plumbing."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Version Control",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "engine", "state", "git"]
+
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-common ~= 0.2.0",
+    "pyyaml >= 6.0",
+]
 ~~~~~
 
 ~~~~~act
-git_commit
+patch_file
+packages/pyquipu-runtime/pyproject.toml
 ~~~~~
-~~~~~text
-test(refactor): migrate mock assertions to L pointer
+~~~~~toml.old
+[project]
+name = "pyquipu-runtime"
+version = "0.2.1"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "The stateless execution runtime for Quipu."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "runtime", "executor", "automation"]
 
-Synchronized all message-based assertions in the test suite to use 'needle.pointer.L' objects instead of raw strings.
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-common ~= 0.1.1",
+    "typer >= 0.9.0"
+]
+~~~~~
+~~~~~toml.new
+[project]
+name = "pyquipu-runtime"
+version = "0.3.0"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "The stateless execution runtime for Quipu."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "runtime", "executor", "automation"]
 
-Modified:
-- packages/**/tests/*.py
-- tests/*.py
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-common ~= 0.2.0",
+    "typer >= 0.9.0"
+]
+~~~~~
 
-This ensures consistency between production code and test code, allowing for type-safe refactoring of message IDs across the entire project.
+#### Acts 3: 更新上层应用包
+
+~~~~~act
+patch_file
+packages/pyquipu-application/pyproject.toml
+~~~~~
+~~~~~toml.old
+[project]
+name = "pyquipu-application"
+version = "0.2.1"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "Core application logic for Quipu, orchestrating engine and runtime."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Build Tools",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "history", "git", "engine"]
+
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-runtime ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+]
+~~~~~
+~~~~~toml.new
+[project]
+name = "pyquipu-application"
+version = "0.3.0"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "Core application logic for Quipu, orchestrating engine and runtime."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Build Tools",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "history", "git", "engine"]
+
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.3.0",
+    "pyquipu-runtime ~= 0.3.0",
+    "pyquipu-common ~= 0.2.0",
+]
+~~~~~
+
+~~~~~act
+patch_file
+packages/pyquipu-cli/pyproject.toml
+~~~~~
+~~~~~toml.old
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-runtime ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-application ~= 0.2.1",
+    "typer >= 0.9.0",
+    "textual >= 0.58.0",
+]
+~~~~~
+~~~~~toml.new
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.3.0",
+    "pyquipu-runtime ~= 0.3.0",
+    "pyquipu-common ~= 0.2.0",
+    "pyquipu-application ~= 0.3.0",
+    "typer >= 0.9.0",
+    "textual >= 0.58.0",
+]
+~~~~~
+
+~~~~~act
+patch_file
+packages/pyquipu-cli/pyproject.toml
+~~~~~
+~~~~~toml.old
+[project]
+name = "pyquipu-cli"
+version = "0.2.1"
+~~~~~
+~~~~~toml.new
+[project]
+name = "pyquipu-cli"
+version = "0.3.0"
+~~~~~
+
+#### Acts 4: 更新测试工具包
+测试工具包也需要 `L` 指针。
+
+~~~~~act
+patch_file
+packages/pyquipu-test-utils/pyproject.toml
+~~~~~
+~~~~~toml.old
+[project]
+name = "pyquipu-test-utils"
+version = "0.2.0"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "Common testing utilities for the Quipu ecosystem."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Framework :: Pytest",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "testing", "pytest"]
+
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyneedle-bus ~= 0.1.4",
+    "typer"
+]
+~~~~~
+~~~~~toml.new
+[project]
+name = "pyquipu-test-utils"
+version = "0.3.0"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+description = "Common testing utilities for the Quipu ecosystem."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Framework :: Pytest",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
+keywords = ["quipu", "devops", "testing", "pytest"]
+
+dependencies = [
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-engine ~= 0.3.0",
+    "pyneedle-bus ~= 0.1.4",
+    "pyneedle-pointer ~= 0.2.1",
+    "typer"
+]
+~~~~~
+
+#### Acts 5: 更新元包和根配置
+
+~~~~~act
+patch_file
+packages/pyquipu/pyproject.toml
+~~~~~
+~~~~~toml.old
+[project]
+name = "pyquipu"
+version = "0.2.1"
+description = "Quipu: Process Archaeology for the AI Era (Meta-package)"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Environment :: Console",
+    "Topic :: Software Development :: Version Control",
+    "Topic :: Software Development :: Build Tools",
+]
+keywords = ["quipu", "devops", "cli", "tui", "git", "history", "automation", "ai"]
+
+dependencies = [
+    "pyquipu-application ~= 0.2.1",
+    "pyquipu-cli ~= 0.2.1",
+    "pyquipu-common ~= 0.1.1",
+    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-runtime ~= 0.2.1",
+]
+~~~~~
+~~~~~toml.new
+[project]
+name = "pyquipu"
+version = "0.3.0"
+description = "Quipu: Process Archaeology for the AI Era (Meta-package)"
+authors = [{ name="doucx", email="doucxldh@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Environment :: Console",
+    "Topic :: Software Development :: Version Control",
+    "Topic :: Software Development :: Build Tools",
+]
+keywords = ["quipu", "devops", "cli", "tui", "git", "history", "automation", "ai"]
+
+dependencies = [
+    "pyquipu-application ~= 0.3.0",
+    "pyquipu-cli ~= 0.3.0",
+    "pyquipu-common ~= 0.2.0",
+    "pyquipu-engine ~= 0.3.0",
+    "pyquipu-spec ~= 0.1.1",
+    "pyquipu-runtime ~= 0.3.0",
+]
+~~~~~
+
+~~~~~act
+patch_file
+pyproject.toml
+~~~~~
+~~~~~toml.old
+[project.optional-dependencies]
+dev = [
+    "pyquipu",
+    "pyquipu-test-utils",
+    "pytest",
+    "pytest-cov",
+    "pytest-timeout",
+    "ruff",
+    "pre-commit"
+]
+~~~~~
+~~~~~toml.new
+[project.optional-dependencies]
+dev = [
+    "pyquipu",
+    "pyquipu-test-utils",
+    "pytest",
+    "pytest-cov",
+    "pytest-timeout",
+    "ruff",
+    "pre-commit",
+    "pyneedle-pointer",
+]
 ~~~~~
 
 ### 下一步建议
-- **运行冒烟测试**: 现在 `L` 指针重构已全部完成，我建议运行一次 `pytest` 以确保所有断言仍然通过且没有任何语法错误。
-- **强制检查项 (Future)**: 未来可以引入一个 pre-commit 钩子或 CI 检查，禁止在 `bus.info` 等方法中直接使用字符串，强制要求使用 `L` 指针，以防止技术债的回潮。
+依赖项和版本号已更新。现在是时候将这些变更作为一个完整的单元提交了。如果你同意，我将生成 `[COMMIT]` 计划。
