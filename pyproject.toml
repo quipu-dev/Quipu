@@ -22,7 +22,8 @@ dev = [
     "pytest-cov",
     "pytest-timeout",
     "ruff",
-    "pre-commit"
+    "pre-commit",
+    "pyneedle-pointer",
 ]
 
 [tool.uv]
