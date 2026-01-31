@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] fix: 修复 mock_runtime_bus 以适配 render_to_string", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769890550.1672428, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] refactor: 将总线架构迁移至 pyneedle-bus", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1769890645.1858134, "duration_ms": 0}}
