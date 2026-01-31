@@ -5,6 +5,7 @@ from typing import Annotated, Optional
 
 import typer
 from quipu.application.utils import find_git_repository_root
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.common.identity import get_user_id_from_email
 from quipu.engine.config import ConfigManager
@@ -52,7 +53,7 @@ def register(app: typer.Typer):
 
         final_user_id = config.get("sync.user_id")
         if not final_user_id:
-            bus.info("sync.setup.firstUse")
+            bus.info(L.sync.setup.firstUse)
             try:
                 result = subprocess.run(
                     ["git", "config", "user.email"], cwd=sync_dir, capture_output=True, text=True, check=True
@@ -64,11 +65,11 @@ def register(app: typer.Typer):
                 final_user_id = get_user_id_from_email(email)
                 config.set("sync.user_id", final_user_id)
                 config.save()
-                bus.success("sync.setup.success", email=email, user_id=final_user_id)
+                bus.success(L.sync.setup.success, email=email, user_id=final_user_id)
 
             except (subprocess.CalledProcessError, ValueError, FileNotFoundError):
-                bus.error("sync.setup.error.noEmail")
-                bus.warning("sync.setup.info.emailHint")
+                bus.error(L.sync.setup.error.noEmail)
+                bus.warning(L.sync.setup.info.emailHint)
                 ctx.exit(1)
 
         try:
@@ -77,50 +78,50 @@ def register(app: typer.Typer):
             target_ids_to_fetch = set(subscriptions)
             target_ids_to_fetch.add(final_user_id)
 
-            bus.info("sync.run.info.mode", mode=mode.value)
+            bus.info(L.sync.run.info.mode, mode=mode.value)
 
             # --- Operation Dispatch based on Mode ---
             match mode:
                 case SyncMode.BIDIRECTIONAL:
-                    bus.info("sync.run.info.pulling")
+                    bus.info(L.sync.run.info.pulling)
                     for target_id in sorted(list(target_ids_to_fetch)):
                         git_db.fetch_quipu_refs(remote, target_id)
-                    bus.info("sync.run.info.reconciling")
+                    bus.info(L.sync.run.info.reconciling)
                     git_db.reconcile_local_with_remote(remote, final_user_id)
-                    bus.info("sync.run.info.pushing")
+                    bus.info(L.sync.run.info.pushing)
                     git_db.push_quipu_refs(remote, final_user_id)
-                    bus.success("sync.run.success.bidirectional")
+                    bus.success(L.sync.run.success.bidirectional)
 
                 case SyncMode.PULL_ONLY:
-                    bus.info("sync.run.info.pulling")
+                    bus.info(L.sync.run.info.pulling)
                     for target_id in sorted(list(target_ids_to_fetch)):
                         git_db.fetch_quipu_refs(remote, target_id)
-                    bus.info("sync.run.info.reconciling")
+                    bus.info(L.sync.run.info.reconciling)
                     git_db.reconcile_local_with_remote(remote, final_user_id)
-                    bus.success("sync.run.success.pullOnly")
+                    bus.success(L.sync.run.success.pullOnly)
 
                 case SyncMode.PULL_PRUNE:
-                    bus.info("sync.run.info.pullingPrune")
+                    bus.info(L.sync.run.info.pullingPrune)
                     for target_id in sorted(list(target_ids_to_fetch)):
                         git_db.fetch_quipu_refs(remote, target_id)
-                    bus.info("sync.run.info.reconciling")
+                    bus.info(L.sync.run.info.reconciling)
                     git_db.reconcile_local_with_remote(remote, final_user_id)
-                    bus.info("sync.run.info.pruning")
+                    bus.info(L.sync.run.info.pruning)
                     git_db.prune_local_from_remote(remote, final_user_id)
-                    bus.success("sync.run.success.pullPrune")
+                    bus.success(L.sync.run.success.pullPrune)
 
                 case SyncMode.PUSH_ONLY:
-                    bus.info("sync.run.info.pushing")
+                    bus.info(L.sync.run.info.pushing)
                     git_db.push_quipu_refs(remote, final_user_id, force=False)
-                    bus.success("sync.run.success.pushOnly")
+                    bus.success(L.sync.run.success.pushOnly)
 
                 case SyncMode.PUSH_FORCE:
-                    bus.info("sync.run.info.pushingForce")
+                    bus.info(L.sync.run.info.pushingForce)
                     git_db.push_quipu_refs(remote, final_user_id, force=True)
-                    bus.success("sync.run.success.pushForce")
+                    bus.success(L.sync.run.success.pushForce)
 
-            bus.info("sync.run.info.cacheHint")
+            bus.info(L.sync.run.info.cacheHint)
 
         except RuntimeError as e:
-            bus.error("sync.run.error.generic", error=str(e))
+            bus.error(L.sync.run.error.generic, error=str(e))
             ctx.exit(1)

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
+from needle.pointer import L
 from quipu.common.bus import bus
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
@@ -39,13 +40,13 @@ def register(app: typer.Typer):
         if list_acts:
             from quipu.application.controller import get_available_acts
 
-            bus.info("axon.listActs.ui.header")
+            bus.info(L.axon.listActs.ui.header)
             acts = get_available_acts(work_dir)
             for name in sorted(acts.keys()):
                 doc = acts[name]
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
-                item_header = bus.render_to_string("axon.listActs.ui.actItem", name=name)
+                item_header = bus.render_to_string(L.axon.listActs.ui.actItem, name=name)
                 bus.data(f"{item_header}\n{indented_doc}\n")
             ctx.exit(0)
 
@@ -56,7 +57,7 @@ def register(app: typer.Typer):
         source_desc = ""
         if file:
             if not file.exists():
-                bus.error("common.error.fileNotFound", path=file)
+                bus.error(L.common.error.fileNotFound, path=file)
                 ctx.exit(1)
             content = file.read_text(encoding="utf-8")
             source_desc = f"文件 ({file.name})"
@@ -74,7 +75,7 @@ def register(app: typer.Typer):
             source_desc = f"默认文件 ({DEFAULT_ENTRY_FILE.name})"
 
         if not content.strip():
-            bus.warning("axon.warning.noInput")
+            bus.warning(L.axon.warning.noInput)
             ctx.exit(0)
 
         # --- 2. 委托给应用层服务 (核心重构) ---
