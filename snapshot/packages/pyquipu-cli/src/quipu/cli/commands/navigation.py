@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from needle.pointer import L
 from quipu.common.bus import bus
 
 from ..config import DEFAULT_WORK_DIR
@@ -30,36 +31,35 @@ def register(app: typer.Typer):
 
             matches = [node for node in graph.values() if node.output_tree.startswith(hash_prefix)]
             if not matches:
-                bus.error("navigation.checkout.error.notFound", hash_prefix=hash_prefix)
+                bus.error(L.navigation.checkout.error.notFound, hash_prefix=hash_prefix)
                 ctx.exit(1)
             if len(matches) > 1:
-                bus.error("navigation.checkout.error.notUnique", hash_prefix=hash_prefix, count=len(matches))
+                bus.error(L.navigation.checkout.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
                 ctx.exit(1)
             target_node = matches[0]
             target_output_tree_hash = target_node.output_tree
 
             current_hash = engine.git_db.get_tree_hash()
             if current_hash == target_output_tree_hash:
-                bus.success("navigation.checkout.info.noAction", short_hash=target_node.short_hash)
+                bus.success(L.navigation.checkout.info.noAction, short_hash=target_node.short_hash)
                 ctx.exit(0)
 
             is_dirty = engine.current_node is None or engine.current_node.output_tree != current_hash
             if is_dirty:
-                bus.warning("navigation.checkout.info.capturingDrift")
+                bus.warning(L.navigation.checkout.info.capturingDrift)
                 engine.capture_drift(current_hash)
-                bus.success("navigation.checkout.success.driftCaptured")
+                bus.success(L.navigation.checkout.success.driftCaptured)
                 current_hash = engine.git_db.get_tree_hash()
 
             diff_stat_str = engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
 
             if not force:
-                prompt = bus.render_to_string(
-                    "navigation.checkout.prompt.confirm",
+                prompt = bus.render_to_string(L.navigation.checkout.prompt.confirm,
                     short_hash=target_node.short_hash,
                     timestamp=target_node.timestamp,
                 )
                 if not prompt_for_confirmation(prompt, diff_lines=diff_stat_str.splitlines(), default=False):
-                    bus.warning("common.prompt.cancel")
+                    bus.warning(L.common.prompt.cancel)
                     raise typer.Abort()
 
             _execute_visit(
@@ -85,9 +85,9 @@ def register(app: typer.Typer):
             for i in range(count):
                 if not target_node.parent:
                     if i > 0:
-                        bus.success("navigation.undo.reachedRoot", steps=i)
+                        bus.success(L.navigation.undo.reachedRoot, steps=i)
                     else:
-                        bus.success("navigation.undo.atRoot")
+                        bus.success(L.navigation.undo.atRoot)
                     if target_node == current_node:
                         ctx.exit(0)
                     break
@@ -116,15 +116,15 @@ def register(app: typer.Typer):
             for i in range(count):
                 if not target_node.children:
                     if i > 0:
-                        bus.success("navigation.redo.reachedEnd", steps=i)
+                        bus.success(L.navigation.redo.reachedEnd, steps=i)
                     else:
-                        bus.success("navigation.redo.atEnd")
+                        bus.success(L.navigation.redo.atEnd)
                     if target_node == current_node:
                         ctx.exit(0)
                     break
                 target_node = target_node.children[-1]
                 if len(current_node.children) > 1:
-                    bus.info("navigation.redo.info.multiBranch", short_hash=target_node.short_hash)
+                    bus.info(L.navigation.redo.info.multiBranch, short_hash=target_node.short_hash)
 
             _execute_visit(
                 ctx,
@@ -146,12 +146,12 @@ def register(app: typer.Typer):
                 ctx.exit(1)
             siblings = current_node.siblings
             if len(siblings) <= 1:
-                bus.success("navigation.prev.noSiblings")
+                bus.success(L.navigation.prev.noSiblings)
                 ctx.exit(0)
             try:
                 idx = siblings.index(current_node)
                 if idx == 0:
-                    bus.success("navigation.prev.atOldest")
+                    bus.success(L.navigation.prev.atOldest)
                     ctx.exit(0)
                 target_node = siblings[idx - 1]
                 _execute_visit(
@@ -176,12 +176,12 @@ def register(app: typer.Typer):
                 ctx.exit(1)
             siblings = current_node.siblings
             if len(siblings) <= 1:
-                bus.success("navigation.next.noSiblings")
+                bus.success(L.navigation.next.noSiblings)
                 ctx.exit(0)
             try:
                 idx = siblings.index(current_node)
                 if idx == len(siblings) - 1:
-                    bus.success("navigation.next.atNewest")
+                    bus.success(L.navigation.next.atNewest)
                     ctx.exit(0)
                 target_node = siblings[idx + 1]
                 _execute_visit(
@@ -203,12 +203,12 @@ def register(app: typer.Typer):
             try:
                 result_hash = engine.back()
                 if result_hash:
-                    bus.success("navigation.back.success", short_hash=result_hash[:7])
+                    bus.success(L.navigation.back.success, short_hash=result_hash[:7])
                 else:
-                    bus.warning("navigation.back.atStart")
+                    bus.warning(L.navigation.back.atStart)
             except Exception as e:
                 logger.error("后退操作失败", exc_info=True)
-                bus.error("navigation.back.error", error=str(e))
+                bus.error(L.navigation.back.error, error=str(e))
                 ctx.exit(1)
 
     @app.command(help="在访问历史中前进一步。")
@@ -220,10 +220,10 @@ def register(app: typer.Typer):
             try:
                 result_hash = engine.forward()
                 if result_hash:
-                    bus.success("navigation.forward.success", short_hash=result_hash[:7])
+                    bus.success(L.navigation.forward.success, short_hash=result_hash[:7])
                 else:
-                    bus.warning("navigation.forward.atEnd")
+                    bus.warning(L.navigation.forward.atEnd)
             except Exception as e:
                 logger.error("前进操作失败", exc_info=True)
-                bus.error("navigation.forward.error", error=str(e))
+                bus.error(L.navigation.forward.error, error=str(e))
                 ctx.exit(1)

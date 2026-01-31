@@ -6,6 +6,7 @@ from typing import Annotated, Dict, List, Optional, Set
 
 import typer
 import yaml
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
@@ -157,7 +158,7 @@ def register(app: typer.Typer):
 
         with engine_context(work_dir) as engine:
             if not engine.history_graph:
-                bus.info("export.info.emptyHistory")
+                bus.info(L.export.info.emptyHistory)
                 ctx.exit(0)
 
             nodes_to_process = sorted(engine.history_graph.values(), key=lambda n: n.timestamp, reverse=True)
@@ -171,22 +172,22 @@ def register(app: typer.Typer):
                 filtered = filter_nodes(nodes_to_process, limit, since, until)
                 nodes_to_export = list(reversed(filtered))
             except typer.BadParameter as e:
-                bus.error("export.error.badParam", error=str(e))
+                bus.error(L.export.error.badParam, error=str(e))
                 ctx.exit(1)
 
             if not nodes_to_export:
-                bus.info("export.info.noMatchingNodes")
+                bus.info(L.export.info.noMatchingNodes)
                 ctx.exit(0)
 
             if output_dir.exists() and any(output_dir.iterdir()):
-                prompt = bus.render_to_string("export.prompt.overwrite", path=output_dir)
+                prompt = bus.render_to_string(L.export.prompt.overwrite, path=output_dir)
                 if not prompt_for_confirmation(prompt, default=False):
-                    bus.warning("common.prompt.cancel")
+                    bus.warning(L.common.prompt.cancel)
                     raise typer.Abort()
                 shutil.rmtree(output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            bus.info("export.info.starting", count=len(nodes_to_export), path=output_dir)
+            bus.info(L.export.info.starting, count=len(nodes_to_export), path=output_dir)
 
             # 预计算文件名和节点集合以供导航栏使用
             filename_map = {node.commit_hash: _generate_filename(node) for node in nodes_to_export}
@@ -201,9 +202,9 @@ def register(app: typer.Typer):
                     (output_dir / filename).write_text(content, encoding="utf-8")
 
             if zip_output:
-                bus.info("export.info.zipping")
+                bus.info(L.export.info.zipping)
                 zip_path = shutil.make_archive(str(output_dir), "zip", output_dir)
                 shutil.rmtree(output_dir)
-                bus.success("export.success.zip", path=zip_path)
+                bus.success(L.export.success.zip, path=zip_path)
             else:
-                bus.success("export.success.dir")
+                bus.success(L.export.success.dir)

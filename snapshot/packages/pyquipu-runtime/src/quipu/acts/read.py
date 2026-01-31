@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 from typing import List
 
+from needle.pointer import L
 from quipu.common.bus import bus
 from quipu.spec.exceptions import ExecutionError
 from quipu.spec.protocols.runtime import ActContext, ExecutorProtocol as Executor
@@ -43,24 +44,24 @@ def _search_files(ctx: ActContext, args: List[str]):
 
     search_path = ctx.resolve_path(parsed_args.path)
     if not search_path.exists():
-        ctx.fail(bus.render_to_string("acts.read.error.pathNotFound", path=search_path))
+        ctx.fail(bus.render_to_string(L.acts.read.error.pathNotFound, path=search_path))
 
-    bus.info("acts.read.info.searching", pattern=parsed_args.pattern, path=search_path)
+    bus.info(L.acts.read.info.searching, pattern=parsed_args.pattern, path=search_path)
 
     if shutil.which("rg"):
-        bus.info("acts.read.info.useRipgrep")
+        bus.info(L.acts.read.info.useRipgrep)
         try:
             cmd = ["rg", "-n", "--no-heading", "--color=never", parsed_args.pattern, str(search_path)]
             result = subprocess.run(cmd, capture_output=True, text=True, cwd=ctx.root_dir)
             if result.stdout:
                 bus.data(result.stdout.strip())
             else:
-                bus.info("acts.read.info.noMatchRipgrep")
+                bus.info(L.acts.read.info.noMatchRipgrep)
             return
         except Exception as e:
-            bus.warning("acts.read.warning.ripgrepFailed", error=str(e))
+            bus.warning(L.acts.read.warning.ripgrepFailed, error=str(e))
 
-    bus.info("acts.read.info.usePythonSearch")
+    bus.info(L.acts.read.info.usePythonSearch)
     _python_search(ctx, search_path, parsed_args.pattern)
 
 
@@ -68,7 +69,7 @@ def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):
     try:
         regex = re.compile(pattern_str)
     except re.error as e:
-        ctx.fail(bus.render_to_string("acts.read.error.invalidRegex", pattern=pattern_str, error=e))
+        ctx.fail(bus.render_to_string(L.acts.read.error.invalidRegex, pattern=pattern_str, error=e))
 
     matches = []
     for root, dirs, files in os.walk(start_path):
@@ -88,27 +89,27 @@ def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):
     if matches:
         bus.data("\n".join(matches))
     else:
-        bus.info("acts.read.info.noMatchPython")
+        bus.info(L.acts.read.info.noMatchPython)
 
 
 def _read_file(ctx: ActContext, args: List[str]):
     if not args:
-        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="read_file", count=1, signature="[path]"))
+        ctx.fail(bus.render_to_string(L.acts.error.missingArgs, act_name="read_file", count=1, signature="[path]"))
 
     target_path = ctx.resolve_path(args[0])
     if not target_path.exists():
-        ctx.fail(bus.render_to_string("acts.read.error.targetNotFound", path=args[0]))
+        ctx.fail(bus.render_to_string(L.acts.read.error.targetNotFound, path=args[0]))
     if target_path.is_dir():
-        ctx.fail(bus.render_to_string("acts.read.error.targetIsDir", path=args[0]))
+        ctx.fail(bus.render_to_string(L.acts.read.error.targetIsDir, path=args[0]))
 
     try:
         content = target_path.read_text(encoding="utf-8")
-        bus.info("acts.read.info.readingFile", filename=target_path.name)
+        bus.info(L.acts.read.info.readingFile, filename=target_path.name)
         bus.data(content)
     except UnicodeDecodeError:
-        bus.error("acts.read.error.binaryOrEncoding", filename=args[0])
+        bus.error(L.acts.read.error.binaryOrEncoding, filename=args[0])
     except Exception as e:
-        ctx.fail(bus.render_to_string("acts.read.error.readFailed", error=e))
+        ctx.fail(bus.render_to_string(L.acts.read.error.readFailed, error=e))
 
 
 def _list_files(ctx: ActContext, args: List[str]):
@@ -123,11 +124,11 @@ def _list_files(ctx: ActContext, args: List[str]):
 
     target_dir = ctx.resolve_path(parsed_args.path)
     if not target_dir.is_dir():
-        ctx.fail(bus.render_to_string("acts.read.error.dirNotFound", path=target_dir))
+        ctx.fail(bus.render_to_string(L.acts.read.error.dirNotFound, path=target_dir))
 
     output = []
     if parsed_args.tree:
-        bus.info("acts.read.info.listingTree", path=target_dir)
+        bus.info(L.acts.read.info.listingTree, path=target_dir)
         for path_object in sorted(target_dir.rglob("*")):
             if ".git" in path_object.parts or ".quipu" in path_object.parts:
                 continue
@@ -135,7 +136,7 @@ def _list_files(ctx: ActContext, args: List[str]):
             indent = "    " * depth
             output.append(f"{indent}└── {path_object.name}{'/' if path_object.is_dir() else ''}")
     else:
-        bus.info("acts.read.info.listingDir", path=target_dir)
+        bus.info(L.acts.read.info.listingDir, path=target_dir)
         items = sorted(list(target_dir.iterdir()), key=lambda p: (p.is_file(), p.name.lower()))
         for item in items:
             if item.name.startswith("."):

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Annotated, Dict, List, Optional
 
 import typer
+from needle.pointer import L
 from quipu.common.bus import bus
 from rich.console import Console
 from rich.syntax import Syntax
@@ -21,10 +22,10 @@ def _find_target_node(graph: Dict, hash_prefix: str):
         if node.commit_hash.startswith(hash_prefix) or node.output_tree.startswith(hash_prefix)
     ]
     if not matches:
-        bus.error("show.error.notFound", hash_prefix=hash_prefix)
+        bus.error(L.show.error.notFound, hash_prefix=hash_prefix)
         raise typer.Exit(1)
     if len(matches) > 1:
-        bus.error("show.error.notUnique", hash_prefix=hash_prefix, count=len(matches))
+        bus.error(L.show.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
         raise typer.Exit(1)
     return matches[0]
 
@@ -53,7 +54,7 @@ def register(app: typer.Typer):
                 if json_output:
                     bus.data("{}")
                 else:
-                    bus.info("show.info.noContent")
+                    bus.info(L.show.info.noContent)
                 raise typer.Exit()
 
             # --- Phase 1: Build output dictionary ---
@@ -62,8 +63,8 @@ def register(app: typer.Typer):
 
             for filename in files_to_process:
                 if filename not in blobs:
-                    bus.error("show.error.fileNotInNode", filename=filename)
-                    bus.info("show.info.availableFiles", file_list=", ".join(blobs.keys()))
+                    bus.error(L.show.error.fileNotInNode, filename=filename)
+                    bus.info(L.show.info.availableFiles, file_list=", ".join(blobs.keys()))
                     raise typer.Exit(1)
 
                 content_bytes = blobs[filename]
@@ -91,8 +92,7 @@ def register(app: typer.Typer):
                     ts = target_node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                     tag = f"[{target_node.node_type.upper()}]"
                     bus.data(
-                        bus.render_to_string(
-                            "show.ui.header",
+                        bus.render_to_string(L.show.ui.header,
                             ts=ts,
                             tag=f"{tag:<9}",
                             short_hash=target_node.short_hash,

@@ -3,6 +3,7 @@ import logging
 import sys
 from pathlib import Path
 
+from needle.pointer import L
 from quipu.common.bus import bus
 
 from .executor import Executor
@@ -14,11 +15,11 @@ def load_plugins(executor: Executor, plugin_dir: Path):
     if not plugin_dir.exists():
         return
 
-    bus.info("runtime.plugin.info.loading", plugin_dir=plugin_dir)
+    bus.info(L.runtime.plugin.info.loading, plugin_dir=plugin_dir)
 
     # 确保是一个目录
     if not plugin_dir.is_dir():
-        bus.warning("runtime.plugin.warning.notDirectory", path=plugin_dir)
+        bus.warning(L.runtime.plugin.warning.notDirectory, path=plugin_dir)
         return
 
     # 扫描目录下所有 .py 文件
@@ -50,7 +51,7 @@ def load_plugins(executor: Executor, plugin_dir: Path):
                     # 静默跳过没有 register 的辅助文件
                     pass
             else:
-                bus.error("runtime.plugin.error.specFailed", file_path=file_path)
+                bus.error(L.runtime.plugin.error.specFailed, file_path=file_path)
 
         except Exception as e:
-            bus.error("runtime.plugin.error.loadFailed", plugin_name=file_path.name, error=e)
+            bus.error(L.runtime.plugin.error.loadFailed, plugin_name=file_path.name, error=e)
