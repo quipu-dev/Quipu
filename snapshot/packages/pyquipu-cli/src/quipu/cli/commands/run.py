@@ -44,7 +44,7 @@ def register(app: typer.Typer):
                 doc = acts[name]
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
-                item_header = bus.get("run.listActs.ui.actItem", name=name)
+                item_header = bus.render_to_string("run.listActs.ui.actItem", name=name)
                 bus.data(f"{item_header}\n{indented_doc}\n")
             ctx.exit(0)
 

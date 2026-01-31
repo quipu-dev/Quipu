@@ -43,7 +43,7 @@ def _search_files(ctx: ActContext, args: List[str]):
 
     search_path = ctx.resolve_path(parsed_args.path)
     if not search_path.exists():
-        ctx.fail(bus.get("acts.read.error.pathNotFound", path=search_path))
+        ctx.fail(bus.render_to_string("acts.read.error.pathNotFound", path=search_path))
 
     bus.info("acts.read.info.searching", pattern=parsed_args.pattern, path=search_path)
 
@@ -68,7 +68,7 @@ def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):
     try:
         regex = re.compile(pattern_str)
     except re.error as e:
-        ctx.fail(bus.get("acts.read.error.invalidRegex", pattern=pattern_str, error=e))
+        ctx.fail(bus.render_to_string("acts.read.error.invalidRegex", pattern=pattern_str, error=e))
 
     matches = []
     for root, dirs, files in os.walk(start_path):
@@ -93,13 +93,13 @@ def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):
 
 def _read_file(ctx: ActContext, args: List[str]):
     if not args:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="read_file", count=1, signature="[path]"))
+        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="read_file", count=1, signature="[path]"))
 
     target_path = ctx.resolve_path(args[0])
     if not target_path.exists():
-        ctx.fail(bus.get("acts.read.error.targetNotFound", path=args[0]))
+        ctx.fail(bus.render_to_string("acts.read.error.targetNotFound", path=args[0]))
     if target_path.is_dir():
-        ctx.fail(bus.get("acts.read.error.targetIsDir", path=args[0]))
+        ctx.fail(bus.render_to_string("acts.read.error.targetIsDir", path=args[0]))
 
     try:
         content = target_path.read_text(encoding="utf-8")
@@ -108,7 +108,7 @@ def _read_file(ctx: ActContext, args: List[str]):
     except UnicodeDecodeError:
         bus.error("acts.read.error.binaryOrEncoding", filename=args[0])
     except Exception as e:
-        ctx.fail(bus.get("acts.read.error.readFailed", error=e))
+        ctx.fail(bus.render_to_string("acts.read.error.readFailed", error=e))
 
 
 def _list_files(ctx: ActContext, args: List[str]):
@@ -123,7 +123,7 @@ def _list_files(ctx: ActContext, args: List[str]):
 
     target_dir = ctx.resolve_path(parsed_args.path)
     if not target_dir.is_dir():
-        ctx.fail(bus.get("acts.read.error.dirNotFound", path=target_dir))
+        ctx.fail(bus.render_to_string("acts.read.error.dirNotFound", path=target_dir))
 
     output = []
     if parsed_args.tree:

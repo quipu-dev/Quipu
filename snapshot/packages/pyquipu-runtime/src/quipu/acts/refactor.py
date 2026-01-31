@@ -15,14 +15,14 @@ def register(executor: Executor):
 
 def _move_file(ctx: ActContext, args: List[str]):
     if len(args) < 2:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="move_file", count=2, signature="[src, dest]"))
+        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="move_file", count=2, signature="[src, dest]"))
 
     src_raw, dest_raw = args[0], args[1]
     src_path = ctx.resolve_path(src_raw)
     dest_path = ctx.resolve_path(dest_raw)
 
     if not src_path.exists():
-        ctx.fail(bus.get("acts.refactor.error.srcNotFound", path=src_raw))
+        ctx.fail(bus.render_to_string("acts.refactor.error.srcNotFound", path=src_raw))
 
     msg = f"Move: {src_raw} -> {dest_raw}"
     ctx.request_confirmation(src_path, "Source Exists", msg)
@@ -31,15 +31,15 @@ def _move_file(ctx: ActContext, args: List[str]):
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(src_path), str(dest_path))
     except PermissionError:
-        ctx.fail(bus.get("acts.refactor.error.movePermission", src=src_raw, dest=dest_raw))
+        ctx.fail(bus.render_to_string("acts.refactor.error.movePermission", src=src_raw, dest=dest_raw))
     except Exception as e:
-        ctx.fail(bus.get("acts.refactor.error.moveUnknown", error=e))
+        ctx.fail(bus.render_to_string("acts.refactor.error.moveUnknown", error=e))
     bus.success("acts.refactor.success.moved", source=src_raw, destination=dest_raw)
 
 
 def _delete_file(ctx: ActContext, args: List[str]):
     if len(args) < 1:
-        ctx.fail(bus.get("acts.error.missingArgs", act_name="delete_file", count=1, signature="[path]"))
+        ctx.fail(bus.render_to_string("acts.error.missingArgs", act_name="delete_file", count=1, signature="[path]"))
 
     raw_path = args[0]
     target_path = ctx.resolve_path(raw_path)
@@ -59,8 +59,8 @@ def _delete_file(ctx: ActContext, args: List[str]):
         else:
             target_path.unlink()
     except PermissionError:
-        ctx.fail(bus.get("acts.refactor.error.deletePermission", path=raw_path))
+        ctx.fail(bus.render_to_string("acts.refactor.error.deletePermission", path=raw_path))
     except Exception as e:
-        ctx.fail(bus.get("acts.refactor.error.deleteUnknown", error=e))
+        ctx.fail(bus.render_to_string("acts.refactor.error.deleteUnknown", error=e))
 
     bus.success("acts.refactor.success.deleted", path=raw_path)
