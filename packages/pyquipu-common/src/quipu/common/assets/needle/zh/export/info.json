@@ -1,0 +1,6 @@
+{
+  "emptyHistory": "📜 历史记录为空，无需导出。",
+  "noMatchingNodes": "🤷 未找到符合条件的节点。",
+  "starting": "🚀 正在导出 {count} 个节点到 '{path}'...",
+  "zipping": "📦 正在压缩导出文件..."
+}

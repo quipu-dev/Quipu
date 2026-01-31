@@ -1,0 +1,5 @@
+{
+  "success": "📸 快照已保存: {short_hash}{msg_suffix}",
+  "noChanges": "✅ 工作区状态未发生变化，无需创建快照。",
+  "error": "❌ 创建快照失败: {error}"
+}

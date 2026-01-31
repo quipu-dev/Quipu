@@ -1,0 +1,16 @@
+{
+  "error": {
+    "srcNotFound": "源文件不存在: {path}",
+    "movePermission": "移动/重命名失败: 权限不足。源: '{src}', 目标: '{dest}'",
+    "moveUnknown": "移动/重命名时发生未知错误: {error}",
+    "deletePermission": "删除失败: 对 '{path}' 的访问权限不足。",
+    "deleteUnknown": "删除时发生未知错误: {error}"
+  },
+  "warning": {
+    "deleteSkipped": "⚠️  文件不存在，跳过删除: {path}"
+  },
+  "success": {
+    "moved": "✅ [移动] 已移动/重命名: {source} -> {destination}",
+    "deleted": "🗑️  [删除] 已删除: {path}"
+  }
+}

@@ -1,2 +1,6 @@
 TyperRenderer: |-
-  A renderer that uses Typer for colored and styled CLI output.
+  适配 Needle 的 RendererProtocol，并支持 Quipu 特有的 data() 输出。
+TyperRenderer.data: |-
+  Quipu 特有接口：输出原始数据到 stdout。
+TyperRenderer.render: |-
+  实现 Needle 的标准渲染接口。

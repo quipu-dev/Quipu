@@ -31,7 +31,6 @@ workspace.members = ["packages/*"]
 [tool.uv.sources]
 pyquipu = { workspace = true }
 pyquipu-application = { workspace = true }
-pyquipu-bus = { workspace = true }
 pyquipu-cli = { workspace = true }
 pyquipu-common = { workspace = true }
 pyquipu-engine = { workspace = true }

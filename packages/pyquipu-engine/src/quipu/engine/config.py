@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import yaml
-from quipu.bus import bus
+from quipu.common.bus import bus
 
 logger = logging.getLogger(__name__)
 

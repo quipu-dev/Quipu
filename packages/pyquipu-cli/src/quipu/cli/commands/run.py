@@ -6,7 +6,7 @@ from typing import Annotated, Optional
 
 import typer
 from quipu.application.controller import run_quipu
-from quipu.bus import bus
+from quipu.common.bus import bus
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
 from ..logger_config import setup_logging
@@ -44,7 +44,7 @@ def register(app: typer.Typer):
                 doc = acts[name]
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
-                item_header = bus.get("run.listActs.ui.actItem", name=name)
+                item_header = bus.render_to_string("run.listActs.ui.actItem", name=name)
                 bus.data(f"{item_header}\n{indented_doc}\n")
             ctx.exit(0)
 

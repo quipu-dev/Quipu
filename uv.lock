@@ -6,7 +6,6 @@ requires-python = ">=3.10"
 members = [
     "pyquipu",
     "pyquipu-application",
-    "pyquipu-bus",
     "pyquipu-cli",
     "pyquipu-common",
     "pyquipu-engine",
@@ -310,12 +309,59 @@ wheels = [
 ]
 
 [[package]]
+name = "pyneedle-bus"
+version = "0.1.4"
+source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
+dependencies = [
+    { name = "pyneedle-pointer" },
+    { name = "pyneedle-runtime" },
+    { name = "pyneedle-spec" },
+]
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/3d/29/323d1e5d4c14f167f4dc9535866c29cdc15a4566e13798664c48cea1804e/pyneedle_bus-0.1.4.tar.gz", hash = "sha256:dfe5bef0af0eae7efd07cf6b2e56fadf0eae1edc88f0af727503ed5bdfcd6236" }
+wheels = [
+    { url = "https://mirrors.aliyun.com/pypi/packages/c7/2e/457f1828e011192e05a0880b7232f9e03d55266d320efee94b78aa0bd00c/pyneedle_bus-0.1.4-py3-none-any.whl", hash = "sha256:3adc9fc270b4185b9ecca595c042910c267e72fb87a516a41bfb1bb277b6a11e" },
+]
+
+[[package]]
+name = "pyneedle-pointer"
+version = "0.2.1"
+source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
+dependencies = [
+    { name = "pyneedle-spec" },
+]
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/2b/29/741cabc53b8573fcf79506890517e2b5ad0d730379d4c5a470d1b45138f1/pyneedle_pointer-0.2.1.tar.gz", hash = "sha256:2b49864e0df9275faec686b97b952130254d850074a8b6b3707b650f988bdec5" }
+wheels = [
+    { url = "https://mirrors.aliyun.com/pypi/packages/54/55/d10c65ba6e9621c8a98e4fa18e34b0cff0f1129b6b9bad8ad11690de4300/pyneedle_pointer-0.2.1-py3-none-any.whl", hash = "sha256:fe8941e11ae1cca64ed8bff023a18af88bbdaf89e8237bcc197a14c476910abc" },
+]
+
+[[package]]
+name = "pyneedle-runtime"
+version = "0.1.4"
+source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
+dependencies = [
+    { name = "pyneedle-pointer" },
+    { name = "pyneedle-spec" },
+]
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/01/72/4ed7aa3237a903868a8845dc55ab10ac4259d1c52f0a846b95edb535e2f3/pyneedle_runtime-0.1.4.tar.gz", hash = "sha256:cb0e6f0e823a4d5da741b1a1602f80539521d8930447791bec43f330245030a6" }
+wheels = [
+    { url = "https://mirrors.aliyun.com/pypi/packages/c4/69/073906a69d101f259accfb86a3f02bda9e31765f0677c89043aeba13b9a8/pyneedle_runtime-0.1.4-py3-none-any.whl", hash = "sha256:4f4b5dc2da6835819f1379379e7566d8c25c1c9b6446d774a6a984aa7dc282b8" },
+]
+
+[[package]]
+name = "pyneedle-spec"
+version = "0.1.5"
+source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/94/b6/960b66cd9b965c517e9c12ce4e6bd506a26606543290018fe119ceb71fa5/pyneedle_spec-0.1.5.tar.gz", hash = "sha256:cc18f9bb03e0c52e3a0a9629fcf895b8ab33c1306e1859023059a6007e82d7a8" }
+wheels = [
+    { url = "https://mirrors.aliyun.com/pypi/packages/7a/78/c82c3a374530910dc2e78dc7369396e6b375d57a593abb40c44fb580c70d/pyneedle_spec-0.1.5-py3-none-any.whl", hash = "sha256:4a3b431d137214f40d42eb26d755d24a97de5950570c4af0b527bad16ae28201" },
+]
+
+[[package]]
 name = "pyquipu"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "packages/pyquipu" }
 dependencies = [
     { name = "pyquipu-application" },
-    { name = "pyquipu-bus" },
     { name = "pyquipu-cli" },
     { name = "pyquipu-common" },
     { name = "pyquipu-engine" },
@@ -326,7 +372,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pyquipu-application", editable = "packages/pyquipu-application" },
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
     { name = "pyquipu-cli", editable = "packages/pyquipu-cli" },
     { name = "pyquipu-common", editable = "packages/pyquipu-common" },
     { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
@@ -336,10 +381,9 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-application"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "packages/pyquipu-application" }
 dependencies = [
-    { name = "pyquipu-bus" },
     { name = "pyquipu-common" },
     { name = "pyquipu-engine" },
     { name = "pyquipu-runtime" },
@@ -348,7 +392,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
     { name = "pyquipu-common", editable = "packages/pyquipu-common" },
     { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
     { name = "pyquipu-runtime", editable = "packages/pyquipu-runtime" },
@@ -356,27 +399,11 @@ requires-dist = [
 ]
 
 [[package]]
-name = "pyquipu-bus"
-version = "0.2.0"
-source = { editable = "packages/pyquipu-bus" }
-dependencies = [
-    { name = "pyquipu-common" },
-    { name = "pyquipu-spec" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pyquipu-common", editable = "packages/pyquipu-common" },
-    { name = "pyquipu-spec", editable = "packages/pyquipu-spec" },
-]
-
-[[package]]
 name = "pyquipu-cli"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "packages/pyquipu-cli" }
 dependencies = [
     { name = "pyquipu-application" },
-    { name = "pyquipu-bus" },
     { name = "pyquipu-common" },
     { name = "pyquipu-engine" },
     { name = "pyquipu-runtime" },
@@ -388,7 +415,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pyquipu-application", editable = "packages/pyquipu-application" },
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
     { name = "pyquipu-common", editable = "packages/pyquipu-common" },
     { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
     { name = "pyquipu-runtime", editable = "packages/pyquipu-runtime" },
@@ -401,13 +427,18 @@ requires-dist = [
 name = "pyquipu-common"
 version = "0.1.1"
 source = { editable = "packages/pyquipu-common" }
+dependencies = [
+    { name = "pyneedle-bus" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pyneedle-bus", specifier = "~=0.1.4" }]
 
 [[package]]
 name = "pyquipu-engine"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "packages/pyquipu-engine" }
 dependencies = [
-    { name = "pyquipu-bus" },
     { name = "pyquipu-common" },
     { name = "pyquipu-spec" },
     { name = "pyyaml" },
@@ -415,7 +446,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
     { name = "pyquipu-common", editable = "packages/pyquipu-common" },
     { name = "pyquipu-spec", editable = "packages/pyquipu-spec" },
     { name = "pyyaml", specifier = ">=6.0" },
@@ -455,10 +485,9 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-runtime"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "packages/pyquipu-runtime" }
 dependencies = [
-    { name = "pyquipu-bus" },
     { name = "pyquipu-common" },
     { name = "pyquipu-spec" },
     { name = "typer" },
@@ -466,7 +495,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
     { name = "pyquipu-common", editable = "packages/pyquipu-common" },
     { name = "pyquipu-spec", editable = "packages/pyquipu-spec" },
     { name = "typer", specifier = ">=0.9.0" },
@@ -474,7 +502,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-spec"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/pyquipu-spec" }
 
 [[package]]
@@ -482,7 +510,7 @@ name = "pyquipu-test-utils"
 version = "0.2.0"
 source = { editable = "packages/pyquipu-test-utils" }
 dependencies = [
-    { name = "pyquipu-bus" },
+    { name = "pyneedle-bus" },
     { name = "pyquipu-engine" },
     { name = "pyquipu-spec" },
     { name = "typer" },
@@ -490,7 +518,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pyquipu-bus", editable = "packages/pyquipu-bus" },
+    { name = "pyneedle-bus", specifier = "~=0.1.4" },
     { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
     { name = "pyquipu-spec", editable = "packages/pyquipu-spec" },
     { name = "typer" },

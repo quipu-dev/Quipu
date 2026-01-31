@@ -1,0 +1,12 @@
+{
+  "info": {
+    "loading": "🔍 正在从 '{plugin_dir}' 加载插件..."
+  },
+  "warning": {
+    "notDirectory": "⚠️  路径 '{path}' 不是目录，跳过插件加载。"
+  },
+  "error": {
+    "specFailed": "❌ 无法为 {file_path} 创建模块规范",
+    "loadFailed": "❌ 加载插件 {plugin_name} 失败: {error}"
+  }
+}

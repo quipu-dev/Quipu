@@ -4,7 +4,7 @@ from typing import Annotated
 
 import typer
 from quipu.application.factory import create_engine
-from quipu.bus import bus
+from quipu.common.bus import bus
 
 from ..config import DEFAULT_WORK_DIR, LOG_LEVEL
 from ..logger_config import configure_file_logging, setup_logging

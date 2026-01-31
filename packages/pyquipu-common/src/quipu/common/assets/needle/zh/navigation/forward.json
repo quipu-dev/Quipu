@@ -1,0 +1,5 @@
+{
+  "success": "✅ 已前进到状态: {short_hash}",
+  "atEnd": "⚠️  已到达访问历史的终点。",
+  "error": "❌ 前进操作失败: {error}"
+}

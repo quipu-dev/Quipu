@@ -1,0 +1,17 @@
+{
+  "info": {
+    "checkoutStarted": "Executing hard checkout to tree: {short_hash}",
+    "pushing": "🚀 {action} Quipu history to {remote} for user {user_id}...",
+    "fetching": "🔍 Fetching Quipu history from {remote} for user {user_id}...",
+    "reconciledNewBranch": "🤝 Reconciled: Added new history branch -> {short_hash}",
+    "prunedRef": "🗑️  Pruned local ref: {ref}"
+  },
+  "success": {
+    "checkoutComplete": "✅ Workspace reset to target state.",
+    "reconciliationComplete": "✅ Reconciliation complete. Added {count} new history branches from remote.",
+    "pruningComplete": "✅ Pruning complete. Removed {count} stale local refs."
+  },
+  "warning": {
+    "copyIndexFailed": "无法复制用户索引进行预热: {error}"
+  }
+}

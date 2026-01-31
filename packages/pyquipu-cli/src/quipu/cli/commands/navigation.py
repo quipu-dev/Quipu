@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 
 from ..config import DEFAULT_WORK_DIR
 from ..ui_utils import prompt_for_confirmation
@@ -53,7 +53,7 @@ def register(app: typer.Typer):
             diff_stat_str = engine.git_db.get_diff_stat(current_hash, target_output_tree_hash)
 
             if not force:
-                prompt = bus.get(
+                prompt = bus.render_to_string(
                     "navigation.checkout.prompt.confirm",
                     short_hash=target_node.short_hash,
                     timestamp=target_node.timestamp,

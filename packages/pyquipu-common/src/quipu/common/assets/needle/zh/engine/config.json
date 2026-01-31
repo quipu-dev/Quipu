@@ -1,0 +1,13 @@
+{
+  "warning": {
+    "invalidFormat": "⚠️  配置文件 '{path}' 不是有效的字典格式，已忽略。"
+  },
+  "error": {
+    "parseFailed": "❌ 解析配置文件 '{path}' 失败: {error}",
+    "readFailed": "❌ 读取配置文件时发生错误: {error}",
+    "saveFailed": "❌ 保存配置文件失败: {error}"
+  },
+  "success": {
+    "saved": "✅ 配置文件已保存至: {path}"
+  }
+}

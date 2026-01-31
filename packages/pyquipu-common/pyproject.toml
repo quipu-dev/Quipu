@@ -22,7 +22,9 @@ classifiers = [
 ]
 keywords = ["quipu", "devops", "common", "utils"]
 
-dependencies = []
+dependencies = [
+    "pyneedle-bus ~= 0.1.4",
+]
 
 [project.urls]
 Homepage = "https://github.com/quipu-dev/Quipu"

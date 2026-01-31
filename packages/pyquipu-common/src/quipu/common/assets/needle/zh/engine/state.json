@@ -1,0 +1,28 @@
+{
+  "warning": {
+    "syncIgnoresFailed": "⚠️  无法同步持久化忽略规则: {e}",
+    "createIsolateFailed": "无法创建隔离文件 {path}: {e}",
+    "updateHeadFailed": "⚠️  无法更新 HEAD 指针: {e}",
+    "updateNavFailed": "⚠️  无法更新导航历史: {e}",
+    "driftDetected": "⚠️  状态漂移：当前 Tree Hash {short_hash} 未在历史中找到。",
+    "headMissing": "⚠️  丢失 HEAD 指针，自动回退到最新历史节点: {short_hash}"
+  },
+  "info": {
+    "navBack": "🔙 Back to: {short_hash} (History: {ptr}/{total})",
+    "navForward": "🔜 Forward to: {short_hash} (History: {ptr}/{total})",
+    "historyLoaded": "从存储中加载了 {count} 个历史事件，形成 {graph_size} 个唯一状态节点。",
+    "capturingDrift": "{message}，新状态 Hash: {short_hash}",
+    "idempotentNode": "📝 记录幂等操作节点 (Idempotent Node): {short_hash}",
+    "planNode": "📝 正在记录 Plan 节点: {input_hash} -> {output_hash}",
+    "checkout": "🔄 状态已切换至: {short_hash}"
+  },
+  "error": {
+    "hydrationFailed": "❌ 自动数据补水失败: {error}"
+  },
+  "success": {
+    "genesisAligned": "✅ 状态对齐：检测到创世状态 (空仓库)。",
+    "aligned": "✅ 状态对齐：当前工作区匹配节点 {short_hash}",
+    "captureComplete": "✅ 捕获完成，新节点已创建: {filename}",
+    "planArchived": "✅ Plan 已归档: {filename}"
+  }
+}

@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import click
 import typer
-from quipu.bus import bus
+from quipu.common.bus import bus
 from quipu.spec.exceptions import OperationCancelledError
 
 
@@ -30,7 +30,9 @@ def prompt_for_confirmation(prompt: str, diff_lines: Optional[List[str]] = None,
                 typer.echo(line.strip("\n"), err=True)
         typer.echo("", err=True)
 
-    prompt_suffix = bus.get("prompt.suffix.yesDefault") if default else bus.get("prompt.suffix.noDefault")
+    prompt_suffix = (
+        bus.render_to_string("prompt.suffix.yesDefault") if default else bus.render_to_string("prompt.suffix.noDefault")
+    )
     typer.secho(prompt + prompt_suffix, nl=False, err=True)
 
     try:

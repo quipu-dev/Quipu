@@ -1,0 +1,4 @@
+QuipuBus.data: |-
+  输出原始数据（如 JSON, Diff 等），通常去往 stdout。
+_detect_lang: |-
+  检测系统或环境变量中定义的语言。Quipu 默认为 zh。

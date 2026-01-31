@@ -115,12 +115,12 @@
       "baseline_code_structure_hash": "e1b93ee725aa5ee39941887fb26b49732a7a8f61df0b77926daeda9129a29b32"
     },
     "py://packages/pyquipu-spec/src/quipu/spec/protocols/runtime.py#ActContext.fail": {
-      "baseline_code_signature_text": "def fail(self, message: str):",
-      "baseline_code_structure_hash": "958e2673564bee10478978290bfc40000240b95caeda5960ba5ab3f021fde407"
+      "baseline_code_signature_text": "def fail(self, message: str) -> NoReturn:",
+      "baseline_code_structure_hash": "c701c09df60d43a0600ec168d06541f71934202d8a2edbc652ff3e4e0b916c73"
     },
     "py://packages/pyquipu-spec/src/quipu/spec/protocols/runtime.py#ActContext.request_confirmation": {
-      "baseline_code_signature_text": "def request_confirmation(self, file_path: Path, old_content: str, new_content: str) -> bool:",
-      "baseline_code_structure_hash": "308ac488c4d05a8380d8910726f80f5b8037609442117aefbf79db0737ed1831"
+      "baseline_code_signature_text": "def request_confirmation(self, file_path: Path, old_content: str, new_content: str) -> None:",
+      "baseline_code_structure_hash": "8d4c2e2014aa61b323721722d0ef55cf792c43936b843bd139489a00730d14b5"
     },
     "py://packages/pyquipu-spec/src/quipu/spec/protocols/runtime.py#ActContext.resolve_path": {
       "baseline_code_signature_text": "def resolve_path(self, rel_path: str) -> Path:",
@@ -131,9 +131,13 @@
       "baseline_code_structure_hash": "5ba8feddbb90925be658fe1a55a0fcca2a2067850b995da8a15bd3f327af9910",
       "baseline_yaml_content_hash": "c265feb8cdf711f4a009e3a054c6d9b9e1cac38ca22db5431cacab79130a77b5"
     },
+    "py://packages/pyquipu-spec/src/quipu/spec/protocols/runtime.py#ExecutorProtocol.register": {
+      "baseline_code_signature_text": "def register(self, name: str, func: ActFunction, arg_mode: str = 'hybrid', summarizer: Any = None) -> None:",
+      "baseline_code_structure_hash": "59dd51bc95185f9ab1ee13d5621836ab10fa56f3d0db93850e3df7e6bccc02e1"
+    },
     "py://packages/pyquipu-spec/src/quipu/spec/protocols/runtime.py#ExecutorProtocol.request_confirmation": {
-      "baseline_code_signature_text": "def request_confirmation(self, file_path: Path, old_content: str, new_content: str) -> bool:",
-      "baseline_code_structure_hash": "308ac488c4d05a8380d8910726f80f5b8037609442117aefbf79db0737ed1831"
+      "baseline_code_signature_text": "def request_confirmation(self, file_path: Path, old_content: str, new_content: str) -> None:",
+      "baseline_code_structure_hash": "8d4c2e2014aa61b323721722d0ef55cf792c43936b843bd139489a00730d14b5"
     },
     "py://packages/pyquipu-spec/src/quipu/spec/protocols/runtime.py#ExecutorProtocol.resolve_path": {
       "baseline_code_signature_text": "def resolve_path(self, rel_path: str) -> Path:",

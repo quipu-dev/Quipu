@@ -1,0 +1,3 @@
+{
+  "usageHint": "\n用法示例:\n  quipu run my_plan.md\n  echo '...' | quipu run"
+}

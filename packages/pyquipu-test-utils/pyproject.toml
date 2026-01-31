@@ -26,7 +26,7 @@ keywords = ["quipu", "devops", "testing", "pytest"]
 dependencies = [
     "pyquipu-spec ~= 0.1.1",
     "pyquipu-engine ~= 0.2.1",
-    "pyquipu-bus ~= 0.2.0",
+    "pyneedle-bus ~= 0.1.4",
     "typer"
 ]
 
@@ -38,7 +38,6 @@ Repository = "https://github.com/quipu-dev/Quipu"
 [tool.uv.sources]
 pyquipu-spec = { workspace = true }
 pyquipu-engine = { workspace = true }
-pyquipu-bus = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quipu"]

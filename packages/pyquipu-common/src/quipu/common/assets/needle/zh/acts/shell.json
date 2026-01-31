@@ -1,0 +1,12 @@
+{
+  "error": {
+    "failed": "命令执行失败 (Code {code})",
+    "exception": "Shell 执行异常: {error}"
+  },
+  "info": {
+    "executing": "🚀 [Shell] 正在执行: {command}"
+  },
+  "warning": {
+    "stderrOutput": "⚠️  [Stderr]:\n{output}"
+  }
+}

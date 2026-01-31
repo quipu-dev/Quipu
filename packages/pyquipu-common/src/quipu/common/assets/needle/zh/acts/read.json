@@ -1,0 +1,24 @@
+{
+  "error": {
+    "pathNotFound": "搜索路径不存在: {path}",
+    "invalidRegex": "无效的正则表达式: {pattern} ({error})",
+    "targetNotFound": "文件不存在: {path}",
+    "targetIsDir": "这是一个目录，请使用 list_files: {path}",
+    "readFailed": "读取文件失败: {error}",
+    "dirNotFound": "目录不存在或不是目录: {path}",
+    "binaryOrEncoding": "❌ [读取] 无法读取二进制或非 UTF-8 文件: {filename}"
+  },
+  "info": {
+    "searching": "🔍 [搜索] 模式: '{pattern}' 于 {path}",
+    "useRipgrep": "⚡ 使用 'rg' (ripgrep) 进行高性能搜索。",
+    "noMatchRipgrep": "🤷 (rg) 未找到匹配项。",
+    "usePythonSearch": "🐢 使用原生 Python 搜索 (回退模式)。",
+    "noMatchPython": "🤷 (Python) 未找到匹配项。",
+    "readingFile": "📖 [读取] 正在读取 {filename}...",
+    "listingTree": "📂 [列表] 目录树: {path}",
+    "listingDir": "📂 [列表] 目录内容: {path}"
+  },
+  "warning": {
+    "ripgrepFailed": "⚠️  ripgrep 执行出错，回退到 Python 搜索: {error}"
+  }
+}
