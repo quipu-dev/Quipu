@@ -1,0 +1,5 @@
+{
+  "success": "✅ 已后退到状态: {short_hash}",
+  "atStart": "⚠️  已到达访问历史的起点。",
+  "error": "❌ 后退操作失败: {error}"
+}

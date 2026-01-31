@@ -1,0 +1,30 @@
+{
+  "git": {
+    "warning": {
+      "parseTreeFailed": "Error parsing tree {tree_hash}: {error}",
+      "skipNoMetadata": "Skipping commit {short_hash}: metadata.json not found in tree.",
+      "skipNoMetaBlob": "Skipping commit {short_hash}: metadata blob missing.",
+      "skipNoTrailer": "Skipping commit {short_hash}: X-Quipu-Output-Tree trailer not found.",
+      "detachedNode": "⚠️  Could not find parent commit for input state {short_hash}. This node may be detached."
+    },
+    "error": {
+      "loadNodeFailed": "Failed to load history node from commit {short_hash}: {e}",
+      "loadBlobsFailed": "Failed to load blobs for commit {short_hash}: {e}",
+      "lazyLoadFailed": "Failed to lazy load content for node {short_hash}: {e}",
+      "invalidRegex": "无效的正则表达式: {regex} ({error})"
+    },
+    "success": {
+      "nodeCreated": "✅ History node created as commit {short_hash}"
+    }
+  },
+  "sqlite": {
+    "warning": {
+      "selfReferenceEdge": "检测到并忽略了一个自引用边: {short_hash}",
+      "writeFailedHint": "   -> 下次启动或 `sync` 时将通过补水机制修复。",
+      "cacheWritebackFailed": "回填缓存失败: {short_hash}: {e}"
+    },
+    "error": {
+      "writeFailedCritical": "⚠️  严重: Git 节点 {short_hash} 已创建，但写入 SQLite 失败: {error}"
+    }
+  }
+}

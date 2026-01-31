@@ -1,0 +1,6 @@
+{
+  "cancelled": "🚫 操作已取消: {error}",
+  "execution": "❌ 操作失败: {error}",
+  "system": "系统错误: {error}",
+  "ambiguousCommand": "💡 提示: 你是不是想执行 'quipu {command}' 命令？"
+}

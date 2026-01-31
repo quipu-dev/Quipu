@@ -1,0 +1,19 @@
+{
+  "error": {
+    "notFound": "❌ 错误: 未找到 output_tree 哈希前缀为 '{hash_prefix}' 的历史节点。",
+    "notUnique": "❌ 错误: 哈希前缀 '{hash_prefix}' 不唯一，匹配到 {count} 个节点。"
+  },
+  "info": {
+    "noAction": "✅ 工作区已处于目标状态 ({short_hash})，无需操作。",
+    "capturingDrift": "⚠️  检测到当前工作区存在未记录的变更，将自动创建捕获节点..."
+  },
+  "success": {
+    "driftCaptured": "✅ 变更已捕获。"
+  },
+  "ui": {
+    "diffHeader": "\n以下是将要发生的变更:"
+  },
+  "prompt": {
+    "confirm": "🚨 即将重置工作区到状态 {short_hash} ({timestamp})。\n此操作会覆盖未提交的更改。是否继续？"
+  }
+}

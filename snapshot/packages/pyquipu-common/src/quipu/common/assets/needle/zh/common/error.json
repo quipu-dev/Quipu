@@ -1,0 +1,6 @@
+{
+  "generic": "❌ 系统错误: {error}",
+  "invalidConfig": "❌ 配置或参数无效: {error}",
+  "fileNotFound": "❌ 错误: 找不到指令文件: {path}",
+  "pathNotFile": "❌ 错误: 路径不是文件: {path}"
+}

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 # --- 配置 ---
-SOURCE_DIR = Path("packages/pyquipu-bus/src/quipu/bus/locales/zh")
+SOURCE_DIR = Path("packages/pyquipu-bus/src/quipu/locales/zh")
 TARGET_DIR = Path("packages/pyquipu-common/src/quipu/common/assets/needle/zh")
 
 def load_source_files(source_dir: Path) -> Dict[str, str]:

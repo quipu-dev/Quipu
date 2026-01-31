@@ -1,0 +1,19 @@
+{
+  "error": {
+    "writePermission": "写入文件失败: 对 '{path}' 的访问权限不足。",
+    "writeUnknown": "写入文件时发生未知错误: {error}",
+    "fileNotFound": "文件未找到: {path}",
+    "readFailed": "读取文件 {path} 失败: {error}",
+    "patchContentMismatch": "在文件 {path} 中未找到指定的旧文本。\n请确保 Markdown 块中的空格和换行完全匹配。",
+    "patchContentAmbiguous": "在文件 {path} 中找到 {count} 个匹配项，无法确定要替换哪一个。",
+    "patchPermission": "替换文件内容失败: 对 '{path}' 的访问权限不足。",
+    "patchUnknown": "更新文件时发生未知错误: {error}",
+    "appendPermission": "追加文件内容失败: 对 '{path}' 的访问权限不足。",
+    "appendUnknown": "追加文件时发生未知错误: {error}"
+  },
+  "success": {
+    "fileWritten": "✅ [写入] 文件已写入: {path}",
+    "filePatched": "✅ [更新] 文件内容已更新: {path}",
+    "fileAppended": "✅ [追加] 内容已追加到: {path}"
+  }
+}

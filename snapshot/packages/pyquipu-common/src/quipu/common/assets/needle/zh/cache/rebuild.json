@@ -1,0 +1,9 @@
+{
+  "info": {
+    "dbNotFound": "🤷 数据库文件不存在，将直接创建。无需重建。",
+    "deleting": "🗑️  旧数据库已删除。"
+  },
+  "error": {
+    "deleteFailed": "❌ 删除旧数据库失败: {error}"
+  }
+}

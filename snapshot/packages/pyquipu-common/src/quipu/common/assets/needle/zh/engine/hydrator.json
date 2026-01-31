@@ -1,0 +1,15 @@
+{
+  "info": {
+    "foundNodes": "发现 {count} 个需要补水的节点。",
+    "nodesHydrated": "💧 {count} 个节点元数据已补水。",
+    "edgesHydrated": "💧 {count} 条边关系已补水。"
+  },
+  "warning": {
+    "skipNoOwner": "跳过 {short_hash}: 无法确定所有者",
+    "skipNoMetadata": "跳过 {short_hash}: 找不到 metadata.json 内容",
+    "skipNoTrailer": "跳过 {short_hash}: 找不到 Output-Tree trailer"
+  },
+  "error": {
+    "parseMetaFailed": "解析 {short_hash} 的元数据失败: {e}"
+  }
+}
