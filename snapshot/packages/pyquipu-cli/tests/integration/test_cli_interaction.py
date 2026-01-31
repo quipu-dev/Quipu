@@ -1,3 +1,4 @@
+from needle.pointer import L
 from unittest.mock import MagicMock
 
 from quipu.cli.main import app
@@ -26,6 +27,6 @@ echo "Success" > {output_file.name}
     result = runner.invoke(app, ["run", "-w", str(work_dir)], input=plan_content + user_input)
 
     assert result.exit_code == 0
-    mock_bus.success.assert_called_once_with("run.success")
+    mock_bus.success.assert_called_once_with(L.run.success)
     assert output_file.exists(), "The command did not create the output file."
     assert output_file.read_text().strip() == "Success"

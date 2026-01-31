@@ -1,3 +1,4 @@
+from needle.pointer import L
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -14,7 +15,7 @@ def test_save_clean_workspace(runner, quipu_workspace, monkeypatch):
 
     result = runner.invoke(app, ["save", "-w", str(work_dir)])
     assert result.exit_code == 0
-    mock_bus.success.assert_called_once_with("workspace.save.noChanges")
+    mock_bus.success.assert_called_once_with(L.workspace.save.noChanges)
 
 
 def test_save_with_changes(runner, quipu_workspace, monkeypatch):
@@ -26,7 +27,7 @@ def test_save_with_changes(runner, quipu_workspace, monkeypatch):
 
     result = runner.invoke(app, ["save", "My Snapshot", "-w", str(work_dir)])
     assert result.exit_code == 0
-    mock_bus.success.assert_called_once_with("workspace.save.success", short_hash=mock.ANY, msg_suffix=" (My Snapshot)")
+    mock_bus.success.assert_called_once_with(L.workspace.save.success, short_hash=mock.ANY, msg_suffix=" (My Snapshot)")
 
 
 def test_discard_changes(runner, quipu_workspace, monkeypatch):
@@ -40,7 +41,7 @@ def test_discard_changes(runner, quipu_workspace, monkeypatch):
 
     result = runner.invoke(app, ["discard", "-f", "-w", str(work_dir)])
     assert result.exit_code == 0
-    mock_bus.success.assert_called_once_with("workspace.discard.success", short_hash=initial_node.short_hash)
+    mock_bus.success.assert_called_once_with(L.workspace.discard.success, short_hash=initial_node.short_hash)
     assert (work_dir / "file.txt").read_text() == "v1"
 
 
@@ -56,5 +57,5 @@ def test_discard_interactive_abort(runner, quipu_workspace, monkeypatch):
     result = runner.invoke(app, ["discard", "-w", str(work_dir)], input="n")
 
     assert result.exit_code == 1
-    mock_bus.warning.assert_called_once_with("common.prompt.cancel")
+    mock_bus.warning.assert_called_once_with(L.common.prompt.cancel)
     assert (work_dir / "file.txt").read_text() == "v2"

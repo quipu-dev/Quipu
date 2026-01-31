@@ -1,6 +1,7 @@
 from unittest.mock import ANY, MagicMock
 
 import pytest
+from needle.pointer import L
 from quipu.cli.main import app
 from quipu.test_utils.helpers import create_linear_history
 
@@ -52,14 +53,14 @@ def test_cli_boundary_messages(runner, populated_workspace, monkeypatch):
     runner.invoke(app, ["back", "-w", str(workspace)])
     result2 = runner.invoke(app, ["back", "-w", str(workspace)])  # one more should hit boundary
     assert result2.exit_code == 0
-    mock_bus.warning.assert_called_with("navigation.back.atStart")
+    mock_bus.warning.assert_called_with(L.navigation.back.atStart)
 
     # Forward until the end
     runner.invoke(app, ["forward", "-w", str(workspace)])  # to B
     runner.invoke(app, ["forward", "-w", str(workspace)])  # to A
     result3 = runner.invoke(app, ["forward", "-w", str(workspace)])
     assert result3.exit_code == 0
-    mock_bus.warning.assert_called_with("navigation.forward.atEnd")
+    mock_bus.warning.assert_called_with(L.navigation.forward.atEnd)
 
 
 def test_checkout_not_found(runner, populated_workspace, monkeypatch):
@@ -69,4 +70,4 @@ def test_checkout_not_found(runner, populated_workspace, monkeypatch):
 
     result = runner.invoke(app, ["checkout", "nonexistent", "-w", str(workspace)])
     assert result.exit_code == 1
-    mock_bus.error.assert_called_once_with("navigation.checkout.error.notFound", hash_prefix="nonexistent")
+    mock_bus.error.assert_called_once_with(L.navigation.checkout.error.notFound, hash_prefix="nonexistent")

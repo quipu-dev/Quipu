@@ -1,53 +1,131 @@
-好的，重构脚本已执行完毕。我们将这些变更作为一个完整的逻辑单元提交到历史记录中。
+好的，保持一致性对测试代码的健壮性至关重要。将测试中的断言也同步到 `L` 指针，可以确保当我们在生产代码中利用 IDE 重构（如重命名某个消息 ID 路径）时，测试用例能自动同步，从而真正发挥重构的威力。
 
-[COMMIT] 计划将把所有受影响的文件添加到 Git 暂存区并创建提交。
+我将生成一个计划，通过脚本自动扫描测试目录并执行这一转换。
 
-## [COMMIT] refactor: 迁移 bus 消息 ID 至 L 指针
+## [WIP] refactor: 迁移测试断言中的消息 ID 至 L 指针
 
 ### 用户需求
-正式提交将字符串形式的消息 ID 重构为 `needle.pointer.L` 对象的变更。
+将测试目录中所有 `mock_bus` 的断言调用（如 `assert_called_with("string.id")`）重构为使用 `L` 指针（如 `assert_called_with(L.string.id)`）。
 
 ### 评论
-此次提交涉及 `quipu-cli`、`quipu-runtime` 和 `quipu-engine` 等多个组件，是提升系统类型安全性的关键一步。通过 Git 提交，我们锁定了这一架构改进。
+在集成测试中，我们大量使用了 `mock_bus` 来验证业务意图。通过将这些断言也迁移到 `L` 指针，我们实现了生产代码与测试代码在语义标识符上的“强耦合”，这是一种健康的耦合，因为它确保了变更的原子性。
 
 ### 目标
-1.  将所有被脚本修改的 Python 文件添加到 Git 暂存区。
-2.  创建一个清晰、描述性的 Git 提交。
+1.  创建一个重构脚本 `refactor_test_assertions.py`。
+2.  执行脚本，扫描 `packages/**/tests/` 和根目录 `tests/` 下的所有 Python 文件：
+    *   将 `mock_bus.<method>.<assertion>("id")` 替换为 `mock_bus.<method>.<assertion>(L.id)`。
+    *   在测试文件中注入 `from needle.pointer import L`。
+3.  验证并删除脚本。
 
 ### 基本原理
-遵循 `d3-constraint-quipu-plan-script-rules`，在独立的文件修改计划之后进行 Git 操作，确保变更被正确验证和记录。使用 `L` 指针不仅是语法糖，它标志着系统向更加严格、自文档化的方向演进。
+*   **多级正则匹配**: 脚本会识别 `assert_called_with`、`assert_called_once_with` 和 `assert_any_call` 等常见的 Mock 断言方法。
+*   **智能导入注入**: 脚本会尝试在 `import pytest` 或文件开头的导入块中插入 `L` 指针的导入语句。
 
 ### 标签
-#intent/refine #flow/ready #priority/medium #comp/cli #comp/runtime #comp/engine #concept/ui #scope/dx #ai/instruct #task/domain/tech-debt #task/object/l-pointer #task/action/refactor #task/state/end #task/status/completed
+#intent/refine #intent/tooling #comp/tests #scope/dx #ai/instruct #task/domain/testing #task/object/l-pointer #task/action/refactor-assertions #task/state/begin
 
 ---
 
 ### Script
 
-#### Acts 1: 提交变更
-将所有重构后的文件加入暂存区并创建提交。
+#### Acts 1: 创建测试重构脚本
 
 ~~~~~act
-git_add
-.
+write_file
+refactor_test_assertions.py
 ~~~~~
+~~~~~python
+import os
+import re
+
+# 扫描 packages 下的测试和根目录下的测试
+SCAN_PATHS = ["packages", "tests"]
+
+# 匹配模式：
+# 1. 基础部分: mock_bus.<method>
+# 2. 断言方法: assert_called_with, assert_called_once_with, assert_any_call, called_with
+# 3. ID 字符串
+TEST_ASSERT_PATTERN = re.compile(
+    r'(mock_bus\.[a-z_]+\.(?:assert_called_with|assert_called_once_with|assert_any_call|called_with))\s*\(\s*(["\'])([a-zA-Z0-9_]+\.[a-zA-Z0-9_\.]+)\2'
+)
+
+def process_file(filepath):
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+    except UnicodeDecodeError:
+        return
+
+    new_content = content
+    has_replacement = False
+
+    def replace_match(match):
+        nonlocal has_replacement
+        has_replacement = True
+        prefix = match.group(1)
+        id_str = match.group(3)
+        return f"{prefix}(L.{id_str}"
+
+    new_content = TEST_ASSERT_PATTERN.sub(replace_match, content)
+
+    if has_replacement:
+        # 注入导入语句
+        if "from needle.pointer import L" not in new_content:
+            # 优先插入在 pytest 导入之后，或者在文件开头的 import 块
+            if "import pytest" in new_content:
+                new_content = new_content.replace(
+                    "import pytest",
+                    "import pytest\nfrom needle.pointer import L"
+                )
+            else:
+                first_import = re.search(r'^(import|from)\s', new_content, re.MULTILINE)
+                if first_import:
+                    insert_pos = first_import.start()
+                    new_content = new_content[:insert_pos] + "from needle.pointer import L\n" + new_content[insert_pos:]
+                else:
+                    new_content = "from needle.pointer import L\n" + new_content
+        
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(new_content)
+        print(f"Refactored test: {filepath}")
+
+def main():
+    print("Starting L-pointer refactoring for tests...")
+    for start_path in SCAN_PATHS:
+        for root, dirs, files in os.walk(start_path):
+            # 仅处理 Python 文件
+            for name in files:
+                if name.endswith(".py") and ("test_" in name or "conftest" in name):
+                    process_file(os.path.join(root, name))
+    print("Test refactoring complete.")
+
+if __name__ == "__main__":
+    main()
+~~~~~
+
+#### Acts 2: 执行测试重构
 
 ~~~~~act
-git_commit
+run_command
 ~~~~~
-~~~~~text
-refactor: migrate bus message IDs from strings to L pointer
+~~~~~
+python3 refactor_test_assertions.py
+~~~~~
 
-This commit replaces all string-literal message IDs used in 'bus.info', 'bus.error', etc., with 'needle.pointer.L' semantic pointers.
+#### Acts 3: 验证结果
+检查一个典型的集成测试文件，确认断言是否已更新。
 
-Benefits:
-- Enables IDE autocomplete and refactoring support for message IDs.
-- Provides a centralized, type-safe way to manage UI messages.
-- Removes "magic strings" from business and CLI logic.
+~~~~~act
+read_file
+packages/pyquipu-cli/tests/integration/test_cache_commands.py
+~~~~~
 
-Modified files throughout the monorepo to include 'from needle.pointer import L' and updated bus calls accordingly.
+#### Acts 4: 清理脚本
+
+~~~~~act
+delete_file
+refactor_test_assertions.py
 ~~~~~
 
 ### 下一步建议
-- **同步测试断言**: 下一步可以考虑将测试用例中的 `mock_bus.info.assert_called_with("string.id")` 也同步重构为 `mock_bus.info.assert_called_with(L.string.id)`，以保持测试代码与生产代码的一致性。
-- **ID 发现工具**: 随着 `L` 的引入，我们可以构建一个简单的静态分析工具，自动提取系统中所有使用的 `L` 指针路径，从而自动生成 I18N 资产模板（`.yaml` 文件），确保没有任何 ID 遗漏翻译。
+一旦测试用例也完成了 `L` 指针的迁移，我建议运行 `pytest` 来验证全系统的一致性。如果一切正常，我们可以进行最终的 `[COMMIT]`。
