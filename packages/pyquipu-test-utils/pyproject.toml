@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyquipu-test-utils"
-version = "0.2.0"
+version = "0.3.0"
 authors = [{ name="doucx", email="doucxldh@gmail.com" }]
 description = "Common testing utilities for the Quipu ecosystem."
 requires-python = ">=3.10"
@@ -25,8 +25,9 @@ keywords = ["quipu", "devops", "testing", "pytest"]
 
 dependencies = [
     "pyquipu-spec ~= 0.1.1",
-    "pyquipu-engine ~= 0.2.1",
+    "pyquipu-engine ~= 0.3.0",
     "pyneedle-bus ~= 0.1.4",
+    "pyneedle-pointer ~= 0.2.1",
     "typer"
 ]
 

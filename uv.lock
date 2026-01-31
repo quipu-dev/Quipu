@@ -358,7 +358,7 @@ wheels = [
 
 [[package]]
 name = "pyquipu"
-version = "0.2.1"
+version = "0.3.0"
 source = { editable = "packages/pyquipu" }
 dependencies = [
     { name = "pyquipu-application" },
@@ -381,7 +381,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-application"
-version = "0.2.1"
+version = "0.3.0"
 source = { editable = "packages/pyquipu-application" }
 dependencies = [
     { name = "pyquipu-common" },
@@ -400,7 +400,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-cli"
-version = "0.2.1"
+version = "0.3.0"
 source = { editable = "packages/pyquipu-cli" }
 dependencies = [
     { name = "pyquipu-application" },
@@ -425,18 +425,22 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-common"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "packages/pyquipu-common" }
 dependencies = [
     { name = "pyneedle-bus" },
+    { name = "pyneedle-pointer" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pyneedle-bus", specifier = "~=0.1.4" }]
+requires-dist = [
+    { name = "pyneedle-bus", specifier = "~=0.1.4" },
+    { name = "pyneedle-pointer", specifier = "~=0.2.1" },
+]
 
 [[package]]
 name = "pyquipu-engine"
-version = "0.2.1"
+version = "0.3.0"
 source = { editable = "packages/pyquipu-engine" }
 dependencies = [
     { name = "pyquipu-common" },
@@ -462,6 +466,7 @@ dependencies = [
 [package.optional-dependencies]
 dev = [
     { name = "pre-commit" },
+    { name = "pyneedle-pointer" },
     { name = "pyquipu" },
     { name = "pyquipu-test-utils" },
     { name = "pytest" },
@@ -473,6 +478,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "pre-commit", marker = "extra == 'dev'" },
+    { name = "pyneedle-pointer", marker = "extra == 'dev'" },
     { name = "pyquipu", editable = "packages/pyquipu" },
     { name = "pyquipu", marker = "extra == 'dev'", editable = "packages/pyquipu" },
     { name = "pyquipu-test-utils", marker = "extra == 'dev'", editable = "packages/pyquipu-test-utils" },
@@ -485,7 +491,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-runtime"
-version = "0.2.1"
+version = "0.3.0"
 source = { editable = "packages/pyquipu-runtime" }
 dependencies = [
     { name = "pyquipu-common" },
@@ -507,10 +513,11 @@ source = { editable = "packages/pyquipu-spec" }
 
 [[package]]
 name = "pyquipu-test-utils"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/pyquipu-test-utils" }
 dependencies = [
     { name = "pyneedle-bus" },
+    { name = "pyneedle-pointer" },
     { name = "pyquipu-engine" },
     { name = "pyquipu-spec" },
     { name = "typer" },
@@ -519,6 +526,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pyneedle-bus", specifier = "~=0.1.4" },
+    { name = "pyneedle-pointer", specifier = "~=0.2.1" },
     { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
     { name = "pyquipu-spec", editable = "packages/pyquipu-spec" },
     { name = "typer" },
