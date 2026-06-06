@@ -29,13 +29,23 @@ def register(app: typer.Typer):
         with engine_context(work_dir) as engine:
             graph = engine.history_graph
 
-            matches = [node for node in graph.values() if node.output_tree.startswith(hash_prefix)]
+            matches = [
+                node
+                for node in graph.values()
+                if node.commit_hash.startswith(hash_prefix) or node.output_tree.startswith(hash_prefix)
+            ]
             if not matches:
                 bus.error(L.navigation.checkout.error.notFound, hash_prefix=hash_prefix)
                 ctx.exit(1)
-            if len(matches) > 1:
+
+            unique_output_trees = {node.output_tree for node in matches}
+            if len(unique_output_trees) > 1:
                 bus.error(L.navigation.checkout.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
                 ctx.exit(1)
+
+            if len(matches) > 1:
+                matches.sort(key=lambda n: (1 if n.parent else 0, n.timestamp), reverse=True)
+
             target_node = matches[0]
             target_output_tree_hash = target_node.output_tree
 

@@ -190,3 +190,33 @@ class TestPersistentIgnores:
         assert "custom_dir/" in content
         assert "*.tmp" in content
         assert ".envs" not in content
+
+
+def test_align_prefers_connected_node(engine_instance: Engine):
+    engine = engine_instance
+    repo_path = engine.root_dir
+
+    # 1. 创建初始状态并提交为第一个节点
+    (repo_path / "file.txt").write_text("v0")
+    hash_init = engine.git_db.get_tree_hash()
+    node_init = engine.create_plan_node(EMPTY_TREE_HASH, hash_init, "init plan")
+
+    # 2. 在其基础上创建状态 A 并作为子节点提交
+    (repo_path / "file.txt").write_text("v1")
+    hash_a = engine.git_db.get_tree_hash()
+    node_connected = engine.create_plan_node(hash_init, hash_a, "connected plan")
+
+    # 3. 本地漂移节点（孤立，无 parent）也指向 hash_a
+    node_orphan = engine.writer.create_node(
+        node_type="capture",
+        input_tree=EMPTY_TREE_HASH,
+        output_tree=hash_a,
+        content="orphan capture",
+    )
+
+    # 4. 对齐
+    engine.align()
+
+    # 5. 验证是否优先对齐到连接链更完备的节点
+    assert engine.current_node is not None
+    assert engine.current_node.commit_hash == node_connected.commit_hash

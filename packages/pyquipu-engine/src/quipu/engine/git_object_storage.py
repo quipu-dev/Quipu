@@ -185,13 +185,10 @@ class GitObjectHistoryReader:
 
     def get_ancestor_output_trees(self, start_output_tree_hash: str) -> Set[str]:
         all_nodes = self.load_all_nodes()
-        node_map = {n.output_tree: n for n in all_nodes}
+        start_nodes = [n for n in all_nodes if n.output_tree == start_output_tree_hash]
 
         ancestors = set()
-        queue = []
-
-        if start_output_tree_hash in node_map:
-            queue.append(node_map[start_output_tree_hash])
+        queue = list(start_nodes)
 
         while queue:
             current_node = queue.pop(0)
@@ -208,13 +205,10 @@ class GitObjectHistoryReader:
 
     def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:
         all_nodes = self.load_all_nodes()
-        node_map = {n.output_tree: n for n in all_nodes}
+        start_nodes = [n for n in all_nodes if n.output_tree == start_output_tree_hash]
 
         descendants = set()
-        queue = []
-
-        if start_output_tree_hash in node_map:
-            queue.append(node_map[start_output_tree_hash])
+        queue = list(start_nodes)
 
         while queue:
             current_node = queue.pop(0)

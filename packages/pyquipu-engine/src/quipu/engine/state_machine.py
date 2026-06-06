@@ -233,12 +233,12 @@ class Engine:
             self.current_node = None
             return "CLEAN"
 
-        # Find node by iterating since keys are now commit hashes
-        found_node = None
-        for node in self.history_graph.values():
-            if node.output_tree == current_hash:
-                found_node = node
-                break
+        matches = [node for node in self.history_graph.values() if node.output_tree == current_hash]
+        if matches:
+            matches.sort(key=lambda n: (1 if n.parent else 0, n.timestamp), reverse=True)
+            found_node = matches[0]
+        else:
+            found_node = None
 
         if found_node:
             self.current_node = found_node

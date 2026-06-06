@@ -196,3 +196,33 @@ class TestSQLiteReaderPaginated:
         assert output_tree_hashes[0] in ancestor_output_trees
         assert output_tree_hashes[13] in ancestor_output_trees
         assert output_tree_hashes[14] not in ancestor_output_trees  # Should not contain itself
+
+    def test_get_ancestors_with_duplicate_hashes(self, sqlite_reader_setup):
+        reader, git_writer, hydrator, db_manager, repo, git_db = sqlite_reader_setup
+
+        # 1. 模拟两条有公共哈希终点但属于不同分支的历史
+        # 节点 A (v1)
+        (repo / "f.txt").write_text("v1")
+        hash_a = git_db.get_tree_hash()
+        node_a = git_writer.create_node("plan", EMPTY_TREE_HASH, hash_a, "Node A")
+
+        # 节点 B1 (B1 是 A 的子节点)
+        (repo / "f.txt").write_text("v2")
+        hash_b1 = git_db.get_tree_hash()
+        node_b1 = git_writer.create_node("plan", hash_a, hash_b1, "Node B1")
+
+        # 节点 B2 (B2 是 A 的子节点，但最终回到了 v1 的状态，也就是 B2 的 output_tree 也是 hash_a)
+        # 这样 B2 就与 A 拥有相同的 output_tree
+        # 我们用 git_writer 创建这个 B2，其父节点是 B1
+        node_b2 = git_writer.create_node("plan", hash_b1, hash_a, "Node B2")
+
+        # 2. 补水
+        hydrator.sync("test-user")
+
+        # 3. 查 B2 (也就是 hash_a) 的祖先
+        # 因为 hash_a 在 nodes 表中有两个对应的 commit 记录 (node_a 和 node_b2)
+        # 如果新逻辑正常，它应该联合两者的祖先进行检索
+        # node_b2 的祖先包含 B1 (hash_b1) 和 A (hash_a)。node_a 的祖先是 EMPTY_TREE_HASH。
+        # 因此，ancestor 集合必须能成功包含 hash_b1！
+        ancestors = reader.get_ancestor_output_trees(hash_a)
+        assert hash_b1 in ancestors
