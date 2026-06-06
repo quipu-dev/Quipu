@@ -4,7 +4,7 @@ import typer
 
 
 class TyperRenderer:
-    def render(self, message: str, level: str = "info", **kwargs: Any) -> None:
+    def render(self, message_text: str, level: str = "info", **kwargs: Any) -> None:
         color = None
         err = True  # 默认输出到 stderr (反馈信息)
 
@@ -22,7 +22,7 @@ class TyperRenderer:
             pass
 
         # Typer 的 secho 处理颜色和 stderr 输出
-        typer.secho(message, fg=color, err=err)
+        typer.secho(message_text, fg=color, err=err)
 
     def data(self, data_string: str) -> None:
         typer.echo(data_string, err=False)
