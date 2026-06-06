@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "Capture: M rendering.py", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1780751440.2476754, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[COMMIT] fix(core): 解决分布式相同树哈希状态对齐、可达性查询及导航歧义问题", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1780751440.6231148, "duration_ms": 0}}
