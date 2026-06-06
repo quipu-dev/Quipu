@@ -71,3 +71,23 @@ def test_checkout_not_found(runner, populated_workspace, monkeypatch):
     result = runner.invoke(app, ["checkout", "nonexistent", "-w", str(workspace)])
     assert result.exit_code == 1
     mock_bus.error.assert_called_once_with(L.navigation.checkout.error.notFound, hash_prefix="nonexistent")
+
+
+def test_checkout_duplicate_tree_hashes(runner, quipu_workspace, monkeypatch):
+    work_dir, _, engine = quipu_workspace
+    mock_bus = MagicMock()
+    monkeypatch.setattr("quipu.cli.commands.navigation.bus", mock_bus)
+
+    # 创建状态 A
+    (work_dir / "file.txt").write_text("v1")
+    hash_a = engine.git_db.get_tree_hash()
+
+    # 产生两个拥有相同 output_tree (hash_a) 但不同 commit 的节点
+    engine.create_plan_node("genesis", hash_a, "Plan 1", summary_override="Node 1")
+    engine.create_plan_node(hash_a, hash_a, "Plan 2", summary_override="Node 2")
+
+    # 执行 checkout 哈希前缀
+    result = runner.invoke(app, ["checkout", hash_a[:7], "-w", str(work_dir), "-f"])
+    assert result.exit_code == 0
+    # 验证是否静默地成功匹配并重定向
+    mock_bus.success.assert_any_call("navigation.checkout.info.noAction", short_hash=ANY)

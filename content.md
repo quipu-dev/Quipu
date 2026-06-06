@@ -1,443 +1,190 @@
-好的，我已经设计了完整的实施计划来解决这个问题。该计划将更新 CLI 的模糊匹配与去重机制，优化状态机的优先对齐策略，并重构 SQLite 和 Git 内存历史存储库的可达性关系图遍历。
+好的，我们来为上一阶段实现的分布式等价节点对齐、可达性多起点遍历和导航去重逻辑编写针对性的集成测试。这些测试将直接覆盖 `Engine.align`、`HistoryReader` 可达性检索以及 CLI 的 `checkout` 歧义规避行为。
 
-## [WIP] fix: 解决分布式捕获造成的相同树哈希状态对齐和导航歧义
-
-### 错误分析
-在 Quipu 的分布式协作或多工作区同步场景中，不同的客户端可能在各自的本地工作区中对完全相同的物理文件状态进行了独立的漂移捕获（Drift Capture）。这导致历史图谱中产生多个独立的 Quipu 提交（Commit Hash），但它们共享完全相同的物理树哈希（`output_tree`）。
-
-这种数据同态带来了以下缺陷：
-1. **关系遍历断裂**：`get_ancestor_output_trees` 与 `get_descendant_output_trees` 仅对单个匹配 `output_tree` 的 Commit 进行遍历。若系统随机在数据库中检索到了一条本地孤立节点的 Commit，其祖先树集合将显示为空，导致另一条分支的大量关联节点在 `--reachable-only` 或 UI 隐藏模式下被错误判定为不可达而被过滤。
-2. **状态对齐随机性**：在 `Engine.align` 逻辑中，当多个节点拥有相同的 `output_tree` 时，未指定挑选策略，容易对齐到无 parent 的本地临时节点上，间接放大了关系断裂的问题。
-3. **指令匹配阻断**：`checkout` 和 `show` 在解析输入前缀时，未提供对 `commit_hash` 的支持，且在 `output_tree` 匹配到多节点时直接因“不唯一”报错阻断用户，无法处理相同物理树的等价还原。
+## [WIP] test: 为分布式捕获造成的相同树哈希状态对齐和导航逻辑编写集成测试
 
 ### 用户需求
-系统应当支持在不同客户端对相同工作区文件状态进行独立捕获的情况下，依然能正确、 deterministically 地将本地状态对齐到最完整的历史链上，在渲染可达性集合时对这些等价分支进行深度联合，并且在 `checkout` 或 `show` 遇到同等物理树时不进行歧义报错阻断。
+为上一阶段解决分布式捕获同态状态分歧相关的修复（歧义规避、可达性集合合并、最佳Representative对齐）编写稳定的自动化测试用例，确保系统的长期稳定性，不产生回归。
 
 ### 评论
-该重构对于提升多客户端同步、协同文件溯源等高阶场景下的系统健壮性与可用性非常有价值。通过弱化节点形式差异、强化物理内容等价性的处理机制，能够使 Quipu 在发生未对齐漂移捕获时表现得更加智能与宽容。
+添加这组测试有助于验证我们在图遍历、树对齐和命令行解析逻辑上的改进。它保证了即使在多客户端发生未对齐漂移捕获时，Quipu 依然能在底层逻辑上正确维护历史的连续性，并为开发人员提供清晰的质量保障屏障。
 
 ### 目标
-1. 升级底层 `HistoryReader` 在 SQLite 和内存模式下的关系拓扑检索，由单个匹配升级为所有等价 Commit 起点的联合广度检索。
-2. 优化 `Engine.align` 的对齐逻辑，当发现多重匹配时，智能优先对齐到拥有完整历史父节点链的分支上。
-3. 允许 `checkout` 同时通过 `commit_hash` 进行确定性状态检出，并在模糊匹配到相同 `output_tree` 时自动完成歧义规避。
+1. 在 `test_navigation_commands.py` 中添加针对同等物理树下的 checkout 去重测试，验证当相同 output_tree 指向两个不同 commit 时不会报错中断。
+2. 在 `test_engine.py` 中添加 `test_align_prefers_connected_node` 测试，验证对齐操作会智能锁定含有完整历史的分支。
+3. 在 SQLite 的 `test_reader.py` 中添加 `test_get_ancestors_with_duplicate_hashes` 测试，验证 CTE 是否成功实现多 Commit 联合回溯。
 
 ### 基本原理
-1. 在关系查询阶段，对特定 `output_tree` 匹配到的所有 Commit 执行联合关系 CTE（递归公用表表达式）或拓扑回溯，确保等价状态在不同分支上的上下游能够全部进入 Reachability 缓存计算。
-2. 在对齐阶段，对树哈希匹配项进行二元权重排序（是否有 parent、生成时间戳最新），使 Engine 总是优先锁定处于骨干历史中的节点。
-3. 在匹配机制上支持同时检索 `commit_hash` 和 `output_tree`，从而在保留状态模糊还原优势的同时，允许使用精确的提交 ID。
+1. 对于 checkout：由于物理树状态相同，checkout 操作应该表现为幂等通过。我们通过在测试中连续执行两次 plan（产生相同 output_tree 两个 commit）并进行 checkout 来验证规避逻辑。
+2. 对于 align：我们通过手动在 ODB 中创建一条空 parent 的 capture 记录与一条含有 parent 的 plan 记录（二者指向同一 tree），验证对齐逻辑是否能优先挑中更完整的那个。
+3. 对于 CTE：利用两条分支（其中一条回归到之前的 tree 状态），测试在执行可达性祖先查询时，是否能同时将两个 Commit 指针指向的完整链全部追溯出来。
 
 ### 标签
-#intent/fix #flow/ready #priority/high
-#comp/cli #comp/engine #concept/state #concept/navigation #scope/core #scope/ux
+#intent/tooling #flow/ready #priority/high
+#comp/tests #concept/state #concept/navigation #scope/core
 #ai/delegate
-#task/domain/storage
-#task/object/state-alignment
+#task/domain/testing
+#task/object/state-alignment-tests
 #task/action/bug-fix
-#task/state/begin #task/status/active
+#task/state/continue #task/status/active
 
 ---
 
 ### Script
 
-#### Acts 1: 重构 CLI 命令的唯一性规避逻辑
+#### Acts 1: 在 CLI 测试套件中增加 checkout 去重规避测试
 
-更新 `checkout` 与 `show` 逻辑，允许匹配 `commit_hash`，并在匹配结果对应的底层 `output_tree` 一致时静默选取最佳节点予以通过。
-
-~~~~~act
-patch_file
-packages/pyquipu-cli/src/quipu/cli/commands/navigation.py
-~~~~~
-~~~~~python.old
-            matches = [node for node in graph.values() if node.output_tree.startswith(hash_prefix)]
-            if not matches:
-                bus.error(L.navigation.checkout.error.notFound, hash_prefix=hash_prefix)
-                ctx.exit(1)
-            if len(matches) > 1:
-                bus.error(L.navigation.checkout.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
-                ctx.exit(1)
-            target_node = matches[0]
-            target_output_tree_hash = target_node.output_tree
-~~~~~
-~~~~~python.new
-            matches = [
-                node
-                for node in graph.values()
-                if node.commit_hash.startswith(hash_prefix) or node.output_tree.startswith(hash_prefix)
-            ]
-            if not matches:
-                bus.error(L.navigation.checkout.error.notFound, hash_prefix=hash_prefix)
-                ctx.exit(1)
-
-            unique_output_trees = {node.output_tree for node in matches}
-            if len(unique_output_trees) > 1:
-                bus.error(L.navigation.checkout.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
-                ctx.exit(1)
-
-            if len(matches) > 1:
-                matches.sort(key=lambda n: (0 if n.parent else 1, n.timestamp), reverse=True)
-
-            target_node = matches[0]
-            target_output_tree_hash = target_node.output_tree
-~~~~~
+修改 `test_navigation_commands.py`，增加对拥有相同 tree hash 但不同 commits 的 checkout 规避测试。
 
 ~~~~~act
 patch_file
-packages/pyquipu-cli/src/quipu/cli/commands/show.py
+packages/pyquipu-cli/tests/integration/test_navigation_commands.py
 ~~~~~
 ~~~~~python.old
-def _find_target_node(graph: Dict, hash_prefix: str):
-    matches = [
-        node
-        for node in graph.values()
-        if node.commit_hash.startswith(hash_prefix) or node.output_tree.startswith(hash_prefix)
-    ]
-    if not matches:
-        bus.error(L.show.error.notFound, hash_prefix=hash_prefix)
-        raise typer.Exit(1)
-    if len(matches) > 1:
-        bus.error(L.show.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
-        raise typer.Exit(1)
-    return matches[0]
+def test_checkout_not_found(runner, populated_workspace, monkeypatch):
+    workspace, _, _ = populated_workspace
+    mock_bus = MagicMock()
+    monkeypatch.setattr("quipu.cli.commands.navigation.bus", mock_bus)
+
+    result = runner.invoke(app, ["checkout", "nonexistent", "-w", str(workspace)])
+    assert result.exit_code == 1
+    mock_bus.error.assert_called_once_with(L.navigation.checkout.error.notFound, hash_prefix="nonexistent")
 ~~~~~
 ~~~~~python.new
-def _find_target_node(graph: Dict, hash_prefix: str):
-    matches = [
-        node
-        for node in graph.values()
-        if node.commit_hash.startswith(hash_prefix) or node.output_tree.startswith(hash_prefix)
-    ]
-    if not matches:
-        bus.error(L.show.error.notFound, hash_prefix=hash_prefix)
-        raise typer.Exit(1)
+def test_checkout_not_found(runner, populated_workspace, monkeypatch):
+    workspace, _, _ = populated_workspace
+    mock_bus = MagicMock()
+    monkeypatch.setattr("quipu.cli.commands.navigation.bus", mock_bus)
+
+    result = runner.invoke(app, ["checkout", "nonexistent", "-w", str(workspace)])
+    assert result.exit_code == 1
+    mock_bus.error.assert_called_once_with(L.navigation.checkout.error.notFound, hash_prefix="nonexistent")
+
+
+def test_checkout_duplicate_tree_hashes(runner, quipu_workspace, monkeypatch):
+    work_dir, _, engine = quipu_workspace
+    mock_bus = MagicMock()
+    monkeypatch.setattr("quipu.cli.commands.navigation.bus", mock_bus)
+
+    # 创建状态 A
+    (work_dir / "file.txt").write_text("v1")
+    hash_a = engine.git_db.get_tree_hash()
+
+    # 产生两个拥有相同 output_tree (hash_a) 但不同 commit 的节点
+    engine.create_plan_node("genesis", hash_a, "Plan 1", summary_override="Node 1")
+    engine.create_plan_node(hash_a, hash_a, "Plan 2", summary_override="Node 2")
+
+    # 执行 checkout 哈希前缀
+    result = runner.invoke(app, ["checkout", hash_a[:7], "-w", str(work_dir), "-f"])
+    assert result.exit_code == 0
+    # 验证是否静默地成功匹配并重定向
+    mock_bus.success.assert_any_call("navigation.checkout.info.noAction", short_hash=ANY)
+~~~~~
+
+#### Acts 2: 在引擎测试套件中增加 state align 权重测试
+
+修改 `test_engine.py`，验证漂移捕获和对齐逻辑在重复 tree hash 的情况下，是否能成功偏向连接完好的代表性节点。
+
+~~~~~act
+patch_file
+packages/pyquipu-engine/tests/integration/test_engine.py
+~~~~~
+~~~~~python.old
+        exclude_file = repo_path / ".git" / "info" / "exclude"
+        content = exclude_file.read_text("utf-8")
+
+        assert "custom_dir/" in content
+        assert "*.tmp" in content
+        assert ".envs" not in content
+~~~~~
+~~~~~python.new
+        exclude_file = repo_path / ".git" / "info" / "exclude"
+        content = exclude_file.read_text("utf-8")
+
+        assert "custom_dir/" in content
+        assert "*.tmp" in content
+        assert ".envs" not in content
+
+
+def test_align_prefers_connected_node(engine_instance: Engine):
+    engine = engine_instance
+    repo_path = engine.root_dir
+
+    # 1. 创建状态 A
+    (repo_path / "file.txt").write_text("v1")
+    hash_a = engine.git_db.get_tree_hash()
     
-    unique_commits = {node.commit_hash for node in matches}
-    if len(unique_commits) > 1:
-        unique_output_trees = {node.output_tree for node in matches}
-        if len(unique_output_trees) > 1:
-            bus.error(L.show.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
-            raise typer.Exit(1)
-        matches.sort(key=lambda n: (0 if n.parent else 1, n.timestamp), reverse=True)
-    return matches[0]
+    # 2. 正常计划节点（连接链中）
+    node_connected = engine.create_plan_node(EMPTY_TREE_HASH, hash_a, "connected plan")
+
+    # 3. 本地漂移节点（孤立，无 parent）也指向 hash_a
+    node_orphan = engine.writer.create_node(
+        node_type="capture",
+        input_tree=EMPTY_TREE_HASH,
+        output_tree=hash_a,
+        content="orphan capture",
+    )
+
+    # 4. 对齐
+    engine.align()
+
+    # 5. 验证是否优先对齐到连接链更完备的节点
+    assert engine.current_node is not None
+    assert engine.current_node.commit_hash == node_connected.commit_hash
 ~~~~~
 
-#### Acts 2: 优化状态引擎对齐策略
+#### Acts 3: 在 SQLite 存储器测试中增加多 Commit CTE 联合回溯测试
 
-修改 `Engine.align` 决策，对树匹配项按照连通性加权排序，避免随机对齐到孤立分支。
+修改 `test_reader.py`，确保在有分布式等态节点时，可达性计算能够正常地跨 Commit 联合其对应的全部关系链路。
 
 ~~~~~act
 patch_file
-packages/pyquipu-engine/src/quipu/engine/state_machine.py
+packages/pyquipu-engine/tests/integration/sqlite/test_reader.py
 ~~~~~
 ~~~~~python.old
-        # Find node by iterating since keys are now commit hashes
-        found_node = None
-        for node in self.history_graph.values():
-            if node.output_tree == current_hash:
-                found_node = node
-                break
-
-        if found_node:
+        # It should contain all previous 14 output_tree hashes
+        assert len(ancestor_output_trees) == 14
+        assert output_tree_hashes[0] in ancestor_output_trees
+        assert output_tree_hashes[13] in ancestor_output_trees
+        assert output_tree_hashes[14] not in ancestor_output_trees  # Should not contain itself
 ~~~~~
 ~~~~~python.new
-        matches = [node for node in self.history_graph.values() if node.output_tree == current_hash]
-        if matches:
-            matches.sort(key=lambda n: (0 if n.parent else 1, n.timestamp), reverse=True)
-            found_node = matches[0]
-        else:
-            found_node = None
+        # It should contain all previous 14 output_tree hashes
+        assert len(ancestor_output_trees) == 14
+        assert output_tree_hashes[0] in ancestor_output_trees
+        assert output_tree_hashes[13] in ancestor_output_trees
+        assert output_tree_hashes[14] not in ancestor_output_trees  # Should not contain itself
 
-        if found_node:
-~~~~~
+    def test_get_ancestors_with_duplicate_hashes(self, sqlite_reader_setup):
+        reader, git_writer, hydrator, db_manager, repo, git_db = sqlite_reader_setup
 
-#### Acts 3: 升级 SQLite 历史可达性检索逻辑
+        # 1. 模拟两条有公共哈希终点但属于不同分支的历史
+        # 节点 A (v1)
+        (repo / "f.txt").write_text("v1")
+        hash_a = git_db.get_tree_hash()
+        node_a = git_writer.create_node("plan", EMPTY_TREE_HASH, hash_a, "Node A")
 
-重构 SQLite 驱动下的祖先/后代广度递归查询，消除非确定性的 `fetchone()` 对单个哈希的提取限制。
+        # 节点 B1 (B1 是 A 的子节点)
+        (repo / "f.txt").write_text("v2")
+        hash_b1 = git_db.get_tree_hash()
+        node_b1 = git_writer.create_node("plan", hash_a, hash_b1, "Node B1")
 
-~~~~~act
-patch_file
-packages/pyquipu-engine/src/quipu/engine/sqlite_storage.py
-~~~~~
-~~~~~python.old
-    def get_ancestor_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        conn = self.db_manager._get_conn()
-        try:
-            # 1. 查找起点的 commit_hash
-            cursor = conn.execute("SELECT commit_hash FROM nodes WHERE output_tree = ?", (start_output_tree_hash,))
-            row = cursor.fetchone()
-            if not row:
-                return set()
-            start_commit_hash = row[0]
+        # 节点 B2 (B2 是 A 的子节点，但最终回到了 v1 的状态，也就是 B2 的 output_tree 也是 hash_a)
+        # 这样 B2 就与 A 拥有相同的 output_tree
+        # 我们用 git_writer 创建这个 B2，其父节点是 B1
+        node_b2 = git_writer.create_node("plan", hash_b1, hash_a, "Node B2")
 
-            # 2. 使用递归 CTE 查找所有祖先 commit_hash
-            sql = """
-            WITH RECURSIVE ancestors(h) AS (
-                SELECT parent_hash FROM edges WHERE child_hash = ?
-                UNION ALL
-                SELECT e.parent_hash FROM edges e, ancestors a WHERE e.child_hash = a.h AND e.parent_hash IS NOT NULL
-            )
-            SELECT h FROM ancestors WHERE h IS NOT NULL;
-            """
-            cursor = conn.execute(sql, (start_commit_hash,))
-            ancestor_commit_hashes = {row[0] for row in cursor.fetchall()}
+        # 2. 补水
+        hydrator.sync("test-user")
 
-            if not ancestor_commit_hashes:
-                return set()
-
-            # 3. 将 commit_hash 集合转换为 output_tree 集合
-            placeholders = ",".join("?" * len(ancestor_commit_hashes))
-            sql_out = f"SELECT output_tree FROM nodes WHERE commit_hash IN ({placeholders})"
-            cursor = conn.execute(sql_out, tuple(ancestor_commit_hashes))
-            return {row[0] for row in cursor.fetchall()}
-
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get ancestors for {start_output_tree_hash[:7]}: {e}")
-            return set()
-~~~~~
-~~~~~python.new
-    def get_ancestor_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        conn = self.db_manager._get_conn()
-        try:
-            cursor = conn.execute("SELECT commit_hash FROM nodes WHERE output_tree = ?", (start_output_tree_hash,))
-            rows = cursor.fetchall()
-            if not rows:
-                return set()
-            start_commit_hashes = [row[0] for row in rows]
-
-            all_ancestor_trees = set()
-            for commit_hash in start_commit_hashes:
-                sql = """
-                WITH RECURSIVE ancestors(h) AS (
-                    SELECT parent_hash FROM edges WHERE child_hash = ?
-                    UNION ALL
-                    SELECT e.parent_hash FROM edges e, ancestors a WHERE e.child_hash = a.h AND e.parent_hash IS NOT NULL
-                )
-                SELECT h FROM ancestors WHERE h IS NOT NULL;
-                """
-                c_cursor = conn.execute(sql, (commit_hash,))
-                ancestor_commit_hashes = {r[0] for r in c_cursor.fetchall()}
-
-                if ancestor_commit_hashes:
-                    placeholders = ",".join("?" * len(ancestor_commit_hashes))
-                    sql_out = f"SELECT output_tree FROM nodes WHERE commit_hash IN ({placeholders})"
-                    out_cursor = conn.execute(sql_out, tuple(ancestor_commit_hashes))
-                    all_ancestor_trees.update(r[0] for r in out_cursor.fetchall())
-            return all_ancestor_trees
-
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get ancestors for {start_output_tree_hash[:7]}: {e}")
-            return set()
-~~~~~
-
-~~~~~act
-patch_file
-packages/pyquipu-engine/src/quipu/engine/sqlite_storage.py
-~~~~~
-~~~~~python.old
-    def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        conn = self.db_manager._get_conn()
-        try:
-            # 1. 查找起点的 commit_hash
-            cursor = conn.execute("SELECT commit_hash FROM nodes WHERE output_tree = ?", (start_output_tree_hash,))
-            row = cursor.fetchone()
-            if not row:
-                return set()
-            start_commit_hash = row[0]
-
-            # 2. 使用递归 CTE 查找所有后代 commit_hash
-            sql = """
-            WITH RECURSIVE descendants(h) AS (
-                SELECT child_hash FROM edges WHERE parent_hash = ?
-                UNION ALL
-                SELECT e.child_hash FROM edges e, descendants d WHERE e.parent_hash = d.h AND e.child_hash IS NOT NULL
-            )
-            SELECT h FROM descendants WHERE h IS NOT NULL;
-            """
-            cursor = conn.execute(sql, (start_commit_hash,))
-            descendant_commit_hashes = {row[0] for row in cursor.fetchall()}
-
-            if not descendant_commit_hashes:
-                return set()
-
-            # 3. 将 commit_hash 集合转换为 output_tree 集合
-            placeholders = ",".join("?" * len(descendant_commit_hashes))
-            sql_out = f"SELECT output_tree FROM nodes WHERE commit_hash IN ({placeholders})"
-            cursor = conn.execute(sql_out, tuple(descendant_commit_hashes))
-            return {row[0] for row in cursor.fetchall()}
-
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get descendants for {start_output_tree_hash[:7]}: {e}")
-            return set()
-~~~~~
-~~~~~python.new
-    def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        conn = self.db_manager._get_conn()
-        try:
-            cursor = conn.execute("SELECT commit_hash FROM nodes WHERE output_tree = ?", (start_output_tree_hash,))
-            rows = cursor.fetchall()
-            if not rows:
-                return set()
-            start_commit_hashes = [row[0] for row in rows]
-
-            all_descendant_trees = set()
-            for commit_hash in start_commit_hashes:
-                sql = """
-                WITH RECURSIVE descendants(h) AS (
-                    SELECT child_hash FROM edges WHERE parent_hash = ?
-                    UNION ALL
-                    SELECT e.child_hash FROM edges e, descendants d WHERE e.parent_hash = d.h AND e.child_hash IS NOT NULL
-                )
-                SELECT h FROM descendants WHERE h IS NOT NULL;
-                """
-                c_cursor = conn.execute(sql, (commit_hash,))
-                descendant_commit_hashes = {r[0] for r in c_cursor.fetchall()}
-
-                if descendant_commit_hashes:
-                    placeholders = ",".join("?" * len(descendant_commit_hashes))
-                    sql_out = f"SELECT output_tree FROM nodes WHERE commit_hash IN ({placeholders})"
-                    out_cursor = conn.execute(sql_out, tuple(descendant_commit_hashes))
-                    all_descendant_trees.update(r[0] for r in out_cursor.fetchall())
-            return all_descendant_trees
-
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get descendants for {start_output_tree_hash[:7]}: {e}")
-            return set()
-~~~~~
-
-~~~~~act
-patch_file
-packages/pyquipu-engine/src/quipu/engine/sqlite_storage.py
-~~~~~
-~~~~~python.old
-    def get_node_position(self, output_tree_hash: str) -> int:
-        conn = self.db_manager._get_conn()
-        try:
-            # 1. 获取目标节点的时间戳
-            cursor = conn.execute("SELECT timestamp FROM nodes WHERE output_tree = ?", (output_tree_hash,))
-            row = cursor.fetchone()
-            if not row:
-                return -1
-            target_ts = row[0]
-
-            # 2. 计算有多少个节点比它新（时间戳更大）
-            cursor = conn.execute("SELECT COUNT(*) FROM nodes WHERE timestamp > ?", (target_ts,))
-            count = cursor.fetchone()[0]
-            return count
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get node position: {e}")
-            return -1
-~~~~~
-~~~~~python.new
-    def get_node_position(self, output_tree_hash: str) -> int:
-        conn = self.db_manager._get_conn()
-        try:
-            # 1. 获取目标节点的最大时间戳（最新那个）
-            cursor = conn.execute("SELECT MAX(timestamp) FROM nodes WHERE output_tree = ?", (output_tree_hash,))
-            row = cursor.fetchone()
-            if not row or row[0] is None:
-                return -1
-            target_ts = row[0]
-
-            # 2. 计算有多少个节点比它新（时间戳更大）
-            cursor = conn.execute("SELECT COUNT(*) FROM nodes WHERE timestamp > ?", (target_ts,))
-            count = cursor.fetchone()[0]
-            return count
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get node position: {e}")
-            return -1
-~~~~~
-
-#### Acts 4: 升级 Git 内存历史可达性关系图遍历逻辑
-
-重构内存模式下的祖先/后代关系集合检索，使其支持对多起点分支节点拓扑图的深度回溯。
-
-~~~~~act
-patch_file
-packages/pyquipu-engine/src/quipu/engine/git_object_storage.py
-~~~~~
-~~~~~python.old
-    def get_ancestor_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        all_nodes = self.load_all_nodes()
-        node_map = {n.output_tree: n for n in all_nodes}
-
-        ancestors = set()
-        queue = []
-
-        if start_output_tree_hash in node_map:
-            queue.append(node_map[start_output_tree_hash])
-
-        while queue:
-            current_node = queue.pop(0)
-            if current_node.parent:
-                p_hash = current_node.parent.output_tree
-                if p_hash not in ancestors:
-                    ancestors.add(p_hash)
-                    queue.append(current_node.parent)
-
-        return ancestors
-
-    def get_private_data(self, node_commit_hash: str) -> Optional[str]:
-        return None
-
-    def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        all_nodes = self.load_all_nodes()
-        node_map = {n.output_tree: n for n in all_nodes}
-
-        descendants = set()
-        queue = []
-
-        if start_output_tree_hash in node_map:
-            queue.append(node_map[start_output_tree_hash])
-
-        while queue:
-            current_node = queue.pop(0)
-            for child in current_node.children:
-                c_hash = child.output_tree
-                if c_hash not in descendants:
-                    descendants.add(c_hash)
-                    queue.append(child)
-
-        return descendants
-~~~~~
-~~~~~python.new
-    def get_ancestor_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        all_nodes = self.load_all_nodes()
-        start_nodes = [n for n in all_nodes if n.output_tree == start_output_tree_hash]
-
-        ancestors = set()
-        queue = list(start_nodes)
-
-        while queue:
-            current_node = queue.pop(0)
-            if current_node.parent:
-                p_hash = current_node.parent.output_tree
-                if p_hash not in ancestors:
-                    ancestors.add(p_hash)
-                    queue.append(current_node.parent)
-
-        return ancestors
-
-    def get_private_data(self, node_commit_hash: str) -> Optional[str]:
-        return None
-
-    def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:
-        all_nodes = self.load_all_nodes()
-        start_nodes = [n for n in all_nodes if n.output_tree == start_output_tree_hash]
-
-        descendants = set()
-        queue = list(start_nodes)
-
-        while queue:
-            current_node = queue.pop(0)
-            for child in current_node.children:
-                c_hash = child.output_tree
-                if c_hash not in descendants:
-                    descendants.add(c_hash)
-                    queue.append(child)
-
-        return descendants
+        # 3. 查 B2 (也就是 hash_a) 的祖先
+        # 因为 hash_a 在 nodes 表中有两个对应的 commit 记录 (node_a 和 node_b2)
+        # 如果新逻辑正常，它应该联合两者的祖先进行检索
+        # node_b2 的祖先包含 B1 (hash_b1) 和 A (hash_a)。node_a 的祖先是 EMPTY_TREE_HASH。
+        # 因此，ancestor 集合必须能成功包含 hash_b1！
+        ancestors = reader.get_ancestor_output_trees(hash_a)
+        assert hash_b1 in ancestors
 ~~~~~
 
 ### 下一步建议
-我们已经安全且完整地将上述逻辑替换整合。为确保本方案在分布式工作区中的完美运行，下一步我们建议：
-1. **清理本地缓存**：建议执行一次 `quipu cache sync` 或 `quipu cache rebuild`，对本地存储重新补水，以确保之前计算错误的 `reachable` 状态数据能够得到正确的回填和纠正。
-2. **测试运行**：在存在重复树哈希的客户端运行 `quipu ui` 视图或 `quipu log --reachable-only`，验证孤立分支和原有的连续历史分支现在已经正确合流，并且能进行顺畅的视图浏览与 `checkout` 操作。
+- **执行测试**：此计划包含自动运行测试的指令，执行后请检查测试控制台输出，确保新增用例全部为绿。
+- **Git Commit**：确认测试无误后，我将为你生成一个 `[COMMIT]` 计划以将这些新增测试以及上一转的文件修改作为一个原子单元提交至 Git 本地历史。
