@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] test: 为分布式捕获造成的相同树哈希状态对齐和导航逻辑编写集成测试", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1780749728.809454, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] fix: 修正降序排序权重倒置并增强状态对齐集成测试", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.1.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1780749879.6639786, "duration_ms": 0}}

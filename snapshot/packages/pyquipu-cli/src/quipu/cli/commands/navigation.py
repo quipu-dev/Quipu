@@ -44,7 +44,7 @@ def register(app: typer.Typer):
                 ctx.exit(1)
 
             if len(matches) > 1:
-                matches.sort(key=lambda n: (0 if n.parent else 1, n.timestamp), reverse=True)
+                matches.sort(key=lambda n: (1 if n.parent else 0, n.timestamp), reverse=True)
 
             target_node = matches[0]
             target_output_tree_hash = target_node.output_tree

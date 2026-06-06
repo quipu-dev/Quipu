@@ -31,7 +31,7 @@ def _find_target_node(graph: Dict, hash_prefix: str):
         if len(unique_output_trees) > 1:
             bus.error(L.show.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
             raise typer.Exit(1)
-        matches.sort(key=lambda n: (0 if n.parent else 1, n.timestamp), reverse=True)
+        matches.sort(key=lambda n: (1 if n.parent else 0, n.timestamp), reverse=True)
     return matches[0]
 
 
