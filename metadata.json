@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "Capture: D ruff.md", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789310371.8091223, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "Capture: M DEVELOPING.md", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789310404.0181797, "duration_ms": 0}}
