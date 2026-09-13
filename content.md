@@ -4,6 +4,8 @@
 
 ### 📝 变更文件摘要:
 ```
-uv.lock | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+scripts/dev_setup.fish | 21 --------------
+ scripts/dev_setup.sh   | 28 ------------------
+ scripts/setup_dev.py   | 78 --------------------------------------------------
+ 3 files changed, 127 deletions(-)
 ```
