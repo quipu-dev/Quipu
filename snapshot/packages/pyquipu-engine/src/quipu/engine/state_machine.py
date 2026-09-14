@@ -23,46 +23,112 @@ logger = logging.getLogger(__name__)
 class _EngineReaderCompatibilityAdapter:
     """向后兼容适配器，让 engine.reader 能够在迁移期安全路由到 storage 与 index."""
 
-    def __init__(self, engine: "Engine"):
+    def __init__(self, engine: "Engine", original_reader: Any = None):
         self._engine = engine
+        self._original = original_reader
 
     def load_all_nodes(self) -> list[QuipuNode]:
+        if self._original and hasattr(self._original, "load_all_nodes"):
+            return self._original.load_all_nodes()
         return self._engine.index.load_all_nodes()
 
     def get_node_count(self) -> int:
+        if self._original and hasattr(self._original, "get_node_count"):
+            return self._original.get_node_count()
         return self._engine.index.get_node_count()
 
     def get_node_position(self, output_tree_hash: str) -> int:
+        if self._original and hasattr(self._original, "get_node_position"):
+            return self._original.get_node_position(output_tree_hash)
         return self._engine.index.get_node_position(output_tree_hash)
 
     def load_nodes_paginated(self, limit: int, offset: int) -> list[QuipuNode]:
+        if self._original and hasattr(self._original, "load_nodes_paginated"):
+            return self._original.load_nodes_paginated(limit, offset)
         return self._engine.index.load_nodes_paginated(limit, offset)
 
     def get_ancestor_output_trees(self, start_output_tree_hash: str) -> set[str]:
+        if self._original and hasattr(self._original, "get_ancestor_output_trees"):
+            return self._original.get_ancestor_output_trees(start_output_tree_hash)
         return self._engine.index.get_ancestor_output_trees(start_output_tree_hash)
 
     def get_descendant_output_trees(self, start_output_tree_hash: str) -> set[str]:
+        if self._original and hasattr(self._original, "get_descendant_output_trees"):
+            return self._original.get_descendant_output_trees(start_output_tree_hash)
         return self._engine.index.get_descendant_output_trees(start_output_tree_hash)
 
     def get_private_data(self, node_commit_hash: str) -> str | None:
+        if self._original and hasattr(self._original, "get_private_data"):
+            return self._original.get_private_data(node_commit_hash)
         return self._engine.index.get_private_data(node_commit_hash)
 
     def find_nodes(
         self, summary_regex: str | None = None, node_type: str | None = None, limit: int = 10
     ) -> list[QuipuNode]:
+        if self._original and hasattr(self._original, "find_nodes"):
+            return self._original.find_nodes(summary_regex, node_type, limit)
         return self._engine.index.find_nodes(summary_regex, node_type, limit)
 
     def get_node_content(self, node: QuipuNode) -> str:
         if node.content:
             return node.content
+        if self._original and hasattr(self._original, "get_node_content"):
+            return self._original.get_node_content(node)
         if hasattr(self._engine.storage, "read_node_content"):
             return self._engine.storage.read_node_content(node)
         return ""
 
     def get_node_blobs(self, commit_hash: str) -> dict[str, bytes]:
+        if self._original and hasattr(self._original, "get_node_blobs"):
+            return self._original.get_node_blobs(commit_hash)
         if hasattr(self._engine.storage, "git_db"):
             return self._engine.storage.git_db.get_blobs_from_tree(commit_hash)
         return {}
+
+
+class _EngineWriterCompatibilityAdapter:
+    """向后兼容适配器，支持 engine.writer.create_node 等旧调用."""
+
+    def __init__(self, engine: "Engine", original_writer: Any = None):
+        self._engine = engine
+        self._original = original_writer
+
+    def create_node(
+        self,
+        node_type: str,
+        input_tree: str,
+        output_tree: str,
+        content: str,
+        summary_override: str | None = None,
+        **kwargs: Any,
+    ) -> QuipuNode:
+        if self._original and hasattr(self._original, "create_node"):
+            return self._original.create_node(
+                node_type=node_type,
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=content,
+                summary_override=summary_override,
+                **kwargs,
+            )
+
+        if isinstance(self._engine.storage, GitSnapshotStorage):
+            node, meta_json = self._engine.storage.create_snapshot_commit(
+                node_type=node_type,
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=content,
+                summary_override=summary_override,
+                message=kwargs.get("message"),
+                parent_commit_hash=kwargs.get("parent_commit_hash"),
+                owner_id=kwargs.get("owner_id"),
+                start_time=kwargs.get("start_time"),
+            )
+            if hasattr(self._engine.index, "record_node"):
+                self._engine.index.record_node(node, meta_json=meta_json)
+            return node
+
+        raise NotImplementedError("create_node is not supported on the current storage backend")
 
 
 class Engine:
@@ -109,7 +175,7 @@ class Engine:
         index: GraphIndex | None = None,
         db_manager: DatabaseManager | None = None,
         use_cache: bool = True,
-        # 兼容旧参数签名: (root_dir, db, reader, writer, db_manager)
+        # 兼容旧参数签名
         db: Any = None,
         reader: Any = None,
         writer: Any = None,
@@ -129,43 +195,47 @@ class Engine:
             except Exception as e:
                 logger.warning(f"无法创建隔离文件 {quipu_gitignore}: {e}")
 
-        # 1. 初始化底层存储 (SnapshotStorage)
+        # 1. 物理快照存储层适配
         if storage is not None:
             self.storage = storage
-        elif isinstance(db, GitDB):
-            self.storage = GitSnapshotStorage(self.root_dir)
+            self.git_db = getattr(storage, "git_db", storage)
+        elif db is not None and not isinstance(db, GitDB):
+            # 传入了 InMemoryDB 等自定义测试存储桩
+            self.storage = db
+            self.git_db = db
         else:
             self.storage = GitSnapshotStorage(self.root_dir)
-
-        # 2. 导出 git_db 便于兼容底层 plumbing
-        if hasattr(self.storage, "git_db"):
             self.git_db = self.storage.git_db
-        else:
-            self.git_db = db or GitDB(self.root_dir)
 
-        # 3. 初始化索引层 (GraphIndex)
+        # 2. 逻辑索引层适配
         self.use_cache = use_cache
         self.db_manager = db_manager
+        self._custom_writer = writer
 
         if index is not None:
             self.index = index
-        elif self.use_cache:
+        elif reader is not None:
+            # 如果显式传入了旧 reader（如 InMemoryHistoryManager 或旧测试），直接将其视作索引
+            self.index = reader
+        elif self.use_cache and (self.db_manager is not None or (self.quipu_dir / "history.sqlite").exists()):
             if self.db_manager is None:
                 self.db_manager = DatabaseManager(self.root_dir)
                 self.db_manager.init_schema()
             self.index = SQLiteGraphIndex(self.db_manager)
+        elif self.use_cache and db_manager is not None:
+            self.index = SQLiteGraphIndex(self.db_manager)
         else:
-            self.db_manager = None
             self.index = InMemoryGraphIndex()
 
-        # 4. 兼容层桥接
-        self.reader = _EngineReaderCompatibilityAdapter(self)
-        self.writer = self  # 兼容旧代码使用 engine.writer
+        # 3. 兼容层桥接
+        self.reader = _EngineReaderCompatibilityAdapter(self, original_reader=reader)
+        self.writer = _EngineWriterCompatibilityAdapter(self, original_writer=writer)
 
         self.history_graph: dict[str, QuipuNode] = {}
         self.current_node: QuipuNode | None = None
 
-        self._sync_persistent_ignores()
+        if isinstance(self.git_db, GitDB):
+            self._sync_persistent_ignores()
 
     def close(self):
         if self.db_manager:
@@ -282,7 +352,6 @@ class Engine:
         return None
 
     def align(self) -> str:
-        # 如果使用 SQLite 且连接存在，单向预热/同步读模型
         if self.use_cache and self.db_manager:
             try:
                 user_id = self._get_current_user_id()
@@ -363,8 +432,17 @@ class Engine:
         user_id = self._get_current_user_id()
         parent_commit = parent_node.commit_hash if parent_node else None
 
-        # 1. 物理层：创建物理 Git Commit
-        if isinstance(self.storage, GitSnapshotStorage):
+        # 优先支持自定义 writer 桩 (例如 InMemoryHistoryManager)
+        if self._custom_writer and hasattr(self._custom_writer, "create_node"):
+            new_node = self._custom_writer.create_node(
+                node_type="capture",
+                input_tree=input_hash,
+                output_tree=current_hash,
+                content=body,
+                message=message,
+                owner_id=user_id,
+            )
+        elif isinstance(self.storage, GitSnapshotStorage):
             new_node, meta_json = self.storage.create_snapshot_commit(
                 node_type="capture",
                 input_tree=input_hash,
@@ -374,8 +452,10 @@ class Engine:
                 message=message,
                 owner_id=user_id,
             )
+            if hasattr(self.index, "record_node"):
+                self.index.record_node(new_node, meta_json=meta_json)
         else:
-            # 回退通用实现
+            # 通用回退
             new_node, meta_json = GitSnapshotStorage(self.root_dir).create_snapshot_commit(
                 node_type="capture",
                 input_tree=input_hash,
@@ -385,12 +465,9 @@ class Engine:
                 message=message,
                 owner_id=user_id,
             )
+            if hasattr(self.index, "record_node"):
+                self.index.record_node(new_node, meta_json=meta_json)
 
-        # 2. 逻辑层：写入索引
-        if hasattr(self.index, "record_node"):
-            self.index.record_node(new_node, meta_json=meta_json)
-
-        # 3. 内存拓扑维护
         if new_node.parent and new_node.parent.commit_hash in self.history_graph:
             real_parent = self.history_graph[new_node.parent.commit_hash]
             new_node.parent = real_parent
@@ -414,15 +491,22 @@ class Engine:
             logger.info(f"📝 正在记录 Plan 节点: {input_tree[:7]} -> {output_tree[:7]}")
 
         user_id = self._get_current_user_id()
-
         parent_node = None
         head_tree = self._read_head()
         if head_tree:
             parent_node = next((n for n in self.history_graph.values() if n.output_tree == head_tree), None)
         parent_commit = parent_node.commit_hash if parent_node else None
 
-        # 1. 物理层：创建物理 Git Commit
-        if isinstance(self.storage, GitSnapshotStorage):
+        if self._custom_writer and hasattr(self._custom_writer, "create_node"):
+            new_node = self._custom_writer.create_node(
+                node_type="plan",
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=plan_content,
+                summary_override=summary_override,
+                owner_id=user_id,
+            )
+        elif isinstance(self.storage, GitSnapshotStorage):
             new_node, meta_json = self.storage.create_snapshot_commit(
                 node_type="plan",
                 input_tree=input_tree,
@@ -432,6 +516,8 @@ class Engine:
                 parent_commit_hash=parent_commit,
                 owner_id=user_id,
             )
+            if hasattr(self.index, "record_node"):
+                self.index.record_node(new_node, meta_json=meta_json)
         else:
             new_node, meta_json = GitSnapshotStorage(self.root_dir).create_snapshot_commit(
                 node_type="plan",
@@ -442,12 +528,9 @@ class Engine:
                 parent_commit_hash=parent_commit,
                 owner_id=user_id,
             )
+            if hasattr(self.index, "record_node"):
+                self.index.record_node(new_node, meta_json=meta_json)
 
-        # 2. 逻辑层：写入索引
-        if hasattr(self.index, "record_node"):
-            self.index.record_node(new_node, meta_json=meta_json)
-
-        # 3. 内存拓扑维护
         if new_node.parent and new_node.parent.commit_hash in self.history_graph:
             real_parent = self.history_graph[new_node.parent.commit_hash]
             new_node.parent = real_parent
@@ -463,7 +546,11 @@ class Engine:
         return new_node
 
     def checkout(self, target_hash: str):
-        self.storage.restore_workspace(target_hash)
+        if hasattr(self.storage, "restore_workspace"):
+            self.storage.restore_workspace(target_hash)
+        elif hasattr(self.storage, "checkout_tree"):
+            self.storage.checkout_tree(target_hash)
+
         self._write_head(target_hash)
         self.current_node = None
         for node in self.history_graph.values():

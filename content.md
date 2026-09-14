@@ -1,42 +1,45 @@
-现在进入路线图的第三阶段：**改造引擎中枢调度（`state_machine.py`）与组装工厂（`factory.py`）**。
+这是一个非常典型且关键的兼容性收敛问题。我们对这 3 个测试错误与失败进行了精确定位，并立即予以修复。
 
-## [WIP] refactor: 重构 Engine 核心中枢与装配工厂以支持可选缓存与职责解耦
+## [WIP] fix: 修复 Engine 内存后端适配与旧兼容层接口
+
+### 错误分析
+1. **内存后端初始化异常 (`test_engine_memory.py`)**:
+   - **现象**: `TestEngineWithMemoryBackend` 的测试抛出 `ExecutionError: 工作目录 不是一个有效的 Git 仓库`。
+   - **根因**: `Engine.__init__` 在未传入 `storage` 时无条件回退到了 `GitSnapshotStorage(self.root_dir)`，强行触发了 `GitDB` 的仓库有效性校验。当测试传入的是 `InMemoryDB` 时，应当直接将 `db` 视为存储驱动，不能初始化 `GitSnapshotStorage`。
+2. **SQLite 提前初始化导致断言失败 (`test_cache_rebuild_no_db`)**:
+   - **现象**: `AssertionError: Expected 'warning' to be called once. Called 0 times.`
+   - **根因**: `Engine.__init__` 在旧测试传入 `reader` / `writer` 时，若未指定 `index`，过于激进地自动调用了 `DatabaseManager.init_schema()`，提前生成了 `.quipu/history.sqlite`，导致 CLI 测试中的 `if not db_path.exists():` 分支未被命中。
+3. **`engine.writer.create_node` 兼容性缺失 (`test_engine.py`)**:
+   - **现象**: `AttributeError: 'Engine' object has no attribute 'create_node'`。
+   - **根因**: `Engine` 内部将 `self.writer = self`，但旧测试直接调用 `engine.writer.create_node(...)`。在过渡期，兼容适配层必须支持 `create_node`。
 
 ### 用户需求
-落实路线图第三阶段：
-1. 改造 `Engine`（`state_machine.py`），使其依赖清晰的 `storage: SnapshotStorage` 与 `index: GraphIndex`，将物理快照操作（Tree/Blob/Commit）交由存储层，元数据与图谱操作交由索引层。
-2. 为 `Engine` 提供内置适配能力，确保现有 CLI/TUI 调用（如 `engine.reader.get_node_blobs`）完全平滑过渡。
-3. 改造 `create_engine`（`factory.py`），引入 `use_cache: bool = True` 开关。在无缓存模式下，跳过任何 SQLite 初始化，装配纯内存索引 `InMemoryGraphIndex`，达成 CI/CD 瞬时执行目标。
+修复上述 3 处回归问题，确保：
+1. 内存后端（`InMemoryDB` / `InMemoryHistoryManager`）能够正常运行，不触碰 Git 文件系统。
+2. 传入旧的 `reader`/`writer` 时不隐式创建 SQLite 数据库文件。
+3. `engine.writer.create_node` 保持向前兼容。
+4. 全量运行测试套件验证结果。
 
 ### 评论
-通过这次中枢重构，`Engine` 真正成为了协调 Command（`storage`）与 Query（`index`）的纯粹门面（Facade）：
-- 无论底层是否启用 SQLite 缓存，`Engine` 的核心业务流程（`capture_drift`, `create_plan_node`, `align`, `visit`）保持 100% 统一。
-- 在 CI/CD 场景下，用户只需传入 `use_cache=False`，即可零文件副作用运行，彻底解除了由于 SQLite 初始化导致的并发与锁困扰。
+在架构演进中，保持渐进式兼容（Graceful Degradation & Backward Compatibility）与新抽象纯化同样重要。通过完善 `Engine` 的自适应包装器，可以让新架构（`storage` + `index`）与旧测试桩（`InMemoryDB`、`engine.writer.create_node`）和谐共存。
 
 ### 目标
-1. 重构 `packages/pyquipu-engine/src/quipu/engine/state_machine.py`：
-   - 构造参数接纳 `storage: SnapshotStorage` 与 `index: GraphIndex`，兼容旧参数。
-   - `capture_drift` 和 `create_plan_node` 先由 `storage` 创建物理 Git Commit，再投递给 `index.record_node`。
-   - `align` 通过 `CacheProjector`（当启用 SQLite 时）按需同步读模型。
-   - 提供向后兼容层，让旧上层代码安全过渡。
-2. 重构 `packages/pyquipu-application/src/quipu/application/factory.py`：
-   - 支持 `create_engine(work_dir, lazy=False, use_cache=True)`。
-   - 根据 `use_cache` 动态装配 `SQLiteGraphIndex` 或 `InMemoryGraphIndex`。
+1. 修正 `packages/pyquipu-engine/src/quipu/engine/state_machine.py` 中的存储初始化与适配器逻辑。
+2. 执行 pytest 测试套件，确保所有测试用例绿灯通过。
 
 ### 基本原理
-1. **中枢解耦**：不再把物理写入和缓存索引绑在同一个 `writer` 链条上。写入时，物理层（`storage.create_snapshot_commit`）作为不可变真相先落盘；逻辑层（`index.record_node`）作为索引投影紧随其后。
-2. **渐进式迁移保障**：在 `Engine` 内部将旧接口（`engine.reader`）透明映射为“物理读向 storage 借道，拓扑读向 index 借道”的组合路由，确保现有 TUI、Export、Query 等命令不受破坏。
+- 当传入的 `db` 为非 `GitDB` 的虚拟存储（如 `InMemoryDB`）时，`Engine` 将其直接视作快照存储提供者。
+- 当上层传入 `reader`/`writer` 时，优先复用传入的对象作为 `self.index` 和自定义写驱动，延迟/阻止非必要的 SQLite 文件落盘。
+- 引入 `_EngineWriterCompatibilityAdapter`，完整桥接 `create_node` 调用到底层实际的存储/索引实现。
 
 ### 标签
-#intent/refine #flow/ready #priority/high #comp/engine #comp/application #concept/state #scope/core #scope/api #ai/instruct #task/domain/storage #task/object/engine-decoupling #task/action/refactor #task/state/continue
+#intent/fix #flow/ready #priority/high #comp/engine #concept/state #scope/core #ai/instruct #task/domain/storage #task/object/engine-decoupling #task/action/bug-fix #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 重构 `Engine` 状态机与调度中枢
-
-重构 `state_machine.py`，实现 `storage` 与 `index` 的职责分离与统一调度。
+#### Acts 1: 完善 `state_machine.py` 的兼容性与内存后端适配
 
 ~~~~~act
 write_file
@@ -68,46 +71,112 @@ logger = logging.getLogger(__name__)
 class _EngineReaderCompatibilityAdapter:
     """向后兼容适配器，让 engine.reader 能够在迁移期安全路由到 storage 与 index."""
 
-    def __init__(self, engine: "Engine"):
+    def __init__(self, engine: "Engine", original_reader: Any = None):
         self._engine = engine
+        self._original = original_reader
 
     def load_all_nodes(self) -> list[QuipuNode]:
+        if self._original and hasattr(self._original, "load_all_nodes"):
+            return self._original.load_all_nodes()
         return self._engine.index.load_all_nodes()
 
     def get_node_count(self) -> int:
+        if self._original and hasattr(self._original, "get_node_count"):
+            return self._original.get_node_count()
         return self._engine.index.get_node_count()
 
     def get_node_position(self, output_tree_hash: str) -> int:
+        if self._original and hasattr(self._original, "get_node_position"):
+            return self._original.get_node_position(output_tree_hash)
         return self._engine.index.get_node_position(output_tree_hash)
 
     def load_nodes_paginated(self, limit: int, offset: int) -> list[QuipuNode]:
+        if self._original and hasattr(self._original, "load_nodes_paginated"):
+            return self._original.load_nodes_paginated(limit, offset)
         return self._engine.index.load_nodes_paginated(limit, offset)
 
     def get_ancestor_output_trees(self, start_output_tree_hash: str) -> set[str]:
+        if self._original and hasattr(self._original, "get_ancestor_output_trees"):
+            return self._original.get_ancestor_output_trees(start_output_tree_hash)
         return self._engine.index.get_ancestor_output_trees(start_output_tree_hash)
 
     def get_descendant_output_trees(self, start_output_tree_hash: str) -> set[str]:
+        if self._original and hasattr(self._original, "get_descendant_output_trees"):
+            return self._original.get_descendant_output_trees(start_output_tree_hash)
         return self._engine.index.get_descendant_output_trees(start_output_tree_hash)
 
     def get_private_data(self, node_commit_hash: str) -> str | None:
+        if self._original and hasattr(self._original, "get_private_data"):
+            return self._original.get_private_data(node_commit_hash)
         return self._engine.index.get_private_data(node_commit_hash)
 
     def find_nodes(
         self, summary_regex: str | None = None, node_type: str | None = None, limit: int = 10
     ) -> list[QuipuNode]:
+        if self._original and hasattr(self._original, "find_nodes"):
+            return self._original.find_nodes(summary_regex, node_type, limit)
         return self._engine.index.find_nodes(summary_regex, node_type, limit)
 
     def get_node_content(self, node: QuipuNode) -> str:
         if node.content:
             return node.content
+        if self._original and hasattr(self._original, "get_node_content"):
+            return self._original.get_node_content(node)
         if hasattr(self._engine.storage, "read_node_content"):
             return self._engine.storage.read_node_content(node)
         return ""
 
     def get_node_blobs(self, commit_hash: str) -> dict[str, bytes]:
+        if self._original and hasattr(self._original, "get_node_blobs"):
+            return self._original.get_node_blobs(commit_hash)
         if hasattr(self._engine.storage, "git_db"):
             return self._engine.storage.git_db.get_blobs_from_tree(commit_hash)
         return {}
+
+
+class _EngineWriterCompatibilityAdapter:
+    """向后兼容适配器，支持 engine.writer.create_node 等旧调用."""
+
+    def __init__(self, engine: "Engine", original_writer: Any = None):
+        self._engine = engine
+        self._original = original_writer
+
+    def create_node(
+        self,
+        node_type: str,
+        input_tree: str,
+        output_tree: str,
+        content: str,
+        summary_override: str | None = None,
+        **kwargs: Any,
+    ) -> QuipuNode:
+        if self._original and hasattr(self._original, "create_node"):
+            return self._original.create_node(
+                node_type=node_type,
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=content,
+                summary_override=summary_override,
+                **kwargs,
+            )
+
+        if isinstance(self._engine.storage, GitSnapshotStorage):
+            node, meta_json = self._engine.storage.create_snapshot_commit(
+                node_type=node_type,
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=content,
+                summary_override=summary_override,
+                message=kwargs.get("message"),
+                parent_commit_hash=kwargs.get("parent_commit_hash"),
+                owner_id=kwargs.get("owner_id"),
+                start_time=kwargs.get("start_time"),
+            )
+            if hasattr(self._engine.index, "record_node"):
+                self._engine.index.record_node(node, meta_json=meta_json)
+            return node
+
+        raise NotImplementedError("create_node is not supported on the current storage backend")
 
 
 class Engine:
@@ -154,7 +223,7 @@ class Engine:
         index: GraphIndex | None = None,
         db_manager: DatabaseManager | None = None,
         use_cache: bool = True,
-        # 兼容旧参数签名: (root_dir, db, reader, writer, db_manager)
+        # 兼容旧参数签名
         db: Any = None,
         reader: Any = None,
         writer: Any = None,
@@ -174,43 +243,47 @@ class Engine:
             except Exception as e:
                 logger.warning(f"无法创建隔离文件 {quipu_gitignore}: {e}")
 
-        # 1. 初始化底层存储 (SnapshotStorage)
+        # 1. 物理快照存储层适配
         if storage is not None:
             self.storage = storage
-        elif isinstance(db, GitDB):
-            self.storage = GitSnapshotStorage(self.root_dir)
+            self.git_db = getattr(storage, "git_db", storage)
+        elif db is not None and not isinstance(db, GitDB):
+            # 传入了 InMemoryDB 等自定义测试存储桩
+            self.storage = db
+            self.git_db = db
         else:
             self.storage = GitSnapshotStorage(self.root_dir)
-
-        # 2. 导出 git_db 便于兼容底层 plumbing
-        if hasattr(self.storage, "git_db"):
             self.git_db = self.storage.git_db
-        else:
-            self.git_db = db or GitDB(self.root_dir)
 
-        # 3. 初始化索引层 (GraphIndex)
+        # 2. 逻辑索引层适配
         self.use_cache = use_cache
         self.db_manager = db_manager
+        self._custom_writer = writer
 
         if index is not None:
             self.index = index
-        elif self.use_cache:
+        elif reader is not None:
+            # 如果显式传入了旧 reader（如 InMemoryHistoryManager 或旧测试），直接将其视作索引
+            self.index = reader
+        elif self.use_cache and (self.db_manager is not None or (self.quipu_dir / "history.sqlite").exists()):
             if self.db_manager is None:
                 self.db_manager = DatabaseManager(self.root_dir)
                 self.db_manager.init_schema()
             self.index = SQLiteGraphIndex(self.db_manager)
+        elif self.use_cache and db_manager is not None:
+            self.index = SQLiteGraphIndex(self.db_manager)
         else:
-            self.db_manager = None
             self.index = InMemoryGraphIndex()
 
-        # 4. 兼容层桥接
-        self.reader = _EngineReaderCompatibilityAdapter(self)
-        self.writer = self  # 兼容旧代码使用 engine.writer
+        # 3. 兼容层桥接
+        self.reader = _EngineReaderCompatibilityAdapter(self, original_reader=reader)
+        self.writer = _EngineWriterCompatibilityAdapter(self, original_writer=writer)
 
         self.history_graph: dict[str, QuipuNode] = {}
         self.current_node: QuipuNode | None = None
 
-        self._sync_persistent_ignores()
+        if isinstance(self.git_db, GitDB):
+            self._sync_persistent_ignores()
 
     def close(self):
         if self.db_manager:
@@ -327,7 +400,6 @@ class Engine:
         return None
 
     def align(self) -> str:
-        # 如果使用 SQLite 且连接存在，单向预热/同步读模型
         if self.use_cache and self.db_manager:
             try:
                 user_id = self._get_current_user_id()
@@ -408,8 +480,17 @@ class Engine:
         user_id = self._get_current_user_id()
         parent_commit = parent_node.commit_hash if parent_node else None
 
-        # 1. 物理层：创建物理 Git Commit
-        if isinstance(self.storage, GitSnapshotStorage):
+        # 优先支持自定义 writer 桩 (例如 InMemoryHistoryManager)
+        if self._custom_writer and hasattr(self._custom_writer, "create_node"):
+            new_node = self._custom_writer.create_node(
+                node_type="capture",
+                input_tree=input_hash,
+                output_tree=current_hash,
+                content=body,
+                message=message,
+                owner_id=user_id,
+            )
+        elif isinstance(self.storage, GitSnapshotStorage):
             new_node, meta_json = self.storage.create_snapshot_commit(
                 node_type="capture",
                 input_tree=input_hash,
@@ -419,8 +500,10 @@ class Engine:
                 message=message,
                 owner_id=user_id,
             )
+            if hasattr(self.index, "record_node"):
+                self.index.record_node(new_node, meta_json=meta_json)
         else:
-            # 回退通用实现
+            # 通用回退
             new_node, meta_json = GitSnapshotStorage(self.root_dir).create_snapshot_commit(
                 node_type="capture",
                 input_tree=input_hash,
@@ -430,12 +513,9 @@ class Engine:
                 message=message,
                 owner_id=user_id,
             )
+            if hasattr(self.index, "record_node"):
+                self.index.record_node(new_node, meta_json=meta_json)
 
-        # 2. 逻辑层：写入索引
-        if hasattr(self.index, "record_node"):
-            self.index.record_node(new_node, meta_json=meta_json)
-
-        # 3. 内存拓扑维护
         if new_node.parent and new_node.parent.commit_hash in self.history_graph:
             real_parent = self.history_graph[new_node.parent.commit_hash]
             new_node.parent = real_parent
@@ -459,15 +539,22 @@ class Engine:
             logger.info(f"📝 正在记录 Plan 节点: {input_tree[:7]} -> {output_tree[:7]}")
 
         user_id = self._get_current_user_id()
-
         parent_node = None
         head_tree = self._read_head()
         if head_tree:
             parent_node = next((n for n in self.history_graph.values() if n.output_tree == head_tree), None)
         parent_commit = parent_node.commit_hash if parent_node else None
 
-        # 1. 物理层：创建物理 Git Commit
-        if isinstance(self.storage, GitSnapshotStorage):
+        if self._custom_writer and hasattr(self._custom_writer, "create_node"):
+            new_node = self._custom_writer.create_node(
+                node_type="plan",
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=plan_content,
+                summary_override=summary_override,
+                owner_id=user_id,
+            )
+        elif isinstance(self.storage, GitSnapshotStorage):
             new_node, meta_json = self.storage.create_snapshot_commit(
                 node_type="plan",
                 input_tree=input_tree,
@@ -477,6 +564,8 @@ class Engine:
                 parent_commit_hash=parent_commit,
                 owner_id=user_id,
             )
+            if hasattr(self.index, "record_node"):
+                self.index.record_node(new_node, meta_json=meta_json)
         else:
             new_node, meta_json = GitSnapshotStorage(self.root_dir).create_snapshot_commit(
                 node_type="plan",
@@ -487,12 +576,9 @@ class Engine:
                 parent_commit_hash=parent_commit,
                 owner_id=user_id,
             )
+            if hasattr(self.index, "record_node"):
+                self.index.record_node(new_node, meta_json=meta_json)
 
-        # 2. 逻辑层：写入索引
-        if hasattr(self.index, "record_node"):
-            self.index.record_node(new_node, meta_json=meta_json)
-
-        # 3. 内存拓扑维护
         if new_node.parent and new_node.parent.commit_hash in self.history_graph:
             real_parent = self.history_graph[new_node.parent.commit_hash]
             new_node.parent = real_parent
@@ -508,7 +594,11 @@ class Engine:
         return new_node
 
     def checkout(self, target_hash: str):
-        self.storage.restore_workspace(target_hash)
+        if hasattr(self.storage, "restore_workspace"):
+            self.storage.restore_workspace(target_hash)
+        elif hasattr(self.storage, "checkout_tree"):
+            self.storage.checkout_tree(target_hash)
+
         self._write_head(target_hash)
         self.current_node = None
         for node in self.history_graph.values():
@@ -518,81 +608,6 @@ class Engine:
         logger.info(f"🔄 状态已切换至: {target_hash[:7]}")
 ~~~~~
 
-#### Acts 2: 改造引擎工厂函数 `factory.py`
-
-在工厂方法中引入 `use_cache: bool = True`，在无缓存模式下完全跳过 SQLite 初始化与文件触碰。
-
-~~~~~act
-write_file
-packages/pyquipu-application/src/quipu/application/factory.py
-~~~~~
-~~~~~python
-import logging
-from pathlib import Path
-
-from quipu.engine.config import ConfigManager
-from quipu.engine.git_storage import GitSnapshotStorage
-from quipu.engine.memory_index import InMemoryGraphIndex
-from quipu.engine.sqlite_db import DatabaseManager
-from quipu.engine.sqlite_index import SQLiteGraphIndex
-from quipu.engine.state_machine import Engine
-
-from .utils import find_git_repository_root
-
-logger = logging.getLogger(__name__)
-
-
-def create_engine(work_dir: Path, lazy: bool = False, use_cache: bool = True) -> Engine:
-    """实例化 Quipu 引擎堆栈。
-
-    Args:
-        work_dir: 操作的工作区目录。
-        lazy: 如果为 True，则不立即加载完整的历史图谱 (不调用 align)。
-        use_cache: 如果为 False，则关闭 SQLite 缓存，使用纯内存索引，
-                  实现 0 IO 开销与零副作用，专为 CI/CD 瞬时执行设计。
-    """
-    project_root = find_git_repository_root(work_dir) or work_dir
-    config = ConfigManager(project_root)
-
-    # 1. 物理快照存储层：永远是 GitSnapshotStorage
-    storage = GitSnapshotStorage(project_root)
-
-    # 2. 检查配置覆盖 (如果用户显式配置了 storage.type = "memory" 或环境变量指定)
-    config_storage_type = config.get("storage.type", "sqlite")
-    if config_storage_type in ("memory", "none", "in_memory"):
-        use_cache = False
-
-    # 3. 逻辑索引层按需装配
-    db_manager = None
-    if use_cache:
-        logger.debug("Engine factory: Using SQLiteGraphIndex (use_cache=True)")
-        db_manager = DatabaseManager(project_root)
-        db_manager.init_schema()
-        index = SQLiteGraphIndex(db_manager)
-    else:
-        logger.debug("Engine factory: Using InMemoryGraphIndex (use_cache=False)")
-        index = InMemoryGraphIndex()
-
-    # 4. 组装并返回 Engine 门面
-    engine = Engine(
-        root_dir=project_root,
-        storage=storage,
-        index=index,
-        db_manager=db_manager,
-        use_cache=use_cache,
-    )
-
-    if not lazy:
-        engine.align()
-
-    return engine
-~~~~~
-
 ### 下一步建议
-阶段三（中枢解耦与装配改造）已经完成。目前 `Engine` 已经正式通过 `storage` 和 `index` 运行，并且支持 `use_cache=False` 瞬时内存模式。
-
-建议下一步推进**阶段四与阶段五（适配治理与测试验证）**：
-1. **测试辅助桩调整 (`pyquipu-test-utils/src/quipu/test_utils/helpers.py`)**：
-   - 适配 `InMemorySnapshotStorage` 与 `InMemoryGraphIndex`，确保测试框架无缝对接新协议。
-2. **运行全量测试**：
-   - 使用 `run_command` 执行 `pytest`，验证所有 CLI、Engine、TUI、Cache 和 Sync 测试是否通过，确保解耦重构零回归。
+根据 `uv run pytest` 的执行结果：
+- 若全量通过，我们将按路线图推进阶段四的 CLI 适配验证与阶段五的测试矩阵完备性测试（验证 `use_cache=False` 瞬时模式及缓存重建能力）。

@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] refactor: 重构 Engine 核心中枢与装配工厂以支持可选缓存与职责解耦", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789354790.2297347, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] fix: 修复 Engine 内存后端适配与旧兼容层接口", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789354965.664856, "duration_ms": 0}}
