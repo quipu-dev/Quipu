@@ -1,198 +1,85 @@
-现在进入路线图第五阶段：**构建并执行存储与索引层解耦的验证测试矩阵**，验证 CI/CD 纯内存模式（`use_cache=False`）、单向读模型投影与缓存重建能力。
+## [WIP] fix: 统一 GraphIndex.record_node 签名并支持元数据参数
 
-## [WIP] test: 增加存储与索引解耦、无缓存模式及缓存重建测试矩阵
+### 错误分析
+- **现象**: 在执行 `test_engine_ci_mode_no_cache_zero_io` 时抛出 `TypeError: InMemoryGraphIndex.record_node() got an unexpected keyword argument 'meta_json'`。
+- **根因**: `Engine.capture_drift` 和 `create_plan_node` 在调用 `self.index.record_node(new_node, meta_json=meta_json)` 时传入了 `meta_json` 关键字参数。`SQLiteGraphIndex` 显式支持该参数，但 `InMemoryGraphIndex` 和 `GraphIndex` 协议定义的入参签名中缺少 `meta_json` 及 `**kwargs`，导致纯内存索引在接收到该参数时报错。
 
 ### 用户需求
-落实路线图阶段五：
-1. 验证项 B（CI/CD 无缓存模式）：验证在 `use_cache=False` 下执行 `capture_drift` 与 `create_plan_node` 时，`.quipu/history.sqlite` 绝不被创建，且 Git 物理快照与引用正确生成。
-2. 验证项 C（缓存丢弃重建）：验证在物理删除 `history.sqlite` 后，`CacheProjector` 能从 Git Commit 树全量重建索引。
-3. 单元隔离性验证：独立验证 `GitSnapshotStorage` 纯物理存储与 `InMemoryGraphIndex` 内存索引的独立运作。
+统一 `GraphIndex` 契约及 `InMemoryGraphIndex` 中 `record_node` 的方法签名，支持可选的 `meta_json` 参数，并重新运行全量测试。
 
 ### 评论
-这套测试矩阵直接闭环了用户最初提出的核心架构诉求：“在 CI/CD 环境下无需 SQLite 缓存层，实现纯 Git 极简零依赖运行”，并证明了读模型（SQLite）可随时丢弃并从物理快照（Git）100% 确定性复原。
+接口签名的细微差异会在具体多态实现切换时暴露出来。将协议中的 `record_node` 规范化为接受可选的序列化元数据（`meta_json: str | None = None`），既能让持久化索引利用已序列化的快照元数据避免重复计算，也能让轻量/内存索引静默忽略，保证多态调用的一致性。
 
 ### 目标
-1. 新建 `packages/pyquipu-engine/tests/unit/test_engine_decoupling.py`，编写包含 CI 模式、缓存重建、独立物理存储与纯内存索引的完整测试用例。
-2. 运行 `pytest` 执行新增验证与全量回归测试。
+1. 在 `quipu.spec.protocols.storage.GraphIndex` 中将 `record_node` 签名更新为接受 `meta_json: str | None = None, **kwargs: Any`。
+2. 在 `quipu.engine.memory_index.InMemoryGraphIndex` 中同步实现该签名。
+3. 运行 `pytest` 验证解耦测试及全量测试套件通过。
 
 ### 基本原理
-- **无缓存验证原则**：监控文件系统边界，确保当 `use_cache=False` 时，没有触碰任何 SQLite 数据库文件或临时文件。
-- **CQRS 确定性复原原则**：Git 是不可变事实（Event/Snapshot Log），SQLite 是投影视图。删除投影视图后，重新通过 `CacheProjector` 投影出的节点数、哈希和拓扑结构必须与删除前完全一致。
+- 遵循开放-封闭与里氏替换原则，所有 `GraphIndex` 的子类型必须兼容超类型所要求的所有调用协议。支持 `meta_json: str | None = None, **kwargs: Any` 可以让上层调用方统一投递元数据上下文。
 
 ### 标签
-#intent/tooling #flow/ready #priority/high #comp/engine #comp/tests #concept/state #scope/core #ai/instruct #task/domain/storage #task/object/engine-decoupling #task/action/test #task/state/continue
+#intent/fix #flow/ready #priority/high #comp/engine #comp/spec #concept/state #scope/api #ai/instruct #task/domain/storage #task/object/engine-decoupling #task/action/bug-fix #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 编写解耦与无缓存模式测试套件
-
-新建 `test_engine_decoupling.py`，完整覆盖物理快照独立性、无缓存模式和缓存重建。
+#### Acts 1: 更新 `GraphIndex` 协议签名
 
 ~~~~~act
-write_file
-packages/pyquipu-engine/tests/unit/test_engine_decoupling.py
+patch_file
+packages/pyquipu-spec/src/quipu/spec/protocols/storage.py
 ~~~~~
 ~~~~~python
-from pathlib import Path
-from quipu.application.factory import create_engine
-from quipu.engine.git_storage import GitSnapshotStorage
-from quipu.engine.memory_index import InMemoryGraphIndex
-from quipu.engine.projector import CacheProjector
-from quipu.engine.sqlite_db import DatabaseManager
-from quipu.engine.sqlite_index import SQLiteGraphIndex
-from quipu.spec.constants import EMPTY_TREE_HASH
+@runtime_checkable
+class GraphIndex(Protocol):
+    """定义图谱拓扑与元数据索引层的契约 (Read-Model / Query Cache).
 
+    仅维护 QuipuNode 节点元数据、拓扑父子关系和轻量缓存，
+    不负责文件物理实体的落盘。
+    """
 
-def test_engine_ci_mode_no_cache_zero_io(git_workspace: Path):
-    """验证项 B: use_cache=False 时，零 SQLite 文件创建，Git 物理快照正常工作."""
-    db_file = git_workspace / ".quipu" / "history.sqlite"
-    assert not db_file.exists(), "初始状态不应存在 sqlite 数据库"
+    def record_node(self, node: QuipuNode) -> None: ...
 
-    # 1. 以无缓存模式启动引擎 (专为 CI/CD 设计)
-    engine = create_engine(git_workspace, lazy=False, use_cache=False)
+    def get_node(self, commit_hash: str) -> QuipuNode | None: ...
+~~~~~
+~~~~~python
+@runtime_checkable
+class GraphIndex(Protocol):
+    """定义图谱拓扑与元数据索引层的契约 (Read-Model / Query Cache).
 
-    # 验证索引类型
-    assert isinstance(engine.index, InMemoryGraphIndex)
-    assert engine.db_manager is None
-    assert not db_file.exists(), "初始化后不应创建 sqlite 文件"
+    仅维护 QuipuNode 节点元数据、拓扑父子关系和轻量缓存，
+    不负责文件物理实体的落盘。
+    """
 
-    # 2. 捕获漂移
-    (git_workspace / "ci_artifact.txt").write_text("build-123")
-    tree_hash_1 = engine.storage.get_tree_hash()
-    capture_node = engine.capture_drift(tree_hash_1, message="CI drift capture")
+    def record_node(self, node: QuipuNode, meta_json: str | None = None, **kwargs: Any) -> None: ...
 
-    assert capture_node is not None
-    assert not db_file.exists(), "捕获漂移后绝对不应生成 sqlite 文件"
+    def get_node(self, commit_hash: str) -> QuipuNode | None: ...
+~~~~~
 
-    # 3. 创建 Plan 节点
-    (git_workspace / "ci_artifact.txt").write_text("build-456")
-    tree_hash_2 = engine.storage.get_tree_hash()
-    plan_node = engine.create_plan_node(tree_hash_1, tree_hash_2, "# CI Test Plan")
+#### Acts 2: 更新 `InMemoryGraphIndex.record_node` 实现
 
-    assert plan_node is not None
-    assert not db_file.exists(), "创建 Plan 节点后绝对不应生成 sqlite 文件"
-
-    # 4. 验证 Git 底层物理事实已正确落盘
-    heads = engine.git_db.get_all_ref_heads("refs/quipu/local/heads/")
-    head_hashes = {h[0] for h in heads}
-    assert capture_node.commit_hash in head_hashes
-    assert plan_node.commit_hash in head_hashes
-
-    # 5. 内存中拓扑正常维系
-    assert plan_node.parent == capture_node
-    assert capture_node.children == [plan_node]
-
-
-def test_cache_projector_rebuild_from_scratch(git_workspace: Path):
-    """验证项 C: 手动删除 SQLite 文件后，可由 CacheProjector 从 Git 物理树全量重建."""
-    db_file = git_workspace / ".quipu" / "history.sqlite"
-
-    # 1. 正常运行并落盘一些历史到 Git 与 SQLite
-    engine = create_engine(git_workspace, lazy=False, use_cache=True)
-    (git_workspace / "file.txt").write_text("v1")
-    h1 = engine.storage.get_tree_hash()
-    n1 = engine.create_plan_node(EMPTY_TREE_HASH, h1, "Plan 1")
-
-    (git_workspace / "file.txt").write_text("v2")
-    h2 = engine.storage.get_tree_hash()
-    n2 = engine.create_plan_node(h1, h2, "Plan 2")
-
-    assert db_file.exists()
-    assert engine.index.get_node_count() == 2
-
-    # 关闭引擎连接
-    engine.close()
-
-    # 2. 模拟灾难或缓存丢弃：物理删除 SQLite 数据库
-    db_file.unlink()
-    assert not db_file.exists()
-
-    # 3. 重新以有缓存模式启动引擎 (触发自动投影)
-    new_engine = create_engine(git_workspace, lazy=False, use_cache=True)
-    try:
-        assert db_file.exists(), "数据库应当被自动重建"
-        assert new_engine.index.get_node_count() == 2, "所有节点应当被完整投影"
-
-        rebuilt_node = new_engine.index.get_node(n2.commit_hash)
-        assert rebuilt_node is not None
-        assert rebuilt_node.output_tree == h2
-        assert rebuilt_node.summary == "Plan 2"
-    finally:
-        new_engine.close()
-
-
-def test_git_snapshot_storage_isolated(git_workspace: Path):
-    """测试 GitSnapshotStorage 独立物理运作能力."""
-    storage = GitSnapshotStorage(git_workspace)
-
-    (git_workspace / "app.py").write_text("print('hello')")
-    tree_hash = storage.capture_workspace()
-    assert len(tree_hash) == 40
-
-    node, meta_json = storage.create_snapshot_commit(
-        node_type="plan",
-        input_tree=EMPTY_TREE_HASH,
-        output_tree=tree_hash,
-        content="# My Plan",
-    )
-
-    assert node.commit_hash is not None
-    assert "My Plan" in meta_json
-
-    # 验证工作区检出恢复
-    (git_workspace / "app.py").write_text("print('modified')")
-    assert storage.get_tree_hash() != tree_hash
-
-    storage.restore_workspace(tree_hash)
-    assert (git_workspace / "app.py").read_text() == "print('hello')"
-
-
-def test_in_memory_graph_index_isolated():
-    """测试 InMemoryGraphIndex 独立图谱计算能力."""
-    index = InMemoryGraphIndex()
-    assert index.get_node_count() == 0
-
-    from datetime import datetime
-    from quipu.spec.models.graph import QuipuNode
-
-    n1 = QuipuNode(
-        commit_hash="c1",
-        input_tree=EMPTY_TREE_HASH,
-        output_tree="t1",
-        timestamp=datetime.now(),
-        filename=Path("c1"),
-        node_type="plan",
-        summary="Initial Plan",
-    )
-    n2 = QuipuNode(
-        commit_hash="c2",
-        input_tree="t1",
-        output_tree="t2",
-        timestamp=datetime.now(),
-        filename=Path("c2"),
-        node_type="plan",
-        summary="Second Plan",
-        parent=n1,
-    )
-
-    index.record_node(n1)
-    index.record_node(n2)
-
-    assert index.get_node_count() == 2
-    assert index.get_ancestor_output_trees("t2") == {"t1"}
-    assert index.get_descendant_output_trees("t1") == {"t2"}
-    assert len(index.find_nodes(summary_regex="Initial")) == 1
+~~~~~act
+patch_file
+packages/pyquipu-engine/src/quipu/engine/memory_index.py
+~~~~~
+~~~~~python
+    def record_node(self, node: QuipuNode) -> None:
+        self._nodes[node.commit_hash] = node
+        if node.parent and node.parent.commit_hash in self._nodes:
+            parent_in_index = self._nodes[node.parent.commit_hash]
+            if node not in parent_in_index.children:
+                parent_in_index.children.append(node)
+~~~~~
+~~~~~python
+    def record_node(self, node: QuipuNode, meta_json: str | None = None, **kwargs: Any) -> None:
+        self._nodes[node.commit_hash] = node
+        if node.parent and node.parent.commit_hash in self._nodes:
+            parent_in_index = self._nodes[node.parent.commit_hash]
+            if node not in parent_in_index.children:
+                parent_in_index.children.append(node)
 ~~~~~
 
 ### 下一步建议
-在本次测试执行确认通过后，说明路线图的五个阶段已经全部高质量落地：
-1. `SnapshotStorage` 与 `GraphIndex` 契约定义与分离；
-2. `GitSnapshotStorage` 纯粹物理层提炼；
-3. `SQLiteGraphIndex` 纯粹逻辑索引层提炼；
-4. `CacheProjector` 单向投影语义纠偏；
-5. `Engine` 与 `factory.create_engine` 支持 `use_cache=False` 瞬时 CI 模式；
-6. 完整的验证测试矩阵建立与回归校验通过。
-
-请查看测试运行结果，若需生成 Git Commit 将本次架构重构落地，请告知。
+通过更新协议与内存索引方法签名，`InMemoryGraphIndex` 已能够安全处理 Engine 传入的元数据参数。执行 `uv run pytest` 将验证全量测试套件的绿灯通过情况。如果所有测试均通过，即可进行后续的 Git 提交确认。

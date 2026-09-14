@@ -16,7 +16,7 @@ class InMemoryGraphIndex(GraphIndex):
         self._nodes: dict[str, QuipuNode] = {}
         self._private_data: dict[str, str] = {}
 
-    def record_node(self, node: QuipuNode) -> None:
+    def record_node(self, node: QuipuNode, meta_json: str | None = None, **kwargs: Any) -> None:
         self._nodes[node.commit_hash] = node
         if node.parent and node.parent.commit_hash in self._nodes:
             parent_in_index = self._nodes[node.parent.commit_hash]
