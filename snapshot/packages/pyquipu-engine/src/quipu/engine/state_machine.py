@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 class _EngineReaderCompatibilityAdapter:
-
     def __init__(self, engine: "Engine", original_reader: Any = None):
         self._engine = engine
         self._original = original_reader
@@ -86,7 +85,6 @@ class _EngineReaderCompatibilityAdapter:
 
 
 class _EngineWriterCompatibilityAdapter:
-
     def __init__(self, engine: "Engine", original_writer: Any = None):
         self._engine = engine
         self._original = original_writer
@@ -130,7 +128,6 @@ class _EngineWriterCompatibilityAdapter:
 
 
 class Engine:
-
     def _sync_persistent_ignores(self):
         try:
             config = ConfigManager(self.root_dir)

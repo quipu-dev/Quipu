@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class SQLiteGraphIndex(GraphIndex):
-
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
 

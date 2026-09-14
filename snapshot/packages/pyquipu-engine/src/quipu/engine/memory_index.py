@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class InMemoryGraphIndex(GraphIndex):
-
     def __init__(self):
         self._nodes: dict[str, QuipuNode] = {}
         self._private_data: dict[str, str] = {}

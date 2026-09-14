@@ -5,7 +5,6 @@ from ..models.graph import QuipuNode
 
 @runtime_checkable
 class SnapshotStorage(Protocol):
-
     def get_tree_hash(self) -> str: ...
 
     def capture_workspace(self, message: str | None = None) -> str: ...
@@ -23,7 +22,6 @@ class SnapshotStorage(Protocol):
 
 @runtime_checkable
 class GraphIndex(Protocol):
-
     def record_node(self, node: QuipuNode, meta_json: str | None = None, **kwargs: Any) -> None: ...
 
     def get_node(self, commit_hash: str) -> QuipuNode | None: ...

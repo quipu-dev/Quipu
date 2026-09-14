@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 class GitSnapshotStorage(SnapshotStorage):
-
     def __init__(self, root_dir: Path):
         self.root_dir = root_dir.resolve()
         self.git_db = GitDB(self.root_dir)

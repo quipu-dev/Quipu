@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class CacheProjector:
-
     def __init__(self, git_db: GitDB, db_manager: DatabaseManager):
         self.git_db = git_db
         self.db_manager = db_manager
