@@ -1,0 +1,6 @@
+CacheProjector: |-
+  读模型单向投影器 (Read-Model Projector / Cache Warmer).
+
+  将不可变的 Git 物理快照历史记录增量或全量投影至 SQLite 索引库。
+CacheProjector.project: |-
+  执行单向读模型投影同步.

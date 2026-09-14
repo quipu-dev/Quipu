@@ -58,9 +58,7 @@ def main(
         typer.Option("--version", "-V", callback=version_callback, is_eager=True, help="显示版本信息并退出。"),
     ] = None,
 ):
-    """
-    Quipu: 一个基于 Git 的、用于文件系统状态溯源与文学化操作的工具。
-    """
+    pass
 
 
 # 注册顶级命令

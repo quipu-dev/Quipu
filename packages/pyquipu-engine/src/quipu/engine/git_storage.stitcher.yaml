@@ -1,0 +1,9 @@
+GitSnapshotStorage: |-
+  Git 物理快照存储实现 (Source of Truth).
+
+  负责与底层 Git plumbing 交互，执行 Tree 捕获、检出、Blob/Tree 读写及 Commit 持久化。
+  此模块绝不依赖 SQLite。
+GitSnapshotStorage.create_snapshot_commit: |-
+  按照 QDPS 规范创建 Git Commit，返回 (QuipuNode, meta_json_str).
+GitSnapshotStorage.read_node_content: |-
+  从 Git 对象库按需提取 content.md.
