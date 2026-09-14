@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from quipu.application.factory import create_engine
 from quipu.engine.git_storage import GitSnapshotStorage
 from quipu.engine.memory_index import InMemoryGraphIndex
@@ -111,6 +112,7 @@ def test_in_memory_graph_index_isolated():
     assert index.get_node_count() == 0
 
     from datetime import datetime
+
     from quipu.spec.models.graph import QuipuNode
 
     n1 = QuipuNode(
