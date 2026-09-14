@@ -13,17 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class SQLiteGraphIndex(GraphIndex):
-    """基于 SQLite 的图谱与元数据索引实现 (Read-Model / Query Accelerator).
-
-    职责仅限于维护 nodes, edges, private_data 表的结构化数据与关系计算，
-    绝不涉及任何底层 Git Plumbing 操作。
-    """
 
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
 
     def record_node(self, node: QuipuNode, meta_json: str | None = None) -> None:
-        """将 QuipuNode 元数据及边关系记录入 SQLite 索引."""
         meta_str = meta_json
         if not meta_str:
             meta_str = json.dumps(

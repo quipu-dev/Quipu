@@ -17,11 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 class GitSnapshotStorage(SnapshotStorage):
-    """Git 物理快照存储实现 (Source of Truth).
-
-    负责与底层 Git plumbing 交互，执行 Tree 捕获、检出、Blob/Tree 读写及 Commit 持久化。
-    此模块绝不依赖 SQLite。
-    """
 
     def __init__(self, root_dir: Path):
         self.root_dir = root_dir.resolve()
@@ -116,7 +111,6 @@ class GitSnapshotStorage(SnapshotStorage):
         owner_id: str | None = None,
         start_time: float | None = None,
     ) -> tuple[QuipuNode, str]:
-        """按照 QDPS 规范创建 Git Commit，返回 (QuipuNode, meta_json_str)."""
         actual_start_time = start_time or time.time()
         end_time = time.time()
         duration_ms = int((end_time - actual_start_time) * 1000)
@@ -195,7 +189,6 @@ class GitSnapshotStorage(SnapshotStorage):
         return node, meta_json_bytes.decode("utf-8")
 
     def read_node_content(self, node: QuipuNode) -> str:
-        """从 Git 对象库按需提取 content.md."""
         if node.content:
             return node.content
 

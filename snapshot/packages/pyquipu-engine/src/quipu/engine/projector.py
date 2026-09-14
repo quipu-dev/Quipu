@@ -10,10 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class CacheProjector:
-    """读模型单向投影器 (Read-Model Projector / Cache Warmer).
-
-    将不可变的 Git 物理快照历史记录增量或全量投影至 SQLite 索引库。
-    """
 
     def __init__(self, git_db: GitDB, db_manager: DatabaseManager):
         self.git_db = git_db
@@ -70,7 +66,6 @@ class CacheProjector:
         return match.group(1) if match else None
 
     def project(self, local_user_id: str):
-        """执行单向读模型投影同步."""
         all_ref_heads = [t[0] for t in self.git_db.get_all_ref_heads("refs/quipu/")]
         if not all_ref_heads:
             logger.debug("✅ Git 中未发现 Quipu 引用，无需投影。")

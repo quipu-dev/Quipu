@@ -6,7 +6,6 @@ from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 def test_engine_ci_mode_no_cache_zero_io(git_workspace: Path):
-    """验证项 B: use_cache=False 时，零 SQLite 文件创建，Git 物理快照正常工作."""
     db_file = git_workspace / ".quipu" / "history.sqlite"
     assert not db_file.exists(), "初始状态不应存在 sqlite 数据库"
 
@@ -46,7 +45,6 @@ def test_engine_ci_mode_no_cache_zero_io(git_workspace: Path):
 
 
 def test_cache_projector_rebuild_from_scratch(git_workspace: Path):
-    """验证项 C: 手动删除 SQLite 文件后，可由 CacheProjector 从 Git 物理树全量重建."""
     db_file = git_workspace / ".quipu" / "history.sqlite"
 
     # 1. 正常运行并落盘一些历史到 Git 与 SQLite
@@ -84,7 +82,6 @@ def test_cache_projector_rebuild_from_scratch(git_workspace: Path):
 
 
 def test_git_snapshot_storage_isolated(git_workspace: Path):
-    """测试 GitSnapshotStorage 独立物理运作能力."""
     storage = GitSnapshotStorage(git_workspace)
 
     (git_workspace / "app.py").write_text("print('hello')")
@@ -110,7 +107,6 @@ def test_git_snapshot_storage_isolated(git_workspace: Path):
 
 
 def test_in_memory_graph_index_isolated():
-    """测试 InMemoryGraphIndex 独立图谱计算能力."""
     index = InMemoryGraphIndex()
     assert index.get_node_count() == 0
 

@@ -2,3 +2,13 @@ HistoryReader: |-
   定义从存储后端读取历史图谱的行为契约
 HistoryWriter: |-
   定义向历史存储后端写入新节点的行为契约
+GraphIndex: |-
+  定义图谱拓扑与元数据索引层的契约 (Read-Model / Query Cache).
+
+  仅维护 QuipuNode 节点元数据、拓扑父子关系和轻量缓存，
+  不负责文件物理实体的落盘。
+SnapshotStorage: |-
+  定义物理快照存储的契约 (Source of Truth).
+
+  仅负责工作区物理状态的捕获、还原以及物理对象 (Blob/Tree/Commit) 的读写，
+  不承载图谱拓扑与业务元数据查询。

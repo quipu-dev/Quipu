@@ -25,8 +25,8 @@
       "baseline_yaml_content_hash": "072213b865fe7346f0d15fb5dac39d87008c64d4c265f765d49a7e0a561a2b76"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_generate_file_content": {
-      "baseline_code_signature_text": "def _generate_file_content(node: QuipuNode, engine: Engine, no_frontmatter: bool, no_nav: bool, exported_hashes_set: Set[str], filename_map: Dict[str, str], hidden_link_types: Set[str]) -> str:",
-      "baseline_code_structure_hash": "a2069123e8ad2f8fb7669b759a07bf27d75408c680eb39d61909494f245e4270",
+      "baseline_code_signature_text": "def _generate_file_content(node: QuipuNode, engine: Engine, no_frontmatter: bool, no_nav: bool, exported_hashes_set: set[str], filename_map: dict[str, str], hidden_link_types: set[str]) -> str:",
+      "baseline_code_structure_hash": "c2c5c7689c763390ce6b2ee51ab34e4de40c4322e1431e541c6af738d1bce182",
       "baseline_yaml_content_hash": "11e8b1b55093a75571b2f6321e13bd409eaf706cc11d05d7bc6f5ded73130d7b"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_generate_filename": {
@@ -35,8 +35,8 @@
       "baseline_yaml_content_hash": "92ba975530e3f064b4e863a873c946fd95e94b147efc977b7a7b8056b7cd54ba"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_generate_navbar": {
-      "baseline_code_signature_text": "def _generate_navbar(current_node: QuipuNode, exported_hashes_set: Set[str], filename_map: Dict[str, str], hidden_link_types: Set[str]) -> str:",
-      "baseline_code_structure_hash": "31730019d72095558dfbb0f1409ac592b3385282bd70b82d0e846ac04feb1425",
+      "baseline_code_signature_text": "def _generate_navbar(current_node: QuipuNode, exported_hashes_set: set[str], filename_map: dict[str, str], hidden_link_types: set[str]) -> str:",
+      "baseline_code_structure_hash": "13f89fc77fd05d7a31e5732fa5a7603170ce584cfaf8800199400a68de86323c",
       "baseline_yaml_content_hash": "12f6b2229709ef9b30084a487dbce1e73f1dc18f9104a615883b25787bca2820"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/export.py#_sanitize_summary": {
@@ -54,8 +54,8 @@
       "baseline_yaml_content_hash": "ae1ff41ba75c522fa2e42291e621ada5e1b02efe729959a460edc34a4a6f1c8a"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#_find_current_node": {
-      "baseline_code_signature_text": "def _find_current_node(engine: Engine, graph: Dict[str, QuipuNode]) -> Optional[QuipuNode]:",
-      "baseline_code_structure_hash": "79b18f799ebe6139a1aed83fbf7ea5fa12335af0cc58e15219222451acc5449c",
+      "baseline_code_signature_text": "def _find_current_node(engine: Engine, graph: dict[str, QuipuNode]) -> QuipuNode | None:",
+      "baseline_code_structure_hash": "f5b529ac7d1b8129b8ff1023fab9b47cca14a3bca0dfa4f7087622e6c30e325b",
       "baseline_yaml_content_hash": "0f66d45f4d99892cd3236244bdefbfaab2652961fb15ef3b74c735aada7f4eda"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#engine_context": {
@@ -64,13 +64,13 @@
       "baseline_yaml_content_hash": "a95bdec257bf9536a0f2b01704c7c08fdf356e43c0aec646290b1cbf0d6991aa"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#filter_nodes": {
-      "baseline_code_signature_text": "def filter_nodes(nodes: List[QuipuNode], limit: Optional[int], since: Optional[str], until: Optional[str]) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "472289c4518baaa2c48f30f0852b7fdb847967b34df5e0d022aea2a86e43d562",
+      "baseline_code_signature_text": "def filter_nodes(nodes: list[QuipuNode], limit: int | None, since: str | None, until: str | None) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "145a7aa3efae785494476511439819a7c2bbabfa2cad8ce35515803a853b2fa6",
       "baseline_yaml_content_hash": "79ea525d26ab251901c03f43b61d5ad30cd35953a00202e75e81456000417054"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/helpers.py#filter_reachable_nodes": {
-      "baseline_code_signature_text": "def filter_reachable_nodes(engine: Engine, nodes: List[QuipuNode]) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "39cedd34f3f1b02b3a1d49b07418cc71215c696ea3a8a5031a0e3ff5846f66f0",
+      "baseline_code_signature_text": "def filter_reachable_nodes(engine: Engine, nodes: list[QuipuNode]) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "7de6be7af2e8f0be6104f222dd827eeb85e99ebd51452c70ef9122f778d8ae0f",
       "baseline_yaml_content_hash": "1ef180ac9d0dc5c26fcd9531e469fcba9f07183977b6ddde67ef4b54b3afaac9"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/navigation.py#register": {
@@ -78,8 +78,8 @@
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/query.py#_nodes_to_json_str": {
-      "baseline_code_signature_text": "def _nodes_to_json_str(nodes: List[QuipuNode]) -> str:",
-      "baseline_code_structure_hash": "61c41315aa76759f15d59b4b5b386c46e347d63f3ede0d2b3bb3ccce6f8b95a7",
+      "baseline_code_signature_text": "def _nodes_to_json_str(nodes: list[QuipuNode]) -> str:",
+      "baseline_code_structure_hash": "1afb8c1e8d73ed71d1237ff99fef1ddb976087d2647b99e3562c0294a18d8339",
       "baseline_yaml_content_hash": "e8fd6bcc24b3c636e78d61a66c4aeb44f31548851d618950ed80afaf75d0eef3"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/query.py#register": {
@@ -99,8 +99,8 @@
       "baseline_code_structure_hash": "32475c50cf36afaf2fb100127ea888c4b2eda4d547ed04ef114d35119f2a5d4b"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/show.py#_find_target_node": {
-      "baseline_code_signature_text": "def _find_target_node(graph: Dict, hash_prefix: str):",
-      "baseline_code_structure_hash": "a51821bc11889003f2fe8c9a531b48afb072f1c665e4539a08844792ed2a7dd5",
+      "baseline_code_signature_text": "def _find_target_node(graph: dict, hash_prefix: str):",
+      "baseline_code_structure_hash": "b95f1b757c251a926b96be651aa0fa712870028e7e525e57cc9d8ae7200636ae",
       "baseline_yaml_content_hash": "807e9066a944912816641ed1d209223dde8f450e116617142a0c032a9b55360e"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/commands/show.py#register": {
@@ -129,6 +129,15 @@
       "baseline_code_signature_text": "def setup_logging():",
       "baseline_code_structure_hash": "9f8fe4f78b0a37cb1fdcb7a71340369231210c17cf8aabd7932364e85e49558f",
       "baseline_yaml_content_hash": "661102cbe0d8b99976a010fa18584a63efc961471bd041664f794e0c03e75c4c"
+    },
+    "py://packages/pyquipu-cli/src/quipu/cli/main.py#main": {
+      "baseline_code_signature_text": "def main(version: Annotated[bool | None, typer.Option(--version, -V, callback=version_callback, is_eager=True, help='\u663e\u793a\u7248\u672c\u4fe1\u606f\u5e76\u9000\u51fa\u3002')] = None):",
+      "baseline_code_structure_hash": "32e7711e68310146999ecb80f8efca45170cd1c73dccb108d7002b57e2e38842",
+      "baseline_yaml_content_hash": "8d9317ae2b400f1f47bf287cfbbb004adf475f941e27413c5e04b9d072d22c98"
+    },
+    "py://packages/pyquipu-cli/src/quipu/cli/main.py#version_callback": {
+      "baseline_code_signature_text": "def version_callback(value: bool):",
+      "baseline_code_structure_hash": "cddfc7cd3b2fe49aab452780ba4ab96c9c2aa7acbe75d5b89b7a7575fe8df41c"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/rendering.py#Renderer.data": {
       "baseline_code_signature_text": "def data(self, data_string: str) -> None:",
@@ -186,8 +195,8 @@
       "baseline_code_structure_hash": "b42ae08d89173d6c36f958bd504fdbe34d778e321cf0e748835e2c6efa55cb94"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp": {
-      "baseline_code_signature_text": "class QuipuUiApp(App[Optional[UiResult]]):",
-      "baseline_code_structure_hash": "9c2dac1a5f65d2d7aed0a6279874c528e0c17c99dd185dd812e3c590eefe5ed4"
+      "baseline_code_signature_text": "class QuipuUiApp(App[UiResult | None]):",
+      "baseline_code_structure_hash": "06d592e4c0dd98b4925a676eff12e395f6be75d7f84579b9ab0a757004b239ab"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp.__init__": {
       "baseline_code_signature_text": "def __init__(self, work_dir: Path, initial_raw_mode: bool = False):",
@@ -216,8 +225,8 @@
       "baseline_yaml_content_hash": "32815db7c566b485e41dc7ea4d9d40e0d8924eca6e948f58ce4e55b439712a86"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._populate_table": {
-      "baseline_code_signature_text": "def _populate_table(self, table: DataTable, nodes: List[QuipuNode]):",
-      "baseline_code_structure_hash": "f037273d62d065407745e04587e974714e2145a5c02ad16cbce19a59432bb60a"
+      "baseline_code_signature_text": "def _populate_table(self, table: DataTable, nodes: list[QuipuNode]):",
+      "baseline_code_structure_hash": "9b34306b3cc2df3739564a1c4737aa0badebf1f5b0f400d237ef9b131eff989a"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/tui.py#QuipuUiApp._refresh_table": {
       "baseline_code_signature_text": "def _refresh_table(self):",
@@ -293,13 +302,13 @@
       "baseline_code_structure_hash": "3f8bce49d7664245df81a63bb5a291ccf0c3cd96c45f83e04d75aebf1d2d5e3d"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/ui_utils.py#confirmation_handler_for_executor": {
-      "baseline_code_signature_text": "def confirmation_handler_for_executor(diff_lines: List[str], prompt: str) -> bool:",
-      "baseline_code_structure_hash": "eb9d0298ff9910ee57c22766b923ec519439fb7394e76c976bc46dd6870a27e7",
+      "baseline_code_signature_text": "def confirmation_handler_for_executor(diff_lines: list[str], prompt: str) -> bool:",
+      "baseline_code_structure_hash": "8839407c0755c23f75f457786bae946a90b42b7cedf79063e69426a80ca23aa6",
       "baseline_yaml_content_hash": "4eb68f7550569e0298c63e8d43e90f5b8434b8f6f4d6636f6f93978d74b08f84"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/ui_utils.py#prompt_for_confirmation": {
-      "baseline_code_signature_text": "def prompt_for_confirmation(prompt: str, diff_lines: Optional[List[str]] = None, default: bool = False) -> bool:",
-      "baseline_code_structure_hash": "99d4f9db04ac7b8fa5eef940c0f467accb61eda08f412652efe21cee6cba508f",
+      "baseline_code_signature_text": "def prompt_for_confirmation(prompt: str, diff_lines: list[str] | None = None, default: bool = False) -> bool:",
+      "baseline_code_structure_hash": "4683c55a61670e31e1df91326540848fe46b1447f94bf29ad10ed42c82dc0aa2",
       "baseline_yaml_content_hash": "3dc83b0a19984f5b60144f71d8978ac23b4c0daa4cde38b1926347f412644bfe"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel": {
@@ -308,8 +317,8 @@
       "baseline_yaml_content_hash": "96759d61f739ca4964b341e970bfc7441bf01351bc836fa766e4e6b1cb55e69c"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.__init__": {
-      "baseline_code_signature_text": "def __init__(self, reader: HistoryReader, current_output_tree_hash: Optional[str], page_size: int = 50):",
-      "baseline_code_structure_hash": "5f9bf8cd0c755d6c2a699bd40cb713b8304c929ef917faf3c52993088465f73f"
+      "baseline_code_signature_text": "def __init__(self, reader: HistoryReader, current_output_tree_hash: str | None, page_size: int = 50):",
+      "baseline_code_structure_hash": "5ae4d4f819ce2ba63f6f06105a2bdcf1bac50fa3c9c7942bc3a363e22a76de45"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.calculate_initial_page": {
       "baseline_code_signature_text": "def calculate_initial_page(self) -> int:",
@@ -322,8 +331,8 @@
       "baseline_yaml_content_hash": "a4ed01837de13f83a2e09fe379954c2b3943c52c2c6fbc12ebe2763d49f99ba3"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.get_nodes_to_render": {
-      "baseline_code_signature_text": "def get_nodes_to_render(self) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "da0b0ed8f69cdd68ccfe27757ac44a4d9526aff829f099bfe713a8083ecf0cb8",
+      "baseline_code_signature_text": "def get_nodes_to_render(self) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "765e1a9704f17737ce518b862c52463538b0c777ae3cf251c9770ef57b05da7c",
       "baseline_yaml_content_hash": "0c4b0ab6fca1e2564718863cbb3e770ffbc94bb7cb9ce43e00e6a7758cb3a543"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.get_public_content": {
@@ -332,8 +341,8 @@
       "baseline_yaml_content_hash": "c82cd6689891833f5df596acf5cc349d3dc989ae032d448a218521060efc01e1"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.get_selected_node": {
-      "baseline_code_signature_text": "def get_selected_node(self) -> Optional[QuipuNode]:",
-      "baseline_code_structure_hash": "77129bc042abcc8c08c02066ae2bb63321091a511ca2827431ea19e789d4752e"
+      "baseline_code_signature_text": "def get_selected_node(self) -> QuipuNode | None:",
+      "baseline_code_structure_hash": "6e3ce0781035f9c7b116b29e108e47f425001b4b388b9741beea84dfbc6ed6e9"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.initialize": {
       "baseline_code_signature_text": "def initialize(self):",
@@ -346,23 +355,23 @@
       "baseline_yaml_content_hash": "e76a7af9c807fb82b1397daacd8942c36ffc31eb26d9e05732fb5b2077949ab0"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.load_page": {
-      "baseline_code_signature_text": "def load_page(self, page_number: int) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "caae11a7a388ed6a9b10e5e091b2451af9ead1c79022bf9e0a0e525fc914b90e",
+      "baseline_code_signature_text": "def load_page(self, page_number: int) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "20f07fca5cc53aa8ada42eacec3b73b6ab9d9082b0246a95204df426712fb025",
       "baseline_yaml_content_hash": "fe82bcfdadf90d6a216cf5cf3b49caf1049a42ed83d34f8cfcd8a389dab699f9"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.next_page": {
-      "baseline_code_signature_text": "def next_page(self) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "b94e50e356c7114a9c08852b28fe00f8fb6be7814d725e1444ecc19fdd7cb867",
+      "baseline_code_signature_text": "def next_page(self) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "1bac01aa154cb7eec042a34d7297ed3f4189267c9c2d75afdc9781d804181e7b",
       "baseline_yaml_content_hash": "1bcf43d112b504b11793b21ed9fe9206f3f75d852f9b3d23a71075f48becc845"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.previous_page": {
-      "baseline_code_signature_text": "def previous_page(self) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "c2b6193078dda89a4bea9480faa371cc9da83986573d969a263c9f42368f9842",
+      "baseline_code_signature_text": "def previous_page(self) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "56ddbcea75ee3c17eae1fcd6a94d87c6257d1c2b81cc18c2b442ac3184321f55",
       "baseline_yaml_content_hash": "42d56fe3ac79b9852ab639aa371b31ff732169536a50162c0c47c481a9ddf2e0"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.select_node_by_key": {
-      "baseline_code_signature_text": "def select_node_by_key(self, key: str) -> Optional[QuipuNode]:",
-      "baseline_code_structure_hash": "645748af52e71503a521c46a4ba9dcbe12ca5bca801c44384304fcbe8228bace",
+      "baseline_code_signature_text": "def select_node_by_key(self, key: str) -> QuipuNode | None:",
+      "baseline_code_structure_hash": "3d513ffd7ee7dc220da062f5401be29ec559cbe4d31dec2c9c3226ae49df2db7",
       "baseline_yaml_content_hash": "e1578b6156c3311a4e524f7c899158b2badde72f9fab1562a3eda6cf4dde79ac"
     },
     "py://packages/pyquipu-cli/src/quipu/cli/view_model.py#GraphViewModel.toggle_unreachable": {
@@ -609,24 +618,24 @@
       "baseline_yaml_content_hash": "2581c4597d154e14157a1ca4f1e6689818bc75cac6c6c982154246996a68ba66"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.__init__": {
-      "baseline_code_signature_text": "def __init__(self, nodes: List[QuipuNode], ancestors: Optional[Set[str]] = None, descendants: Optional[Set[str]] = None, private_data: Optional[dict[str, str]] = None):",
-      "baseline_code_structure_hash": "3ddcaa8c8a300064a165de433720cbfc92926faf9f9f2036582ae70fe5af1d5f"
+      "baseline_code_signature_text": "def __init__(self, nodes: list[QuipuNode], ancestors: set[str] | None = None, descendants: set[str] | None = None, private_data: dict[str, str] | None = None):",
+      "baseline_code_structure_hash": "c15adb4b9faeca3e22de5b84c4d7dcd05ea584b089d584de2305cb7da5b17915"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.find_nodes": {
-      "baseline_code_signature_text": "def find_nodes(self, summary_regex: Optional[str] = None, node_type: Optional[str] = None, limit: int = 10) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "3d04cb357877311ed8d37041f5ad5d0f322ed4105e52f5b88cfd40b6f110f6cc"
+      "baseline_code_signature_text": "def find_nodes(self, summary_regex: str | None = None, node_type: str | None = None, limit: int = 10) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "b103f594dbae22354bdb513e871e3b9cdbbeb2e41d2db5a818abb6a7f3b0c311"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.get_ancestor_output_trees": {
-      "baseline_code_signature_text": "def get_ancestor_output_trees(self, start_output_tree_hash: str) -> Set[str]:",
-      "baseline_code_structure_hash": "5ae091ca177977fc323d5563cb7f0c6e7af44ac50237f951d24c9793c2336220"
+      "baseline_code_signature_text": "def get_ancestor_output_trees(self, start_output_tree_hash: str) -> set[str]:",
+      "baseline_code_structure_hash": "3137f354f85dc31acbd0088f5ef7e1fe4cf485b61f6be7e135f65436068e515c"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.get_descendant_output_trees": {
-      "baseline_code_signature_text": "def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:",
-      "baseline_code_structure_hash": "8eb09e56e11e9534720ef7286af9a75507b606322ada07811813f6b3278f5edd"
+      "baseline_code_signature_text": "def get_descendant_output_trees(self, start_output_tree_hash: str) -> set[str]:",
+      "baseline_code_structure_hash": "526a17b5e1ffa47471d993f9b748dac6ea0351fbcfe21dd8af229f06468c8eb4"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.get_node_blobs": {
-      "baseline_code_signature_text": "def get_node_blobs(self, commit_hash: str) -> Dict[str, bytes]:",
-      "baseline_code_structure_hash": "48acf7a37a5612c09d5062797e966133a5c15ba17d05e10407be3235bb076f3d"
+      "baseline_code_signature_text": "def get_node_blobs(self, commit_hash: str) -> dict[str, bytes]:",
+      "baseline_code_structure_hash": "7518243aeddcb0655879143807114fbeb826325af0a4123a2ba38f5111bc444b"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.get_node_content": {
       "baseline_code_signature_text": "def get_node_content(self, node: QuipuNode) -> str:",
@@ -641,16 +650,16 @@
       "baseline_code_structure_hash": "eeb815e029cbffaf43c5365481a21a4251ca6fb30632886a63a5716104041b0e"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.get_private_data": {
-      "baseline_code_signature_text": "def get_private_data(self, node_commit_hash: str) -> Optional[str]:",
-      "baseline_code_structure_hash": "b03c5152ce31de33095b38682a69df3dcfcd6551fd2d0e5109137fb9a8e6a772"
+      "baseline_code_signature_text": "def get_private_data(self, node_commit_hash: str) -> str | None:",
+      "baseline_code_structure_hash": "f89eb26a5371e45416b6f432a473f88cd63353152433e66e86f35265a7658191"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.load_all_nodes": {
-      "baseline_code_signature_text": "def load_all_nodes(self) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "860f1b0ce953562bf9798d8e0e7a6d05c0aada817fc5e88689012cb45876f7be"
+      "baseline_code_signature_text": "def load_all_nodes(self) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "c5356664632a9b785d7fe92e32dbe0c2f1a17f3e47b114c31bdaed8d6a801709"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#MockHistoryReader.load_nodes_paginated": {
-      "baseline_code_signature_text": "def load_nodes_paginated(self, limit: int, offset: int) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "cf4d892bf90a00fa3f083ef8e4bb292b58bf36a417cf53e04002657744c0022e"
+      "baseline_code_signature_text": "def load_nodes_paginated(self, limit: int, offset: int) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "562ea54003c14803e8c89699ab31b0595f9e236068865e3088685a8b78595134"
     },
     "py://packages/pyquipu-cli/tests/unit/test_view_model.py#TestGraphViewModel": {
       "baseline_code_signature_text": "class TestGraphViewModel:",

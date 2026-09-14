@@ -14,14 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 def create_engine(work_dir: Path, lazy: bool = False, use_cache: bool = True) -> Engine:
-    """实例化 Quipu 引擎堆栈。
-
-    Args:
-        work_dir: 操作的工作区目录。
-        lazy: 如果为 True，则不立即加载完整的历史图谱 (不调用 align)。
-        use_cache: 如果为 False，则关闭 SQLite 缓存，使用纯内存索引，
-                  实现 0 IO 开销与零副作用，专为 CI/CD 瞬时执行设计。
-    """
     project_root = find_git_repository_root(work_dir) or work_dir
     config = ConfigManager(project_root)
 

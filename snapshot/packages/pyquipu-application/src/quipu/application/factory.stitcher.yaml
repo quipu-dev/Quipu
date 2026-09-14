@@ -1,10 +1,8 @@
 "create_engine": |-
-  实例化完整的 Engine 堆栈。
-
-  会自动向上查找项目根目录 (Git Root) 来初始化 Engine。
-  此工厂由配置驱动，以决定使用何种存储后端。
+  实例化 Quipu 引擎堆栈。
 
   Args:
       work_dir: 操作的工作区目录。
       lazy: 如果为 True，则不立即加载完整的历史图谱 (不调用 align)。
-            这对于需要快速启动并按需加载数据的场景 (如 UI) 至关重要。
+      use_cache: 如果为 False，则关闭 SQLite 缓存，使用纯内存索引，
+                实现 0 IO 开销与零副作用，专为 CI/CD 瞬时执行设计。

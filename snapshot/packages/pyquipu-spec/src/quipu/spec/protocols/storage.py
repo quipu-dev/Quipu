@@ -5,11 +5,6 @@ from ..models.graph import QuipuNode
 
 @runtime_checkable
 class SnapshotStorage(Protocol):
-    """定义物理快照存储的契约 (Source of Truth).
-
-    仅负责工作区物理状态的捕获、还原以及物理对象 (Blob/Tree/Commit) 的读写，
-    不承载图谱拓扑与业务元数据查询。
-    """
 
     def get_tree_hash(self) -> str: ...
 
@@ -28,11 +23,6 @@ class SnapshotStorage(Protocol):
 
 @runtime_checkable
 class GraphIndex(Protocol):
-    """定义图谱拓扑与元数据索引层的契约 (Read-Model / Query Cache).
-
-    仅维护 QuipuNode 节点元数据、拓扑父子关系和轻量缓存，
-    不负责文件物理实体的落盘。
-    """
 
     def record_node(self, node: QuipuNode, meta_json: str | None = None, **kwargs: Any) -> None: ...
 

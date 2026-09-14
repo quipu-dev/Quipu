@@ -8,10 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class InMemoryGraphIndex(GraphIndex):
-    """纯内存图谱索引实现。
-
-    适用于 CI/CD 环境、单元测试或不需要持久化 SQLite 缓存的极简瞬时场景。
-    """
 
     def __init__(self):
         self._nodes: dict[str, QuipuNode] = {}

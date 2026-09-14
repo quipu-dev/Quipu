@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 class _EngineReaderCompatibilityAdapter:
-    """向后兼容适配器，让 engine.reader 能够在迁移期安全路由到 storage 与 index."""
 
     def __init__(self, engine: "Engine", original_reader: Any = None):
         self._engine = engine
@@ -87,7 +86,6 @@ class _EngineReaderCompatibilityAdapter:
 
 
 class _EngineWriterCompatibilityAdapter:
-    """向后兼容适配器，支持 engine.writer.create_node 等旧调用."""
 
     def __init__(self, engine: "Engine", original_writer: Any = None):
         self._engine = engine
@@ -132,10 +130,6 @@ class _EngineWriterCompatibilityAdapter:
 
 
 class Engine:
-    """Quipu 状态引擎门面 (Facade).
-
-    协调 GitSnapshotStorage (物理状态真相) 与 GraphIndex (图谱索引/缓存加速).
-    """
 
     def _sync_persistent_ignores(self):
         try:
