@@ -7,22 +7,70 @@ from typing import Any
 from quipu.common.identity import get_user_id_from_email
 from quipu.spec.constants import EMPTY_TREE_HASH
 from quipu.spec.models.graph import QuipuNode
-from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
+from quipu.spec.protocols.storage import GraphIndex, SnapshotStorage
 
 from .config import ConfigManager
 from .git_db import GitDB
-from .hydrator import Hydrator
-
-# 导入类型以进行类型提示
-try:
-    from .sqlite_db import DatabaseManager
-except ImportError:
-    DatabaseManager = None
+from .git_storage import GitSnapshotStorage
+from .memory_index import InMemoryGraphIndex
+from .projector import CacheProjector
+from .sqlite_db import DatabaseManager
+from .sqlite_index import SQLiteGraphIndex
 
 logger = logging.getLogger(__name__)
 
 
+class _EngineReaderCompatibilityAdapter:
+    """向后兼容适配器，让 engine.reader 能够在迁移期安全路由到 storage 与 index."""
+
+    def __init__(self, engine: "Engine"):
+        self._engine = engine
+
+    def load_all_nodes(self) -> list[QuipuNode]:
+        return self._engine.index.load_all_nodes()
+
+    def get_node_count(self) -> int:
+        return self._engine.index.get_node_count()
+
+    def get_node_position(self, output_tree_hash: str) -> int:
+        return self._engine.index.get_node_position(output_tree_hash)
+
+    def load_nodes_paginated(self, limit: int, offset: int) -> list[QuipuNode]:
+        return self._engine.index.load_nodes_paginated(limit, offset)
+
+    def get_ancestor_output_trees(self, start_output_tree_hash: str) -> set[str]:
+        return self._engine.index.get_ancestor_output_trees(start_output_tree_hash)
+
+    def get_descendant_output_trees(self, start_output_tree_hash: str) -> set[str]:
+        return self._engine.index.get_descendant_output_trees(start_output_tree_hash)
+
+    def get_private_data(self, node_commit_hash: str) -> str | None:
+        return self._engine.index.get_private_data(node_commit_hash)
+
+    def find_nodes(
+        self, summary_regex: str | None = None, node_type: str | None = None, limit: int = 10
+    ) -> list[QuipuNode]:
+        return self._engine.index.find_nodes(summary_regex, node_type, limit)
+
+    def get_node_content(self, node: QuipuNode) -> str:
+        if node.content:
+            return node.content
+        if hasattr(self._engine.storage, "read_node_content"):
+            return self._engine.storage.read_node_content(node)
+        return ""
+
+    def get_node_blobs(self, commit_hash: str) -> dict[str, bytes]:
+        if hasattr(self._engine.storage, "git_db"):
+            return self._engine.storage.git_db.get_blobs_from_tree(commit_hash)
+        return {}
+
+
 class Engine:
+    """Quipu 状态引擎门面 (Facade).
+
+    协调 GitSnapshotStorage (物理状态真相) 与 GraphIndex (图谱索引/缓存加速).
+    """
+
     def _sync_persistent_ignores(self):
         try:
             config = ConfigManager(self.root_dir)
@@ -41,9 +89,7 @@ class Engine:
                 content = exclude_file.read_text("utf-8")
 
             managed_block_pattern = re.compile(rf"{re.escape(header)}.*{re.escape(footer)}", re.DOTALL)
-
             new_block = f"{header}\n" + "\n".join(patterns) + f"\n{footer}"
-
             new_content, count = managed_block_pattern.subn(new_block, content)
             if count == 0:
                 if content and not content.endswith("\n"):
@@ -53,24 +99,26 @@ class Engine:
             if new_content != content:
                 exclude_file.write_text(new_content, "utf-8")
                 logger.debug("✅ .git/info/exclude 已更新。")
-
         except Exception as e:
-            logger.warning(f"⚠️  无法同步持久化忽略规则: {e}")
+            logger.warning(f"⚠️ 无法同步持久化忽略规则: {e}")
 
     def __init__(
         self,
         root_dir: Path,
-        db: Any,
-        reader: HistoryReader,
-        writer: HistoryWriter,
-        db_manager: Any | None = None,
+        storage: SnapshotStorage | None = None,
+        index: GraphIndex | None = None,
+        db_manager: DatabaseManager | None = None,
+        use_cache: bool = True,
+        # 兼容旧参数签名: (root_dir, db, reader, writer, db_manager)
+        db: Any = None,
+        reader: Any = None,
+        writer: Any = None,
     ):
         self.root_dir = root_dir.resolve()
         self.quipu_dir = self.root_dir / ".quipu"
         self.quipu_dir.mkdir(exist_ok=True)
         self.history_dir = self.quipu_dir / "history"
         self.head_file = self.quipu_dir / "HEAD"
-
         self.nav_log_file = self.quipu_dir / "nav_log"
         self.nav_ptr_file = self.quipu_dir / "nav_ptr"
 
@@ -81,28 +129,54 @@ class Engine:
             except Exception as e:
                 logger.warning(f"无法创建隔离文件 {quipu_gitignore}: {e}")
 
-        self.git_db = db
-        self.reader = reader
-        self.writer = writer
-        self.db_manager = db_manager  # 持有数据库管理器引用
+        # 1. 初始化底层存储 (SnapshotStorage)
+        if storage is not None:
+            self.storage = storage
+        elif isinstance(db, GitDB):
+            self.storage = GitSnapshotStorage(self.root_dir)
+        else:
+            self.storage = GitSnapshotStorage(self.root_dir)
+
+        # 2. 导出 git_db 便于兼容底层 plumbing
+        if hasattr(self.storage, "git_db"):
+            self.git_db = self.storage.git_db
+        else:
+            self.git_db = db or GitDB(self.root_dir)
+
+        # 3. 初始化索引层 (GraphIndex)
+        self.use_cache = use_cache
+        self.db_manager = db_manager
+
+        if index is not None:
+            self.index = index
+        elif self.use_cache:
+            if self.db_manager is None:
+                self.db_manager = DatabaseManager(self.root_dir)
+                self.db_manager.init_schema()
+            self.index = SQLiteGraphIndex(self.db_manager)
+        else:
+            self.db_manager = None
+            self.index = InMemoryGraphIndex()
+
+        # 4. 兼容层桥接
+        self.reader = _EngineReaderCompatibilityAdapter(self)
+        self.writer = self  # 兼容旧代码使用 engine.writer
+
         self.history_graph: dict[str, QuipuNode] = {}
         self.current_node: QuipuNode | None = None
 
-        if isinstance(db, GitDB):
-            self._sync_persistent_ignores()
+        self._sync_persistent_ignores()
 
     def close(self):
         if self.db_manager:
             self.db_manager.close()
 
     def _get_current_user_id(self) -> str:
-        # 1. 尝试从 Quipu 配置中读取
         config = ConfigManager(self.root_dir)
         user_id = config.get("sync.user_id")
         if user_id:
             return user_id
 
-        # 2. 如果配置中没有，则回退到 Git 配置
         try:
             result = subprocess.run(
                 ["git", "config", "user.email"],
@@ -113,15 +187,10 @@ class Engine:
             )
             email = result.stdout.strip()
             if email:
-                derived_id = get_user_id_from_email(email)
-                logger.debug(f"从 Git config 动态获取 user_id: {derived_id}")
-                return derived_id
+                return get_user_id_from_email(email)
         except (subprocess.CalledProcessError, FileNotFoundError):
-            logger.debug("无法从 git config 中获取 user.email。")
-            # 忽略错误，继续执行最终的回退逻辑
+            pass
 
-        # 3. 最终回退
-        logger.debug("未找到 user_id，将使用默认回退值 'unknown-local-user'。")
         return "unknown-local-user"
 
     def _read_head(self) -> str | None:
@@ -133,7 +202,7 @@ class Engine:
         try:
             self.head_file.write_text(tree_hash, encoding="utf-8")
         except Exception as e:
-            logger.warning(f"⚠️  无法更新 HEAD 指针: {e}")
+            logger.warning(f"⚠️ 无法更新 HEAD 指针: {e}")
 
     def _read_nav(self) -> tuple[list[str], int]:
         log = []
@@ -163,7 +232,7 @@ class Engine:
             self.nav_log_file.write_text("\n".join(log), encoding="utf-8")
             self.nav_ptr_file.write_text(str(ptr), encoding="utf-8")
         except Exception as e:
-            logger.warning(f"⚠️  无法更新导航历史: {e}")
+            logger.warning(f"⚠️ 无法更新导航历史: {e}")
 
     def _append_nav(self, tree_hash: str):
         log, ptr = self._read_nav()
@@ -213,21 +282,21 @@ class Engine:
         return None
 
     def align(self) -> str:
-        # 如果使用 SQLite，先进行数据补水
-        if self.db_manager:
+        # 如果使用 SQLite 且连接存在，单向预热/同步读模型
+        if self.use_cache and self.db_manager:
             try:
                 user_id = self._get_current_user_id()
-                hydrator = Hydrator(self.git_db, self.db_manager)
-                hydrator.sync(local_user_id=user_id)
+                projector = CacheProjector(self.git_db, self.db_manager)
+                projector.project(local_user_id=user_id)
             except Exception:
-                logger.exception("❌ 自动数据补水失败")
+                logger.exception("❌ 自动数据投影失败")
 
-        all_nodes = self.reader.load_all_nodes()
+        all_nodes = self.index.load_all_nodes()
         self.history_graph = {node.commit_hash: node for node in all_nodes}
         if all_nodes:
             logger.info(f"从存储中加载了 {len(all_nodes)} 个历史事件，形成 {len(self.history_graph)} 个唯一状态节点。")
 
-        current_hash = self.git_db.get_tree_hash()
+        current_hash = self.storage.get_tree_hash()
         if current_hash == EMPTY_TREE_HASH and not self.history_graph:
             logger.info("✅ 状态对齐：检测到创世状态 (空仓库)。")
             self.current_node = None
@@ -246,7 +315,7 @@ class Engine:
             self._write_head(current_hash)
             return "CLEAN"
 
-        logger.warning(f"⚠️  状态漂移：当前 Tree Hash {current_hash[:7]} 未在历史中找到。")
+        logger.warning(f"⚠️ 状态漂移：当前 Tree Hash {current_hash[:7]} 未在历史中找到。")
         if not self.history_graph:
             return "ORPHAN"
         return "DIRTY"
@@ -257,7 +326,7 @@ class Engine:
         node_type: str | None = None,
         limit: int = 10,
     ) -> list[QuipuNode]:
-        return self.reader.find_nodes(
+        return self.index.find_nodes(
             summary_regex=summary_regex,
             node_type=node_type,
             limit=limit,
@@ -272,7 +341,6 @@ class Engine:
         parent_node = None
 
         if head_tree_hash:
-            # 正确的逻辑：遍历节点，用 output_tree 匹配 head 的 tree hash
             parent_node = next(
                 (node for node in self.history_graph.values() if node.output_tree == head_tree_hash), None
             )
@@ -280,15 +348,10 @@ class Engine:
         if parent_node:
             input_hash = parent_node.output_tree
         elif self.history_graph:
-            # 只有当 HEAD 指针无效或丢失时，才执行回退逻辑
             last_node = max(self.history_graph.values(), key=lambda node: node.timestamp)
             input_hash = last_node.output_tree
-            logger.warning(
-                f"⚠️  HEAD 指针 '{head_tree_hash[:7] if head_tree_hash else 'N/A'}' 无效或丢失，"
-                f"自动回退到最新历史节点: {input_hash[:7]}"
-            )
 
-        diff_summary = self.git_db.get_diff_stat(input_hash, current_hash)
+        diff_summary = self.storage.get_diff_stat(input_hash, current_hash)
         user_message_section = f"### 💬 备注:\n{message}\n\n" if message else ""
         body = (
             f"# 📸 Snapshot Capture\n\n"
@@ -298,16 +361,36 @@ class Engine:
         )
 
         user_id = self._get_current_user_id()
+        parent_commit = parent_node.commit_hash if parent_node else None
 
-        new_node = self.writer.create_node(
-            node_type="capture",
-            input_tree=input_hash,
-            output_tree=current_hash,
-            content=body,
-            message=message,
-            owner_id=user_id,
-        )
+        # 1. 物理层：创建物理 Git Commit
+        if isinstance(self.storage, GitSnapshotStorage):
+            new_node, meta_json = self.storage.create_snapshot_commit(
+                node_type="capture",
+                input_tree=input_hash,
+                output_tree=current_hash,
+                content=body,
+                parent_commit_hash=parent_commit,
+                message=message,
+                owner_id=user_id,
+            )
+        else:
+            # 回退通用实现
+            new_node, meta_json = GitSnapshotStorage(self.root_dir).create_snapshot_commit(
+                node_type="capture",
+                input_tree=input_hash,
+                output_tree=current_hash,
+                content=body,
+                parent_commit_hash=parent_commit,
+                message=message,
+                owner_id=user_id,
+            )
 
+        # 2. 逻辑层：写入索引
+        if hasattr(self.index, "record_node"):
+            self.index.record_node(new_node, meta_json=meta_json)
+
+        # 3. 内存拓扑维护
         if new_node.parent and new_node.parent.commit_hash in self.history_graph:
             real_parent = self.history_graph[new_node.parent.commit_hash]
             new_node.parent = real_parent
@@ -332,15 +415,39 @@ class Engine:
 
         user_id = self._get_current_user_id()
 
-        new_node = self.writer.create_node(
-            node_type="plan",
-            input_tree=input_tree,
-            output_tree=output_tree,
-            content=plan_content,
-            summary_override=summary_override,
-            owner_id=user_id,
-        )
+        parent_node = None
+        head_tree = self._read_head()
+        if head_tree:
+            parent_node = next((n for n in self.history_graph.values() if n.output_tree == head_tree), None)
+        parent_commit = parent_node.commit_hash if parent_node else None
 
+        # 1. 物理层：创建物理 Git Commit
+        if isinstance(self.storage, GitSnapshotStorage):
+            new_node, meta_json = self.storage.create_snapshot_commit(
+                node_type="plan",
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=plan_content,
+                summary_override=summary_override,
+                parent_commit_hash=parent_commit,
+                owner_id=user_id,
+            )
+        else:
+            new_node, meta_json = GitSnapshotStorage(self.root_dir).create_snapshot_commit(
+                node_type="plan",
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=plan_content,
+                summary_override=summary_override,
+                parent_commit_hash=parent_commit,
+                owner_id=user_id,
+            )
+
+        # 2. 逻辑层：写入索引
+        if hasattr(self.index, "record_node"):
+            self.index.record_node(new_node, meta_json=meta_json)
+
+        # 3. 内存拓扑维护
         if new_node.parent and new_node.parent.commit_hash in self.history_graph:
             real_parent = self.history_graph[new_node.parent.commit_hash]
             new_node.parent = real_parent
@@ -356,12 +463,7 @@ class Engine:
         return new_node
 
     def checkout(self, target_hash: str):
-        # 获取切换前的 tree hash 作为 "old_tree"
-        current_head_hash = self._read_head()
-
-        # 调用已优化的 checkout_tree 方法
-        self.git_db.checkout_tree(new_tree_hash=target_hash, old_tree_hash=current_head_hash)
-
+        self.storage.restore_workspace(target_hash)
         self._write_head(target_hash)
         self.current_node = None
         for node in self.history_graph.values():

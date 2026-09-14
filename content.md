@@ -1,588 +1,369 @@
-现在进入第二阶段的核心落地：收敛并纯化 Git 物理快照层（`GitSnapshotStorage`）、重构 SQLite 逻辑索引层（`SQLiteGraphIndex`），并将原双向同步语义的 Hydrator 重塑为单向投影器（`CacheProjector`）。
+现在进入路线图的第三阶段：**改造引擎中枢调度（`state_machine.py`）与组装工厂（`factory.py`）**。
 
-## [WIP] refactor: 实现 GitSnapshotStorage、SQLiteGraphIndex 与 CacheProjector
+## [WIP] refactor: 重构 Engine 核心中枢与装配工厂以支持可选缓存与职责解耦
 
 ### 用户需求
-落实解耦路线图阶段二：
-1. 提炼并创建独立的 `GitSnapshotStorage`，承揽所有 Git 底层快照捕获与对象存储，剥离任何 SQLite 交互。
-2. 彻底拆除原 `SQLiteHistoryWriter` 嵌套代理 Git 写入器的设计，实现纯净的 `SQLiteGraphIndex`（实现 `GraphIndex` 协议）。
-3. 将 `hydrator.py` 改造为单向投影器 `CacheProjector`，明确从 Source of Truth（Git）到 Read-Model（SQLite）的单向预热/重建语义。
+落实路线图第三阶段：
+1. 改造 `Engine`（`state_machine.py`），使其依赖清晰的 `storage: SnapshotStorage` 与 `index: GraphIndex`，将物理快照操作（Tree/Blob/Commit）交由存储层，元数据与图谱操作交由索引层。
+2. 为 `Engine` 提供内置适配能力，确保现有 CLI/TUI 调用（如 `engine.reader.get_node_blobs`）完全平滑过渡。
+3. 改造 `create_engine`（`factory.py`），引入 `use_cache: bool = True` 开关。在无缓存模式下，跳过任何 SQLite 初始化，装配纯内存索引 `InMemoryGraphIndex`，达成 CI/CD 瞬时执行目标。
 
 ### 评论
-通过将 Git 的物理写入/读取与 SQLite 的元数据读写彻底解开：
-- `GitSnapshotStorage` 成为唯一维护物理真相的独立组件，即使在没有 SQLite 的环境下也能完整创建快照与提交。
-- `SQLiteGraphIndex` 不再扮演伪装的 Storage，而是纯粹的查询缓存和图谱索引器。
-- `CacheProjector` 厘清了“缓存补水”的本质是读模型投影，消除了过去两个存储平级的认知偏差。
+通过这次中枢重构，`Engine` 真正成为了协调 Command（`storage`）与 Query（`index`）的纯粹门面（Facade）：
+- 无论底层是否启用 SQLite 缓存，`Engine` 的核心业务流程（`capture_drift`, `create_plan_node`, `align`, `visit`）保持 100% 统一。
+- 在 CI/CD 场景下，用户只需传入 `use_cache=False`，即可零文件副作用运行，彻底解除了由于 SQLite 初始化导致的并发与锁困扰。
 
 ### 目标
-1. 在 `pyquipu-engine` 中创建 `quipu.engine.git_storage.GitSnapshotStorage`，实现 `SnapshotStorage` 协议，提供工作区快照捕获、还原、差异分析及 QDPS 节点落盘能力。
-2. 在 `pyquipu-engine` 中创建 `quipu.engine.sqlite_index.SQLiteGraphIndex`，实现 `GraphIndex` 协议，提供纯净的节点记录、关系维系和高速查询能力。
-3. 在 `pyquipu-engine` 中创建 `quipu.engine.projector.CacheProjector`，负责将 Git 中的历史数据增量或全量投影至 SQLite。
+1. 重构 `packages/pyquipu-engine/src/quipu/engine/state_machine.py`：
+   - 构造参数接纳 `storage: SnapshotStorage` 与 `index: GraphIndex`，兼容旧参数。
+   - `capture_drift` 和 `create_plan_node` 先由 `storage` 创建物理 Git Commit，再投递给 `index.record_node`。
+   - `align` 通过 `CacheProjector`（当启用 SQLite 时）按需同步读模型。
+   - 提供向后兼容层，让旧上层代码安全过渡。
+2. 重构 `packages/pyquipu-application/src/quipu/application/factory.py`：
+   - 支持 `create_engine(work_dir, lazy=False, use_cache=True)`。
+   - 根据 `use_cache` 动态装配 `SQLiteGraphIndex` 或 `InMemoryGraphIndex`。
 
 ### 基本原理
-1. **单一职责与替换原则**：`GitSnapshotStorage` 专注处理 Git Plumbing（Tree、Blob、Commit、Refs），确保无论上层使用 `SQLiteGraphIndex` 还是 `InMemoryGraphIndex`，物理快照机制完全一致且可复用。
-2. **读写分离与读模型投影**：写入操作由 Engine 先调用 `GitSnapshotStorage.create_snapshot_commit(...)` 产生物理凭证，再将生成的 `QuipuNode` 投递给 `GraphIndex.record_node(...)` 建立索引；数据丢失时由 `CacheProjector` 从物理层单向重建索引。
+1. **中枢解耦**：不再把物理写入和缓存索引绑在同一个 `writer` 链条上。写入时，物理层（`storage.create_snapshot_commit`）作为不可变真相先落盘；逻辑层（`index.record_node`）作为索引投影紧随其后。
+2. **渐进式迁移保障**：在 `Engine` 内部将旧接口（`engine.reader`）透明映射为“物理读向 storage 借道，拓扑读向 index 借道”的组合路由，确保现有 TUI、Export、Query 等命令不受破坏。
 
 ### 标签
-#intent/refine #flow/ready #priority/high #comp/engine #concept/state #scope/core #scope/api #ai/instruct #task/domain/storage #task/object/engine-decoupling #task/action/refactor #task/state/continue
+#intent/refine #flow/ready #priority/high #comp/engine #comp/application #concept/state #scope/core #scope/api #ai/instruct #task/domain/storage #task/object/engine-decoupling #task/action/refactor #task/state/continue
 
 ---
 
 ### Script
 
-#### Acts 1: 创建纯净的物理快照存储 `GitSnapshotStorage`
+#### Acts 1: 重构 `Engine` 状态机与调度中枢
 
-封装 Git 底层能力，实现 `SnapshotStorage` 协议及标准的 QDPS 快照 Commit 封装，零依赖 SQLite。
+重构 `state_machine.py`，实现 `storage` 与 `index` 的职责分离与统一调度。
 
 ~~~~~act
 write_file
-packages/pyquipu-engine/src/quipu/engine/git_storage.py
+packages/pyquipu-engine/src/quipu/engine/state_machine.py
 ~~~~~
 ~~~~~python
-import importlib.metadata
-import json
 import logging
-import os
-import platform
 import re
-import time
-from datetime import datetime
+import subprocess
 from pathlib import Path
 from typing import Any
 
-from quipu.engine.git_db import GitDB
+from quipu.common.identity import get_user_id_from_email
 from quipu.spec.constants import EMPTY_TREE_HASH
 from quipu.spec.models.graph import QuipuNode
-from quipu.spec.protocols.storage import SnapshotStorage
+from quipu.spec.protocols.storage import GraphIndex, SnapshotStorage
+
+from .config import ConfigManager
+from .git_db import GitDB
+from .git_storage import GitSnapshotStorage
+from .memory_index import InMemoryGraphIndex
+from .projector import CacheProjector
+from .sqlite_db import DatabaseManager
+from .sqlite_index import SQLiteGraphIndex
 
 logger = logging.getLogger(__name__)
 
 
-class GitSnapshotStorage(SnapshotStorage):
-    """Git 物理快照存储实现 (Source of Truth).
+class _EngineReaderCompatibilityAdapter:
+    """向后兼容适配器，让 engine.reader 能够在迁移期安全路由到 storage 与 index."""
 
-    负责与底层 Git plumbing 交互，执行 Tree 捕获、检出、Blob/Tree 读写及 Commit 持久化。
-    此模块绝不依赖 SQLite。
-    """
-
-    def __init__(self, root_dir: Path):
-        self.root_dir = root_dir.resolve()
-        self.git_db = GitDB(self.root_dir)
-
-    def get_tree_hash(self) -> str:
-        return self.git_db.get_tree_hash()
-
-    def capture_workspace(self, message: str | None = None) -> str:
-        return self.git_db.get_tree_hash()
-
-    def restore_workspace(self, tree_hash: str) -> None:
-        self.git_db.checkout_tree(new_tree_hash=tree_hash)
-
-    def read_blob(self, blob_hash: str) -> bytes:
-        return self.git_db.cat_file(blob_hash, "blob")
-
-    def read_tree_blobs(self, tree_hash: str) -> dict[str, bytes]:
-        return self.git_db.get_blobs_from_tree(tree_hash)
-
-    def get_diff_stat(self, old_tree: str, new_tree: str, count: int = 30) -> str:
-        return self.git_db.get_diff_stat(old_tree, new_tree, count=count)
-
-    def get_diff_name_status(self, old_tree: str, new_tree: str) -> list[tuple[str, str]]:
-        return self.git_db.get_diff_name_status(old_tree, new_tree)
-
-    def _get_generator_info(self) -> dict[str, str]:
-        return {
-            "id": os.getenv("QUIPU_GENERATOR_ID", "manual"),
-            "tool": os.getenv("QUIPU_TOOL", "quipu-cli"),
-        }
-
-    def _get_env_info(self) -> dict[str, str]:
-        try:
-            quipu_version = importlib.metadata.version("pyquipu-engine")
-        except importlib.metadata.PackageNotFoundError:
-            try:
-                quipu_version = importlib.metadata.version("quipu-engine")
-            except importlib.metadata.PackageNotFoundError:
-                quipu_version = "unknown"
-
-        return {
-            "quipu": quipu_version,
-            "python": platform.python_version(),
-            "os": platform.system().lower(),
-        }
-
-    def generate_summary(
-        self,
-        node_type: str,
-        content: str,
-        input_tree: str,
-        output_tree: str,
-        summary_override: str | None = None,
-        message: str | None = None,
-    ) -> str:
-        if summary_override:
-            return summary_override
-
-        if node_type == "plan":
-            match = re.search(r"^\s*#{1,6}\s+(.*)", content, re.MULTILINE)
-            if match:
-                return match.group(1).strip()
-            first_line = next((line.strip() for line in content.strip().splitlines() if line.strip()), "Plan executed")
-            return (first_line[:75] + "...") if len(first_line) > 75 else first_line
-
-        elif node_type == "capture":
-            changes = self.git_db.get_diff_name_status(input_tree, output_tree)
-            if not changes:
-                auto_summary = "Capture: No changes detected"
-            else:
-                formatted_changes = [f"{status} {Path(path).name}" for status, path in changes[:3]]
-                summary_part = ", ".join(formatted_changes)
-                if len(changes) > 3:
-                    summary_part += f" ... and {len(changes) - 3} more files"
-                auto_summary = f"Capture: {summary_part}"
-
-            user_msg = (message or "").strip()
-            return f"{user_msg} {auto_summary}".strip() if user_msg else auto_summary
-
-        return "Unknown node type"
-
-    def create_snapshot_commit(
-        self,
-        node_type: str,
-        input_tree: str,
-        output_tree: str,
-        content: str,
-        summary_override: str | None = None,
-        parent_commit_hash: str | None = None,
-        message: str | None = None,
-        owner_id: str | None = None,
-        start_time: float | None = None,
-    ) -> tuple[QuipuNode, str]:
-        """按照 QDPS 规范创建 Git Commit，返回 (QuipuNode, meta_json_str)."""
-        actual_start_time = start_time or time.time()
-        end_time = time.time()
-        duration_ms = int((end_time - actual_start_time) * 1000)
-
-        summary = self.generate_summary(
-            node_type=node_type,
-            content=content,
-            input_tree=input_tree,
-            output_tree=output_tree,
-            summary_override=summary_override,
-            message=message,
-        )
-
-        metadata = {
-            "meta_version": "1.0",
-            "summary": summary,
-            "type": node_type,
-            "generator": self._get_generator_info(),
-            "env": self._get_env_info(),
-            "exec": {"start": actual_start_time, "duration_ms": duration_ms},
-        }
-
-        meta_json_bytes = json.dumps(metadata, sort_keys=False, ensure_ascii=False).encode("utf-8")
-        content_md_bytes = content.encode("utf-8")
-
-        meta_blob_hash = self.git_db.hash_object(meta_json_bytes)
-        content_blob_hash = self.git_db.hash_object(content_md_bytes)
-
-        # 构建包含 snapshot tree 强引用的 tree descriptor
-        tree_descriptor = (
-            f"100444 blob {meta_blob_hash}\tmetadata.json\n"
-            f"100444 blob {content_blob_hash}\tcontent.md\n"
-            f"040000 tree {output_tree}\tsnapshot"
-        )
-        tree_hash = self.git_db.mktree(tree_descriptor)
-
-        # 确定父 Commit
-        resolved_parent = parent_commit_hash
-        if not resolved_parent and input_tree != EMPTY_TREE_HASH:
-            resolved_parent = self.git_db.get_commit_by_output_tree(input_tree)
-
-        parents = [resolved_parent] if resolved_parent else None
-
-        commit_message = f"{summary}\n\nX-Quipu-Output-Tree: {output_tree}"
-        new_commit_hash = self.git_db.commit_tree(tree_hash=tree_hash, parent_hashes=parents, message=commit_message)
-
-        # 更新本地 head ref
-        self.git_db.update_ref(f"refs/quipu/local/heads/{new_commit_hash}", new_commit_hash)
-
-        logger.info(f"✅ Git 快照 Commit 已创建: {new_commit_hash[:7]}")
-
-        node = QuipuNode(
-            commit_hash=new_commit_hash,
-            input_tree=input_tree,
-            output_tree=output_tree,
-            timestamp=datetime.fromtimestamp(actual_start_time),
-            filename=Path(f".quipu/git_objects/{new_commit_hash}"),
-            node_type=node_type,
-            content=content,
-            summary=summary,
-            owner_id=owner_id,
-        )
-
-        if resolved_parent:
-            node.parent = QuipuNode(
-                commit_hash=resolved_parent,
-                input_tree="",
-                output_tree=input_tree,
-                timestamp=datetime.fromtimestamp(0),
-                filename=Path(f".quipu/git_objects/{resolved_parent}"),
-                node_type="unknown",
-                content="",
-                summary="",
-            )
-
-        return node, meta_json_bytes.decode("utf-8")
-
-    def read_node_content(self, node: QuipuNode) -> str:
-        """从 Git 对象库按需提取 content.md."""
-        if node.content:
-            return node.content
-
-        try:
-            commit_bytes = self.git_db.cat_file(node.commit_hash, "commit")
-            tree_line = commit_bytes.split(b"\n", 1)[0].decode("utf-8")
-            if not tree_line.startswith("tree "):
-                return ""
-            tree_hash = tree_line.split()[1]
-
-            tree_content_map = self.git_db.batch_cat_file([tree_hash])
-            if tree_hash not in tree_content_map:
-                return ""
-
-            tree_content = tree_content_map[tree_hash]
-            entries = self._parse_tree_binary(tree_content)
-            blob_hash = entries.get("content.md")
-            if not blob_hash:
-                return ""
-
-            content_bytes = self.git_db.cat_file(blob_hash, "blob")
-            content = content_bytes.decode("utf-8", errors="ignore")
-            node.content = content
-            return content
-        except Exception as e:
-            logger.error(f"Failed to read content for {node.short_hash}: {e}")
-            return ""
-
-    def _parse_tree_binary(self, data: bytes) -> dict[str, str]:
-        entries = {}
-        idx = 0
-        length = len(data)
-        while idx < length:
-            space_idx = data.find(b" ", idx)
-            if space_idx == -1:
-                break
-            null_idx = data.find(b"\0", space_idx + 1)
-            if null_idx == -1:
-                break
-            filename = data[space_idx + 1 : null_idx].decode("utf-8", errors="ignore")
-            hash_start = null_idx + 1
-            if hash_start + 20 > length:
-                break
-            hash_bytes = data[hash_start : hash_start + 20]
-            entries[filename] = hash_bytes.hex()
-            idx = hash_start + 20
-        return entries
-~~~~~
-
-#### Acts 2: 实现纯净的图谱索引 `SQLiteGraphIndex`
-
-实现 `GraphIndex` 协议，仅承担 SQLite 的 CRUD 与拓扑查询，彻底废除伪装代理写入模式。
-
-~~~~~act
-write_file
-packages/pyquipu-engine/src/quipu/engine/sqlite_index.py
-~~~~~
-~~~~~python
-import json
-import logging
-import sqlite3
-from datetime import datetime
-from pathlib import Path
-
-from quipu.engine.sqlite_db import DatabaseManager
-from quipu.spec.constants import EMPTY_TREE_HASH
-from quipu.spec.models.graph import QuipuNode
-from quipu.spec.protocols.storage import GraphIndex
-
-logger = logging.getLogger(__name__)
-
-
-class SQLiteGraphIndex(GraphIndex):
-    """基于 SQLite 的图谱与元数据索引实现 (Read-Model / Query Accelerator).
-
-    职责仅限于维护 nodes, edges, private_data 表的结构化数据与关系计算，
-    绝不涉及任何底层 Git Plumbing 操作。
-    """
-
-    def __init__(self, db_manager: DatabaseManager):
-        self.db_manager = db_manager
-
-    def record_node(self, node: QuipuNode, meta_json: str | None = None) -> None:
-        """将 QuipuNode 元数据及边关系记录入 SQLite 索引."""
-        meta_str = meta_json
-        if not meta_str:
-            meta_str = json.dumps(
-                {
-                    "summary": node.summary,
-                    "type": node.node_type,
-                    "exec": {"start": node.timestamp.timestamp()},
-                }
-            )
-
-        self.db_manager.execute_write(
-            """
-            INSERT OR REPLACE INTO nodes
-            (commit_hash, owner_id, output_tree, node_type, timestamp, summary,
-             generator_id, meta_json, plan_md_cache)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                node.commit_hash,
-                node.owner_id or "unknown-local-user",
-                node.output_tree,
-                node.node_type,
-                node.timestamp.timestamp(),
-                node.summary,
-                None,
-                meta_str,
-                node.content or None,
-            ),
-        )
-
-        if node.parent:
-            self.db_manager.execute_write(
-                "INSERT OR IGNORE INTO edges (child_hash, parent_hash) VALUES (?, ?)",
-                (node.commit_hash, node.parent.commit_hash),
-            )
-
-    def record_private_data(self, commit_hash: str, intent_md: str) -> None:
-        self.db_manager.execute_write(
-            "INSERT OR REPLACE INTO private_data (node_hash, intent_md) VALUES (?, ?)",
-            (commit_hash, intent_md),
-        )
-
-    def get_node(self, commit_hash: str) -> QuipuNode | None:
-        conn = self.db_manager._get_conn()
-        cursor = conn.execute("SELECT * FROM nodes WHERE commit_hash = ?", (commit_hash,))
-        row = cursor.fetchone()
-        if not row:
-            return None
-        return QuipuNode(
-            commit_hash=row["commit_hash"],
-            input_tree="",
-            output_tree=row["output_tree"],
-            timestamp=datetime.fromtimestamp(row["timestamp"]),
-            filename=Path(f".quipu/git_objects/{row['commit_hash']}"),
-            node_type=row["node_type"],
-            summary=row["summary"],
-            content=row["plan_md_cache"] if row["plan_md_cache"] is not None else "",
-            owner_id=row["owner_id"],
-        )
-
-    def get_node_count(self) -> int:
-        conn = self.db_manager._get_conn()
-        try:
-            cursor = conn.execute("SELECT COUNT(*) FROM nodes")
-            row = cursor.fetchone()
-            return row[0] if row else 0
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get node count: {e}")
-            return 0
-
-    def get_node_position(self, output_tree_hash: str) -> int:
-        conn = self.db_manager._get_conn()
-        try:
-            cursor = conn.execute("SELECT MAX(timestamp) FROM nodes WHERE output_tree = ?", (output_tree_hash,))
-            row = cursor.fetchone()
-            if not row or row[0] is None:
-                return -1
-            target_ts = row[0]
-            cursor = conn.execute("SELECT COUNT(*) FROM nodes WHERE timestamp > ?", (target_ts,))
-            return cursor.fetchone()[0]
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get node position: {e}")
-            return -1
+    def __init__(self, engine: "Engine"):
+        self._engine = engine
 
     def load_all_nodes(self) -> list[QuipuNode]:
-        conn = self.db_manager._get_conn()
-        nodes_cursor = conn.execute("SELECT * FROM nodes ORDER BY timestamp DESC;")
-        nodes_data = nodes_cursor.fetchall()
+        return self._engine.index.load_all_nodes()
 
-        temp_nodes: dict[str, QuipuNode] = {}
-        for row in nodes_data:
-            commit_hash = row["commit_hash"]
-            node = QuipuNode(
-                commit_hash=commit_hash,
-                input_tree="",
-                output_tree=row["output_tree"],
-                timestamp=datetime.fromtimestamp(row["timestamp"]),
-                filename=Path(f".quipu/git_objects/{commit_hash}"),
-                node_type=row["node_type"],
-                summary=row["summary"],
-                content=row["plan_md_cache"] if row["plan_md_cache"] is not None else "",
-                owner_id=row["owner_id"],
-            )
-            temp_nodes[commit_hash] = node
+    def get_node_count(self) -> int:
+        return self._engine.index.get_node_count()
 
-        edges_cursor = conn.execute("SELECT child_hash, parent_hash FROM edges;")
-        edges_data = edges_cursor.fetchall()
-
-        for row in edges_data:
-            child_hash, parent_hash = row["child_hash"], row["parent_hash"]
-            if child_hash == parent_hash:
-                continue
-            if child_hash in temp_nodes and parent_hash in temp_nodes:
-                child_node = temp_nodes[child_hash]
-                parent_node = temp_nodes[parent_hash]
-                if child_node.parent is None:
-                    child_node.parent = parent_node
-                    parent_node.children.append(child_node)
-                    child_node.input_tree = parent_node.output_tree
-
-        for node in temp_nodes.values():
-            if node.parent is None:
-                node.input_tree = EMPTY_TREE_HASH
-            node.children.sort(key=lambda n: n.timestamp)
-
-        return list(temp_nodes.values())
+    def get_node_position(self, output_tree_hash: str) -> int:
+        return self._engine.index.get_node_position(output_tree_hash)
 
     def load_nodes_paginated(self, limit: int, offset: int) -> list[QuipuNode]:
-        conn = self.db_manager._get_conn()
-        try:
-            cursor = conn.execute("SELECT * FROM nodes ORDER BY timestamp DESC LIMIT ? OFFSET ?", (limit, offset))
-            rows = cursor.fetchall()
-            if not rows:
-                return []
-
-            nodes_map = {}
-            node_hashes = []
-            for row in rows:
-                commit_hash = row["commit_hash"]
-                node_hashes.append(commit_hash)
-                nodes_map[commit_hash] = QuipuNode(
-                    commit_hash=commit_hash,
-                    input_tree="",
-                    output_tree=row["output_tree"],
-                    timestamp=datetime.fromtimestamp(row["timestamp"]),
-                    filename=Path(f".quipu/git_objects/{commit_hash}"),
-                    node_type=row["node_type"],
-                    summary=row["summary"],
-                    content=row["plan_md_cache"] if row["plan_md_cache"] is not None else "",
-                    owner_id=row["owner_id"],
-                )
-
-            placeholders = ",".join("?" * len(node_hashes))
-            edges_cursor = conn.execute(
-                f"SELECT child_hash, parent_hash FROM edges WHERE child_hash IN ({placeholders})", tuple(node_hashes)
-            )
-            edges = edges_cursor.fetchall()
-            child_to_parent = {row["child_hash"]: row["parent_hash"] for row in edges}
-            parent_hashes = [row["parent_hash"] for row in edges]
-
-            parent_info = {}
-            if parent_hashes:
-                p_placeholders = ",".join("?" * len(parent_hashes))
-                p_cursor = conn.execute(
-                    f"SELECT commit_hash, output_tree FROM nodes WHERE commit_hash IN ({p_placeholders})",
-                    tuple(parent_hashes),
-                )
-                parent_info = {row["commit_hash"]: row["output_tree"] for row in p_cursor.fetchall()}
-
-            results = []
-            for commit_hash in node_hashes:
-                node = nodes_map[commit_hash]
-                parent_hash = child_to_parent.get(commit_hash)
-                if parent_hash:
-                    node.input_tree = parent_info.get(parent_hash, EMPTY_TREE_HASH)
-                    if parent_hash in nodes_map:
-                        parent_node = nodes_map[parent_hash]
-                        node.parent = parent_node
-                        parent_node.children.append(node)
-                else:
-                    node.input_tree = EMPTY_TREE_HASH
-                results.append(node)
-
-            for node in results:
-                node.children.sort(key=lambda n: n.timestamp)
-            return results
-        except sqlite3.Error as e:
-            logger.error(f"Failed to load paginated nodes: {e}")
-            return []
+        return self._engine.index.load_nodes_paginated(limit, offset)
 
     def get_ancestor_output_trees(self, start_output_tree_hash: str) -> set[str]:
-        conn = self.db_manager._get_conn()
-        try:
-            cursor = conn.execute("SELECT commit_hash FROM nodes WHERE output_tree = ?", (start_output_tree_hash,))
-            rows = cursor.fetchall()
-            if not rows:
-                return set()
-            start_commit_hashes = [row[0] for row in rows]
-
-            all_ancestor_trees = set()
-            for commit_hash in start_commit_hashes:
-                sql = """
-                WITH RECURSIVE ancestors(h) AS (
-                    SELECT parent_hash FROM edges WHERE child_hash = ?
-                    UNION ALL
-                    SELECT e.parent_hash FROM edges e, ancestors a WHERE e.child_hash = a.h AND e.parent_hash IS NOT NULL
-                )
-                SELECT h FROM ancestors WHERE h IS NOT NULL;
-                """
-                c_cursor = conn.execute(sql, (commit_hash,))
-                ancestor_commit_hashes = {r[0] for r in c_cursor.fetchall()}
-                if ancestor_commit_hashes:
-                    placeholders = ",".join("?" * len(ancestor_commit_hashes))
-                    sql_out = f"SELECT output_tree FROM nodes WHERE commit_hash IN ({placeholders})"
-                    out_cursor = conn.execute(sql_out, tuple(ancestor_commit_hashes))
-                    all_ancestor_trees.update(r[0] for r in out_cursor.fetchall())
-            return all_ancestor_trees
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get ancestors for {start_output_tree_hash[:7]}: {e}")
-            return set()
+        return self._engine.index.get_ancestor_output_trees(start_output_tree_hash)
 
     def get_descendant_output_trees(self, start_output_tree_hash: str) -> set[str]:
-        conn = self.db_manager._get_conn()
-        try:
-            cursor = conn.execute("SELECT commit_hash FROM nodes WHERE output_tree = ?", (start_output_tree_hash,))
-            rows = cursor.fetchall()
-            if not rows:
-                return set()
-            start_commit_hashes = [row[0] for row in rows]
-
-            all_descendant_trees = set()
-            for commit_hash in start_commit_hashes:
-                sql = """
-                WITH RECURSIVE descendants(h) AS (
-                    SELECT child_hash FROM edges WHERE parent_hash = ?
-                    UNION ALL
-                    SELECT e.child_hash FROM edges e, descendants d WHERE e.parent_hash = d.h AND e.child_hash IS NOT NULL
-                )
-                SELECT h FROM descendants WHERE h IS NOT NULL;
-                """
-                c_cursor = conn.execute(sql, (commit_hash,))
-                descendant_commit_hashes = {r[0] for r in c_cursor.fetchall()}
-                if descendant_commit_hashes:
-                    placeholders = ",".join("?" * len(descendant_commit_hashes))
-                    sql_out = f"SELECT output_tree FROM nodes WHERE commit_hash IN ({placeholders})"
-                    out_cursor = conn.execute(sql_out, tuple(descendant_commit_hashes))
-                    all_descendant_trees.update(r[0] for r in out_cursor.fetchall())
-            return all_descendant_trees
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get descendants for {start_output_tree_hash[:7]}: {e}")
-            return set()
+        return self._engine.index.get_descendant_output_trees(start_output_tree_hash)
 
     def get_private_data(self, node_commit_hash: str) -> str | None:
-        conn = self.db_manager._get_conn()
+        return self._engine.index.get_private_data(node_commit_hash)
+
+    def find_nodes(
+        self, summary_regex: str | None = None, node_type: str | None = None, limit: int = 10
+    ) -> list[QuipuNode]:
+        return self._engine.index.find_nodes(summary_regex, node_type, limit)
+
+    def get_node_content(self, node: QuipuNode) -> str:
+        if node.content:
+            return node.content
+        if hasattr(self._engine.storage, "read_node_content"):
+            return self._engine.storage.read_node_content(node)
+        return ""
+
+    def get_node_blobs(self, commit_hash: str) -> dict[str, bytes]:
+        if hasattr(self._engine.storage, "git_db"):
+            return self._engine.storage.git_db.get_blobs_from_tree(commit_hash)
+        return {}
+
+
+class Engine:
+    """Quipu 状态引擎门面 (Facade).
+
+    协调 GitSnapshotStorage (物理状态真相) 与 GraphIndex (图谱索引/缓存加速).
+    """
+
+    def _sync_persistent_ignores(self):
         try:
-            cursor = conn.execute("SELECT intent_md FROM private_data WHERE node_hash = ?", (node_commit_hash,))
-            row = cursor.fetchone()
-            return row[0] if row else None
-        except sqlite3.Error as e:
-            logger.error(f"Failed to get private data for {node_commit_hash[:7]}: {e}")
-            return None
+            config = ConfigManager(self.root_dir)
+            patterns = config.get("sync.persistent_ignores", [])
+            if not patterns:
+                return
+
+            exclude_file = self.root_dir / ".git" / "info" / "exclude"
+            exclude_file.parent.mkdir(exist_ok=True)
+
+            header = "# --- Managed by Quipu ---"
+            footer = "# --- End Managed by Quipu ---"
+
+            content = ""
+            if exclude_file.exists():
+                content = exclude_file.read_text("utf-8")
+
+            managed_block_pattern = re.compile(rf"{re.escape(header)}.*{re.escape(footer)}", re.DOTALL)
+            new_block = f"{header}\n" + "\n".join(patterns) + f"\n{footer}"
+            new_content, count = managed_block_pattern.subn(new_block, content)
+            if count == 0:
+                if content and not content.endswith("\n"):
+                    content += "\n"
+                new_content = content + "\n" + new_block + "\n"
+
+            if new_content != content:
+                exclude_file.write_text(new_content, "utf-8")
+                logger.debug("✅ .git/info/exclude 已更新。")
+        except Exception as e:
+            logger.warning(f"⚠️ 无法同步持久化忽略规则: {e}")
+
+    def __init__(
+        self,
+        root_dir: Path,
+        storage: SnapshotStorage | None = None,
+        index: GraphIndex | None = None,
+        db_manager: DatabaseManager | None = None,
+        use_cache: bool = True,
+        # 兼容旧参数签名: (root_dir, db, reader, writer, db_manager)
+        db: Any = None,
+        reader: Any = None,
+        writer: Any = None,
+    ):
+        self.root_dir = root_dir.resolve()
+        self.quipu_dir = self.root_dir / ".quipu"
+        self.quipu_dir.mkdir(exist_ok=True)
+        self.history_dir = self.quipu_dir / "history"
+        self.head_file = self.quipu_dir / "HEAD"
+        self.nav_log_file = self.quipu_dir / "nav_log"
+        self.nav_ptr_file = self.quipu_dir / "nav_ptr"
+
+        quipu_gitignore = self.quipu_dir / ".gitignore"
+        if not quipu_gitignore.exists():
+            try:
+                quipu_gitignore.write_text("*\n", encoding="utf-8")
+            except Exception as e:
+                logger.warning(f"无法创建隔离文件 {quipu_gitignore}: {e}")
+
+        # 1. 初始化底层存储 (SnapshotStorage)
+        if storage is not None:
+            self.storage = storage
+        elif isinstance(db, GitDB):
+            self.storage = GitSnapshotStorage(self.root_dir)
+        else:
+            self.storage = GitSnapshotStorage(self.root_dir)
+
+        # 2. 导出 git_db 便于兼容底层 plumbing
+        if hasattr(self.storage, "git_db"):
+            self.git_db = self.storage.git_db
+        else:
+            self.git_db = db or GitDB(self.root_dir)
+
+        # 3. 初始化索引层 (GraphIndex)
+        self.use_cache = use_cache
+        self.db_manager = db_manager
+
+        if index is not None:
+            self.index = index
+        elif self.use_cache:
+            if self.db_manager is None:
+                self.db_manager = DatabaseManager(self.root_dir)
+                self.db_manager.init_schema()
+            self.index = SQLiteGraphIndex(self.db_manager)
+        else:
+            self.db_manager = None
+            self.index = InMemoryGraphIndex()
+
+        # 4. 兼容层桥接
+        self.reader = _EngineReaderCompatibilityAdapter(self)
+        self.writer = self  # 兼容旧代码使用 engine.writer
+
+        self.history_graph: dict[str, QuipuNode] = {}
+        self.current_node: QuipuNode | None = None
+
+        self._sync_persistent_ignores()
+
+    def close(self):
+        if self.db_manager:
+            self.db_manager.close()
+
+    def _get_current_user_id(self) -> str:
+        config = ConfigManager(self.root_dir)
+        user_id = config.get("sync.user_id")
+        if user_id:
+            return user_id
+
+        try:
+            result = subprocess.run(
+                ["git", "config", "user.email"],
+                cwd=self.root_dir,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            email = result.stdout.strip()
+            if email:
+                return get_user_id_from_email(email)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        return "unknown-local-user"
+
+    def _read_head(self) -> str | None:
+        if self.head_file.exists():
+            return self.head_file.read_text(encoding="utf-8").strip()
+        return None
+
+    def _write_head(self, tree_hash: str):
+        try:
+            self.head_file.write_text(tree_hash, encoding="utf-8")
+        except Exception as e:
+            logger.warning(f"⚠️ 无法更新 HEAD 指针: {e}")
+
+    def _read_nav(self) -> tuple[list[str], int]:
+        log = []
+        ptr = -1
+        if self.nav_log_file.exists():
+            try:
+                content = self.nav_log_file.read_text(encoding="utf-8").strip()
+                if content:
+                    log = content.splitlines()
+            except Exception:
+                pass
+        if self.nav_ptr_file.exists():
+            try:
+                ptr = int(self.nav_ptr_file.read_text(encoding="utf-8").strip())
+            except Exception:
+                pass
+        if not log:
+            ptr = -1
+        elif ptr < 0:
+            ptr = 0
+        elif ptr >= len(log):
+            ptr = len(log) - 1
+        return log, ptr
+
+    def _write_nav(self, log: list[str], ptr: int):
+        try:
+            self.nav_log_file.write_text("\n".join(log), encoding="utf-8")
+            self.nav_ptr_file.write_text(str(ptr), encoding="utf-8")
+        except Exception as e:
+            logger.warning(f"⚠️ 无法更新导航历史: {e}")
+
+    def _append_nav(self, tree_hash: str):
+        log, ptr = self._read_nav()
+        if not log:
+            current_head = self._read_head()
+            if current_head and current_head != tree_hash:
+                log.append(current_head)
+                ptr = 0
+        if ptr < len(log) - 1:
+            log = log[: ptr + 1]
+        if log and log[-1] == tree_hash:
+            ptr = len(log) - 1
+            self._write_nav(log, ptr)
+            return
+        log.append(tree_hash)
+        ptr = len(log) - 1
+        MAX_LOG_SIZE = 100
+        if len(log) > MAX_LOG_SIZE:
+            log = log[-MAX_LOG_SIZE:]
+            ptr = len(log) - 1
+        self._write_nav(log, ptr)
+
+    def visit(self, target_hash: str):
+        self.checkout(target_hash)
+        self._append_nav(target_hash)
+
+    def back(self) -> str | None:
+        log, ptr = self._read_nav()
+        if ptr > 0:
+            new_ptr = ptr - 1
+            target_hash = log[new_ptr]
+            logger.info(f"🔙 Back to: {target_hash[:7]} (History: {new_ptr + 1}/{len(log)})")
+            self.checkout(target_hash)
+            self._write_nav(log, new_ptr)
+            return target_hash
+        return None
+
+    def forward(self) -> str | None:
+        log, ptr = self._read_nav()
+        if ptr < len(log) - 1:
+            new_ptr = ptr + 1
+            target_hash = log[new_ptr]
+            logger.info(f"🔜 Forward to: {target_hash[:7]} (History: {new_ptr + 1}/{len(log)})")
+            self.checkout(target_hash)
+            self._write_nav(log, new_ptr)
+            return target_hash
+        return None
+
+    def align(self) -> str:
+        # 如果使用 SQLite 且连接存在，单向预热/同步读模型
+        if self.use_cache and self.db_manager:
+            try:
+                user_id = self._get_current_user_id()
+                projector = CacheProjector(self.git_db, self.db_manager)
+                projector.project(local_user_id=user_id)
+            except Exception:
+                logger.exception("❌ 自动数据投影失败")
+
+        all_nodes = self.index.load_all_nodes()
+        self.history_graph = {node.commit_hash: node for node in all_nodes}
+        if all_nodes:
+            logger.info(f"从存储中加载了 {len(all_nodes)} 个历史事件，形成 {len(self.history_graph)} 个唯一状态节点。")
+
+        current_hash = self.storage.get_tree_hash()
+        if current_hash == EMPTY_TREE_HASH and not self.history_graph:
+            logger.info("✅ 状态对齐：检测到创世状态 (空仓库)。")
+            self.current_node = None
+            return "CLEAN"
+
+        matches = [node for node in self.history_graph.values() if node.output_tree == current_hash]
+        if matches:
+            matches.sort(key=lambda n: (1 if n.parent else 0, n.timestamp), reverse=True)
+            found_node = matches[0]
+        else:
+            found_node = None
+
+        if found_node:
+            self.current_node = found_node
+            logger.info(f"✅ 状态对齐：当前工作区匹配节点 {self.current_node.short_hash}")
+            self._write_head(current_hash)
+            return "CLEAN"
+
+        logger.warning(f"⚠️ 状态漂移：当前 Tree Hash {current_hash[:7]} 未在历史中找到。")
+        if not self.history_graph:
+            return "ORPHAN"
+        return "DIRTY"
 
     def find_nodes(
         self,
@@ -590,221 +371,228 @@ class SQLiteGraphIndex(GraphIndex):
         node_type: str | None = None,
         limit: int = 10,
     ) -> list[QuipuNode]:
-        query = "SELECT * FROM nodes"
-        conditions = []
-        params = []
+        return self.index.find_nodes(
+            summary_regex=summary_regex,
+            node_type=node_type,
+            limit=limit,
+        )
 
-        if node_type:
-            conditions.append("node_type = ?")
-            params.append(node_type)
+    def capture_drift(self, current_hash: str, message: str | None = None) -> QuipuNode:
+        log_message = f"📸 正在捕获工作区漂移 (Message: {message})" if message else "📸 正在捕获工作区漂移"
+        logger.info(f"{log_message}，新状态 Hash: {current_hash[:7]}")
 
-        if summary_regex:
-            conditions.append("summary LIKE ?")
-            params.append(f"%{summary_regex}%")
+        input_hash = EMPTY_TREE_HASH
+        head_tree_hash = self._read_head()
+        parent_node = None
 
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
-
-        query += " ORDER BY timestamp DESC LIMIT ?"
-        params.append(limit)
-
-        conn = self.db_manager._get_conn()
-        cursor = conn.execute(query, tuple(params))
-        rows = cursor.fetchall()
-
-        results = []
-        for row in rows:
-            node = QuipuNode(
-                commit_hash=row["commit_hash"],
-                input_tree="",
-                output_tree=row["output_tree"],
-                timestamp=datetime.fromtimestamp(row["timestamp"]),
-                filename=Path(f".quipu/git_objects/{row['commit_hash']}"),
-                node_type=row["node_type"],
-                summary=row["summary"],
-                content=row["plan_md_cache"] if row["plan_md_cache"] is not None else "",
-                owner_id=row["owner_id"],
+        if head_tree_hash:
+            parent_node = next(
+                (node for node in self.history_graph.values() if node.output_tree == head_tree_hash), None
             )
-            results.append(node)
-        return results
+
+        if parent_node:
+            input_hash = parent_node.output_tree
+        elif self.history_graph:
+            last_node = max(self.history_graph.values(), key=lambda node: node.timestamp)
+            input_hash = last_node.output_tree
+
+        diff_summary = self.storage.get_diff_stat(input_hash, current_hash)
+        user_message_section = f"### 💬 备注:\n{message}\n\n" if message else ""
+        body = (
+            f"# 📸 Snapshot Capture\n\n"
+            f"{user_message_section}"
+            f"检测到工作区发生变更。\n\n"
+            f"### 📝 变更文件摘要:\n```\n{diff_summary}\n```"
+        )
+
+        user_id = self._get_current_user_id()
+        parent_commit = parent_node.commit_hash if parent_node else None
+
+        # 1. 物理层：创建物理 Git Commit
+        if isinstance(self.storage, GitSnapshotStorage):
+            new_node, meta_json = self.storage.create_snapshot_commit(
+                node_type="capture",
+                input_tree=input_hash,
+                output_tree=current_hash,
+                content=body,
+                parent_commit_hash=parent_commit,
+                message=message,
+                owner_id=user_id,
+            )
+        else:
+            # 回退通用实现
+            new_node, meta_json = GitSnapshotStorage(self.root_dir).create_snapshot_commit(
+                node_type="capture",
+                input_tree=input_hash,
+                output_tree=current_hash,
+                content=body,
+                parent_commit_hash=parent_commit,
+                message=message,
+                owner_id=user_id,
+            )
+
+        # 2. 逻辑层：写入索引
+        if hasattr(self.index, "record_node"):
+            self.index.record_node(new_node, meta_json=meta_json)
+
+        # 3. 内存拓扑维护
+        if new_node.parent and new_node.parent.commit_hash in self.history_graph:
+            real_parent = self.history_graph[new_node.parent.commit_hash]
+            new_node.parent = real_parent
+            if new_node not in real_parent.children:
+                real_parent.children.append(new_node)
+
+        self.history_graph[new_node.commit_hash] = new_node
+        self.current_node = new_node
+        self._write_head(current_hash)
+        self._append_nav(current_hash)
+
+        logger.info(f"✅ 捕获完成，新节点已创建: {new_node.filename.name}")
+        return new_node
+
+    def create_plan_node(
+        self, input_tree: str, output_tree: str, plan_content: str, summary_override: str | None = None
+    ) -> QuipuNode:
+        if input_tree == output_tree:
+            logger.info(f"📝 记录幂等操作节点 (Idempotent Node): {output_tree[:7]}")
+        else:
+            logger.info(f"📝 正在记录 Plan 节点: {input_tree[:7]} -> {output_tree[:7]}")
+
+        user_id = self._get_current_user_id()
+
+        parent_node = None
+        head_tree = self._read_head()
+        if head_tree:
+            parent_node = next((n for n in self.history_graph.values() if n.output_tree == head_tree), None)
+        parent_commit = parent_node.commit_hash if parent_node else None
+
+        # 1. 物理层：创建物理 Git Commit
+        if isinstance(self.storage, GitSnapshotStorage):
+            new_node, meta_json = self.storage.create_snapshot_commit(
+                node_type="plan",
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=plan_content,
+                summary_override=summary_override,
+                parent_commit_hash=parent_commit,
+                owner_id=user_id,
+            )
+        else:
+            new_node, meta_json = GitSnapshotStorage(self.root_dir).create_snapshot_commit(
+                node_type="plan",
+                input_tree=input_tree,
+                output_tree=output_tree,
+                content=plan_content,
+                summary_override=summary_override,
+                parent_commit_hash=parent_commit,
+                owner_id=user_id,
+            )
+
+        # 2. 逻辑层：写入索引
+        if hasattr(self.index, "record_node"):
+            self.index.record_node(new_node, meta_json=meta_json)
+
+        # 3. 内存拓扑维护
+        if new_node.parent and new_node.parent.commit_hash in self.history_graph:
+            real_parent = self.history_graph[new_node.parent.commit_hash]
+            new_node.parent = real_parent
+            if new_node not in real_parent.children:
+                real_parent.children.append(new_node)
+
+        self.history_graph[new_node.commit_hash] = new_node
+        self.current_node = new_node
+        self._write_head(output_tree)
+        self._append_nav(output_tree)
+
+        logger.info(f"✅ Plan 已归档: {new_node.filename.name}")
+        return new_node
+
+    def checkout(self, target_hash: str):
+        self.storage.restore_workspace(target_hash)
+        self._write_head(target_hash)
+        self.current_node = None
+        for node in self.history_graph.values():
+            if node.output_tree == target_hash:
+                self.current_node = node
+                break
+        logger.info(f"🔄 状态已切换至: {target_hash[:7]}")
 ~~~~~
 
-#### Acts 3: 实现单向读模型投影器 `CacheProjector`
+#### Acts 2: 改造引擎工厂函数 `factory.py`
 
-替代原 `hydrator.py`，语义明确为“从 Git 物理真实源单向预热/重建 SQLite 读模型”。
+在工厂方法中引入 `use_cache: bool = True`，在无缓存模式下完全跳过 SQLite 初始化与文件触碰。
 
 ~~~~~act
 write_file
-packages/pyquipu-engine/src/quipu/engine/projector.py
+packages/pyquipu-application/src/quipu/application/factory.py
 ~~~~~
 ~~~~~python
-import json
 import logging
-import re
+from pathlib import Path
 
-from quipu.engine.git_db import GitDB
+from quipu.engine.config import ConfigManager
 from quipu.engine.git_storage import GitSnapshotStorage
+from quipu.engine.memory_index import InMemoryGraphIndex
 from quipu.engine.sqlite_db import DatabaseManager
+from quipu.engine.sqlite_index import SQLiteGraphIndex
+from quipu.engine.state_machine import Engine
+
+from .utils import find_git_repository_root
 
 logger = logging.getLogger(__name__)
 
 
-class CacheProjector:
-    """读模型单向投影器 (Read-Model Projector / Cache Warmer).
+def create_engine(work_dir: Path, lazy: bool = False, use_cache: bool = True) -> Engine:
+    """实例化 Quipu 引擎堆栈。
 
-    将不可变的 Git 物理快照历史记录增量或全量投影至 SQLite 索引库。
+    Args:
+        work_dir: 操作的工作区目录。
+        lazy: 如果为 True，则不立即加载完整的历史图谱 (不调用 align)。
+        use_cache: 如果为 False，则关闭 SQLite 缓存，使用纯内存索引，
+                  实现 0 IO 开销与零副作用，专为 CI/CD 瞬时执行设计。
     """
+    project_root = find_git_repository_root(work_dir) or work_dir
+    config = ConfigManager(project_root)
 
-    def __init__(self, git_db: GitDB, db_manager: DatabaseManager):
-        self.git_db = git_db
-        self.db_manager = db_manager
-        self._storage_parser = GitSnapshotStorage(git_db.root)
+    # 1. 物理快照存储层：永远是 GitSnapshotStorage
+    storage = GitSnapshotStorage(project_root)
 
-    def _get_owner_from_ref(self, ref_name: str, local_user_id: str) -> str | None:
-        remote_match = re.match(r"refs/quipu/remotes/[^/]+/([^/]+)/heads/.*", ref_name)
-        if remote_match:
-            return remote_match.group(1)
-        if ref_name.startswith("refs/quipu/local/heads/"):
-            return local_user_id
-        return None
+    # 2. 检查配置覆盖 (如果用户显式配置了 storage.type = "memory" 或环境变量指定)
+    config_storage_type = config.get("storage.type", "sqlite")
+    if config_storage_type in ("memory", "none", "in_memory"):
+        use_cache = False
 
-    def _get_commit_owners(self, local_user_id: str) -> dict[str, str]:
-        head_ref_tuples = self.git_db.get_all_ref_heads("refs/quipu/")
-        head_owners: dict[str, str] = {}
-        for commit_hash, ref_name in head_ref_tuples:
-            owner_id = self._get_owner_from_ref(ref_name, local_user_id)
-            if owner_id and (ref_name.startswith("refs/quipu/remotes") or commit_hash not in head_owners):
-                head_owners[commit_hash] = owner_id
+    # 3. 逻辑索引层按需装配
+    db_manager = None
+    if use_cache:
+        logger.debug("Engine factory: Using SQLiteGraphIndex (use_cache=True)")
+        db_manager = DatabaseManager(project_root)
+        db_manager.init_schema()
+        index = SQLiteGraphIndex(db_manager)
+    else:
+        logger.debug("Engine factory: Using InMemoryGraphIndex (use_cache=False)")
+        index = InMemoryGraphIndex()
 
-        if not head_owners:
-            return {}
+    # 4. 组装并返回 Engine 门面
+    engine = Engine(
+        root_dir=project_root,
+        storage=storage,
+        index=index,
+        db_manager=db_manager,
+        use_cache=use_cache,
+    )
 
-        all_git_logs = self.git_db.log_ref(list(head_owners.keys()))
-        log_map = {entry["hash"]: entry for entry in all_git_logs}
+    if not lazy:
+        engine.align()
 
-        final_commit_owners: dict[str, str] = {}
-        queue = list(head_owners.keys())
-
-        for commit_hash in queue:
-            final_commit_owners[commit_hash] = head_owners[commit_hash]
-
-        visited = set(head_owners.keys())
-
-        while queue:
-            child_hash = queue.pop(0)
-            owner = final_commit_owners.get(child_hash)
-            if not owner or child_hash not in log_map:
-                continue
-
-            parent_hashes = log_map[child_hash]["parent"].split()
-            for parent_hash in parent_hashes:
-                if parent_hash and parent_hash not in visited:
-                    final_commit_owners[parent_hash] = owner
-                    visited.add(parent_hash)
-                    queue.append(parent_hash)
-
-        return final_commit_owners
-
-    def _parse_output_tree_from_body(self, body: str) -> str | None:
-        match = re.search(r"X-Quipu-Output-Tree:\s*([0-9a-f]{40})", body)
-        return match.group(1) if match else None
-
-    def project(self, local_user_id: str):
-        """执行单向读模型投影同步."""
-        all_ref_heads = [t[0] for t in self.git_db.get_all_ref_heads("refs/quipu/")]
-        if not all_ref_heads:
-            logger.debug("✅ Git 中未发现 Quipu 引用，无需投影。")
-            return
-
-        all_git_logs = self.git_db.log_ref(all_ref_heads)
-        if not all_git_logs:
-            logger.debug("✅ Git 中未发现 Quipu 历史，无需投影。")
-            return
-        log_map = {entry["hash"]: entry for entry in all_git_logs}
-
-        commit_owners = self._get_commit_owners(local_user_id)
-        db_hashes = self.db_manager.get_all_node_hashes()
-        missing_hashes = set(log_map.keys()) - db_hashes
-
-        if not missing_hashes:
-            logger.debug("✅ 数据库索引与 Git 历史完全一致，无需投影。")
-            return
-
-        logger.info(f"发现 {len(missing_hashes)} 个待投影的历史节点。")
-
-        nodes_to_insert: list[tuple] = []
-        edges_to_insert: list[tuple] = []
-
-        tree_hashes = [log_map[h]["tree"] for h in missing_hashes if h in log_map]
-        trees_content = self.git_db.batch_cat_file(tree_hashes)
-
-        tree_to_meta_blob: dict[str, str] = {}
-        meta_blob_hashes: list[str] = []
-        for tree_hash, content_bytes in trees_content.items():
-            entries = self._storage_parser._parse_tree_binary(content_bytes)
-            if "metadata.json" in entries:
-                blob_hash = entries["metadata.json"]
-                tree_to_meta_blob[tree_hash] = blob_hash
-                meta_blob_hashes.append(blob_hash)
-        metas_content = self.git_db.batch_cat_file(meta_blob_hashes)
-
-        for commit_hash in missing_hashes:
-            log_entry = log_map[commit_hash]
-            tree_hash = log_entry["tree"]
-            owner_id = commit_owners.get(commit_hash)
-            if not owner_id:
-                logger.warning(f"跳过 {commit_hash[:7]}: 无法确定所有者")
-                continue
-
-            meta_blob_hash = tree_to_meta_blob.get(tree_hash)
-            if not meta_blob_hash or meta_blob_hash not in metas_content:
-                logger.warning(f"跳过 {commit_hash[:7]}: 找不到 metadata.json 内容")
-                continue
-
-            output_tree = self._parse_output_tree_from_body(log_entry["body"])
-            if not output_tree:
-                logger.warning(f"跳过 {commit_hash[:7]}: 找不到 Output-Tree trailer")
-                continue
-
-            try:
-                meta_bytes = metas_content[meta_blob_hash]
-                meta_data = json.loads(meta_bytes)
-                nodes_to_insert.append(
-                    (
-                        commit_hash,
-                        owner_id,
-                        output_tree,
-                        meta_data.get("type", "unknown"),
-                        float(meta_data.get("exec", {}).get("start") or log_entry["timestamp"]),
-                        meta_data.get("summary", "No summary"),
-                        meta_data.get("generator", {}).get("id"),
-                        meta_bytes.decode("utf-8"),
-                        None,
-                    )
-                )
-                for p_hash in log_entry["parent"].split():
-                    if p_hash in log_map:
-                        edges_to_insert.append((commit_hash, p_hash))
-            except (json.JSONDecodeError, KeyError) as e:
-                logger.error(f"解析 {commit_hash[:7]} 元数据失败: {e}")
-
-        if nodes_to_insert:
-            self.db_manager.batch_insert_nodes(nodes_to_insert)
-            logger.info(f"💧 {len(nodes_to_insert)} 个节点索引已投影。")
-        if edges_to_insert:
-            self.db_manager.batch_insert_edges(edges_to_insert)
-            logger.info(f"💧 {len(edges_to_insert)} 条边拓扑已投影。")
+    return engine
 ~~~~~
 
 ### 下一步建议
-阶段二的关键组件已经全部就位：
-- `GitSnapshotStorage`：物理快照层
-- `SQLiteGraphIndex`：本地磁盘索引层
-- `InMemoryGraphIndex`：内存极简索引层
-- `CacheProjector`：读模型投影器
+阶段三（中枢解耦与装配改造）已经完成。目前 `Engine` 已经正式通过 `storage` 和 `index` 运行，并且支持 `use_cache=False` 瞬时内存模式。
 
-建议下一步推进**阶段三（引擎中枢改造与装配）**：
-1. **改造 `Engine` (`quipu.engine.state_machine`)**：
-   - 构造参数接纳 `storage: SnapshotStorage` 与 `index: GraphIndex`（可自动从 `use_cache` 装配），将物理操作路由至 `storage`，图谱操作路由至 `index`。
-2. **改造工厂方法 (`quipu.application.factory.create_engine`)**：
-   - 支持 `use_cache: bool = True`，在 `use_cache=False` 时初始化 `InMemoryGraphIndex` 并完全跳过 `.quipu/history.sqlite` 的创建。
+建议下一步推进**阶段四与阶段五（适配治理与测试验证）**：
+1. **测试辅助桩调整 (`pyquipu-test-utils/src/quipu/test_utils/helpers.py`)**：
+   - 适配 `InMemorySnapshotStorage` 与 `InMemoryGraphIndex`，确保测试框架无缝对接新协议。
+2. **运行全量测试**：
+   - 使用 `run_command` 执行 `pytest`，验证所有 CLI、Engine、TUI、Cache 和 Sync 测试是否通过，确保解耦重构零回归。
