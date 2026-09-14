@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] fix: 修复 Engine 内存后端适配与旧兼容层接口", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789354965.664856, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] test: 增加存储与索引解耦、无缓存模式及缓存重建测试矩阵", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789355067.819659, "duration_ms": 0}}

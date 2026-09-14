@@ -1,40 +1,3 @@
-现在进入路线图第五阶段：**构建并执行存储与索引层解耦的验证测试矩阵**，验证 CI/CD 纯内存模式（`use_cache=False`）、单向读模型投影与缓存重建能力。
-
-## [WIP] test: 增加存储与索引解耦、无缓存模式及缓存重建测试矩阵
-
-### 用户需求
-落实路线图阶段五：
-1. 验证项 B（CI/CD 无缓存模式）：验证在 `use_cache=False` 下执行 `capture_drift` 与 `create_plan_node` 时，`.quipu/history.sqlite` 绝不被创建，且 Git 物理快照与引用正确生成。
-2. 验证项 C（缓存丢弃重建）：验证在物理删除 `history.sqlite` 后，`CacheProjector` 能从 Git Commit 树全量重建索引。
-3. 单元隔离性验证：独立验证 `GitSnapshotStorage` 纯物理存储与 `InMemoryGraphIndex` 内存索引的独立运作。
-
-### 评论
-这套测试矩阵直接闭环了用户最初提出的核心架构诉求：“在 CI/CD 环境下无需 SQLite 缓存层，实现纯 Git 极简零依赖运行”，并证明了读模型（SQLite）可随时丢弃并从物理快照（Git）100% 确定性复原。
-
-### 目标
-1. 新建 `packages/pyquipu-engine/tests/unit/test_engine_decoupling.py`，编写包含 CI 模式、缓存重建、独立物理存储与纯内存索引的完整测试用例。
-2. 运行 `pytest` 执行新增验证与全量回归测试。
-
-### 基本原理
-- **无缓存验证原则**：监控文件系统边界，确保当 `use_cache=False` 时，没有触碰任何 SQLite 数据库文件或临时文件。
-- **CQRS 确定性复原原则**：Git 是不可变事实（Event/Snapshot Log），SQLite 是投影视图。删除投影视图后，重新通过 `CacheProjector` 投影出的节点数、哈希和拓扑结构必须与删除前完全一致。
-
-### 标签
-#intent/tooling #flow/ready #priority/high #comp/engine #comp/tests #concept/state #scope/core #ai/instruct #task/domain/storage #task/object/engine-decoupling #task/action/test #task/state/continue
-
----
-
-### Script
-
-#### Acts 1: 编写解耦与无缓存模式测试套件
-
-新建 `test_engine_decoupling.py`，完整覆盖物理快照独立性、无缓存模式和缓存重建。
-
-~~~~~act
-write_file
-packages/pyquipu-engine/tests/unit/test_engine_decoupling.py
-~~~~~
-~~~~~python
 from pathlib import Path
 from quipu.application.factory import create_engine
 from quipu.engine.git_storage import GitSnapshotStorage
@@ -184,15 +147,3 @@ def test_in_memory_graph_index_isolated():
     assert index.get_ancestor_output_trees("t2") == {"t1"}
     assert index.get_descendant_output_trees("t1") == {"t2"}
     assert len(index.find_nodes(summary_regex="Initial")) == 1
-~~~~~
-
-### 下一步建议
-在本次测试执行确认通过后，说明路线图的五个阶段已经全部高质量落地：
-1. `SnapshotStorage` 与 `GraphIndex` 契约定义与分离；
-2. `GitSnapshotStorage` 纯粹物理层提炼；
-3. `SQLiteGraphIndex` 纯粹逻辑索引层提炼；
-4. `CacheProjector` 单向投影语义纠偏；
-5. `Engine` 与 `factory.create_engine` 支持 `use_cache=False` 瞬时 CI 模式；
-6. 完整的验证测试矩阵建立与回归校验通过。
-
-请查看测试运行结果，若需生成 Git Commit 将本次架构重构落地，请告知。
