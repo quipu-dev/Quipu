@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "ruff Capture: M factory.py, M git_storage.py, M memory_index.py ... and 6 more files", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789355343.848356, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] chore: 升级相关子包版本号与工作区依赖约束", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789355418.8425558, "duration_ms": 0}}
