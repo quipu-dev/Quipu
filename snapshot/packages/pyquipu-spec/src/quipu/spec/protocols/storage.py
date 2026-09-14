@@ -4,6 +4,63 @@ from ..models.graph import QuipuNode
 
 
 @runtime_checkable
+class SnapshotStorage(Protocol):
+    """定义物理快照存储的契约 (Source of Truth).
+
+    仅负责工作区物理状态的捕获、还原以及物理对象 (Blob/Tree/Commit) 的读写，
+    不承载图谱拓扑与业务元数据查询。
+    """
+
+    def get_tree_hash(self) -> str: ...
+
+    def capture_workspace(self, message: str | None = None) -> str: ...
+
+    def restore_workspace(self, tree_hash: str) -> None: ...
+
+    def read_blob(self, blob_hash: str) -> bytes: ...
+
+    def read_tree_blobs(self, tree_hash: str) -> dict[str, bytes]: ...
+
+    def get_diff_stat(self, old_tree: str, new_tree: str, count: int = 30) -> str: ...
+
+    def get_diff_name_status(self, old_tree: str, new_tree: str) -> list[tuple[str, str]]: ...
+
+
+@runtime_checkable
+class GraphIndex(Protocol):
+    """定义图谱拓扑与元数据索引层的契约 (Read-Model / Query Cache).
+
+    仅维护 QuipuNode 节点元数据、拓扑父子关系和轻量缓存，
+    不负责文件物理实体的落盘。
+    """
+
+    def record_node(self, node: QuipuNode) -> None: ...
+
+    def get_node(self, commit_hash: str) -> QuipuNode | None: ...
+
+    def get_node_count(self) -> int: ...
+
+    def get_node_position(self, output_tree_hash: str) -> int: ...
+
+    def load_nodes_paginated(self, limit: int, offset: int) -> list[QuipuNode]: ...
+
+    def load_all_nodes(self) -> list[QuipuNode]: ...
+
+    def find_nodes(
+        self, summary_regex: str | None = None, node_type: str | None = None, limit: int = 10
+    ) -> list[QuipuNode]: ...
+
+    def get_ancestor_output_trees(self, start_output_tree_hash: str) -> set[str]: ...
+
+    def get_descendant_output_trees(self, start_output_tree_hash: str) -> set[str]: ...
+
+    def get_private_data(self, node_commit_hash: str) -> str | None: ...
+
+
+# --- 向后兼容别名 (过渡期保留，后续阶段清理) ---
+
+
+@runtime_checkable
 class HistoryReader(Protocol):
     def load_all_nodes(self) -> list[QuipuNode]: ...
     def get_node_content(self, node: QuipuNode) -> str: ...
