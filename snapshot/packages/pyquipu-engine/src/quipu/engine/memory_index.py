@@ -1,8 +1,9 @@
 import logging
 import re
+from typing import Any
+
 from quipu.spec.models.graph import QuipuNode
 from quipu.spec.protocols.storage import GraphIndex
-from typing import Any
 
 logger = logging.getLogger(__name__)
 

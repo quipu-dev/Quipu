@@ -7,11 +7,8 @@ ruff
 
 ### 📝 变更文件摘要:
 ```
-packages/pyquipu-engine/src/quipu/engine/git_storage.py   | 1 -
- packages/pyquipu-engine/src/quipu/engine/memory_index.py  | 1 -
- packages/pyquipu-engine/src/quipu/engine/projector.py     | 1 -
- packages/pyquipu-engine/src/quipu/engine/sqlite_index.py  | 1 -
- packages/pyquipu-engine/src/quipu/engine/state_machine.py | 3 ---
- packages/pyquipu-spec/src/quipu/spec/protocols/storage.py | 2 --
- 6 files changed, 9 deletions(-)
+.../src/quipu/engine/memory_index.py               |  3 +-
+ .../tests/unit/test_engine_decoupling.py           |  2 +
+ uv.lock                                            | 43 +++++++++++-----------
+ 3 files changed, 25 insertions(+), 23 deletions(-)
 ```
