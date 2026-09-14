@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] refactor: 重定义存储与索引层协议并实现内存索引", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789354577.8840156, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "[WIP] refactor: 实现 GitSnapshotStorage、SQLiteGraphIndex 与 CacheProjector", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789354714.433081, "duration_ms": 0}}
