@@ -60,12 +60,12 @@
       "baseline_code_structure_hash": "9bab2b1dd22fea04e58176b09f65ef4f673738c47abf25fca7e0c62af472206f"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryDB.checkout_tree": {
-      "baseline_code_signature_text": "def checkout_tree(self, new_tree_hash: str, old_tree_hash: Optional[str] = None):",
-      "baseline_code_structure_hash": "5665baaadaf6a2b3e5f09812ec429cd57f9cd0ee96ec6a6fd9b574de0638f5a5"
+      "baseline_code_signature_text": "def checkout_tree(self, new_tree_hash: str, old_tree_hash: str | None = None):",
+      "baseline_code_structure_hash": "5f5efb5ccb9d90f707815e4a16c4f86910eaaf33140d5ee2ce93f029dc724996"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryDB.get_diff_name_status": {
-      "baseline_code_signature_text": "def get_diff_name_status(self, old_tree: str, new_tree: str) -> List[Tuple[str, str]]:",
-      "baseline_code_structure_hash": "807343877a65b864a254b3e3719d15a6cc0edb17c4e792ea1bba00c60f0be910"
+      "baseline_code_signature_text": "def get_diff_name_status(self, old_tree: str, new_tree: str) -> list[tuple[str, str]]:",
+      "baseline_code_structure_hash": "cfe405344881a864135573c87e9f7a8f96821a69a7fc492c935af785736c368d"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryDB.get_diff_stat": {
       "baseline_code_signature_text": "def get_diff_stat(self, old_tree: str, new_tree: str) -> str:",
@@ -86,24 +86,24 @@
       "baseline_code_structure_hash": "d83218c094372a8d28cf658577483ef46c9069b26b63410c35e75ace59ba0329"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.create_node": {
-      "baseline_code_signature_text": "def create_node(self, node_type: str, input_tree: str, output_tree: str, content: str, summary_override: Optional[str] = None, **kwargs: Any = {}) -> QuipuNode:",
-      "baseline_code_structure_hash": "0b3e983f67b1351f7a4361e31a7c9144d1988621951d626bf72c09424a75d639"
+      "baseline_code_signature_text": "def create_node(self, node_type: str, input_tree: str, output_tree: str, content: str, summary_override: str | None = None, **kwargs: Any = {}) -> QuipuNode:",
+      "baseline_code_structure_hash": "e7103294bad5a6d5d20f6c0193375949918fd5f88e0f2579646d83eb48fcdd34"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.find_nodes": {
-      "baseline_code_signature_text": "def find_nodes(self, summary_regex: Optional[str] = None, node_type: Optional[str] = None, limit: int = 10) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "3d04cb357877311ed8d37041f5ad5d0f322ed4105e52f5b88cfd40b6f110f6cc"
+      "baseline_code_signature_text": "def find_nodes(self, summary_regex: str | None = None, node_type: str | None = None, limit: int = 10) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "b103f594dbae22354bdb513e871e3b9cdbbeb2e41d2db5a818abb6a7f3b0c311"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.get_ancestor_output_trees": {
-      "baseline_code_signature_text": "def get_ancestor_output_trees(self, start_output_tree_hash: str) -> Set[str]:",
-      "baseline_code_structure_hash": "5ae091ca177977fc323d5563cb7f0c6e7af44ac50237f951d24c9793c2336220"
+      "baseline_code_signature_text": "def get_ancestor_output_trees(self, start_output_tree_hash: str) -> set[str]:",
+      "baseline_code_structure_hash": "3137f354f85dc31acbd0088f5ef7e1fe4cf485b61f6be7e135f65436068e515c"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.get_descendant_output_trees": {
-      "baseline_code_signature_text": "def get_descendant_output_trees(self, start_output_tree_hash: str) -> Set[str]:",
-      "baseline_code_structure_hash": "8eb09e56e11e9534720ef7286af9a75507b606322ada07811813f6b3278f5edd"
+      "baseline_code_signature_text": "def get_descendant_output_trees(self, start_output_tree_hash: str) -> set[str]:",
+      "baseline_code_structure_hash": "526a17b5e1ffa47471d993f9b748dac6ea0351fbcfe21dd8af229f06468c8eb4"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.get_node_blobs": {
-      "baseline_code_signature_text": "def get_node_blobs(self, commit_hash: str) -> Dict[str, bytes]:",
-      "baseline_code_structure_hash": "48acf7a37a5612c09d5062797e966133a5c15ba17d05e10407be3235bb076f3d"
+      "baseline_code_signature_text": "def get_node_blobs(self, commit_hash: str) -> dict[str, bytes]:",
+      "baseline_code_structure_hash": "7518243aeddcb0655879143807114fbeb826325af0a4123a2ba38f5111bc444b"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.get_node_content": {
       "baseline_code_signature_text": "def get_node_content(self, node: QuipuNode) -> str:",
@@ -118,16 +118,16 @@
       "baseline_code_structure_hash": "eeb815e029cbffaf43c5365481a21a4251ca6fb30632886a63a5716104041b0e"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.get_private_data": {
-      "baseline_code_signature_text": "def get_private_data(self, node_commit_hash: str) -> Optional[str]:",
-      "baseline_code_structure_hash": "b03c5152ce31de33095b38682a69df3dcfcd6551fd2d0e5109137fb9a8e6a772"
+      "baseline_code_signature_text": "def get_private_data(self, node_commit_hash: str) -> str | None:",
+      "baseline_code_structure_hash": "f89eb26a5371e45416b6f432a473f88cd63353152433e66e86f35265a7658191"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.load_all_nodes": {
-      "baseline_code_signature_text": "def load_all_nodes(self) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "860f1b0ce953562bf9798d8e0e7a6d05c0aada817fc5e88689012cb45876f7be"
+      "baseline_code_signature_text": "def load_all_nodes(self) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "c5356664632a9b785d7fe92e32dbe0c2f1a17f3e47b114c31bdaed8d6a801709"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#InMemoryHistoryManager.load_nodes_paginated": {
-      "baseline_code_signature_text": "def load_nodes_paginated(self, limit: int, offset: int) -> List[QuipuNode]:",
-      "baseline_code_structure_hash": "cf4d892bf90a00fa3f083ef8e4bb292b58bf36a417cf53e04002657744c0022e"
+      "baseline_code_signature_text": "def load_nodes_paginated(self, limit: int, offset: int) -> list[QuipuNode]:",
+      "baseline_code_structure_hash": "562ea54003c14803e8c89699ab31b0595f9e236068865e3088685a8b78595134"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#VirtualFileSystem": {
       "baseline_code_signature_text": "class VirtualFileSystem:",
@@ -143,8 +143,8 @@
       "baseline_code_structure_hash": "568018bce5cb8d6b0a2a72c2f8d4dc40dfc67db2792096d93e525d1ff339d823"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#VirtualFileSystem.read": {
-      "baseline_code_signature_text": "def read(self, path: str) -> Optional[str]:",
-      "baseline_code_structure_hash": "610c3197a70c8c4e0dc5ddd1a636a625ed5cda307bdbca93d0fb017850a06d1c"
+      "baseline_code_signature_text": "def read(self, path: str) -> str | None:",
+      "baseline_code_structure_hash": "690b18e2190687e97edca83182d93b2b7863e88bc2d7fe2322ffe7a63f1eb828"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#VirtualFileSystem.write": {
       "baseline_code_signature_text": "def write(self, path: str, content: str):",
@@ -166,18 +166,18 @@
       "baseline_yaml_content_hash": "2b18d49fe70c484ef9eb7e30b82ef7947626997888fc200007e9bc82bbb52049"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#create_dirty_workspace_history": {
-      "baseline_code_signature_text": "def create_dirty_workspace_history(engine: Engine) -> Tuple[Engine, str]:",
-      "baseline_code_structure_hash": "9a1b473936bc06f3c7c301e66140295213df44abc420f8775246d5987b8c1cb0",
+      "baseline_code_signature_text": "def create_dirty_workspace_history(engine: Engine) -> tuple[Engine, str]:",
+      "baseline_code_structure_hash": "db82dd252216ba5486d4521e58be659e4e7426d932c4973c5bc5d5a4b36256d6",
       "baseline_yaml_content_hash": "788b7ec1efaaeb6e6b78fdfd2bdd37d2e351d623d9295291c369478832bb739d"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#create_linear_history": {
-      "baseline_code_signature_text": "def create_linear_history(engine: Engine) -> Tuple[Engine, Dict[str, str]]:",
-      "baseline_code_structure_hash": "3ada516acb039d0433939843fde70504f99dee0302a1342292fc8d6c9fabf883",
+      "baseline_code_signature_text": "def create_linear_history(engine: Engine) -> tuple[Engine, dict[str, str]]:",
+      "baseline_code_structure_hash": "b44641eaae7598feda5446e32f797a1a565598175b41977222e610feab063f7b",
       "baseline_yaml_content_hash": "2b2e026a825ce169baf9da35d706d1e55fa1ca76af4b7605e78bcbc2e6383599"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#create_linear_history_from_specs": {
-      "baseline_code_signature_text": "def create_linear_history_from_specs(engine: Engine, specs: List[Dict[str, Any]]):",
-      "baseline_code_structure_hash": "4e0464d5d219a29b0877daa0db5127754a0527bb0e2ce2b667521475b6913f19",
+      "baseline_code_signature_text": "def create_linear_history_from_specs(engine: Engine, specs: list[dict[str, Any]]):",
+      "baseline_code_structure_hash": "bbcec25e6acf451cf81b092b8c106ff9c163ef549a7d5d30fd48743fa4a84326",
       "baseline_yaml_content_hash": "c7ec7be674a17ad41caac42e79b2950813e70941b054b8b5f6b758a28b36722d"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#create_node_via_cli": {
@@ -191,8 +191,8 @@
       "baseline_yaml_content_hash": "8c2dc8174d13fa669d9125a57591161fa3153ad590205eeada686934077fbcb7"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#create_query_branching_history": {
-      "baseline_code_signature_text": "def create_query_branching_history(engine: Engine) -> Tuple[Engine, str]:",
-      "baseline_code_structure_hash": "b5df830ed85fcd3b85c442eadaf3dfbe4ccc48a4f81f70f89bc0d94d02ea232e",
+      "baseline_code_signature_text": "def create_query_branching_history(engine: Engine) -> tuple[Engine, str]:",
+      "baseline_code_structure_hash": "1e7e8187359090b93d48c63ce3cfe81345b73391ddacc1061881b8eaf17508b9",
       "baseline_yaml_content_hash": "2b33e55e9b1b15627669e69594fbb8287dac86b82599fb48aa339605fc480ac8"
     },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/helpers.py#get_local_quipu_heads": {

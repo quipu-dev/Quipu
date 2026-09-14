@@ -2,16 +2,22 @@ from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 from ..models.graph import QuipuNode
-from .storage import HistoryReader, HistoryWriter
+from .storage import GraphIndex, HistoryReader, HistoryWriter, SnapshotStorage
 
 
 @runtime_checkable
 class QuipuEngine(Protocol):
     root_dir: Path
-    reader: HistoryReader
-    writer: HistoryWriter
     history_graph: dict[str, QuipuNode]
     current_node: QuipuNode | None
+
+    # 新架构属性
+    storage: SnapshotStorage | Any
+    index: GraphIndex | Any
+
+    # 兼容过渡属性
+    reader: HistoryReader | Any
+    writer: HistoryWriter | Any
     git_db: Any
 
     def align(self) -> str: ...

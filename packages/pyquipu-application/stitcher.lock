@@ -25,8 +25,8 @@
       "baseline_yaml_content_hash": "ba87b5c38065687528f0d842b3c042da0e4c164a6019a46707ead5b7f2488997"
     },
     "py://packages/pyquipu-application/src/quipu/application/controller.py#get_available_acts": {
-      "baseline_code_signature_text": "def get_available_acts(work_dir: Path) -> Dict[str, str]:",
-      "baseline_code_structure_hash": "442aa8ba3388add2d240e0f9bc612bf35528e11d40c765c6ec3a44e4eb874f8b",
+      "baseline_code_signature_text": "def get_available_acts(work_dir: Path) -> dict[str, str]:",
+      "baseline_code_structure_hash": "091aa3fb9d99ff06688aa255afe6ac4d4fc5e9db00a1555704839682fdb53f16",
       "baseline_yaml_content_hash": "bd97f637450a7cf01f330f5106a83d9e916dde59d64f2fe89ba667ea8e23e4ac"
     },
     "py://packages/pyquipu-application/src/quipu/application/controller.py#run_quipu": {
@@ -40,9 +40,9 @@
       "baseline_yaml_content_hash": "aa58fd5cec8b7c127c3a729915c6d4f99c875e4405edba365a5f03f5dff992f7"
     },
     "py://packages/pyquipu-application/src/quipu/application/factory.py#create_engine": {
-      "baseline_code_signature_text": "def create_engine(work_dir: Path, lazy: bool = False) -> Engine:",
-      "baseline_code_structure_hash": "4565a1494d7662227444205f34a6e4458c80db2856e465388e6d987a15c015c2",
-      "baseline_yaml_content_hash": "3dba786e050a1669e0b95d77fdb347afd214cb596dec260790fbfad6963db840"
+      "baseline_code_signature_text": "def create_engine(work_dir: Path, lazy: bool = False, use_cache: bool = True) -> Engine:",
+      "baseline_code_structure_hash": "2afc3a31b5d9ba284c4eaf7a308240923b4a6a821b00eb8cfa828ffa62620dba",
+      "baseline_yaml_content_hash": "efef58205170a8dbf546807e17f09f739c207c9fcc1848bc948a85a2ab924cdc"
     },
     "py://packages/pyquipu-application/src/quipu/application/plugin_manager.py#PluginManager": {
       "baseline_code_signature_text": "class PluginManager:",
@@ -55,8 +55,8 @@
       "baseline_yaml_content_hash": "34b1c59e7fa9a03d089fccdafa494a216e5a7746e0aff3b5891a262b88986369"
     },
     "py://packages/pyquipu-application/src/quipu/application/utils.py#find_git_repository_root": {
-      "baseline_code_signature_text": "def find_git_repository_root(start_path: Path) -> Optional[Path]:",
-      "baseline_code_structure_hash": "9f19014baa92289d9b4f04d4ee8a92df475d31c38820edc4ffc20efc9ce218a8",
+      "baseline_code_signature_text": "def find_git_repository_root(start_path: Path) -> Path | None:",
+      "baseline_code_structure_hash": "05d8fe7090528803841637392070e2146ad89ef2d1c79371d86ee2d0338bfc4d",
       "baseline_yaml_content_hash": "8ab446ed5e94789aede646cc369436537ffdd64fc5da3229937ba99d5bc83bb7"
     },
     "py://packages/pyquipu-application/tests/unit/test_controller.py#TestControllerUnit": {

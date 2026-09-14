@@ -1,6 +1,7 @@
 "Engine": |-
-  Quipu 状态引擎。
-  负责协调 Git 物理状态和 Quipu 逻辑图谱。
+  Quipu 状态引擎门面 (Facade).
+
+  协调 GitSnapshotStorage (物理状态真相) 与 GraphIndex (图谱索引/缓存加速).
 "Engine._get_current_user_id": |-
   确定当前用户的 ID，实现统一的、鲁棒的身份识别。
   优先级:
@@ -14,3 +15,7 @@
 "Engine.find_nodes": |-
   在历史图谱中查找符合条件的节点。
   此方法现在委托给配置的 HistoryReader 来执行查找。
+_EngineReaderCompatibilityAdapter: |-
+  向后兼容适配器，让 engine.reader 能够在迁移期安全路由到 storage 与 index.
+_EngineWriterCompatibilityAdapter: |-
+  向后兼容适配器，支持 engine.writer.create_node 等旧调用.
