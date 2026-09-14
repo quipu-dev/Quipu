@@ -7,7 +7,6 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 from quipu.engine.git_db import GitDB
 from quipu.spec.constants import EMPTY_TREE_HASH

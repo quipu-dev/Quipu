@@ -2,9 +2,6 @@ from pathlib import Path
 from quipu.application.factory import create_engine
 from quipu.engine.git_storage import GitSnapshotStorage
 from quipu.engine.memory_index import InMemoryGraphIndex
-from quipu.engine.projector import CacheProjector
-from quipu.engine.sqlite_db import DatabaseManager
-from quipu.engine.sqlite_index import SQLiteGraphIndex
 from quipu.spec.constants import EMPTY_TREE_HASH
 
 
@@ -56,7 +53,7 @@ def test_cache_projector_rebuild_from_scratch(git_workspace: Path):
     engine = create_engine(git_workspace, lazy=False, use_cache=True)
     (git_workspace / "file.txt").write_text("v1")
     h1 = engine.storage.get_tree_hash()
-    n1 = engine.create_plan_node(EMPTY_TREE_HASH, h1, "Plan 1")
+    engine.create_plan_node(EMPTY_TREE_HASH, h1, "Plan 1")
 
     (git_workspace / "file.txt").write_text("v2")
     h2 = engine.storage.get_tree_hash()
