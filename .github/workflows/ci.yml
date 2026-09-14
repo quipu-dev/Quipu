@@ -36,32 +36,26 @@ jobs:
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
         
-      # 步骤 4: 创建虚拟环境并安装开发依赖
-      #   这模拟了 `setup_dev.py` 中创建 dev 环境的过程
-      - name: Create venv and install dev dependencies
+      # 步骤 4: 使用 uv sync 基于 lockfile 同步 workspace 及开发依赖
+      - name: Sync workspace dependencies with uv
         run: |
-          # 激活 uv
           source $HOME/.cargo/env
-          # 创建虚拟环境
-          uv venv .envs/dev
-          # 安装开发和测试工具，以及所有本地包（可编辑模式）
-          uv pip install -p .envs/dev \
-            -e .[dev]
+          uv sync --frozen --all-packages --extra dev
 
       # 步骤 5: 运行 Ruff (代码风格检查和静态分析)
       #   使用 --check 标志，如果代码格式不正确，CI 会失败
       - name: Run Ruff Linter and Formatter Check
         run: |
-          source .envs/dev/bin/activate
-          ruff check .
-          ruff format --check .
+          source $HOME/.cargo/env
+          uv run ruff check .
+          uv run ruff format --check .
 
       # 步骤 6: 运行 Pytest
       #   pytest 会自动读取 pyproject.toml 中的配置
       - name: Run Pytest with Coverage
         run: |
-          source .envs/dev/bin/activate
-          pytest
+          source $HOME/.cargo/env
+          uv run pytest
           
   build-wheels:
     # 模拟 `promote` 流程，确保所有包都可以被成功打包
