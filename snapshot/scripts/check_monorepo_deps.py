@@ -145,7 +145,7 @@ def run_checks() -> int:
 
         # 收集可选/开发依赖 (optional-dependencies)
         opt_deps = project.get("optional-dependencies", {})
-        for _, deps in opt_deps.items():
+        for deps in opt_deps.values():
             for dep_str in deps:
                 req_name, spec = parse_requirement_str(dep_str)
                 dep_map[req_name].append(

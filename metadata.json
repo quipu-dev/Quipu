@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[COMMIT] fix(deps): 修复 monorepo 依赖一致性、升级 runtime 至 0.3.1 并集成 CI 检查脚本", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.4.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789441719.3635015, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "Capture: M check_monorepo_deps.py", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "unknown", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789442128.833548, "duration_ms": 0}}
