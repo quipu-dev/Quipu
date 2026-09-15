@@ -479,21 +479,21 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pre-commit", marker = "extra == 'dev'" },
-    { name = "pyneedle-pointer", marker = "extra == 'dev'" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.5.0" },
+    { name = "pyneedle-pointer", marker = "extra == 'dev'", specifier = "~=0.2.1" },
     { name = "pyquipu", editable = "packages/pyquipu" },
     { name = "pyquipu", marker = "extra == 'dev'", editable = "packages/pyquipu" },
     { name = "pyquipu-test-utils", marker = "extra == 'dev'", editable = "packages/pyquipu-test-utils" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "pytest-cov", marker = "extra == 'dev'" },
-    { name = "pytest-timeout", marker = "extra == 'dev'" },
-    { name = "ruff", marker = "extra == 'dev'" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0.0" },
+    { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.2.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4.0" },
 ]
 provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-runtime"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "packages/pyquipu-runtime" }
 dependencies = [
     { name = "pyquipu-common" },
@@ -531,7 +531,7 @@ requires-dist = [
     { name = "pyneedle-pointer", specifier = "~=0.2.1" },
     { name = "pyquipu-engine", editable = "packages/pyquipu-engine" },
     { name = "pyquipu-spec", editable = "packages/pyquipu-spec" },
-    { name = "typer" },
+    { name = "typer", specifier = ">=0.9.0" },
 ]
 
 [[package]]

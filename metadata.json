@@ -1,1 +1,1 @@
-{"meta_version": "1.0", "summary": "[WIP] fix(runtime): 提升 pyquipu-runtime 至 0.3.1 并同步更新工作区依赖", "type": "plan", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.4.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789441457.9389975, "duration_ms": 0}}
+{"meta_version": "1.0", "summary": "ruff Capture: M check_monorepo_deps.py, M uv.lock", "type": "capture", "generator": {"id": "manual", "tool": "quipu-cli"}, "env": {"quipu": "0.4.0", "python": "3.13.5", "os": "linux"}, "exec": {"start": 1789441572.0808582, "duration_ms": 0}}

@@ -30,12 +30,8 @@ except ModuleNotFoundError:
 
 # 匹配简单 PEP 508 依赖声明的正则：包名与版本说明符
 # 例如: "typer >= 0.9.0", "pyneedle-bus ~= 0.1.4", "pyquipu"
-DEP_REGEX = re.compile(
-    r"^(?P<name>[A-Za-z0-9_.\-]+)(?:\s*(?P<marker>;.*))?$"
-)
-SPEC_SPLIT_REGEX = re.compile(
-    r"^(?P<name>[A-Za-z0-9_.\-]+)\s*(?P<spec>(?:==|~=|>=|<=|>|<|!=).*)$"
-)
+DEP_REGEX = re.compile(r"^(?P<name>[A-Za-z0-9_.\-]+)(?:\s*(?P<marker>;.*))?$")
+SPEC_SPLIT_REGEX = re.compile(r"^(?P<name>[A-Za-z0-9_.\-]+)\s*(?P<spec>(?:==|~=|>=|<=|>|<|!=).*)$")
 
 
 @dataclass
@@ -56,7 +52,7 @@ def parse_requirement_str(req_str: str) -> tuple[str, str]:
         name = match.group("name").strip().lower().replace("_", "-")
         spec = match.group("spec").strip()
         return name, spec
-    
+
     # 无版本号的情况
     name = clean_req.strip().lower().replace("_", "-")
     return name, ""
@@ -175,7 +171,9 @@ def run_checks() -> int:
                 if occ.package_name == "pyquipu-monorepo":
                     continue
                 if not occ.spec_version:
-                    print(f"  ❌ 错误: '{occ.package_name}' ({occ.file_path}) 引用内部包 '{target_pkg}' 时未指定版本约束！")
+                    print(
+                        f"  ❌ 错误: '{occ.package_name}' ({occ.file_path}) 引用内部包 '{target_pkg}' 时未指定版本约束！"
+                    )
                     has_errors = True
                 elif not check_version_compat(actual_ver, occ.spec_version):
                     print(
