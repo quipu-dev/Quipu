@@ -201,14 +201,12 @@ def run_checks() -> int:
     # 5. 校验规则三：裸依赖检查（不允许缺乏版本范围）
     print("\n📋 [检查项 3/3] 裸依赖检查 (不允许无版本范围限制)...")
     for req_name, occurrences in dep_map.items():
-        # 允许根 monorepo 的 dev 依赖或者 meta 依赖适当放宽？严格原则下建议一律报错
         for occ in occurrences:
-            # 排除自身工作区根项目引用 pyquipu 的元声明
-            if occ.package_name == "pyquipu-monorepo" and req_name == "pyquipu":
+            # 根 monorepo 引用自身 workspace 内部包时，如果未指定版本则由 workspace 源码解析，不视作裸外部依赖
+            if occ.package_name == "pyquipu-monorepo" and req_name in workspace_pkg_versions:
                 continue
 
             if not occ.spec_version:
-                # 忽略一些纯粹开发工具且已在其他地方锁定的，若遵循严格原则直接报错
                 print(
                     f"  ⚠️  警告/错误: 发现裸依赖 (缺乏版本约束):\n"
                     f"     依赖: '{req_name}'\n"
