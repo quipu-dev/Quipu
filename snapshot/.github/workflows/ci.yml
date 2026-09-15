@@ -42,7 +42,12 @@ jobs:
           source $HOME/.cargo/env
           uv sync --frozen --all-packages --extra dev
 
-      # 步骤 5: 运行 Ruff (代码风格检查和静态分析)
+      # 步骤 5: 检查 Monorepo 依赖一致性
+      - name: Check Monorepo Dependency Consistency
+        run: |
+          python scripts/check_monorepo_deps.py
+
+      # 步骤 6: 运行 Ruff (代码风格检查和静态分析)
       #   使用 --check 标志，如果代码格式不正确，CI 会失败
       - name: Run Ruff Linter and Formatter Check
         run: |
