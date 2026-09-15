@@ -26,7 +26,7 @@ dependencies = [
     "pyquipu-common ~= 0.2.0",
     "pyquipu-engine ~= 0.4.0",
     "pyquipu-spec ~= 0.2.0",
-    "pyquipu-runtime ~= 0.3.0",
+    "pyquipu-runtime ~= 0.3.1",
 ]
 
 [project.urls]
