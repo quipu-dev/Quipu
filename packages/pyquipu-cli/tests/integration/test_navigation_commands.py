@@ -73,3 +73,22 @@ def test_checkout_duplicate_tree_hashes(runner, quipu_workspace):
     result = runner.invoke(app, ["checkout", hash_a[:7], "-w", str(work_dir), "-f"])
     assert result.exit_code == 0
     assert (work_dir / "file.txt").read_text() == "v1"
+
+
+def test_cli_set_head(runner, populated_workspace):
+    workspace, hash_a, _hash_b = populated_workspace
+
+    # 当前状态为 B。我们在工作区增加修改而不提交
+    (workspace / "dirty.txt").write_text("local edits")
+
+    # 执行 set-head 回到状态 A
+    result = runner.invoke(app, ["set-head", hash_a[:7], "-w", str(workspace), "-f"])
+    assert result.exit_code == 0
+
+    # 验证文件系统：未修改的工作区文件保持原状
+    assert (workspace / "dirty.txt").exists()
+    assert (workspace / "b.txt").exists()  # B 产生的文件没有被清除
+
+    # 验证 Quipu HEAD 已指向 A
+    head_content = (workspace / ".quipu" / "HEAD").read_text().strip()
+    assert head_content == hash_a

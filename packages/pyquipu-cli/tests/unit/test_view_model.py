@@ -191,3 +191,20 @@ class TestGraphViewModel:
         # Case 4: Neither
         bundle4 = vm.get_content_bundle(node_none)
         assert bundle4 == "*此节点无详细内容*"
+
+    def test_view_model_set_head(self, sample_nodes):
+        reader = MockHistoryReader(sample_nodes, ancestors={"h1"}, descendants={"h3"})
+        vm = GraphViewModel(reader, current_output_tree_hash="h0")
+        vm.initialize()
+
+        node_target = sample_nodes[2]  # h2
+        # Mock 新的祖先与后代关系
+        reader._ancestors = {"h1"}
+        reader._descendants = {"h5"}
+
+        vm.set_head(node_target)
+
+        assert vm.current_output_tree_hash == node_target.output_tree
+        assert vm.is_reachable(node_target.output_tree) is True
+        assert vm.is_reachable("h1") is True
+        assert vm.is_reachable("h5") is True

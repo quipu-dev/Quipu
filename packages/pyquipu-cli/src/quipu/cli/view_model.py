@@ -70,6 +70,13 @@ class GraphViewModel:
         self._node_by_key = {str(node.filename): node for node in self.current_page_nodes}
         return self.current_page_nodes
 
+    def set_head(self, node: QuipuNode):
+        self.current_output_tree_hash = node.output_tree
+        ancestors = self.reader.get_ancestor_output_trees(node.output_tree)
+        descendants = self.reader.get_descendant_output_trees(node.output_tree)
+        self.reachable_set = ancestors.union(descendants)
+        self.reachable_set.add(node.output_tree)
+
     def toggle_unreachable(self):
         self.show_unreachable = not self.show_unreachable
 

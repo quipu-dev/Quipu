@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 from quipu.cli.tui import QuipuUiApp
@@ -64,3 +65,32 @@ class TestUiLogic:
             summary="",  # Explicitly empty
         )
         assert app._get_node_summary(node_without_summary) == "No description"
+
+    def test_head_badge_rendered_in_table(self, view_model_factory):
+        node_head = QuipuNode("c1", "tree_head", "root", datetime(2023, 1, 1), Path("f1"), "plan", summary="Head Node")
+        node_other = QuipuNode(
+            "c2", "tree_other", "tree_head", datetime(2023, 1, 2), Path("f2"), "plan", summary="Other Node"
+        )
+
+        view_model = view_model_factory([node_head, node_other], current_hash="tree_head")
+        app = QuipuUiApp(work_dir=Path("."))
+        app.view_model = view_model
+
+        # 1. 测试干净工作区 (Clean State): 显示绿底 HEAD，不带 *
+        app.is_workspace_dirty = False
+        mock_table_clean = MagicMock()
+        app._populate_table(mock_table_clean, [node_head, node_other])
+        head_row_clean = mock_table_clean.add_row.call_args_list[0].args[2]
+        assert "HEAD" in head_row_clean
+        assert "HEAD*" not in head_row_clean
+
+        # 2. 测试漂移工作区 (Dirty State): 显示 HEAD* 徽章
+        app.is_workspace_dirty = True
+        mock_table_dirty = MagicMock()
+        app._populate_table(mock_table_dirty, [node_head, node_other])
+        head_row_dirty = mock_table_dirty.add_row.call_args_list[0].args[2]
+        assert "HEAD*" in head_row_dirty
+
+        # 其它非 HEAD 节点绝不包含任何 HEAD 标记
+        other_row = mock_table_dirty.add_row.call_args_list[1].args[2]
+        assert "HEAD" not in other_row
