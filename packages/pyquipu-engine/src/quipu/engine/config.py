@@ -3,8 +3,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from needle.pointer import L
-from quipu.common.bus import bus
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +34,14 @@ class ConfigManager:
             with open(self.config_path, "r", encoding="utf-8") as f:
                 config_data = yaml.safe_load(f)
                 if not isinstance(config_data, dict):
-                    bus.warning(L.engine.config.warning.invalidFormat, path=self.config_path)
+                    logger.warning(f"配置文件 '{self.config_path}' 不是有效的字典格式，已忽略。")
                     return {}
                 return config_data
         except yaml.YAMLError as e:
-            bus.error(L.engine.config.error.parseFailed, path=self.config_path, error=str(e))
+            logger.error(f"解析配置文件 '{self.config_path}' 失败: {e}")
             return {}
         except Exception as e:
-            bus.error(L.engine.config.error.readFailed, error=str(e))
+            logger.error(f"读取配置文件时发生错误: {e}")
             return {}
 
     def get(self, key: str, fallback: Any = None) -> Any:
@@ -83,7 +81,7 @@ class ConfigManager:
             self.config_path.parent.mkdir(exist_ok=True)
             with open(self.config_path, "w", encoding="utf-8") as f:
                 yaml.dump(self.user_config, f, default_flow_style=False, allow_unicode=True)
-            bus.success(L.engine.config.success.saved, path=self.config_path)
+            logger.info(f"配置文件已保存至: {self.config_path}")
         except Exception as e:
-            bus.error(L.engine.config.error.saveFailed, error=str(e))
+            logger.error(f"保存配置文件失败: {e}")
             raise

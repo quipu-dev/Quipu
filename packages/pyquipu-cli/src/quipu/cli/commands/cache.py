@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 cache_app = typer.Typer(name="cache", help="管理本地 SQLite 缓存。")
 
 
-@cache_app.command("sync")
+@cache_app.command("sync", help="执行增量数据补水，将 Git 历史索引同步到本地 SQLite。")
 def cache_sync(
     ctx: typer.Context,
     work_dir: Annotated[
@@ -36,7 +36,7 @@ def cache_sync(
         ctx.exit(1)
 
 
-@cache_app.command("rebuild")
+@cache_app.command("rebuild", help="重建本地 SQLite 缓存数据库。")
 def cache_rebuild(
     ctx: typer.Context,
     force: Annotated[bool, typer.Option("--force", "-f", help="强制执行，跳过确认提示。")] = False,
@@ -54,7 +54,7 @@ def cache_rebuild(
         cache_sync(ctx, work_dir)
 
 
-@cache_app.command("prune-refs")
+@cache_app.command("prune-refs", help="清理冗余的本地分支引用 (heads)。")
 def cache_prune_refs(
     ctx: typer.Context,
     work_dir: Annotated[

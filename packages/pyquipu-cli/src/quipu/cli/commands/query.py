@@ -57,7 +57,7 @@ def register(app: typer.Typer):
 
             if not graph:
                 if json_output:
-                    bus.data("[]")
+                    typer.echo("[]", err=False)
                 else:
                     bus.info(L.query.info.emptyHistory)
                 raise typer.Exit(0)
@@ -75,13 +75,13 @@ def register(app: typer.Typer):
 
             if not nodes:
                 if json_output:
-                    bus.data("[]")
+                    typer.echo("[]", err=False)
                 else:
                     bus.info(L.query.info.noResults)
                 raise typer.Exit(0)
 
             if json_output:
-                bus.data(_nodes_to_json_str(nodes))
+                typer.echo(_nodes_to_json_str(nodes), err=False)
                 raise typer.Exit(0)
 
             bus.info(L.query.log.ui.header)
@@ -89,10 +89,8 @@ def register(app: typer.Typer):
                 ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 tag = f"[{node.node_type.upper()}]"
                 summary = node.summary
-                # Note: Coloring is a presentation detail handled by renderer, or omitted for data.
-                # Here we pass the uncolored data string to the bus.
                 data_line = f"{ts} {tag:<9} {node.short_hash} - {summary}"
-                bus.data(data_line)
+                typer.echo(data_line, err=False)
 
     @app.command(name="find", help="根据摘要或类型搜索历史节点。")
     def find_command(
@@ -108,7 +106,7 @@ def register(app: typer.Typer):
         with engine_context(work_dir) as engine:
             if not engine.history_graph:
                 if json_output:
-                    bus.data("[]")
+                    typer.echo("[]", err=False)
                 else:
                     bus.info(L.query.info.emptyHistory)
                 ctx.exit(0)
@@ -117,13 +115,13 @@ def register(app: typer.Typer):
 
             if not nodes:
                 if json_output:
-                    bus.data("[]")
+                    typer.echo("[]", err=False)
                 else:
                     bus.info(L.query.info.noResults)
                 ctx.exit(0)
 
             if json_output:
-                bus.data(_nodes_to_json_str(nodes))
+                typer.echo(_nodes_to_json_str(nodes), err=False)
                 ctx.exit(0)
 
             bus.info(L.query.find.ui.header)
@@ -131,4 +129,4 @@ def register(app: typer.Typer):
                 ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 tag = f"[{node.node_type.upper()}]"
                 data_line = f"{ts} {tag:<9} {node.output_tree} - {node.summary}"
-                bus.data(data_line)
+                typer.echo(data_line, err=False)

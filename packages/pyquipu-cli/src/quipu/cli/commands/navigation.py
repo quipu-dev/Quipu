@@ -77,7 +77,7 @@ def register(app: typer.Typer):
                 ctx,
                 engine,
                 target_output_tree_hash,
-                "navigation.info.navigating",
+                L.navigation.info.navigating,
                 short_hash=target_node.short_hash,
             )
 
@@ -108,7 +108,7 @@ def register(app: typer.Typer):
                 ctx,
                 engine,
                 target_node.output_tree,
-                "navigation.info.navigating",
+                L.navigation.info.navigating,
                 short_hash=target_node.short_hash,
             )
 
@@ -141,7 +141,7 @@ def register(app: typer.Typer):
                 ctx,
                 engine,
                 target_node.output_tree,
-                "navigation.info.navigating",
+                L.navigation.info.navigating,
                 short_hash=target_node.short_hash,
             )
 
@@ -169,7 +169,7 @@ def register(app: typer.Typer):
                     ctx,
                     engine,
                     target_node.output_tree,
-                    "navigation.info.navigating",
+                    L.navigation.info.navigating,
                     short_hash=target_node.short_hash,
                 )
             except ValueError:
@@ -199,7 +199,7 @@ def register(app: typer.Typer):
                     ctx,
                     engine,
                     target_node.output_tree,
-                    "navigation.info.navigating",
+                    L.navigation.info.navigating,
                     short_hash=target_node.short_hash,
                 )
             except ValueError:

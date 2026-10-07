@@ -1,7 +1,4 @@
-from unittest.mock import MagicMock
-
 import pytest
-from needle.pointer import L
 from quipu.cli.main import app
 from quipu.engine.state_machine import Engine
 
@@ -41,36 +38,29 @@ def history_with_redundant_refs(engine_instance: Engine):
     return engine
 
 
-def test_cache_sync(runner, quipu_workspace, monkeypatch):
+def test_cache_sync(runner, quipu_workspace):
     work_dir, _, _ = quipu_workspace
-    mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     result = runner.invoke(app, ["cache", "sync", "-w", str(work_dir)])
 
     assert result.exit_code == 0
-    mock_bus.info.assert_called_once_with(L.cache.sync.info.hydrating)
-    mock_bus.success.assert_called_once_with(L.cache.sync.success)
+    db_path = work_dir / ".quipu" / "history.sqlite"
+    assert db_path.exists()
 
 
-def test_cache_rebuild_no_db(runner, quipu_workspace, monkeypatch):
+def test_cache_rebuild_no_db(runner, quipu_workspace):
     work_dir, _, _ = quipu_workspace
-    mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     result = runner.invoke(app, ["cache", "rebuild", "-w", str(work_dir)])
 
     assert result.exit_code == 0
-    mock_bus.warning.assert_called_once_with(L.cache.rebuild.info.dbNotFound)
-    mock_bus.info.assert_called_once_with(L.cache.sync.info.hydrating)
-    mock_bus.success.assert_called_once_with(L.cache.sync.success)
+    db_path = work_dir / ".quipu" / "history.sqlite"
+    assert db_path.exists()
 
 
-def test_cache_prune_refs_with_redundancy(runner, history_with_redundant_refs, monkeypatch):
+def test_cache_prune_refs_with_redundancy(runner, history_with_redundant_refs):
     engine = history_with_redundant_refs
     work_dir = engine.root_dir
-    mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     refs_dir = work_dir / ".git" / "refs" / "quipu" / "local" / "heads"
     assert len(list(refs_dir.iterdir())) == 5, "Pre-condition: 5 refs should exist before pruning"
@@ -78,37 +68,28 @@ def test_cache_prune_refs_with_redundancy(runner, history_with_redundant_refs, m
     result = runner.invoke(app, ["cache", "prune-refs", "-w", str(work_dir)])
 
     assert result.exit_code == 0
-    mock_bus.info.assert_any_call(L.cache.prune.info.scanning)
-    mock_bus.info.assert_any_call(L.cache.prune.info.found, count=3, total=5)
-    mock_bus.success.assert_called_with(L.cache.prune.success, count=3)
     assert len(list(refs_dir.iterdir())) == 2, "Post-condition: 2 refs should remain after pruning"
 
 
-def test_cache_prune_refs_no_redundancy(runner, history_with_redundant_refs, monkeypatch):
+def test_cache_prune_refs_no_redundancy(runner, history_with_redundant_refs):
     engine = history_with_redundant_refs
     work_dir = engine.root_dir
-    mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
+    refs_dir = work_dir / ".git" / "refs" / "quipu" / "local" / "heads"
 
     # 第一次运行以清理
     runner.invoke(app, ["cache", "prune-refs", "-w", str(work_dir)])
-    mock_bus.reset_mock()  # 重置 mock 以进行第二次断言
+    assert len(list(refs_dir.iterdir())) == 2
 
-    # 第二次运行，此时应没有冗余
+    # 第二次运行，此时应保持 2 个有效分支末端
     result = runner.invoke(app, ["cache", "prune-refs", "-w", str(work_dir)])
 
     assert result.exit_code == 0
-    mock_bus.info.assert_called_once_with(L.cache.prune.info.scanning)
-    mock_bus.success.assert_called_once_with(L.cache.prune.info.noRedundant)
+    assert len(list(refs_dir.iterdir())) == 2
 
 
-def test_cache_prune_refs_empty_repo(runner, quipu_workspace, monkeypatch):
+def test_cache_prune_refs_empty_repo(runner, quipu_workspace):
     work_dir, _, _ = quipu_workspace
-    mock_bus = MagicMock()
-    monkeypatch.setattr("quipu.cli.commands.cache.bus", mock_bus)
 
     result = runner.invoke(app, ["cache", "prune-refs", "-w", str(work_dir)])
 
     assert result.exit_code == 0
-    mock_bus.info.assert_called_once_with(L.cache.prune.info.scanning)
-    mock_bus.success.assert_called_once_with(L.cache.prune.info.noRedundant)

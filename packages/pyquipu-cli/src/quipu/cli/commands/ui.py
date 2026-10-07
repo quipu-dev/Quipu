@@ -60,7 +60,7 @@ def register(app: typer.Typer):
                 with engine_context(work_dir) as action_engine:
                     bus.info(L.ui.info.checkoutRequest, short_hash=target_hash[:7])
                     _execute_visit(
-                        ctx, action_engine, target_hash, "navigation.info.navigating", short_hash=target_hash[:7]
+                        ctx, action_engine, target_hash, L.navigation.info.navigating, short_hash=target_hash[:7]
                     )
 
             elif action == "dump":

@@ -45,7 +45,7 @@ def register(app: typer.Typer):
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
                 item_header = bus.render_to_string(L.axon.listActs.ui.actItem, name=name)
-                bus.data(f"{item_header}\n{indented_doc}\n")
+                typer.echo(f"{item_header}\n{indented_doc}\n", err=False)
             ctx.exit(0)
 
         logger.debug(f"axon started with file={file}, work_dir={work_dir}, parser={parser_name}, yolo={yolo}")

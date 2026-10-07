@@ -26,7 +26,7 @@ def function_b():
 
         new_str = """    # This block has been modified."""
 
-        with pytest.raises(ExecutionError, match="acts.basic.error.patchContentAmbiguous"):
+        with pytest.raises(ExecutionError, match="找到 2 个匹配项"):
             patch_func, _, _ = executor._acts["patch_file"]
             ctx = ActContext(executor)
             patch_func(ctx, [str(target_file), old_str, new_str])
@@ -39,11 +39,9 @@ def function_b():
         target_file = isolated_vault / "ambiguous.txt"
         target_file.write_text(content)
 
-        # 期望 `patch_file` 在检测到多个 "repeat" 时抛出 ExecutionError
-        with pytest.raises(ExecutionError, match="acts.basic.error.patchContentAmbiguous"):
+        with pytest.raises(ExecutionError, match="找到 2 个匹配项"):
             patch_func, _, _ = executor._acts["patch_file"]
             ctx = ActContext(executor)
-            # 我们期望这里会失败，因为它无法确定要 patch 哪个 "repeat"
             patch_func(ctx, [str(target_file), "repeat", "norepeat"])
 
         # 验证文件内容未被修改

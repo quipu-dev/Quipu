@@ -162,7 +162,7 @@ class GitObjectHistoryReader:
         for node in temp_nodes.values():
             node.children.sort(key=lambda n: n.timestamp)
 
-        return list(temp_nodes.values())
+        return sorted(temp_nodes.values(), key=lambda n: n.timestamp, reverse=True)
 
     def get_node_count(self) -> int:
         return len(self.load_all_nodes())

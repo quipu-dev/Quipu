@@ -44,7 +44,7 @@ def register(app: typer.Typer):
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
                 item_header = bus.render_to_string(L.run.listActs.ui.actItem, name=name)
-                bus.data(f"{item_header}\n{indented_doc}\n")
+                typer.echo(f"{item_header}\n{indented_doc}\n", err=False)
             ctx.exit(0)
 
         content = ""
@@ -100,5 +100,5 @@ def register(app: typer.Typer):
                 bus.success(result.message, **kwargs)
 
         if result.data:
-            bus.data(result.data)
+            typer.echo(result.data, err=False)
         ctx.exit(result.exit_code)

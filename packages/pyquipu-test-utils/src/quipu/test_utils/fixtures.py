@@ -107,34 +107,6 @@ def sync_test_environment(tmp_path_factory):
 
 
 @pytest.fixture
-def mock_runtime_bus(monkeypatch):
-    m_bus = MagicMock()
-
-    # 让 bus.render_to_string (及旧的 get) 返回传入的 msg_id 字符串
-    # 这样测试代码断言异常消息时，能匹配到预期的 ID (例如 "acts.error.missingArgs")
-    def echo_id(msg_id, **kwargs):
-        return str(msg_id)
-
-    m_bus.get.side_effect = echo_id
-    m_bus.render_to_string.side_effect = echo_id
-
-    patch_targets = [
-        "quipu.runtime.executor.bus",
-        "quipu.runtime.plugin_loader.bus",
-        "quipu.acts.basic.bus",
-        "quipu.acts.check.bus",
-        "quipu.acts.git.bus",
-        "quipu.acts.memory.bus",
-        "quipu.acts.read.bus",
-        "quipu.acts.refactor.bus",
-        "quipu.acts.shell.bus",
-    ]
-    for target in patch_targets:
-        monkeypatch.setattr(target, m_bus, raising=False)
-    return m_bus
-
-
-@pytest.fixture
 def executor(tmp_path: Path):
     from quipu.acts.basic import register as register_basic_acts
     from quipu.runtime.executor import Executor

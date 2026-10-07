@@ -112,7 +112,7 @@ class TestBasicActs:
         patch_file_func, _, _ = executor._acts["patch_file"]
         ctx = ActContext(executor)
 
-        with pytest.raises(ExecutionError, match="acts.basic.error.patchContentMismatch"):
+        with pytest.raises(ExecutionError, match="未找到指定的旧文本"):
             patch_file_func(ctx, ["wrong.txt", "BBB", "CCC"])
 
     def test_append_file(self, executor: Executor, isolated_vault: Path):
@@ -129,7 +129,7 @@ class TestBasicActs:
         append_func, _, _ = executor._acts["append_file"]
         ctx = ActContext(executor)
 
-        with pytest.raises(ExecutionError, match="acts.basic.error.fileNotFound"):
+        with pytest.raises(ExecutionError, match="文件未找到"):
             append_func(ctx, ["ghost.txt", "content"])
 
     def test_variable_lang_parser_recognition(self):
@@ -202,4 +202,4 @@ class TestHybridArgs:
         stmts: list[Statement] = [{"act": 'write_file "unclosed string', "contexts": []}]
         with pytest.raises(ExecutionError) as exc:
             executor.execute(stmts)
-        assert "Error parsing Act command line" in str(exc.value)
+        assert "解析 Act 命令行出错" in str(exc.value)

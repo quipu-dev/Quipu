@@ -57,7 +57,7 @@ def register(app: typer.Typer):
 
             if not blobs:
                 if json_output:
-                    bus.data("{}")
+                    typer.echo("{}", err=False)
                 else:
                     bus.info(L.show.info.noContent)
                 raise typer.Exit()
@@ -80,7 +80,7 @@ def register(app: typer.Typer):
 
             # --- Phase 2: Render output ---
             if json_output:
-                bus.data(json.dumps(output_data, indent=2, ensure_ascii=False))
+                typer.echo(json.dumps(output_data, indent=2, ensure_ascii=False), err=False)
             else:
                 console = Console()
                 if extract:
@@ -96,14 +96,15 @@ def register(app: typer.Typer):
                     # Default view: show summary and all files prettified
                     ts = target_node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                     tag = f"[{target_node.node_type.upper()}]"
-                    bus.data(
+                    typer.echo(
                         bus.render_to_string(
                             L.show.ui.header,
                             ts=ts,
                             tag=f"{tag:<9}",
                             short_hash=target_node.short_hash,
                             summary=target_node.summary,
-                        )
+                        ),
+                        err=False,
                     )
 
                     for filename, content in output_data.items():

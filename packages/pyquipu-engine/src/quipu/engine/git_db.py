@@ -5,8 +5,6 @@ import subprocess
 from contextlib import contextmanager
 from pathlib import Path
 
-from needle.pointer import L
-from quipu.common.bus import bus
 from quipu.spec.exceptions import ExecutionError
 
 logger = logging.getLogger(__name__)
@@ -72,7 +70,7 @@ class GitDB:
             try:
                 shutil.copy2(user_index_path, index_path)
             except OSError as e:
-                bus.warning(L.engine.git.warning.copyIndexFailed, error=str(e))
+                logger.warning(f"无法复制用户索引进行预热: {e}")
 
         # 定义隔离的环境变量
         env = {"GIT_INDEX_FILE": str(index_path)}
@@ -181,7 +179,7 @@ class GitDB:
         return changes
 
     def checkout_tree(self, new_tree_hash: str, old_tree_hash: str | None = None):
-        bus.info(L.engine.git.info.checkoutStarted, short_hash=new_tree_hash[:7])
+        logger.debug(f"开始检出树快照: {new_tree_hash[:7]}")
 
         # 1. 高性能检出核心
         # --reset: 类似于 git reset --hard，强制覆盖本地未提交的变更，解决 "not uptodate" 冲突。
@@ -197,7 +195,7 @@ class GitDB:
         # -e .quipu: 排除 .quipu 目录，防止自毁
         self._run(["clean", "-df", "-e", ".quipu"])
 
-        bus.success(L.engine.git.success.checkoutComplete)
+        logger.debug(f"快照检出完成: {new_tree_hash[:7]}")
 
     def cat_file(self, object_hash: str, object_type: str) -> bytes:
         cmd = ["cat-file", object_type, object_hash]
@@ -354,8 +352,8 @@ class GitDB:
 
     def push_quipu_refs(self, remote: str, user_id: str, force: bool = False):
         refspec = f"refs/quipu/local/heads/*:refs/quipu/users/{user_id}/heads/*"
-        action = "Force-pushing" if force else "Pushing"
-        bus.info(L.engine.git.info.pushing, action=action, remote=remote, user_id=user_id)
+        action_name = "强制推送" if force else "推送"
+        logger.info(f"正在{action_name} Quipu 历史引用到远程仓库 {remote} (用户: {user_id})...")
 
         cmd = ["push", remote, refspec]
         if force:
@@ -364,15 +362,15 @@ class GitDB:
 
     def fetch_quipu_refs(self, remote: str, user_id: str):
         refspec = f"refs/quipu/users/{user_id}/heads/*:refs/quipu/remotes/{remote}/{user_id}/heads/*"
-        bus.info(L.engine.git.info.fetching, remote=remote, user_id=user_id)
+        logger.info(f"正在从远程仓库 {remote} 获取 Quipu 历史引用 (用户: {user_id})...")
         self._run(["fetch", remote, "--prune", refspec])
 
-    def reconcile_local_with_remote(self, remote: str, user_id: str):
+    def reconcile_local_with_remote(self, remote: str, user_id: str) -> int:
         remote_heads_prefix = f"refs/quipu/remotes/{remote}/{user_id}/heads/"
         remote_heads = self.get_all_ref_heads(remote_heads_prefix)
         if not remote_heads:
-            logger.debug("No remote refs found to reconcile.")
-            return
+            logger.debug("未发现需要调和的远程引用。")
+            return 0
 
         reconciled_count = 0
         for commit_hash, remote_ref in remote_heads:
@@ -388,14 +386,15 @@ class GitDB:
                 # 本地不存在此 ref，从远程镜像创建它
                 self.update_ref(local_ref, commit_hash)
                 reconciled_count += 1
-                bus.info(L.engine.git.info.reconciledNewBranch, short_hash=commit_hash[:7])
+                logger.info(f"已调和新分支: 添加历史分支 -> {commit_hash[:7]}")
 
         if reconciled_count > 0:
-            bus.success(L.engine.git.success.reconciliationComplete, count=reconciled_count)
+            logger.info(f"调和完成，已从远程新增 {reconciled_count} 条历史分支。")
         else:
-            logger.debug("✅ Local history is already up-to-date with remote.")
+            logger.debug("本地历史已与远程保持一致。")
+        return reconciled_count
 
-    def prune_local_from_remote(self, remote: str, user_id: str):
+    def prune_local_from_remote(self, remote: str, user_id: str) -> int:
         local_prefix = "refs/quipu/local/heads/"
         remote_prefix = f"refs/quipu/remotes/{remote}/{user_id}/heads/"
 
@@ -404,15 +403,16 @@ class GitDB:
 
         to_delete = local_heads - remote_heads
         if not to_delete:
-            logger.debug("✅ No local refs to prune.")
-            return
+            logger.debug("未发现需要修剪的本地引用。")
+            return 0
 
         deleted_count = 0
         for ref_suffix in to_delete:
             local_ref_to_delete = local_prefix + ref_suffix
             self.delete_ref(local_ref_to_delete)
             deleted_count += 1
-            bus.info(L.engine.git.info.prunedRef, ref=local_ref_to_delete)
+            logger.info(f"已修剪本地过期引用: {local_ref_to_delete}")
 
         if deleted_count > 0:
-            bus.success(L.engine.git.success.pruningComplete, count=deleted_count)
+            logger.info(f"修剪完成，已删除 {deleted_count} 个陈旧的本地引用。")
+        return deleted_count

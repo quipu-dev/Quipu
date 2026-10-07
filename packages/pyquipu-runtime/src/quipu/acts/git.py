@@ -2,9 +2,6 @@ import logging
 import os
 import subprocess
 
-from needle.pointer import L
-
-from quipu.common.bus import bus
 from quipu.spec.protocols.runtime import ActContext
 from quipu.spec.protocols.runtime import ExecutorProtocol as Executor
 
@@ -35,18 +32,17 @@ def _run_git_cmd(ctx: ActContext, cmd_args: list[str]) -> str:
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         error_msg = e.stderr.strip()
-        ctx.fail(bus.render_to_string(L.acts.git.error.cmdFailed, args=" ".join(cmd_args), error=error_msg))
+        ctx.fail(f"Git 命令执行失败: git {' '.join(cmd_args)}\n错误信息: {error_msg}")
     except FileNotFoundError:
-        ctx.fail(bus.render_to_string(L.acts.git.error.gitNotFound))
+        ctx.fail("未找到 git 命令，请确保系统已安装 Git。")
     return ""
 
 
 def _git_init(ctx: ActContext, args: list[str]):
     if (ctx.root_dir / ".git").exists():
-        bus.warning(L.acts.git.warning.repoExists)
+        logger.debug("Git 仓库已存在，跳过初始化。")
         return
     _run_git_cmd(ctx, ["init"])
-    bus.success(L.acts.git.success.initialized, path=ctx.root_dir)
 
 
 def _git_add(ctx: ActContext, args: list[str]):
@@ -59,26 +55,24 @@ def _git_add(ctx: ActContext, args: list[str]):
     if not targets:
         targets = ["."]
     _run_git_cmd(ctx, ["add"] + targets)
-    bus.success(L.acts.git.success.added, targets=targets)
 
 
 def _git_commit(ctx: ActContext, args: list[str]):
     if len(args) < 1:
-        ctx.fail(bus.render_to_string(L.acts.error.missingArgs, act_name="git_commit", count=1, signature="[message]"))
+        ctx.fail("git_commit 需要至少 1 个参数: [message]")
 
     message = args[0]
 
     status = _run_git_cmd(ctx, ["status", "--porcelain"])
     if not status:
-        bus.warning(L.acts.git.warning.commitSkipped)
+        logger.debug("没有暂存的更改，跳过提交。")
         return
 
     ctx.request_confirmation(ctx.root_dir / ".git", "Staged Changes", f"Commit Message: {message}")
 
     _run_git_cmd(ctx, ["commit", "-m", message])
-    bus.success(L.acts.git.success.committed, message=message)
 
 
 def _git_status(ctx: ActContext, args: list[str]):
     status = _run_git_cmd(ctx, ["status"])
-    bus.data(status)
+    ctx.data(status)

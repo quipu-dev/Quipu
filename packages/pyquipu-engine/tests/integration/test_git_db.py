@@ -1,9 +1,7 @@
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
-from needle.pointer import L
 from quipu.engine.git_db import GitDB
 
 
@@ -180,17 +178,17 @@ class TestGitDBPlumbing:
         assert not (git_repo / "file2.txt").exists(), "file2.txt should have been cleaned"
         assert (quipu_dir / "preserve.me").exists(), ".quipu directory should be preserved"
 
-    def test_checkout_tree_messaging(self, git_repo: Path, db: GitDB, monkeypatch):
-        mock_bus = MagicMock()
-        monkeypatch.setattr("quipu.engine.git_db.bus", mock_bus)
-
-        (git_repo / "file1.txt").write_text("v1")
+    def test_checkout_tree_side_effects(self, git_repo: Path, db: GitDB):
+        target_file = git_repo / "file1.txt"
+        target_file.write_text("v1", "utf-8")
         hash_a = db.get_tree_hash()
+
+        target_file.write_text("v2", "utf-8")
+        assert target_file.read_text("utf-8") == "v2"
 
         db.checkout_tree(hash_a)
 
-        mock_bus.info.assert_called_once_with(L.engine.git.info.checkoutStarted, short_hash=hash_a[:7])
-        mock_bus.success.assert_called_once_with(L.engine.git.success.checkoutComplete)
+        assert target_file.read_text("utf-8") == "v1"
 
     def test_get_diff_name_status(self, git_repo: Path, db: GitDB):
         # State A

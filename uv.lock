@@ -358,7 +358,7 @@ wheels = [
 
 [[package]]
 name = "pyquipu"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "packages/pyquipu" }
 dependencies = [
     { name = "pyquipu-application" },
@@ -381,7 +381,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-application"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "packages/pyquipu-application" }
 dependencies = [
     { name = "pyquipu-common" },
@@ -400,7 +400,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-cli"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "packages/pyquipu-cli" }
 dependencies = [
     { name = "click" },
@@ -427,7 +427,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-common"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/pyquipu-common" }
 dependencies = [
     { name = "pyneedle-bus" },
@@ -442,7 +442,7 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-engine"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "packages/pyquipu-engine" }
 dependencies = [
     { name = "pyquipu-common" },
@@ -493,7 +493,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pyquipu-runtime"
-version = "0.3.1"
+version = "0.4.0"
 source = { editable = "packages/pyquipu-runtime" }
 dependencies = [
     { name = "pyquipu-common" },
@@ -510,12 +510,12 @@ requires-dist = [
 
 [[package]]
 name = "pyquipu-spec"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/pyquipu-spec" }
 
 [[package]]
 name = "pyquipu-test-utils"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "packages/pyquipu-test-utils" }
 dependencies = [
     { name = "pyneedle-bus" },

@@ -30,11 +30,6 @@
       "baseline_code_structure_hash": "33afd9208fd13d1928de8848342ed791bf13f87918ea571de8ad156a621eca13",
       "baseline_yaml_content_hash": "328e7d4a0cdf5e44f753ec79e30ed151db691dc806ac7aea9368fc57e17d1f03"
     },
-    "py://packages/pyquipu-test-utils/src/quipu/test_utils/fixtures.py#mock_runtime_bus": {
-      "baseline_code_signature_text": "def mock_runtime_bus(monkeypatch):",
-      "baseline_code_structure_hash": "7cf21c2a06934f4c8699dfc2ede7d34009da427cb32a86b3c32fb864ef905462",
-      "baseline_yaml_content_hash": "b5df45efe6096cbcb714abce7bbc1622d6c9e15567e715875e23b646fcff972a"
-    },
     "py://packages/pyquipu-test-utils/src/quipu/test_utils/fixtures.py#quipu_workspace": {
       "baseline_code_signature_text": "def quipu_workspace(engine_instance: Engine):",
       "baseline_code_structure_hash": "802bd8d11b57f1ad06b0e92bb5f75d8cc3f2dc544f299177179d13f01bcaa448",
