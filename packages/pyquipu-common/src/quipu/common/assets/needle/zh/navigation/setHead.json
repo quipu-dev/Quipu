@@ -1,0 +1,13 @@
+{
+  "error": {
+    "notFound": "❌ 错误: 未找到哈希前缀为 '{hash_prefix}' 的历史节点。",
+    "notUnique": "❌ 错误: 哈希前缀 '{hash_prefix}' 不唯一，匹配到 {count} 个节点。"
+  },
+  "info": {
+    "noAction": "✅ 当前 HEAD 已指向目标节点 ({short_hash})，无需操作。"
+  },
+  "prompt": {
+    "confirm": "🚨 即将把基准历史节点 (HEAD) 重定位到 {short_hash} ({timestamp})。\n工作区现有文件内容将保持不变。是否继续？"
+  },
+  "success": "📌 HEAD 基准已成功重定位至 {short_hash} ({summary})。"
+}

@@ -81,6 +81,73 @@ def register(app: typer.Typer):
                 short_hash=target_node.short_hash,
             )
 
+    @app.command(name="set-head", help="手动将 HEAD（基准节点）重定位到指定状态，不修改工作区文件。")
+    def set_head(
+        ctx: typer.Context,
+        hash_prefix: Annotated[str, typer.Argument(help="目标历史节点的 commit_hash 或 output_tree 的哈希前缀。")],
+        work_dir: Annotated[
+            Path,
+            typer.Option(
+                "--work-dir", "-w", help="操作执行的根目录（工作区）", file_okay=False, dir_okay=True, resolve_path=True
+            ),
+        ] = DEFAULT_WORK_DIR,
+        force: Annotated[bool, typer.Option("--force", "-f", help="强制执行，跳过确认提示。")] = False,
+    ):
+        with engine_context(work_dir) as engine:
+            graph = engine.history_graph
+
+            matches = [
+                node
+                for node in graph.values()
+                if node.commit_hash.startswith(hash_prefix) or node.output_tree.startswith(hash_prefix)
+            ]
+            if not matches:
+                bus.error(L.navigation.setHead.error.notFound, hash_prefix=hash_prefix)
+                ctx.exit(1)
+
+            unique_output_trees = {node.output_tree for node in matches}
+            if len(unique_output_trees) > 1:
+                bus.error(L.navigation.setHead.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
+                ctx.exit(1)
+
+            if len(matches) > 1:
+                matches.sort(key=lambda n: (1 if n.parent else 0, n.timestamp), reverse=True)
+
+            target_node = matches[0]
+            target_output_tree_hash = target_node.output_tree
+
+            current_head = engine._read_head()
+            if current_head == target_output_tree_hash:
+                bus.success(L.navigation.setHead.info.noAction, short_hash=target_node.short_hash)
+                ctx.exit(0)
+
+            current_tree = engine.git_db.get_tree_hash()
+            diff_stat_str = engine.git_db.get_diff_stat(target_output_tree_hash, current_tree)
+
+            if not force:
+                prompt = bus.render_to_string(
+                    L.navigation.setHead.prompt.confirm,
+                    short_hash=target_node.short_hash,
+                    timestamp=target_node.timestamp,
+                )
+                if not prompt_for_confirmation(
+                    prompt, diff_lines=diff_stat_str.splitlines() if diff_stat_str else None, default=True
+                ):
+                    bus.warning(L.common.prompt.cancel)
+                    raise typer.Abort()
+
+            try:
+                engine.set_head(hash_prefix)
+                bus.success(
+                    L.navigation.setHead.success,
+                    short_hash=target_node.short_hash,
+                    summary=target_node.summary or "无描述",
+                )
+            except Exception as e:
+                logger.exception("重定位 HEAD 失败")
+                bus.error(L.navigation.error.generic, error=str(e))
+                ctx.exit(1)
+
     @app.command(help="沿当前分支向上导航（回到父节点）。")
     def undo(
         ctx: typer.Context,

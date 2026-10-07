@@ -320,6 +320,50 @@ class Engine:
         self.checkout(target_hash)
         self._append_nav(target_hash)
 
+    def set_head(self, target: str | QuipuNode) -> QuipuNode:
+        if isinstance(target, QuipuNode):
+            target_node = target
+            self.history_graph[target_node.commit_hash] = target_node
+        else:
+            target_hash = target
+            # 兼容惰性加载 (lazy=True): 若当前内存图谱未装载，自动从索引加载
+            if not self.history_graph:
+                all_nodes = self.index.load_all_nodes()
+                self.history_graph = {node.commit_hash: node for node in all_nodes}
+
+            matches = [
+                node
+                for node in self.history_graph.values()
+                if node.commit_hash.startswith(target_hash) or node.output_tree.startswith(target_hash)
+            ]
+            if not matches:
+                # 重新从 index 读取最新图谱再次尝试
+                all_nodes = self.index.load_all_nodes()
+                self.history_graph = {node.commit_hash: node for node in all_nodes}
+                matches = [
+                    node
+                    for node in self.history_graph.values()
+                    if node.commit_hash.startswith(target_hash) or node.output_tree.startswith(target_hash)
+                ]
+
+            if not matches:
+                raise KeyError(f"未找到匹配哈希前缀 '{target_hash}' 的历史节点。")
+
+            unique_output_trees = {node.output_tree for node in matches}
+            if len(unique_output_trees) > 1:
+                raise ValueError(f"哈希前缀 '{target_hash}' 不唯一，匹配到 {len(matches)} 个节点。")
+
+            if len(matches) > 1:
+                matches.sort(key=lambda n: (1 if n.parent else 0, n.timestamp), reverse=True)
+
+            target_node = matches[0]
+
+        self._write_head(target_node.output_tree)
+        self._append_nav(target_node.output_tree)
+        self.current_node = target_node
+        logger.info(f"📌 HEAD 基准已重定位至: {target_node.short_hash} (Commit: {target_node.commit_hash[:7]})")
+        return target_node
+
     def back(self) -> str | None:
         log, ptr = self._read_nav()
         if ptr > 0:

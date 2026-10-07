@@ -39,6 +39,7 @@ class QuipuUiApp(App[UiResult | None]):
         Binding("enter", "checkout_node", "检出节点"),
         Binding("v", "toggle_view", "切换内容视图"),
         Binding("m", "toggle_markdown", "切换 Markdown 渲染"),
+        Binding("H", "set_head", "设为基准(HEAD)"),
         Binding("p", "dump_content", "输出内容(stdout)"),
         Binding("t", "toggle_hidden", "显隐非关联分支"),
         Binding("k", "move_up", "上移", show=False),
@@ -62,6 +63,7 @@ class QuipuUiApp(App[UiResult | None]):
         self.update_timer: Timer | None = None
         self.debounce_delay_seconds: float = 0.50
         self.markdown_enabled = not initial_raw_mode
+        self.is_workspace_dirty: bool = False
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -81,9 +83,23 @@ class QuipuUiApp(App[UiResult | None]):
         self.query_one(Header).tall = False
 
         self.engine = create_engine(self.work_dir, lazy=True)
-        current_output_tree_hash = self.engine.git_db.get_tree_hash()
-        self.view_model = GraphViewModel(reader=self.engine.reader, current_output_tree_hash=current_output_tree_hash)
+        current_tree_hash = self.engine.git_db.get_tree_hash()
+        persisted_head = self.engine._read_head()
+        head_tree_hash = persisted_head or current_tree_hash
+
+        # 检测当前工作区与逻辑 HEAD 是否存在漂移
+        self.is_workspace_dirty = bool(persisted_head and current_tree_hash != persisted_head)
+
+        self.view_model = GraphViewModel(reader=self.engine.reader, current_output_tree_hash=head_tree_hash)
         self.view_model.initialize()
+
+        if self.is_workspace_dirty:
+            self.notify(
+                "工作区存在未保存修改，当前图谱基于 HEAD 基准呈现。",
+                title="⚠️ 工作区未对齐 (Drift)",
+                severity="warning",
+                timeout=4.0,
+            )
 
         table = self.query_one(DataTable)
         table.add_columns("Time", "Graph", "Node Info")
@@ -104,7 +120,12 @@ class QuipuUiApp(App[UiResult | None]):
     def _update_header(self):
         assert self.view_model is not None
         mode = "Markdown" if self.markdown_enabled else "Raw Text"
-        self.sub_title = f"Page {self.view_model.current_page} / {self.view_model.total_pages} | View: {mode} (m)"
+        status_tag = "⚡ DIRTY" if self.is_workspace_dirty else "✔ CLEAN"
+        self.sub_title = (
+            f"Page {self.view_model.current_page} / {self.view_model.total_pages} | "
+            f"View: {mode} (m) | "
+            f"Workspace: {status_tag}"
+        )
 
     def _load_page(self, page_number: int) -> None:
         assert self.view_model is not None
@@ -146,6 +167,23 @@ class QuipuUiApp(App[UiResult | None]):
         if selected_node:
             self.exit(result=("checkout", selected_node.output_tree))
 
+    def action_set_head(self) -> None:
+        assert self.view_model is not None
+        assert self.engine is not None
+        selected_node = self.view_model.get_selected_node()
+        if not selected_node:
+            return
+
+        self.engine.set_head(selected_node)
+        self.view_model.set_head(selected_node)
+
+        # 重新评估当前工作区与新 HEAD 的对齐状态
+        current_tree_hash = self.engine.git_db.get_tree_hash()
+        self.is_workspace_dirty = bool(selected_node.output_tree != current_tree_hash)
+
+        self._refresh_table()
+        self.notify(f"HEAD 已重设为: {selected_node.short_hash} ({selected_node.summary})", title="Quipu HEAD")
+
     def action_dump_content(self) -> None:
         assert self.view_model is not None
         selected_node = self.view_model.get_selected_node()
@@ -183,6 +221,10 @@ class QuipuUiApp(App[UiResult | None]):
         tracks: list[str | None] = []
 
         for node in nodes:
+            is_head = bool(
+                self.view_model.current_output_tree_hash
+                and node.output_tree == self.view_model.current_output_tree_hash
+            )
             is_reachable = self.view_model.is_reachable(node.output_tree)
             dim_tag = "[dim]" if not is_reachable else ""
             end_dim_tag = "[/dim]" if dim_tag else ""
@@ -198,9 +240,21 @@ class QuipuUiApp(App[UiResult | None]):
                 owner_display = node.owner_id[:12]
                 owner_info = f"[yellow]({owner_display}) [/yellow]"
 
-            info_text = (
-                f"{owner_info}[{base_color}][{node.node_type.upper()}] {node.short_hash}[/{base_color}] - {summary}"
-            )
+            if is_head:
+                if self.is_workspace_dirty:
+                    head_badge = "[bold black on bright_yellow] HEAD* [/] "
+                else:
+                    head_badge = "[bold black on green] HEAD [/] "
+            else:
+                head_badge = ""
+
+            node_tag = f"[{base_color}][{node.node_type.upper()}] {node.short_hash}[/{base_color}]"
+
+            if is_head:
+                info_text = f"{head_badge}{owner_info}[bold]{node_tag} - {summary}[/bold]"
+            else:
+                info_text = f"{owner_info}{node_tag} - {summary}"
+
             info_str = f"{dim_tag}{info_text}{end_dim_tag}"
             table.add_row(ts_str, "".join(graph_chars), info_str, key=str(node.filename))
 
