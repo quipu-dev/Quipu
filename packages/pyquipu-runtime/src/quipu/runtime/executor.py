@@ -1,12 +1,11 @@
 import difflib
 import logging
 import shlex
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from needle.pointer import L
-from quipu.common.bus import bus
 from quipu.spec.exceptions import ExecutionError, OperationCancelledError
 from quipu.spec.protocols.runtime import ActContext, ActFunction, Statement
 
@@ -15,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 # 定义确认处理器的签名: (diff_lines: List[str], prompt_message: str) -> bool
 ConfirmationHandler = Callable[[list[str], str], bool]
+DataHandler = Callable[[str], None]
 
 
 class Executor:
@@ -23,10 +23,12 @@ class Executor:
         root_dir: Path,
         yolo: bool = False,
         confirmation_handler: ConfirmationHandler | None = None,
+        data_handler: DataHandler | None = None,
     ):
         self.root_dir = root_dir.resolve()
         self.yolo = yolo
         self.confirmation_handler = confirmation_handler
+        self.data_handler = data_handler
         # Map: name -> (func, arg_mode, summarizer)
         self._acts: dict[str, tuple[ActFunction, str, Any]] = {}
 
@@ -34,7 +36,13 @@ class Executor:
             try:
                 self.root_dir.mkdir(parents=True, exist_ok=True)
             except Exception as e:
-                bus.warning(L.runtime.executor.warning.createRootDirFailed, path=self.root_dir, error=e)
+                logger.warning(f"无法创建根目录 {self.root_dir}: {e}")
+
+    def output_data(self, data_string: str) -> None:
+        if self.data_handler:
+            self.data_handler(data_string)
+        else:
+            sys.stdout.write(data_string + ("\n" if not data_string.endswith("\n") else ""))
 
     def register(self, name: str, func: ActFunction, arg_mode: str = "hybrid", summarizer: Any = None):
         valid_modes = {"hybrid", "exclusive", "block_only"}
@@ -99,21 +107,19 @@ class Executor:
         )
 
         if not diff:
-            bus.info(L.runtime.executor.info.noChange)
+            logger.debug(f"文件内容无变化，跳过修改: {file_path.name}")
             return
 
         if not self.confirmation_handler:
-            bus.warning(L.runtime.executor.warning.noConfirmHandler)
-            raise OperationCancelledError("No confirmation handler is configured.")
+            logger.warning(f"缺少确认处理器，跳过需确认的操作: {file_path.name}")
+            raise OperationCancelledError("未配置确认处理器。")
 
         prompt = f"❓ 是否对 {file_path.name} 执行上述修改?"
-        # 此调用现在要么成功返回，要么抛出 OperationCancelledError
         self.confirmation_handler(diff, prompt)
 
     def execute(self, statements: list[Statement]):
-        bus.info(L.runtime.executor.info.starting, count=len(statements))
+        logger.debug(f"正在开始执行 {len(statements)} 个操作...")
 
-        # 创建一个可重用的上下文对象
         ctx = ActContext(self)
 
         for i, stmt in enumerate(statements):
@@ -123,22 +129,17 @@ class Executor:
             try:
                 tokens = shlex.split(raw_act_line)
             except ValueError as e:
-                raise ExecutionError(f"Error parsing Act command line: {raw_act_line} ({e})")
+                raise ExecutionError(f"解析 Act 命令行出错: {raw_act_line} ({e})")
 
             if not tokens:
-                bus.warning(L.runtime.executor.warning.skipEmpty, current=i + 1, total=len(statements))
+                logger.warning(f"跳过空指令 [{i + 1}/{len(statements)}]")
                 continue
 
             act_name = tokens[0]
             inline_args = tokens[1:]
 
             if act_name not in self._acts:
-                bus.warning(
-                    L.runtime.executor.warning.skipUnknown,
-                    current=i + 1,
-                    total=len(statements),
-                    act_name=act_name,
-                )
+                logger.warning(f"跳过未知操作 [{i + 1}/{len(statements)}]: {act_name}")
                 continue
 
             func, arg_mode, _ = self._acts[act_name]
@@ -150,32 +151,23 @@ class Executor:
                 if inline_args:
                     final_args = inline_args
                     if block_contexts:
-                        logger.debug(
-                            f"ℹ️  [{act_name} - Exclusive] Inline args detected,"
-                            f" ignoring {len(block_contexts)} subsequent Block(s)."
-                        )
+                        logger.debug(f"[{act_name} - Exclusive] 检测到行内参数，忽略后续 {len(block_contexts)} 个块。")
                 else:
                     final_args = block_contexts
             elif arg_mode == "block_only":
                 if inline_args:
-                    bus.warning(L.runtime.executor.warning.ignoreInlineArgs, act_name=act_name, args=inline_args)
+                    logger.warning(f"[{act_name}] 模式为 block_only，已忽略行内参数: {inline_args}")
                 final_args = block_contexts
 
             try:
-                bus.info(
-                    L.runtime.executor.info.executing,
-                    current=i + 1,
-                    total=len(statements),
-                    act_name=act_name,
-                    mode=arg_mode,
-                    arg_count=len(final_args),
+                logger.debug(
+                    f"正在执行 [{i + 1}/{len(statements)}]: {act_name} (模式: {arg_mode}, 参数数: {len(final_args)})"
                 )
-                # 传递上下文对象，而不是 executor 实例
                 func(ctx, final_args)
             except OperationCancelledError:
-                # 显式地重新抛出，以确保它能被上层捕获
+                raise
+            except ExecutionError:
                 raise
             except Exception as e:
-                # 记录详细日志供调试，同时抛出标准错误供上层展示
-                logger.error(f"Execution failed for '{act_name}': {e}")
-                raise ExecutionError(f"An error occurred while executing '{act_name}': {e}") from e
+                logger.error(f"执行 '{act_name}' 时发生异常: {e}")
+                raise ExecutionError(f"执行 '{act_name}' 时出错: {e}") from e

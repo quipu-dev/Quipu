@@ -1,8 +1,6 @@
 import logging
-from unittest.mock import ANY
 
 import pytest
-from needle.pointer import L
 from quipu.application.controller import run_quipu
 from quipu.cli.main import app
 from typer.testing import CliRunner
@@ -113,26 +111,13 @@ class TestCLIWrapper:
 
     def test_cli_save_on_clean_workspace(self, workspace):
         """测试 `save` 命令在工作区干净时的行为"""
-        from unittest.mock import MagicMock
-
-        mock_bus = MagicMock()
-        # Mock bus to avoid dependency on specific UI text
-        with pytest.MonkeyPatch.context() as m:
-            m.setattr("quipu.cli.commands.workspace.bus", mock_bus)
-            result = runner.invoke(app, ["save", "-w", str(workspace)])
-            assert result.exit_code == 0
-            mock_bus.success.assert_called_with(L.workspace.save.noChanges)
+        result = runner.invoke(app, ["save", "-w", str(workspace)])
+        assert result.exit_code == 0
 
     def test_cli_discard_no_history(self, workspace):
         """测试 `discard` 命令在没有历史记录时的行为"""
-        from unittest.mock import MagicMock
-
-        mock_bus = MagicMock()
-        with pytest.MonkeyPatch.context() as m:
-            m.setattr("quipu.cli.commands.workspace.bus", mock_bus)
-            result = runner.invoke(app, ["discard", "-f", "-w", str(workspace)])
-            assert result.exit_code == 1
-            mock_bus.error.assert_called_with(L.workspace.discard.error.noHistory)
+        result = runner.invoke(app, ["discard", "-f", "-w", str(workspace)])
+        assert result.exit_code == 1
 
 
 class TestCheckoutCLI:
@@ -216,28 +201,12 @@ class TestCheckoutCLI:
         """Test checkout with a non-existent hash."""
         workspace, _, _ = populated_workspace
 
-        # Using Mock Bus to check error message id
-        from unittest.mock import MagicMock
-
-        mock_bus = MagicMock()
-        with pytest.MonkeyPatch.context() as m:
-            m.setattr("quipu.cli.commands.navigation.bus", mock_bus)
-            result = runner.invoke(app, ["checkout", "deadbeef", "--work-dir", str(workspace), "--force"])
-
-            assert result.exit_code == 1
-            mock_bus.error.assert_called_with(L.navigation.checkout.error.notFound, hash_prefix="deadbeef")
+        result = runner.invoke(app, ["checkout", "deadbeef", "--work-dir", str(workspace), "--force"])
+        assert result.exit_code == 1
 
     def test_cli_checkout_already_on_state(self, populated_workspace):
         """Test checking out to the current state does nothing."""
         workspace, _, hash_b = populated_workspace
 
-        from unittest.mock import MagicMock
-
-        mock_bus = MagicMock()
-        with pytest.MonkeyPatch.context() as m:
-            m.setattr("quipu.cli.commands.navigation.bus", mock_bus)
-
-            result = runner.invoke(app, ["checkout", hash_b[:8], "--work-dir", str(workspace), "--force"])
-
-            assert result.exit_code == 0
-            mock_bus.success.assert_called_with(L.navigation.checkout.info.noAction, short_hash=ANY)
+        result = runner.invoke(app, ["checkout", hash_b[:8], "--work-dir", str(workspace), "--force"])
+        assert result.exit_code == 0

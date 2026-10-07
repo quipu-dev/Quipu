@@ -144,8 +144,8 @@
       "baseline_yaml_content_hash": "1d63209468d8e8ae3bd9ec7a0e6f2847d0d4acb61fbcfcb2096398952d64197a"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/git_db.py#GitDB.prune_local_from_remote": {
-      "baseline_code_signature_text": "def prune_local_from_remote(self, remote: str, user_id: str):",
-      "baseline_code_structure_hash": "1dee7d7db5207789d7e5ecaec48e9c2e8ea39b41352df305c97af914db5284e4",
+      "baseline_code_signature_text": "def prune_local_from_remote(self, remote: str, user_id: str) -> int:",
+      "baseline_code_structure_hash": "620a81b3a0ead89d4fd4d6c9968b0668d271e4483fb00ac35f8586e25302ee38",
       "baseline_yaml_content_hash": "58a68f6ecac3f870dcf14162ebf0e010cd9482607fc2281d8cc6dce1a9980ba2"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/git_db.py#GitDB.push_quipu_refs": {
@@ -154,8 +154,8 @@
       "baseline_yaml_content_hash": "8ce627c01bba7443144125dfd475354cff7e5cbd6ebdf10b0432e8724a6067b6"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/git_db.py#GitDB.reconcile_local_with_remote": {
-      "baseline_code_signature_text": "def reconcile_local_with_remote(self, remote: str, user_id: str):",
-      "baseline_code_structure_hash": "febb797ed43b998abec81d7c98c30bb3ae2b6ffe104443fa7853ea1fcf140a3e",
+      "baseline_code_signature_text": "def reconcile_local_with_remote(self, remote: str, user_id: str) -> int:",
+      "baseline_code_structure_hash": "89d031e76e6409381e2bfcaa03e336bdb59eea45c8f2d4d37eba649ee14bf541",
       "baseline_yaml_content_hash": "d99263879b976dbc767c74e7199dd6cc4848fca7c7738d5edea8efae5fc62d90"
     },
     "py://packages/pyquipu-engine/src/quipu/engine/git_db.py#GitDB.shadow_index": {
@@ -971,11 +971,6 @@
       "baseline_code_signature_text": "def test_checkout_tree(self, git_repo: Path, db: GitDB):",
       "baseline_code_structure_hash": "262a95a655fd9d84ccb9371fd75a21a9e2a947df7a5386a30d53aa99ab16ebf5",
       "baseline_yaml_content_hash": "8a914a8819c3e8fe55579cf7094c08d1e09bae3a05740c35283284faacc5e539"
-    },
-    "py://packages/pyquipu-engine/tests/integration/test_git_db.py#TestGitDBPlumbing.test_checkout_tree_messaging": {
-      "baseline_code_signature_text": "def test_checkout_tree_messaging(self, git_repo: Path, db: GitDB, monkeypatch):",
-      "baseline_code_structure_hash": "9de293605b3a4fbe4315af86bed01ae8ad602349c264f06aac9005d107a38423",
-      "baseline_yaml_content_hash": "25d56e2cf253bc5e1fcf4fd422ca42aa08d119541c8e29e2a854d93879ee6615"
     },
     "py://packages/pyquipu-engine/tests/integration/test_git_db.py#TestGitDBPlumbing.test_exclude_quipu_dir": {
       "baseline_code_signature_text": "def test_exclude_quipu_dir(self, git_repo, db):",

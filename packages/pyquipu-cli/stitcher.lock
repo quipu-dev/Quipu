@@ -385,31 +385,31 @@
       "baseline_yaml_content_hash": "10abdb1c78b295674eb73565b7c53565277f79654dcd0a746c7de5677b953e99"
     },
     "py://packages/pyquipu-cli/tests/integration/test_cache_commands.py#test_cache_prune_refs_empty_repo": {
-      "baseline_code_signature_text": "def test_cache_prune_refs_empty_repo(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "d4ce253da27790d6db1ef53900d924f5c5b3c53d837a8f5b7b78824e3c051692",
+      "baseline_code_signature_text": "def test_cache_prune_refs_empty_repo(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "91273402846d09da51bbb73536d559355beaf0cb99bc1b9d57775bc9530c3dff",
       "baseline_yaml_content_hash": "822f61ea085a8e38ef58291302bbad39261dc830375ce153f9d13ff8d0c9a097"
     },
     "py://packages/pyquipu-cli/tests/integration/test_cache_commands.py#test_cache_prune_refs_no_redundancy": {
-      "baseline_code_signature_text": "def test_cache_prune_refs_no_redundancy(runner, history_with_redundant_refs, monkeypatch):",
-      "baseline_code_structure_hash": "8c4a3698e87d114eaedced5c87cb74fd7c9ca4e7725ff8222fa232fe4e6b242e",
+      "baseline_code_signature_text": "def test_cache_prune_refs_no_redundancy(runner, history_with_redundant_refs):",
+      "baseline_code_structure_hash": "04d8df74f9e8b3b2a1a8ef3aa63c6efa2c0a9f7294e49405a2795f095eb431f0",
       "baseline_yaml_content_hash": "25733b69ba77e98cbd4b785d39c03b2b3bcd9f6a5f9ea8647efab79091ac9abb"
     },
     "py://packages/pyquipu-cli/tests/integration/test_cache_commands.py#test_cache_prune_refs_with_redundancy": {
-      "baseline_code_signature_text": "def test_cache_prune_refs_with_redundancy(runner, history_with_redundant_refs, monkeypatch):",
-      "baseline_code_structure_hash": "c58e2d5ba6da187c407e8e6385b4176ef39fa4fa0f433704ad8b986475a92e09",
+      "baseline_code_signature_text": "def test_cache_prune_refs_with_redundancy(runner, history_with_redundant_refs):",
+      "baseline_code_structure_hash": "3590f736cc833759ac681db6daf4b8e123713e25749d6acd8b0b6809fda27398",
       "baseline_yaml_content_hash": "8d7a3e4a24e09025899e5ed2c7f1c29f6c6b4e47139d2a5c0e9b87b313d03730"
     },
     "py://packages/pyquipu-cli/tests/integration/test_cache_commands.py#test_cache_rebuild_no_db": {
-      "baseline_code_signature_text": "def test_cache_rebuild_no_db(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "5fc1415e872b411ada16684d562ffe119117dd58492884f7286c8bfb4ff7de96"
+      "baseline_code_signature_text": "def test_cache_rebuild_no_db(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "7518fe4488ba0b5be8bc02fc0d2307cf6c1e97e0439dcf0f06476e3c7c85b27c"
     },
     "py://packages/pyquipu-cli/tests/integration/test_cache_commands.py#test_cache_sync": {
-      "baseline_code_signature_text": "def test_cache_sync(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "7d4e6de318c26e5dd5da259d87ddca79c608cb1bd280175da305fc3eb2d032fd"
+      "baseline_code_signature_text": "def test_cache_sync(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "02bacc36e6c1fab34a1e14805f5fbc34992d8a6a71ce8ad615f45fb78d117352"
     },
     "py://packages/pyquipu-cli/tests/integration/test_cli_interaction.py#test_run_command_with_piped_input_and_confirmation": {
-      "baseline_code_signature_text": "def test_run_command_with_piped_input_and_confirmation(runner: CliRunner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "b7a1eb5b96b292fd193b703476be50984991d54239dde16abfd096a140576e03",
+      "baseline_code_signature_text": "def test_run_command_with_piped_input_and_confirmation(runner: CliRunner, quipu_workspace):",
+      "baseline_code_structure_hash": "3d9ea290f6493a4275e68736bc4ba78ac18e9236ab1a8ba6d59495d90e8ffcda",
       "baseline_yaml_content_hash": "203d658b383946880f985a5e9ee682beb7efb4df6d92b6ccaf8c6643879b9e5a"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#history_for_all_links": {
@@ -423,99 +423,99 @@
       "baseline_yaml_content_hash": "0941dc88c5fc6c0b7470307d57bf4d0448ee2ea9bec3b11190e25161d1aa039c"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_basic": {
-      "baseline_code_signature_text": "def test_export_basic(runner, populated_history, monkeypatch):",
-      "baseline_code_structure_hash": "f5478dfed05f4c6a630bad6a69a88b173e2c7828c2c597d08646355ed4e4a552",
+      "baseline_code_signature_text": "def test_export_basic(runner, populated_history):",
+      "baseline_code_structure_hash": "0a6963d7487bf76ea152d4cf2025783929add9ff0316cee7a795ab8f8542f0eb",
       "baseline_yaml_content_hash": "e35b608074a69b83910a4460fe820994788db7176a5199858e7a32aac05c758b"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_edge_cases": {
-      "baseline_code_signature_text": "def test_export_edge_cases(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "41930f27ce81a7ce57aa3469c4622c9b90880b933c67622dc16babb64b477f94",
+      "baseline_code_signature_text": "def test_export_edge_cases(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "9c14c54a43157ef52cc7613f9c9ccca8cbb08982c032ea46564930a8a191e8fd",
       "baseline_yaml_content_hash": "ed18f4aede2a0e963f599ea2cccd4aadb1ecb72f8b4c810b9526a69958216716"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_filtering": {
-      "baseline_code_signature_text": "def test_export_filtering(runner, populated_history, monkeypatch):",
-      "baseline_code_structure_hash": "1325755c46fb393f5e391eb40b01b5cced517f4b0aa4937664640a1688b2880d",
+      "baseline_code_signature_text": "def test_export_filtering(runner, populated_history):",
+      "baseline_code_structure_hash": "64a4739e6e5fa869052093c6b25191856fb96f7da945f63cd91203d15b4f8757",
       "baseline_yaml_content_hash": "e7fff7621e1b9621b187a322f1cf89892b374c138f2e17d7b3b86f61bc88c0b6"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_hide_link_type": {
-      "baseline_code_signature_text": "def test_export_hide_link_type(runner, history_for_all_links, link_type_to_hide, text_not_expected, text_still_expected, monkeypatch):",
-      "baseline_code_structure_hash": "294719815e008d81ad1cb62d2062ecf294b7673b498590616590ea5e3a9f07dd",
+      "baseline_code_signature_text": "def test_export_hide_link_type(runner, history_for_all_links, link_type_to_hide, text_not_expected, text_still_expected):",
+      "baseline_code_structure_hash": "2526a34013aa385fa382d9ecd378f9e1aac50cec17385515d5d1986b039deb8e",
       "baseline_yaml_content_hash": "ade2bcbe9c6dc916b95cdf15b75614ccbe0207d252fbb09a6c341cb244358779"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_hide_multiple_link_types": {
-      "baseline_code_signature_text": "def test_export_hide_multiple_link_types(runner, history_for_all_links, monkeypatch):",
-      "baseline_code_structure_hash": "1176971b7df7ad7143b59eb1c1fc05d9550c3c380ff687b168729bdc9d0fac58",
+      "baseline_code_signature_text": "def test_export_hide_multiple_link_types(runner, history_for_all_links):",
+      "baseline_code_structure_hash": "dac33348dae6431aa2ab83c765b10890747db47cbbec8094e5fc813bc35eeaa8",
       "baseline_yaml_content_hash": "f47513e5f8923bf7d0062c197ece29fc28be8b3efa23d71867ff9bbffbdb86bf"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_no_frontmatter": {
-      "baseline_code_signature_text": "def test_export_no_frontmatter(runner, populated_history, monkeypatch):",
-      "baseline_code_structure_hash": "f6e30bf7ff867fbcbf9f23986a99231001bcd1c4f1470d6e3e1d41a8180fc264"
+      "baseline_code_signature_text": "def test_export_no_frontmatter(runner, populated_history):",
+      "baseline_code_structure_hash": "5cb74673d53524fa0835f1886e7dbd825a8648085a9e35c9db9f2e64a268ef6b"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_no_nav": {
-      "baseline_code_signature_text": "def test_export_no_nav(runner, populated_history, monkeypatch):",
-      "baseline_code_structure_hash": "69c47c8b9599e0d256ac2809c21fa596354be14f837786e75e9d60a8b0ec4513"
+      "baseline_code_signature_text": "def test_export_no_nav(runner, populated_history):",
+      "baseline_code_structure_hash": "cfedbab35edb37ac6ac056598e0ae445cbe2fe1b6cd0490f093241c806423bc6"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_reachable_only": {
-      "baseline_code_signature_text": "def test_export_reachable_only(runner, populated_history, monkeypatch):",
-      "baseline_code_structure_hash": "204af9755e7d7baa22e39dde26e31447e142bb7fe2344375b518c97785c1937a",
+      "baseline_code_signature_text": "def test_export_reachable_only(runner, populated_history):",
+      "baseline_code_structure_hash": "4aa08c7de265b7b406737b23cc019dfc6d6b3e079cf28dd34b64ed937927d23b",
       "baseline_yaml_content_hash": "81c156040adf33d2e37cd9fee8c0e42bf43d71ef4672e6acad48ed09129bf2e2"
     },
     "py://packages/pyquipu-cli/tests/integration/test_export_command.py#test_export_zip": {
-      "baseline_code_signature_text": "def test_export_zip(runner, populated_history, monkeypatch):",
-      "baseline_code_structure_hash": "d6979bfd0d147160b36cce171dbf63360fd7bc991309e37cba37de5d2ee44b49"
+      "baseline_code_signature_text": "def test_export_zip(runner, populated_history):",
+      "baseline_code_structure_hash": "c48e6d8eb82b2ba56eaa8badc6ef59a2bc40571ac8ca1990010bce21df7a58ac"
     },
     "py://packages/pyquipu-cli/tests/integration/test_navigation_commands.py#populated_workspace": {
       "baseline_code_signature_text": "def populated_workspace(quipu_workspace):",
       "baseline_code_structure_hash": "c59fd4dc20ce857fa9138cf6a141777d82bf81b65fa1291a92ecce757b547f80"
     },
     "py://packages/pyquipu-cli/tests/integration/test_navigation_commands.py#test_checkout_duplicate_tree_hashes": {
-      "baseline_code_signature_text": "def test_checkout_duplicate_tree_hashes(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "90d43a2c8e72ef4330803f5cdc67d9ca6580c5bbe335fd11f428ccae502be4e5"
+      "baseline_code_signature_text": "def test_checkout_duplicate_tree_hashes(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "6728fedb35b4d6c72d159cdd2e0c3f44906e39b6c8c3553655cb2a4365ae0720"
     },
     "py://packages/pyquipu-cli/tests/integration/test_navigation_commands.py#test_checkout_not_found": {
-      "baseline_code_signature_text": "def test_checkout_not_found(runner, populated_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "7c619ddf1fe0f07f2f9edaeefea3ebc53f6acfeb7c0fcda2b27a15e6c51c4935"
+      "baseline_code_signature_text": "def test_checkout_not_found(runner, populated_workspace):",
+      "baseline_code_structure_hash": "c0149694af01cb265151b88f2870f3d679fee84cf35c390c2bb613076defc54c"
     },
     "py://packages/pyquipu-cli/tests/integration/test_navigation_commands.py#test_cli_back_forward_flow": {
-      "baseline_code_signature_text": "def test_cli_back_forward_flow(runner, populated_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "4b431c5c04adb0a9f19632764cb48b459a05fba4fa2df3334bef20a5cb3c4abb"
+      "baseline_code_signature_text": "def test_cli_back_forward_flow(runner, populated_workspace):",
+      "baseline_code_structure_hash": "5d4a528188216bea61776843d12a715947c63888be2f38782b9b35ad6a78c457"
     },
     "py://packages/pyquipu-cli/tests/integration/test_navigation_commands.py#test_cli_boundary_messages": {
-      "baseline_code_signature_text": "def test_cli_boundary_messages(runner, populated_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "7fe22f8180cf5ed7c08f3b02249658cb8d2d1c6475f000c64c16fd0becee0e13"
+      "baseline_code_signature_text": "def test_cli_boundary_messages(runner, populated_workspace):",
+      "baseline_code_structure_hash": "6c9bd9ed95d476c365e6ee69e22a76b668ef6790c989c31fc112c81606b7c665"
     },
     "py://packages/pyquipu-cli/tests/integration/test_query_commands.py#test_find_command": {
-      "baseline_code_signature_text": "def test_find_command(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "03aca2eee1965f53ddad328ec4628d07d80157fef75cb4219eecfba1d175693a"
+      "baseline_code_signature_text": "def test_find_command(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "72f0fb407f46684d1df705ee3d6b721c5ec8dc2675993d0261d2e0eb86805b08"
     },
     "py://packages/pyquipu-cli/tests/integration/test_query_commands.py#test_find_json_output": {
-      "baseline_code_signature_text": "def test_find_json_output(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "f22b45b2e829f5f6b18818cb50510a62ec55b9e8b4af698421ab6696fcced299"
+      "baseline_code_signature_text": "def test_find_json_output(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "5e6e7f68235b3becc1c9c55b4fcb2ea20312e8918d9f2bb1cc9c4450faa4a1ca"
     },
     "py://packages/pyquipu-cli/tests/integration/test_query_commands.py#test_log_empty": {
-      "baseline_code_signature_text": "def test_log_empty(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "3129afec2dd777317329097169d643f76f1d221dc284727d2c64dedf8559ff10"
+      "baseline_code_signature_text": "def test_log_empty(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "16da6b57eac3bb7fc8673bd8ba9a2f9966aacbe390a8e6d5db01287a8a12736a"
     },
     "py://packages/pyquipu-cli/tests/integration/test_query_commands.py#test_log_filtering": {
-      "baseline_code_signature_text": "def test_log_filtering(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "99be88d8fe0a454e5c1aff067f6ec29b7048fd3d1e687c40fa4156a65d5aba66",
+      "baseline_code_signature_text": "def test_log_filtering(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "5ff566e8c0f542bf9c5abb868c09ad4a3f469018c11048fbd632d76055241785",
       "baseline_yaml_content_hash": "a8959d35dcc5ca988a8944d950022efa1acc963c7a1cacc9cc4437ee0d309c92"
     },
     "py://packages/pyquipu-cli/tests/integration/test_query_commands.py#test_log_json_empty": {
-      "baseline_code_signature_text": "def test_log_json_empty(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "9a9c2272fcf5b7b1f3d14b45d15f99fb424f11bf852b4718b49af018d3bbd1f2"
+      "baseline_code_signature_text": "def test_log_json_empty(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "4d66145665e1eca47a651fda15c6fed60fc8132a223f39b432865550bc6cc2d2"
     },
     "py://packages/pyquipu-cli/tests/integration/test_query_commands.py#test_log_json_output": {
-      "baseline_code_signature_text": "def test_log_json_output(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "ca87d055ff4a2f4430cdeb56875a33ff988d6357e52a28eda0c96c2563c366ab"
+      "baseline_code_signature_text": "def test_log_json_output(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "5b48c951acee2ea411d28e651a580a40d00e5cf77e8fb3a620b845dda7ac2ca7"
     },
     "py://packages/pyquipu-cli/tests/integration/test_query_commands.py#test_log_output": {
-      "baseline_code_signature_text": "def test_log_output(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "6f1526c53ac86c618bb7d00329a1917acea5db8ac7cb88c86b893d784d7c9f7c"
+      "baseline_code_signature_text": "def test_log_output(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "20b44b0ad0c5f73ca03ac7de7af9e7ce44919e4bd89e24b13780986d6d1d9cf9"
     },
     "py://packages/pyquipu-cli/tests/integration/test_query_commands.py#test_log_reachable_only": {
-      "baseline_code_signature_text": "def test_log_reachable_only(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "13f651bc8de431c9417d2e7dc8273c4c9bd4b2e138beb838c1d48fd5dc6a622f",
+      "baseline_code_signature_text": "def test_log_reachable_only(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "e7daa5088cb01d9268d0cce848176a26f031df8c0ebcb97f2966c4da276acc65",
       "baseline_yaml_content_hash": "a06e80467a042af7a0347d0039c032b5548c6202ed84a9cf049e46f6575b8322"
     },
     "py://packages/pyquipu-cli/tests/integration/test_unfriendly_paths.py#dirty_workspace": {
@@ -554,20 +554,20 @@
       "baseline_yaml_content_hash": "f01ebffe05f56fa42b62e6f409e2735595896f408de0034f31b90c3405db5cc3"
     },
     "py://packages/pyquipu-cli/tests/integration/test_workspace_commands.py#test_discard_changes": {
-      "baseline_code_signature_text": "def test_discard_changes(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "9d34b0df041164aad4cdecd2d05c8b6d682439cf47d07a75acac43bed200148b"
+      "baseline_code_signature_text": "def test_discard_changes(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "cf015c906c76db0823d1361a37c6ef5cd77fbec23ed3f1a00a4c2bae0951ef65"
     },
     "py://packages/pyquipu-cli/tests/integration/test_workspace_commands.py#test_discard_interactive_abort": {
       "baseline_code_signature_text": "def test_discard_interactive_abort(runner, quipu_workspace, monkeypatch):",
       "baseline_code_structure_hash": "4bfaeed5322a2cedecc7fd2a1e7b4c958ba4ca1e2c98bd1b3e1c2c01a89b4249"
     },
     "py://packages/pyquipu-cli/tests/integration/test_workspace_commands.py#test_save_clean_workspace": {
-      "baseline_code_signature_text": "def test_save_clean_workspace(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "910b44c7643132b27f13c012cfa79871466906b839b7f6804db07395474bfe90"
+      "baseline_code_signature_text": "def test_save_clean_workspace(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "6f56f70ef7cd87e3ca7af4a7a12245fba7c86a314d5831ade3b43747f2313121"
     },
     "py://packages/pyquipu-cli/tests/integration/test_workspace_commands.py#test_save_with_changes": {
-      "baseline_code_signature_text": "def test_save_with_changes(runner, quipu_workspace, monkeypatch):",
-      "baseline_code_structure_hash": "9ea9ffcf0904028d70743dbfc9d741268a8bca6d67d704ab1e76d9e02360aa03"
+      "baseline_code_signature_text": "def test_save_with_changes(runner, quipu_workspace):",
+      "baseline_code_structure_hash": "68a0866c62010fcf249aca5ccea482c57eb8dce7bb77b4f61734088c91339722"
     },
     "py://packages/pyquipu-cli/tests/unit/test_tui_logic.py#TestUiLogic": {
       "baseline_code_signature_text": "class TestUiLogic:",

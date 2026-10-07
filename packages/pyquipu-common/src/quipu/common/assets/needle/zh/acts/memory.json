@@ -1,9 +1,0 @@
-{
-  "error": {
-    "missingContent": "log_thought 需要内容参数",
-    "writeFailed": "无法写入记忆文件: {error}"
-  },
-  "success": {
-    "thoughtLogged": "🧠 [记忆] 思维已记录到 .quipu/memory.md"
-  }
-}

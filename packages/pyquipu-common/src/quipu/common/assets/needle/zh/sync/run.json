@@ -6,8 +6,7 @@
     "reconciling": "🤝 正在调和...",
     "pushing": "⬆️  正在推送...",
     "pushingForce": "⬆️  正在强制推送...",
-    "pruning": "🗑️  正在修剪本地...",
-    "cacheHint": "\n💡 提示: 运行 `quipu cache sync` 来更新本地数据库和 UI 视图。"
+    "pruning": "🗑️  正在修剪本地..."
   },
   "success": {
     "bidirectional": "\n✅ Quipu 双向同步完成。",

@@ -12,7 +12,7 @@ class TestMemoryActs:
     def setup_executor(self, executor: Executor):
         register_memory_acts(executor)
 
-    def test_log_thought_success(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):
+    def test_log_thought_success(self, executor: Executor, isolated_vault: Path):
         func, _, _ = executor._acts["log_thought"]
         ctx = ActContext(executor)
         func(ctx, ["Thinking process..."])
@@ -23,20 +23,17 @@ class TestMemoryActs:
         assert "Thinking process..." in content
         assert "## [" in content
 
-        mock_runtime_bus.success.assert_called_with("acts.memory.success.thoughtLogged")
-
     def test_log_thought_missing_args(self, executor: Executor):
         func, _, _ = executor._acts["log_thought"]
         ctx = ActContext(executor)
-        with pytest.raises(ExecutionError, match="acts.memory.error.missingContent"):
+        with pytest.raises(ExecutionError, match="log_thought 需要内容参数"):
             func(ctx, [])
 
     def test_log_thought_write_error(self, executor: Executor, isolated_vault: Path, monkeypatch):
-        # 模拟 open 失败
         monkeypatch.setattr("builtins.open", lambda *args, **kwargs: (_ for _ in ()).throw(OSError("Disk full")))
 
         func, _, _ = executor._acts["log_thought"]
         ctx = ActContext(executor)
 
-        with pytest.raises(ExecutionError, match="acts.memory.error.writeFailed"):
+        with pytest.raises(ExecutionError, match="无法写入记忆文件"):
             func(ctx, ["content"])

@@ -30,6 +30,14 @@ class ActContext:
     def request_confirmation(self, file_path: Path, old_content: str, new_content: str) -> None:
         return self._executor.request_confirmation(file_path, old_content, new_content)
 
+    def data(self, data_string: str) -> None:
+        if hasattr(self._executor, "output_data"):
+            self._executor.output_data(data_string)
+        else:
+            import sys
+
+            sys.stdout.write(data_string + ("\n" if not data_string.endswith("\n") else ""))
+
     def fail(self, message: str) -> NoReturn:
         raise ExecutionError(message)
 

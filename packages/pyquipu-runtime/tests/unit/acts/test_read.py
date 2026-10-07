@@ -12,66 +12,69 @@ class TestReadActs:
     def setup_executor(self, executor: Executor):
         register_read_acts(executor)
 
-    def test_search_python_fallback(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):
+    def test_search_python_fallback(self, executor: Executor, isolated_vault: Path, monkeypatch):
         monkeypatch.setattr(shutil, "which", lambda x: None)
         target_file = isolated_vault / "config.py"
         target_file.write_text('SECRET_KEY = "123456"', encoding="utf-8")
         (isolated_vault / "readme.md").write_text("Nothing here", encoding="utf-8")
 
+        captured = []
+        executor.data_handler = captured.append
+
         search_func, _, _ = executor._acts["search_files"]
         ctx = ActContext(executor)
         search_func(ctx, ["SECRET_KEY"])
 
-        mock_runtime_bus.info.assert_any_call("acts.read.info.usePythonSearch")
-
-        # 验证数据输出
-        assert mock_runtime_bus.data.called
-        data_out = mock_runtime_bus.data.call_args[0][0]
-        assert "config.py" in data_out
-        assert 'SECRET_KEY = "123456"' in data_out
+        assert len(captured) == 1
+        assert "config.py" in captured[0]
+        assert 'SECRET_KEY = "123456"' in captured[0]
 
     @pytest.mark.skipif(not shutil.which("rg"), reason="Ripgrep (rg) 未安装，跳过集成测试")
-    def test_search_with_ripgrep(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):
+    def test_search_with_ripgrep(self, executor: Executor, isolated_vault: Path):
         (isolated_vault / "main.rs").write_text('fn main() { println!("Hello Quipu"); }', encoding="utf-8")
+
+        captured = []
+        executor.data_handler = captured.append
 
         search_func, _, _ = executor._acts["search_files"]
         ctx = ActContext(executor)
         search_func(ctx, ["println!"])
 
-        mock_runtime_bus.info.assert_any_call("acts.read.info.useRipgrep")
+        assert len(captured) == 1
+        assert "main.rs" in captured[0]
+        assert 'println!("Hello Quipu")' in captured[0]
 
-        assert mock_runtime_bus.data.called
-        data_out = mock_runtime_bus.data.call_args[0][0]
-        assert "main.rs" in data_out
-        assert 'println!("Hello Quipu")' in data_out
-
-    def test_search_scoped_path(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):
+    def test_search_scoped_path(self, executor: Executor, isolated_vault: Path, monkeypatch):
         monkeypatch.setattr(shutil, "which", lambda x: None)
         (isolated_vault / "target.txt").write_text("target_function", encoding="utf-8")
         src_dir = isolated_vault / "src"
         src_dir.mkdir()
         (src_dir / "inner.txt").write_text("target_function", encoding="utf-8")
 
+        captured = []
+        executor.data_handler = captured.append
+
         search_func, _, _ = executor._acts["search_files"]
         ctx = ActContext(executor)
         search_func(ctx, ["target_function", "--path", "src"])
 
-        assert mock_runtime_bus.data.called
-        stdout = mock_runtime_bus.data.call_args[0][0]
-
-        # After the fix, the path should be relative to the root
+        assert len(captured) == 1
+        stdout = captured[0]
         assert str(Path("src") / "inner.txt") in stdout
         assert "target.txt" not in stdout
 
-    def test_search_no_match(self, executor: Executor, isolated_vault: Path, monkeypatch, mock_runtime_bus):
+    def test_search_no_match(self, executor: Executor, isolated_vault: Path, monkeypatch):
         monkeypatch.setattr(shutil, "which", lambda x: None)
         (isolated_vault / "file.txt").write_text("some content", encoding="utf-8")
+
+        captured = []
+        executor.data_handler = captured.append
 
         search_func, _, _ = executor._acts["search_files"]
         ctx = ActContext(executor)
         search_func(ctx, ["non_existent_pattern"])
 
-        mock_runtime_bus.info.assert_called_with("acts.read.info.noMatchPython")
+        assert len(captured) == 0
 
     def test_search_binary_file_resilience(self, executor: Executor, isolated_vault: Path, monkeypatch):
         monkeypatch.setattr(shutil, "which", lambda x: None)
@@ -94,12 +97,12 @@ class TestReadActs:
     def test_read_file_not_found(self, executor: Executor):
         func, _, _ = executor._acts["read_file"]
         ctx = ActContext(executor)
-        with pytest.raises(ExecutionError, match="acts.read.error.targetNotFound"):
+        with pytest.raises(ExecutionError, match="文件不存在"):
             func(ctx, ["ghost.txt"])
 
     def test_read_file_is_dir(self, executor: Executor, isolated_vault: Path):
         (isolated_vault / "subdir").mkdir()
         func, _, _ = executor._acts["read_file"]
         ctx = ActContext(executor)
-        with pytest.raises(ExecutionError, match="acts.read.error.targetIsDir"):
+        with pytest.raises(ExecutionError, match="这是一个目录"):
             func(ctx, ["subdir"])

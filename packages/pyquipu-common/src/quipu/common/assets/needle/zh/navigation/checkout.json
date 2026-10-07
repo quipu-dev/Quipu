@@ -10,9 +10,6 @@
   "success": {
     "driftCaptured": "✅ 变更已捕获。"
   },
-  "ui": {
-    "diffHeader": "\n以下是将要发生的变更:"
-  },
   "prompt": {
     "confirm": "🚨 即将重置工作区到状态 {short_hash} ({timestamp})。\n此操作会覆盖未提交的更改。是否继续？"
   }

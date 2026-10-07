@@ -23,7 +23,7 @@ class TestGitActs:
         subprocess.run(["git", "config", "user.email", "quipu@test.com"], cwd=isolated_vault, check=True)
         subprocess.run(["git", "config", "user.name", "Quipu Bot"], cwd=isolated_vault, check=True)
 
-    def test_git_workflow(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):
+    def test_git_workflow(self, executor: Executor, isolated_vault: Path):
         # 1. 创建文件
         target_file = isolated_vault / "README.md"
         target_file.write_text("# Test Repo", encoding="utf-8")
@@ -32,7 +32,6 @@ class TestGitActs:
         git_add, _, _ = executor._acts["git_add"]
         ctx = ActContext(executor)
         git_add(ctx, ["README.md"])
-        mock_runtime_bus.success.assert_called_with("acts.git.success.added", targets=["README.md"])
 
         # 验证状态 (porcelain 输出 ?? 代表未追踪，A 代表已添加)
         status = subprocess.check_output(["git", "status", "--porcelain"], cwd=isolated_vault, text=True)
@@ -41,36 +40,25 @@ class TestGitActs:
         # 3. Git Commit
         git_commit, _, _ = executor._acts["git_commit"]
         git_commit(ctx, ["Initial commit"])
-        mock_runtime_bus.success.assert_called_with("acts.git.success.committed", message="Initial commit")
 
         # 验证提交日志
         log = subprocess.check_output(["git", "log", "--oneline"], cwd=isolated_vault, text=True)
         assert "Initial commit" in log
 
-    def test_git_init_idempotent(self, executor: Executor, mock_runtime_bus):
-        # setup_git_env 已经 init 过了，再次 init 应该提示跳过
+    def test_git_init_idempotent(self, executor: Executor):
+        # setup_git_env 已经 init 过了，再次 init 应当静默无异常
         func, _, _ = executor._acts["git_init"]
         ctx = ActContext(executor)
         func(ctx, [])
-        mock_runtime_bus.warning.assert_called_with("acts.git.warning.repoExists")
 
-    def test_git_status_output_stream(self, executor: Executor, isolated_vault: Path, mock_runtime_bus):
-        # 1. 制造一些状态变更
+    def test_git_status_output_stream(self, executor: Executor, isolated_vault: Path):
         (isolated_vault / "untracked.txt").write_text("new file")
 
-        # 2. 我们通过 executor.execute 来模拟完整的执行流程
+        captured = []
+        executor.data_handler = captured.append
+
         stmts: list[Statement] = [{"act": "git_status", "contexts": []}]
         executor.execute(stmts)
 
-        # 3. 验证 bus 调用
-        # 验证执行器日志
-        mock_runtime_bus.info.assert_any_call(
-            "runtime.executor.info.executing", current=1, total=1, act_name="git_status", mode="exclusive", arg_count=0
-        )
-
-        # 验证数据输出
-        # args[0] 应该是 status 字符串，包含 untracked.txt
-        assert mock_runtime_bus.data.called
-        data_arg = mock_runtime_bus.data.call_args[0][0]
-        assert "Untracked files" in data_arg
-        assert "untracked.txt" in data_arg
+        assert len(captured) == 1
+        assert "untracked.txt" in captured[0]
