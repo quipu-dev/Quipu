@@ -85,10 +85,19 @@ class QuipuUiApp(App[UiResult | None]):
         self.engine = create_engine(self.work_dir, lazy=True)
         current_tree_hash = self.engine.git_db.get_tree_hash()
         persisted_head = self.engine._read_head()
-        head_tree_hash = persisted_head or current_tree_hash
 
-        # 检测当前工作区与逻辑 HEAD 是否存在漂移
-        self.is_workspace_dirty = bool(persisted_head and current_tree_hash != persisted_head)
+        # 状态判定 (State-Centric)：优先检测物理工作区是否精准匹配已知历史节点
+        node_pos = self.engine.reader.get_node_position(current_tree_hash)
+        if node_pos != -1:
+            # 当前物理状态精准匹配历史节点：自动对齐为 CLEAN，并确立为基准
+            head_tree_hash = current_tree_hash
+            self.is_workspace_dirty = False
+            if persisted_head != current_tree_hash:
+                self.engine._write_head(current_tree_hash)
+        else:
+            # 当前物理状态未在历史中找到：说明工作区相对于 HEAD 存在真实漂移
+            head_tree_hash = persisted_head or current_tree_hash
+            self.is_workspace_dirty = bool(persisted_head and current_tree_hash != persisted_head)
 
         self.view_model = GraphViewModel(reader=self.engine.reader, current_output_tree_hash=head_tree_hash)
         self.view_model.initialize()
