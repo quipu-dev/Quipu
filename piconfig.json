@@ -1,0 +1,15 @@
+{
+  "presets": {
+    "full": {
+      "format": "xml",
+      "extension": ["py", "toml", "json"],
+      "paths": ["."],
+      "ignore_dir": ["tests"]
+    },
+    "fullt": {
+      "format": "xml",
+      "extension": ["py", "toml", "json"],
+      "paths": ["."]
+    }
+  }
+}
