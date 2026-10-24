@@ -18,6 +18,11 @@ DataHandler = Callable[[str], None]
 
 
 class Executor:
+    """
+    执行器：负责管理可用的 Act 并执行解析后的语句。
+    维护文件操作的安全边界。
+    """
+
     def __init__(
         self,
         root_dir: Path,
@@ -45,6 +50,14 @@ class Executor:
             sys.stdout.write(data_string + ("\n" if not data_string.endswith("\n") else ""))
 
     def register(self, name: str, func: ActFunction, arg_mode: str = "hybrid", summarizer: Any = None):
+        """
+        注册一个新的操作
+        :param arg_mode: 参数解析模式
+                         - "hybrid": (默认) 合并行内参数和块内容 (inline + blocks)
+                         - "exclusive": 互斥模式。优先使用行内参数；若无行内参数，则使用块内容。绝不混合。
+                         - "block_only": 仅使用块内容，强制忽略行内参数。
+        :param summarizer: 可选的 Summarizer 函数 (args, context_blocks) -> str
+        """
         valid_modes = {"hybrid", "exclusive", "block_only"}
         if arg_mode not in valid_modes:
             raise ValueError(f"Invalid arg_mode: {arg_mode}. Must be one of {valid_modes}")
@@ -53,9 +66,14 @@ class Executor:
         logger.debug(f"注册 Act: {name} (Mode: {arg_mode})")
 
     def get_registered_acts(self) -> dict[str, str]:
+        """获取所有已注册的 Act 及其文档字符串"""
         return {name: data[0].__doc__ or "No documentation." for name, data in self._acts.items()}
 
     def summarize_statement(self, stmt: Statement) -> str | None:
+        """
+        尝试为给定的语句生成摘要。
+        如果找不到 Act 或 Act 没有 summarizer，返回 None。
+        """
         raw_act_line = stmt["act"]
         try:
             tokens = shlex.split(raw_act_line)
@@ -85,6 +103,10 @@ class Executor:
             return None
 
     def resolve_path(self, rel_path: str) -> Path:
+        """
+        将相对路径转换为基于 root_dir 的绝对路径。
+        包含基本的路径逃逸检查。
+        """
         clean_rel = rel_path.strip()
         abs_path = (self.root_dir / clean_rel).resolve()
 
@@ -94,6 +116,11 @@ class Executor:
         return abs_path
 
     def request_confirmation(self, file_path: Path, old_content: str, new_content: str):
+        """
+        生成 diff 并请求用户确认。
+        如果 self.yolo 为 True, 则直接返回。
+        如果用户取消或环境不支持，此方法将抛出 OperationCancelledError。
+        """
         if self.yolo:
             return
 
@@ -118,6 +145,7 @@ class Executor:
         self.confirmation_handler(diff, prompt)
 
     def execute(self, statements: list[Statement]):
+        """执行一系列语句"""
         logger.debug(f"正在开始执行 {len(statements)} 个操作...")
 
         ctx = ActContext(self)

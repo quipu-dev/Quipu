@@ -6,6 +6,10 @@ from quipu.spec.constants import EMPTY_TREE_HASH
 
 
 def test_align_orphan_state(engine_instance: Engine):
+    """
+    测试场景：在一个没有历史记录的项目中运行时，
+    引擎应能正确识别为 "ORPHAN" 状态 (适用于两种后端)。
+    """
     engine, repo_path = engine_instance, engine_instance.root_dir
 
     (repo_path / "main.py").write_text("print('new project')", "utf-8")
@@ -17,6 +21,10 @@ def test_align_orphan_state(engine_instance: Engine):
 
 
 def test_capture_drift_git_object(engine_instance: Engine):
+    """
+    测试场景 (GitObject Backend)：当工作区处于 DIRTY 状态时，引擎应能成功捕获变化，
+    创建一个新的 Capture 节点，并更新 Git 引用。
+    """
     engine, repo_path = engine_instance, engine_instance.root_dir
 
     # 1. Create initial state and corresponding node
@@ -57,6 +65,10 @@ def test_capture_drift_git_object(engine_instance: Engine):
 class TestEngineFindNodes:
     @pytest.fixture
     def populated_engine(self, engine_instance: Engine):
+        """
+        Populates an engine instance with a linear history using shared test helpers.
+        History: (Genesis) -> Plan -> Capture -> Plan
+        """
         import time
 
         from quipu.test_utils.helpers import (
@@ -120,6 +132,7 @@ class TestEngineFindNodes:
 
 class TestPersistentIgnores:
     def test_sync_creates_file_if_not_exists(self, engine_instance: Engine):
+        """测试：如果 exclude 文件不存在，应能根据默认配置创建它。"""
         engine, repo_path = engine_instance, engine_instance.root_dir
 
         (repo_path / ".quipu").mkdir(exist_ok=True)
@@ -135,6 +148,7 @@ class TestPersistentIgnores:
         assert ".envs" in content
 
     def test_sync_appends_to_existing_file(self, engine_instance: Engine):
+        """测试：如果 exclude 文件已存在，应追加 Quipu 块而不是覆盖。"""
         engine, repo_path = engine_instance, engine_instance.root_dir
 
         exclude_file = repo_path / ".git" / "info" / "exclude"
@@ -151,6 +165,7 @@ class TestPersistentIgnores:
         assert "o.md" in content
 
     def test_sync_updates_existing_block(self, engine_instance: Engine):
+        """测试：如果 Quipu 块已存在，应更新其内容。"""
         engine, repo_path = engine_instance, engine_instance.root_dir
 
         exclude_file = repo_path / ".git" / "info" / "exclude"
@@ -170,6 +185,7 @@ class TestPersistentIgnores:
         assert "# More ignores" in content
 
     def test_sync_uses_user_config(self, engine_instance: Engine):
+        """测试：应优先使用 .quipu/config.yml 中的用户配置。"""
         import yaml
 
         engine, repo_path = engine_instance, engine_instance.root_dir

@@ -10,6 +10,7 @@ from quipu.spec.constants import EMPTY_TREE_HASH
 
 @pytest.fixture
 def git_writer_setup(tmp_path):
+    """创建一个包含 Git 仓库、GitDB 和 GitObjectHistoryWriter 实例的测试环境。"""
     repo_path = tmp_path / "test_repo"
     repo_path.mkdir()
     subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
@@ -23,6 +24,8 @@ def git_writer_setup(tmp_path):
 
 
 class TestGitObjectHistoryWriterUnit:
+    """对 GitObjectHistoryWriter 的内部逻辑进行单元测试。"""
+
     @pytest.mark.parametrize(
         "node_type, content, kwargs, mock_changes, expected_summary",
         [
@@ -54,6 +57,8 @@ class TestGitObjectHistoryWriterUnit:
 
 
 class TestGitObjectHistoryWriterIntegration:
+    """对 GitObjectHistoryWriter 与真实 Git 仓库的交互进行集成测试。"""
+
     def test_create_node_end_to_end(self, git_writer_setup):
         writer, git_db, repo_path = git_writer_setup
 

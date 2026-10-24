@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def register(executor: Executor):
+    """注册基础文件系统操作"""
     executor.register("write_file", _write_file, arg_mode="hybrid", summarizer=_summarize_write)
     executor.register("patch_file", _patch_file, arg_mode="hybrid", summarizer=_summarize_patch_file)
     executor.register("append_file", _append_file, arg_mode="hybrid", summarizer=_summarize_append)
@@ -30,10 +31,20 @@ def _summarize_append(args: list[str], contexts: list[str]) -> str:
 
 
 def _end(ctx: ActContext, args: list[str]):
-    pass
+    """
+    Act: end
+    Args: [ignored_contexts...]
+    说明: 这是一个空操作。
+    它的作用是显式结束上一个指令的参数收集。
+    解析器会将后续的 block 视为 end 的参数，而 end 函数会忽略它们。
+    """
 
 
 def _echo(ctx: ActContext, args: list[str]):
+    """
+    Act: echo
+    Args: [content]
+    """
     if len(args) < 1:
         ctx.fail("echo 需要至少 1 个参数: [content]")
 
@@ -41,6 +52,10 @@ def _echo(ctx: ActContext, args: list[str]):
 
 
 def _write_file(ctx: ActContext, args: list[str]):
+    """
+    Act: write_file
+    Args: [path, content]
+    """
     if len(args) < 2:
         ctx.fail("write_file 需要至少 2 个参数: [path, content]")
 
@@ -68,6 +83,10 @@ def _write_file(ctx: ActContext, args: list[str]):
 
 
 def _patch_file(ctx: ActContext, args: list[str]):
+    """
+    Act: patch_file
+    Args: [path, old_string, new_string]
+    """
     if len(args) < 3:
         ctx.fail("patch_file 需要至少 3 个参数: [path, old_string, new_string]")
 
@@ -101,6 +120,10 @@ def _patch_file(ctx: ActContext, args: list[str]):
 
 
 def _append_file(ctx: ActContext, args: list[str]):
+    """
+    Act: append_file
+    Args: [path, content]
+    """
     if len(args) < 2:
         ctx.fail("append_file 需要至少 2 个参数: [path, content]")
 

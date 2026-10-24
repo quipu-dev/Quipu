@@ -8,11 +8,16 @@ logger = logging.getLogger(__name__)
 
 
 def register(executor: Executor):
+    """注册重构类操作"""
     executor.register("move_file", _move_file, arg_mode="hybrid")
     executor.register("delete_file", _delete_file, arg_mode="exclusive")
 
 
 def _move_file(ctx: ActContext, args: list[str]):
+    """
+    Act: move_file
+    Args: [src_path, dest_path]
+    """
     if len(args) < 2:
         ctx.fail("move_file 需要至少 2 个参数: [src, dest]")
 
@@ -36,6 +41,10 @@ def _move_file(ctx: ActContext, args: list[str]):
 
 
 def _delete_file(ctx: ActContext, args: list[str]):
+    """
+    Act: delete_file
+    Args: [path]
+    """
     if len(args) < 1:
         ctx.fail("delete_file 需要至少 1 个参数: [path]")
 

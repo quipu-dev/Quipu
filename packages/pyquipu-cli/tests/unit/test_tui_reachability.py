@@ -10,6 +10,8 @@ from test_view_model import MockHistoryReader
 
 @pytest.fixture
 def view_model_factory():
+    """A factory to create a GraphViewModel instance with mock data for tests."""
+
     def _factory(nodes, current_hash=None, ancestors=None, descendants=None, private_data=None):
         reader = MockHistoryReader(nodes, ancestors=ancestors, descendants=descendants, private_data=private_data)
         vm = GraphViewModel(reader, current_output_tree_hash=current_hash)
@@ -21,6 +23,7 @@ def view_model_factory():
 
 class TestUiReachability:
     def test_ui_uses_view_model_for_reachability(self, view_model_factory):
+        """Tests that the UI correctly queries the ViewModel to check reachability."""
         node_root = QuipuNode("c_root", "root", "null", datetime(2023, 1, 1), Path("f_root"), "plan", summary="Root")
         node_a = QuipuNode("c_a", "a", "root", datetime(2023, 1, 2), Path("f_a"), "plan", summary="A")
         node_b = QuipuNode(
@@ -49,6 +52,7 @@ class TestUiReachability:
         assert app.view_model.is_reachable("b") is False  # Unreachable
 
     def test_filter_unreachable_nodes_in_populate(self, view_model_factory):
+        """Tests the filtering logic within the _populate_table method."""
         node_root = QuipuNode("c_root", "root", "null", datetime(2023, 1, 1), Path("f_root"), "plan", summary="Root")
         node_a = QuipuNode("c_a", "a", "root", datetime(2023, 1, 2), Path("f_a"), "plan", summary="A")
         node_b = QuipuNode("c_b", "b", "root", datetime(2023, 1, 3), Path("f_b"), "plan", summary="B")

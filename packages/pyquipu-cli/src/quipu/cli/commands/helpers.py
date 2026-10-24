@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def engine_context(work_dir: Path) -> Generator[Engine, None, None]:
+    """Context manager to set up logging, create, and automatically close a Quipu engine."""
     setup_logging()
     engine = None
     try:
@@ -29,6 +30,7 @@ def engine_context(work_dir: Path) -> Generator[Engine, None, None]:
 
 
 def _find_current_node(engine: Engine, graph: dict[str, QuipuNode]) -> QuipuNode | None:
+    """在图中查找与当前工作区状态匹配的节点"""
     current_hash = engine.git_db.get_tree_hash()
     # 修复：直接从 graph 中通过 output_tree hash 查找
     for node in graph.values():
@@ -41,6 +43,7 @@ def _find_current_node(engine: Engine, graph: dict[str, QuipuNode]) -> QuipuNode
 
 
 def _execute_visit(ctx: typer.Context, engine: Engine, target_hash: str, msg_id: str, **kwargs):
+    """辅助函数：执行 engine.visit 并处理结果"""
     bus.info(msg_id, **kwargs)
     try:
         engine.visit(target_hash)
@@ -52,6 +55,7 @@ def _execute_visit(ctx: typer.Context, engine: Engine, target_hash: str, msg_id:
 
 
 def filter_nodes(nodes: list[QuipuNode], limit: int | None, since: str | None, until: str | None) -> list[QuipuNode]:
+    """根据时间戳和数量过滤节点列表。"""
     filtered = nodes
     if since:
         try:
@@ -71,6 +75,7 @@ def filter_nodes(nodes: list[QuipuNode], limit: int | None, since: str | None, u
 
 
 def filter_reachable_nodes(engine: Engine, nodes: list[QuipuNode]) -> list[QuipuNode]:
+    """仅保留与当前工作区状态直接相关的节点（祖先和后代）。"""
     current_node = _find_current_node(engine, engine.history_graph)
     if not current_node:
         # 如果工作区是脏的，无法确定起点，返回所有节点

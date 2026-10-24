@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def _find_target_node(graph: dict, hash_prefix: str):
+    """辅助函数，用于在图中查找唯一的节点。"""
     matches = [
         node
         for node in graph.values()

@@ -14,6 +14,10 @@ from .helpers import engine_context, filter_nodes, filter_reachable_nodes
 
 
 def _nodes_to_json_str(nodes: list[QuipuNode]) -> str:
+    """
+    Dynamically serializes a list of QuipuNode objects to a JSON string,
+    avoiding hardcoded fields for better maintainability.
+    """
     EXCLUDED_FIELDS = {"parent", "children", "content", "filename"}
     node_list = []
     for node in nodes:

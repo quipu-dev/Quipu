@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class Hydrator:
+    """负责将 Git 对象历史记录同步（补水）到 SQLite 数据库。"""
+
     def __init__(self, git_db: GitDB, db_manager: DatabaseManager):
         self.git_db = git_db
         self.db_manager = db_manager
@@ -17,6 +19,7 @@ class Hydrator:
         self._parser = GitObjectHistoryReader(git_db)
 
     def _get_owner_from_ref(self, ref_name: str, local_user_id: str) -> str | None:
+        """从 Git ref 路径中解析 owner_id。"""
         remote_match = re.match(r"refs/quipu/remotes/[^/]+/([^/]+)/heads/.*", ref_name)
         if remote_match:
             return remote_match.group(1)
@@ -25,6 +28,10 @@ class Hydrator:
         return None
 
     def _get_commit_owners(self, local_user_id: str) -> dict[str, str]:
+        """
+        构建一个从 commit_hash 到 owner_id 的完整映射。
+        通过从每个分支末端向上遍历图来传播所有权。
+        """
         # 1. 获取所有分支末端 (heads) 及其直接所有者
         head_ref_tuples = self.git_db.get_all_ref_heads("refs/quipu/")
         head_owners: dict[str, str] = {}
@@ -67,6 +74,10 @@ class Hydrator:
         return final_commit_owners
 
     def sync(self, local_user_id: str):
+        """
+        执行增量补水操作。
+        此实现经过重构，以确保在从零重建时能够处理完整的历史图谱。
+        """
         # --- 阶段 1: 发现 ---
         all_ref_heads = [t[0] for t in self.git_db.get_all_ref_heads("refs/quipu/")]
         if not all_ref_heads:

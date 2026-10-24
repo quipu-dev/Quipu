@@ -8,10 +8,16 @@ logger = logging.getLogger(__name__)
 
 
 def register(executor: Executor):
+    """注册记忆与日志操作"""
     executor.register("log_thought", _log_thought, arg_mode="block_only")
 
 
 def _log_thought(ctx: ActContext, args: list[str]):
+    """
+    Act: log_thought
+    Args: [content]
+    说明: 将思维过程追加到 .quipu/memory.md 文件中，用于长期记忆。
+    """
     if len(args) < 1:
         ctx.fail("log_thought 需要内容参数")
 

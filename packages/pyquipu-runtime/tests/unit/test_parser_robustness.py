@@ -3,6 +3,10 @@ from quipu.runtime.parser import detect_best_parser, get_parser
 
 class TestParserRobustness:
     def test_parse_complex_language_tags(self):
+        """
+        验证解析器能否处理包含特殊字符的语言标签。
+        当前的 RegexBlockParser 会在 python-new 和 c++ 上失败。
+        """
         text = """
 ```act
 test_act
@@ -35,6 +39,10 @@ std::cout << "plus";
         assert 'std::cout << "plus";' in stmt["contexts"][2]
 
     def test_parse_with_spaces_in_fence(self):
+        """
+        验证解析器能否处理围栏后的空格（CommonMark 标准允许）。
+        例如: '~~~~~ python'
+        """
         text = """
 ```act
 test_act
@@ -51,6 +59,7 @@ print("space")
         assert 'print("space")' in stmts[0]["contexts"][0]
 
     def test_unclosed_block_handling(self):
+        """验证未闭合的块是否被安全处理（例如忽略或报错，但不应崩溃）。"""
         text = """
 ```act
 valid

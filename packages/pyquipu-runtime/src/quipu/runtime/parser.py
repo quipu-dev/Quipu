@@ -5,6 +5,15 @@ from quipu.spec.protocols.runtime import Statement
 
 
 class StateBlockParser:
+    """
+    基于状态机的解析器。
+
+    设计目标：
+    1. 健壮性：支持任意语言标签（如 python.old, c++, python-new）。
+    2. 原真性：绝对保留块内的所有空白和缩进（这对 patch_file 至关重要）。
+       标准 Markdown 解析器可能会剥离 1-3 个空格的缩进，这会导致补丁匹配失败。
+    """
+
     def __init__(self, fence_char: str):
         self.fence_char = fence_char
 
@@ -100,11 +109,15 @@ class StateBlockParser:
 
 
 class BacktickParser(StateBlockParser):
+    """标准 Markdown 解析器 (```)"""
+
     def __init__(self):
         super().__init__("`")
 
 
 class TildeParser(StateBlockParser):
+    """波浪号解析器 (~~~)"""
+
     def __init__(self):
         super().__init__("~")
 
@@ -118,6 +131,7 @@ _PARSERS = {
 
 
 def get_parser(name: str) -> PlanParser:
+    """工厂函数"""
     if name not in _PARSERS:
         raise ValueError(f"未知的解析器: {name}. 可用选项: {list(_PARSERS.keys())}")
     return _PARSERS[name]()
@@ -128,6 +142,10 @@ def list_parsers() -> list[str]:
 
 
 def detect_best_parser(text: str) -> str:
+    """
+    自动检测解析器类型。
+    使用简单的正则预扫描来判断是使用波浪号还是反引号。
+    """
     # 宽松匹配：行首 fence + 任意空白 + act
     pattern = re.compile(r"^([`~]{3,})\s*act\b", re.IGNORECASE | re.MULTILINE)
     match = pattern.search(text)

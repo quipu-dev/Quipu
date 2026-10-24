@@ -14,12 +14,15 @@ logger = logging.getLogger(__name__)
 
 
 def register(executor: Executor):
+    """注册读取与检索操作"""
     executor.register("read_file", _read_file, arg_mode="hybrid")
     executor.register("list_files", _list_files, arg_mode="exclusive")
     executor.register("search_files", _search_files, arg_mode="exclusive")
 
 
 class SafeArgumentParser(argparse.ArgumentParser):
+    """覆盖 ArgumentParser 以抛出 ExecutionError。"""
+
     def error(self, message):
         raise ExecutionError(f"参数解析错误: {message}")
 
@@ -29,6 +32,10 @@ class SafeArgumentParser(argparse.ArgumentParser):
 
 
 def _search_files(ctx: ActContext, args: list[str]):
+    """
+    Act: search_files
+    Args: pattern [--path PATH]
+    """
     parser = SafeArgumentParser(prog="search_files", add_help=False)
     parser.add_argument("pattern", help="搜索内容的正则表达式")
     parser.add_argument("--path", "-p", default=".", help="搜索的根目录")
@@ -89,6 +96,10 @@ def _python_search(ctx: ActContext, start_path: Path, pattern_str: str):
 
 
 def _read_file(ctx: ActContext, args: list[str]):
+    """
+    Act: read_file
+    Args: [path]
+    """
     if not args:
         ctx.fail("read_file 需要至少 1 个参数: [path]")
 
@@ -108,6 +119,10 @@ def _read_file(ctx: ActContext, args: list[str]):
 
 
 def _list_files(ctx: ActContext, args: list[str]):
+    """
+    Act: list_files
+    Args: [path] [--tree]
+    """
     parser = SafeArgumentParser(prog="list_files", add_help=False)
     parser.add_argument("path", nargs="?", default=".", help="目标目录")
     parser.add_argument("--tree", "-t", action="store_true", help="以树状结构递归显示")

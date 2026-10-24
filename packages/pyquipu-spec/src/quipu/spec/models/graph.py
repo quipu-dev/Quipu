@@ -7,6 +7,8 @@ from pathlib import Path
 
 @dataclasses.dataclass
 class QuipuNode:
+    """表示 Quipu 历史图谱中的一个节点（DTO）"""
+
     commit_hash: str
     output_tree: str
     input_tree: str
