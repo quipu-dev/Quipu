@@ -80,7 +80,7 @@ fail_act
             # 验证错误被捕获并封装到 Result 中
             assert result.success is False
             assert result.exit_code == 1
-            assert result.message == "run.error.execution"
+            assert "操作失败" in result.message
             assert isinstance(result.error, ExecutionError)
             assert "Task failed successfully" in str(result.error)
 
@@ -102,7 +102,7 @@ fail_act
             # 空计划通常不算失败，但也没有副作用
             assert result.success is True
             assert result.exit_code == 0
-            assert result.message == "axon.warning.noStatements"
+            assert "未解析到任何有效指令" in result.message
 
             # 验证没有调用 execute
             mock_runtime.execute.assert_not_called()

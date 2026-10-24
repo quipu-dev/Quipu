@@ -1,8 +1,0 @@
-{
-  "info": {
-    "scanning": "🔍 正在扫描冗余引用...",
-    "found": "🗑️  发现 {count} 个冗余引用 (总计 {total} 个 heads)。",
-    "noRedundant": "✅ 未发现冗余引用。"
-  },
-  "success": "✅ 清理完成，已删除 {count} 个引用。"
-}

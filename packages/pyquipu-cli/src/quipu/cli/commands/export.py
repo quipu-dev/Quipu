@@ -6,8 +6,6 @@ from typing import Annotated
 
 import typer
 import yaml
-from needle.pointer import L
-from quipu.common.bus import bus
 from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
 
@@ -163,7 +161,7 @@ def register(app: typer.Typer):
 
         with engine_context(work_dir) as engine:
             if not engine.history_graph:
-                bus.info(L.export.info.emptyHistory)
+                typer.secho("📜 历史记录为空，无需导出。", fg=typer.colors.BLUE, err=True)
                 ctx.exit(0)
 
             nodes_to_process = sorted(engine.history_graph.values(), key=lambda n: n.timestamp, reverse=True)
@@ -177,22 +175,26 @@ def register(app: typer.Typer):
                 filtered = filter_nodes(nodes_to_process, limit, since, until)
                 nodes_to_export = list(reversed(filtered))
             except typer.BadParameter as e:
-                bus.error(L.export.error.badParam, error=str(e))
+                typer.secho(f"❌ 参数错误: {e}", fg=typer.colors.RED, err=True)
                 ctx.exit(1)
 
             if not nodes_to_export:
-                bus.info(L.export.info.noMatchingNodes)
+                typer.secho("🤷 未找到符合条件的节点。", fg=typer.colors.BLUE, err=True)
                 ctx.exit(0)
 
             if output_dir.exists() and any(output_dir.iterdir()):
-                prompt = bus.render_to_string(L.export.prompt.overwrite, path=output_dir)
+                prompt = f"⚠️ 目录 '{output_dir}' 非空，是否清空并继续?"
                 if not prompt_for_confirmation(prompt, default=False):
-                    bus.warning(L.common.prompt.cancel)
+                    typer.secho("\n🚫 操作已取消。", fg=typer.colors.YELLOW, err=True)
                     raise typer.Abort()
                 shutil.rmtree(output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            bus.info(L.export.info.starting, count=len(nodes_to_export), path=output_dir)
+            typer.secho(
+                f"🚀 正在导出 {len(nodes_to_export)} 个节点到 '{output_dir}'...",
+                fg=typer.colors.BLUE,
+                err=True,
+            )
 
             # 预计算文件名和节点集合以供导航栏使用
             filename_map = {node.commit_hash: _generate_filename(node) for node in nodes_to_export}
@@ -207,9 +209,9 @@ def register(app: typer.Typer):
                     (output_dir / filename).write_text(content, encoding="utf-8")
 
             if zip_output:
-                bus.info(L.export.info.zipping)
+                typer.secho("📦 正在压缩导出文件...", fg=typer.colors.BLUE, err=True)
                 zip_path = shutil.make_archive(str(output_dir), "zip", output_dir)
                 shutil.rmtree(output_dir)
-                bus.success(L.export.success.zip, path=zip_path)
+                typer.secho(f"\n✅ 导出成功，已保存为压缩包: {zip_path}", fg=typer.colors.GREEN, err=True)
             else:
-                bus.success(L.export.success.dir)
+                typer.secho("\n✅ 导出成功完成。", fg=typer.colors.GREEN, err=True)

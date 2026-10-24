@@ -3,16 +3,10 @@ import logging
 from typing import Annotated
 
 import typer
-from quipu.common.bus import bus
 
 from .commands import axon, cache, export, navigation, query, remote, run, show, ui, workspace
-from .rendering import TyperRenderer
 
 # --- Global Setup ---
-# Inject the CLI-specific renderer into the common message bus instance.
-# This must be done once at the application's entry point.
-bus.set_renderer(TyperRenderer())
-
 # Initialize logger, but handler configuration (stderr or file)
 # is determined by specific commands at runtime.
 logging.getLogger(__name__)

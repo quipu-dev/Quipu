@@ -1,5 +1,0 @@
-{
-  "depHint": "💡 请运行: pip install 'textual>=0.58.0'",
-  "emptyHistory": "📜 历史记录为空，无需启动 UI。",
-  "checkoutRequest": "\n> TUI 请求检出到: {short_hash}"
-}

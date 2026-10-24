@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -11,4 +11,3 @@ class QuipuResult:
     message: str = ""
     data: Any = None
     error: Exception | None = None
-    msg_kwargs: dict[str, Any] = field(default_factory=dict)

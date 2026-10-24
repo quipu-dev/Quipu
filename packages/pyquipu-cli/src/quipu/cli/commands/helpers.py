@@ -5,9 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 import typer
-from needle.pointer import L
 from quipu.application.factory import create_engine
-from quipu.common.bus import bus
 from quipu.engine.state_machine import Engine
 from quipu.spec.models.graph import QuipuNode
 
@@ -32,25 +30,32 @@ def engine_context(work_dir: Path) -> Generator[Engine, None, None]:
 def _find_current_node(engine: Engine, graph: dict[str, QuipuNode]) -> QuipuNode | None:
     """在图中查找与当前工作区状态匹配的节点"""
     current_hash = engine.git_db.get_tree_hash()
-    # 修复：直接从 graph 中通过 output_tree hash 查找
     for node in graph.values():
         if node.output_tree == current_hash:
             return node
 
-    bus.warning(L.navigation.warning.workspaceDirty)
-    bus.info(L.navigation.info.saveHint)
+    typer.secho(
+        "⚠️  当前工作区状态未在历史中找到，或存在未保存的变更。",
+        fg=typer.colors.YELLOW,
+        err=True,
+    )
+    typer.secho(
+        "💡  请先运行 'quipu save' 创建一个快照，再进行导航。",
+        fg=typer.colors.BLUE,
+        err=True,
+    )
     return None
 
 
-def _execute_visit(ctx: typer.Context, engine: Engine, target_hash: str, msg_id: str, **kwargs):
+def _execute_visit(ctx: typer.Context, engine: Engine, target_hash: str, msg: str):
     """辅助函数：执行 engine.visit 并处理结果"""
-    bus.info(msg_id, **kwargs)
+    typer.secho(msg, fg=typer.colors.BLUE, err=True)
     try:
         engine.visit(target_hash)
-        bus.success(L.navigation.success.visit, short_hash=target_hash[:7])
+        typer.secho(f"✅ 已成功切换到状态 {target_hash[:7]}。", fg=typer.colors.GREEN, err=True)
     except Exception as e:
         logger.exception(f"导航操作失败 (目标哈希: {target_hash[:12]})")
-        bus.error(L.navigation.error.generic, error=str(e))
+        typer.secho(f"❌ 导航操作失败: {e}", fg=typer.colors.RED, err=True)
         ctx.exit(1)
 
 
