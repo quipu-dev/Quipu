@@ -19,6 +19,18 @@ logger = logging.getLogger(__name__)
 
 
 def get_available_acts(work_dir: Path) -> dict[str, str]:
+    """
+    Statelessly discovers and returns all available acts.
+
+    This function initializes a temporary, stateless executor to discover
+    core acts and acts from plugins found relative to the working directory.
+
+    Args:
+        work_dir: The directory from which to discover project-level plugins.
+
+    Returns:
+        A dictionary mapping act names to their docstrings.
+    """
     # A dummy confirmation handler is used as it's not required for listing.
     # Yolo=True ensures no interactive prompts can be triggered.
     executor = Executor(
@@ -38,6 +50,11 @@ ConfirmationHandler = Callable[[list[str], str], bool]
 
 
 class QuipuApplication:
+    """
+    封装了 Quipu 核心业务流程的高层应用对象。
+    负责协调 Engine, Parser, Executor。
+    """
+
     def __init__(self, work_dir: Path, confirmation_handler: ConfirmationHandler, yolo: bool = False):
         self.work_dir = work_dir
         self.confirmation_handler = confirmation_handler
@@ -46,6 +63,10 @@ class QuipuApplication:
         logger.info(f"Operation boundary set to: {self.work_dir}")
 
     def _prepare_workspace(self) -> str:
+        """
+        检查并准备工作区，处理状态漂移。
+        返回执行前的 input_tree_hash。
+        """
         current_hash = self.engine.git_db.get_tree_hash()
 
         # 1. 正常 Clean: current_node 存在且与当前 hash 一致
@@ -67,6 +88,7 @@ class QuipuApplication:
             return current_hash
 
     def _setup_executor(self) -> Executor:
+        """创建、配置并返回一个 Executor 实例，并注入确认处理器。"""
         executor = Executor(
             root_dir=self.work_dir,
             yolo=self.yolo,
@@ -83,6 +105,7 @@ class QuipuApplication:
         return executor
 
     def run(self, content: str, parser_name: str) -> QuipuResult:
+        """执行一个完整的 Plan。"""
         # --- Phase 1 & 2: Perception & Decision (Lazy Capture) ---
         input_tree_hash = self._prepare_workspace()
 
@@ -140,6 +163,12 @@ def run_quipu(
     parser_name: str = "auto",
     yolo: bool = False,
 ) -> QuipuResult:
+    """
+    Quipu 核心业务逻辑的入口包装器。
+
+    实例化并运行 QuipuApplication，捕获所有异常并转化为 QuipuResult。
+    确保资源被安全释放。
+    """
     app = None
     try:
         app = QuipuApplication(work_dir=work_dir, confirmation_handler=confirmation_handler, yolo=yolo)
@@ -175,6 +204,22 @@ def run_stateless_plan(
     parser_name: str = "auto",
     yolo: bool = False,
 ) -> QuipuResult:
+    """
+    Executes a plan in a stateless manner, bypassing the Quipu engine.
+
+    This function sets up a temporary executor, loads plugins, parses the content,
+    and executes the statements against the specified working directory.
+
+    Args:
+        content: The string content of the plan to execute.
+        work_dir: The root directory for the execution.
+        confirmation_handler: A callable to handle user confirmations.
+        parser_name: The name of the parser to use ('auto' by default).
+        yolo: If True, skips all confirmation prompts.
+
+    Returns:
+        A QuipuResult object indicating the outcome of the execution.
+    """
     try:
         executor = Executor(
             root_dir=work_dir,

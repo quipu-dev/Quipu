@@ -9,11 +9,17 @@ logger = logging.getLogger(__name__)
 
 
 def register(executor: Executor):
+    """注册检查类操作"""
     executor.register("check_files_exist", _check_files_exist, arg_mode="exclusive")
     executor.register("check_cwd_match", _check_cwd_match, arg_mode="exclusive")
 
 
 def _check_files_exist(ctx: ActContext, args: list[str]):
+    """
+    Act: check_files_exist
+    Args: [file_list_string]
+    说明: 检查当前工作区内是否存在指定的文件。文件名通过换行符分隔。
+    """
     if len(args) < 1:
         ctx.fail("check_files_exist 需要至少 1 个参数: [file_list_string]")
 
@@ -35,6 +41,11 @@ def _check_files_exist(ctx: ActContext, args: list[str]):
 
 
 def _check_cwd_match(ctx: ActContext, args: list[str]):
+    """
+    Act: check_cwd_match
+    Args: [expected_absolute_path]
+    说明: 检查当前运行的工作区根目录是否与预期的绝对路径匹配。
+    """
     if len(args) < 1:
         ctx.fail("check_cwd_match 需要至少 1 个参数: [expected_absolute_path]")
 

@@ -12,6 +12,7 @@ from quipu.spec.protocols.runtime import ActContext, Statement
 class TestGitActs:
     @pytest.fixture(autouse=True)
     def setup_git_env(self, executor: Executor, isolated_vault: Path):
+        """为测试环境自动注册 Git Acts 并进行 git init"""
         register_git_acts(executor)
 
         # 执行初始化
@@ -52,6 +53,7 @@ class TestGitActs:
         func(ctx, [])
 
     def test_git_status_output_stream(self, executor: Executor, isolated_vault: Path):
+        """验证 git_status 使用 bus.data 输出数据，而 executor 使用 bus.info 输出进度。"""
         (isolated_vault / "untracked.txt").write_text("new file")
 
         captured = []

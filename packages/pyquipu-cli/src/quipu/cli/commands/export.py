@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def _sanitize_summary(summary: str) -> str:
+    """净化摘要以用作安全的文件名部分。"""
     if not summary:
         return "no-summary"
     sanitized = re.sub(r"[\\/:#\[\]|]", "_", summary)
@@ -27,6 +28,7 @@ def _sanitize_summary(summary: str) -> str:
 
 
 def _generate_filename(node: QuipuNode) -> str:
+    """根据规范生成文件名。"""
     ts = node.timestamp.strftime("%y%m%d-%H%M")
     short_hash = node.commit_hash[:7]
     sanitized_summary = _sanitize_summary(node.summary)
@@ -34,6 +36,7 @@ def _generate_filename(node: QuipuNode) -> str:
 
 
 def _format_frontmatter(node: QuipuNode) -> str:
+    """生成 YAML Frontmatter 字符串。"""
     data = {
         "commit_hash": node.commit_hash,
         "output_tree": node.output_tree,
@@ -53,6 +56,7 @@ def _generate_navbar(
     filename_map: dict[str, str],
     hidden_link_types: set[str],
 ) -> str:
+    """生成导航栏 Markdown 字符串。"""
     nav_links = []
 
     # 1. 总结节点 (↑)
@@ -106,6 +110,7 @@ def _generate_file_content(
     filename_map: dict[str, str],
     hidden_link_types: set[str],
 ) -> str:
+    """构建单个 Markdown 文件的完整内容。"""
     parts = []
     if not no_frontmatter:
         parts.append(_format_frontmatter(node))

@@ -18,6 +18,10 @@ from quipu.spec.protocols.storage import HistoryReader, HistoryWriter
 
 
 def create_plan_node_with_change(engine: Engine, parent_hash: str, file_name: str, content: str, message: str) -> str:
+    """
+    Creates a file change in the workspace and generates a new Plan node.
+    Returns the output_tree hash of the new node.
+    """
     (engine.root_dir / file_name).write_text(content)
     new_hash = engine.git_db.get_tree_hash()
     engine.create_plan_node(input_tree=parent_hash, output_tree=new_hash, plan_content=message)
@@ -25,6 +29,11 @@ def create_plan_node_with_change(engine: Engine, parent_hash: str, file_name: st
 
 
 def create_capture_node_with_change(engine: Engine, file_name: str, content: str, message: str) -> str:
+    """
+    Creates a file change in the workspace and generates a new Capture node.
+    The new node is parented to the current HEAD of the engine.
+    Returns the output_tree hash of the new node.
+    """
     (engine.root_dir / file_name).write_text(content)
     new_hash = engine.git_db.get_tree_hash()
     engine.capture_drift(new_hash, message=message)
@@ -35,6 +44,8 @@ def create_capture_node_with_change(engine: Engine, file_name: str, content: str
 
 
 class VirtualFileSystem:
+    """一个简单的内存虚拟文件系统。"""
+
     def __init__(self):
         self._files: dict[str, str] = {}
 
@@ -55,12 +66,15 @@ class VirtualFileSystem:
 
 
 class InMemoryDB:
+    """一个模拟 GitDB 接口的内存数据库，用于快速测试。"""
+
     def __init__(self):
         self.vfs = VirtualFileSystem()
         self.snapshots: dict[str, VirtualFileSystem] = {EMPTY_TREE_HASH: VirtualFileSystem()}
         self.nodes: dict[str, QuipuNode] = {}  # output_tree -> Node
 
     def get_tree_hash(self) -> str:
+        """对当前 VFS 内容进行确定性哈希。"""
         if not self.vfs.files:
             return EMPTY_TREE_HASH
 
@@ -109,6 +123,8 @@ class InMemoryDB:
 
 
 class InMemoryHistoryManager(HistoryReader, HistoryWriter):
+    """同时实现 Reader 和 Writer 接口的内存历史管理器。"""
+
     def __init__(self, db: InMemoryDB):
         self.db = db  # The db holds the single source of truth for nodes
 
@@ -225,11 +241,13 @@ class InMemoryHistoryManager(HistoryReader, HistoryWriter):
 
 
 def run_git_command(cwd: Path, args: list[str], check: bool = True) -> str:
+    """Helper to run a git command and return stdout."""
     result = subprocess.run(["git"] + args, cwd=cwd, capture_output=True, text=True, check=check)
     return result.stdout.strip()
 
 
 def get_local_quipu_heads(work_dir: Path) -> set[str]:
+    """Helper to get a set of all local quipu head commit hashes."""
     refs_output = run_git_command(
         work_dir, ["for-each-ref", "--format=%(objectname)", "refs/quipu/local/heads"], check=False
     )
@@ -239,6 +257,7 @@ def get_local_quipu_heads(work_dir: Path) -> set[str]:
 
 
 def create_node_via_cli(runner: CliRunner, work_dir: Path, content: str) -> str:
+    """Helper to create a node via the CLI runner and return its commit hash."""
     heads_before = get_local_quipu_heads(work_dir)
 
     # [FIX] Add an explicit title to the plan to ensure predictable node summary.
@@ -273,6 +292,12 @@ def create_node_via_cli(runner: CliRunner, work_dir: Path, content: str) -> str:
 
 
 def create_branching_history(engine: Engine) -> Engine:
+    r"""
+    Creates a common branching history for testing.
+    History:
+    - n0 (root) -> n1 -> n2 (branch point) -> n3a (branch A) -> n4 (summary)
+                                          \-> n3b (branch B)
+    """
     ws = engine.root_dir
     (ws / "file.txt").write_text("v0")
     h0 = engine.git_db.get_tree_hash()
@@ -297,6 +322,11 @@ def create_branching_history(engine: Engine) -> Engine:
 
 
 def create_complex_link_history(engine: Engine) -> Engine:
+    """
+    Creates a complex history to ensure a specific node has all navigation link types.
+    Node n3 will have: a parent (n2b), a child (n4), an ancestor branch point (n1),
+    and an ancestor summary node (n_summary).
+    """
     ws = engine.root_dir
     engine.create_plan_node(EMPTY_TREE_HASH, EMPTY_TREE_HASH, "plan sum", summary_override="Ancestor_Summary")
     (ws / "f").write_text("v0")
@@ -325,6 +355,12 @@ def create_complex_link_history(engine: Engine) -> Engine:
 
 
 def create_linear_history(engine: Engine) -> tuple[Engine, dict[str, str]]:
+    """
+    Creates a simple linear history A -> B.
+    - State A: a.txt
+    - State B: b.txt (a.txt is removed)
+    Returns the engine and a dictionary mapping state names ('a', 'b') to their output tree hashes.
+    """
     ws = engine.root_dir
 
     # State A
@@ -343,6 +379,13 @@ def create_linear_history(engine: Engine) -> tuple[Engine, dict[str, str]]:
 
 
 def create_dirty_workspace_history(engine: Engine) -> tuple[Engine, str]:
+    """
+    Creates a history A -> B, then makes the workspace dirty.
+    - State A: file.txt -> "v1"
+    - State B (HEAD): file.txt -> "v2"
+    - Dirty State: file.txt -> "v3"
+    Returns the engine and the hash of state A for checkout tests.
+    """
     work_dir = engine.root_dir
     file_path = work_dir / "file.txt"
 
@@ -362,6 +405,10 @@ def create_dirty_workspace_history(engine: Engine) -> tuple[Engine, str]:
 
 
 def create_linear_history_from_specs(engine: Engine, specs: list[dict[str, Any]]):
+    """
+    Creates a linear history based on a list of specifications.
+    Each spec is a dict: {'type': 'plan'|'capture', 'summary': str, 'content': Optional[str]}
+    """
     parent_hash = EMPTY_TREE_HASH
     if engine.history_graph:
         # If history is not empty, start from the latest node
@@ -389,6 +436,12 @@ def create_linear_history_from_specs(engine: Engine, specs: list[dict[str, Any]]
 
 
 def create_query_branching_history(engine: Engine) -> tuple[Engine, str]:
+    r"""
+    Creates a specific branching history for query reachability tests.
+    History: root -> A -> B (HEAD)
+                   \-> C (unreachable)
+    Returns the engine and the hash of state B (the HEAD).
+    """
     ws = engine.root_dir
     # root -> A
     (ws / "f_a").touch()

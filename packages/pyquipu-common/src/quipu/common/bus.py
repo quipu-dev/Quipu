@@ -19,11 +19,13 @@ class QuipuBus(FeedbackBus):
     _renderer: QuipuRendererProtocol | None  # type: ignore
 
     def data(self, data_string: str) -> None:
+        """输出原始数据（如 JSON, Diff 等），通常去往 stdout。"""
         if self._renderer and hasattr(self._renderer, "data"):
             self._renderer.data(data_string)
 
 
 def _detect_lang() -> str:
+    """检测系统或环境变量中定义的语言。Quipu 默认为 zh。"""
     env_lang = os.getenv("QUIPU_LANG") or os.getenv("NEEDLE_LANG")
     if env_lang:
         return env_lang

@@ -7,6 +7,7 @@ from quipu.test_utils.helpers import EMPTY_TREE_HASH, InMemoryDB, InMemoryHistor
 
 @pytest.fixture
 def memory_engine(tmp_path: Path) -> Engine:
+    """创建一个使用完整内存后端的 Engine 实例。"""
     db = InMemoryDB()
     history_manager = InMemoryHistoryManager(db)
     # The root_dir is just a placeholder for the in-memory engine
@@ -16,11 +17,13 @@ def memory_engine(tmp_path: Path) -> Engine:
 
 class TestEngineWithMemoryBackend:
     def test_align_clean_genesis(self, memory_engine: Engine):
+        """测试在创世状态下的对齐。"""
         status = memory_engine.align()
         assert status == "CLEAN"
         assert memory_engine.current_node is None
 
     def test_capture_drift_from_genesis(self, memory_engine: Engine):
+        """测试从创世状态捕获漂移。"""
         # 1. 模拟文件变更
         memory_engine.git_db.vfs.write("a.txt", "hello")
         current_hash = memory_engine.git_db.get_tree_hash()
@@ -43,6 +46,7 @@ class TestEngineWithMemoryBackend:
         assert memory_engine.current_node == node
 
     def test_plan_node_creation(self, memory_engine: Engine):
+        """测试 Plan 节点的创建流程。"""
         # State A
         memory_engine.git_db.vfs.write("a.txt", "v1")
         hash_a = memory_engine.git_db.get_tree_hash()

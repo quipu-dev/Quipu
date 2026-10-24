@@ -3,6 +3,7 @@ from typer.testing import CliRunner
 
 
 def test_run_command_with_piped_input_and_confirmation(runner: CliRunner, quipu_workspace):
+    """测试核心场景: 通过管道输入 plan，并对需要确认的 act (run_command) 进行交互。"""
     work_dir, _, _ = quipu_workspace
     output_file = work_dir / "output.txt"
 

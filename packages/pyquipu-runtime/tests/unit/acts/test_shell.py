@@ -22,6 +22,7 @@ class TestShellActs:
         assert captured[0] == "Hello Shell"
 
     def test_run_command_multiline_script(self, executor: Executor, isolated_vault):
+        """验证多行脚本可以被正确执行。"""
         script = "touch file_a.txt\nmv file_a.txt file_b.txt"
         func, _, _ = executor._acts["run_command"]
         ctx = ActContext(executor)
@@ -31,6 +32,10 @@ class TestShellActs:
         assert (isolated_vault / "file_b.txt").exists()
 
     def test_run_command_does_not_swallow_blocks(self, executor: Executor):
+        """
+        验证 run_command 不会吞噬后续指令。
+        这是一个更底层的测试，直接使用 executor.execute。
+        """
         captured = []
         executor.data_handler = captured.append
 

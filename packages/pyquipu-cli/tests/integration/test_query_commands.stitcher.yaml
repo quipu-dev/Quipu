@@ -1,4 +1,0 @@
-"test_log_filtering": |-
-  Test limit and time filtering logic for log command.
-"test_log_reachable_only": |-
-  Test --reachable-only filtering for the log command.

@@ -22,11 +22,14 @@ DEFAULTS = {
 
 
 class ConfigManager:
+    """负责加载和管理 .quipu/config.yml 文件。"""
+
     def __init__(self, work_dir: Path):
         self.config_path = work_dir.resolve() / ".quipu" / "config.yml"
         self.user_config: dict[str, Any] = self._load_config()
 
     def _load_config(self) -> dict[str, Any]:
+        """加载并解析 YAML 配置文件，如果文件不存在或无效则返回空字典。"""
         if not self.config_path.exists():
             return {}
 
@@ -45,6 +48,14 @@ class ConfigManager:
             return {}
 
     def get(self, key: str, fallback: Any = None) -> Any:
+        """
+        获取一个配置值，支持点状符号进行嵌套访问 (e.g., 'sync.remote_name')。
+
+        查找顺序:
+        1. 用户配置 (`config.yml`)
+        2. 内置默认值 (`DEFAULTS`)
+        3. 提供的 `fallback` 值
+        """
         # 尝试从用户配置中获取
         user_val = self._get_nested(self.user_config, key)
         if user_val is not None:
@@ -59,6 +70,7 @@ class ConfigManager:
         return fallback
 
     def _get_nested(self, data: dict, key: str) -> Any:
+        """使用点状符号安全地访问嵌套字典。"""
         keys = key.split(".")
         current = data
         for k in keys:
@@ -69,6 +81,10 @@ class ConfigManager:
         return current
 
     def set(self, key: str, value: Any):
+        """
+        设置一个配置值，支持点状符号进行嵌套访问。
+        如果中间路径的字典不存在，会自动创建。
+        """
         keys = key.split(".")
         d = self.user_config
         for k in keys[:-1]:
@@ -77,6 +93,7 @@ class ConfigManager:
         logger.debug(f"配置已更新: {key} = {value}")
 
     def save(self):
+        """将当前的 user_config 写回到 .quipu/config.yml 文件。"""
         try:
             self.config_path.parent.mkdir(exist_ok=True)
             with open(self.config_path, "w", encoding="utf-8") as f:

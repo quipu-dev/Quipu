@@ -8,10 +8,15 @@ logger = logging.getLogger(__name__)
 
 
 def register(executor: Executor):
+    """注册 Shell 相关操作"""
     executor.register("run_command", _run_command, arg_mode="exclusive")
 
 
 def _run_command(ctx: ActContext, args: list[str]):
+    """
+    Act: run_command
+    Args: [command_string]
+    """
     if len(args) < 1:
         ctx.fail("run_command 需要至少 1 个参数: [command_string]")
 

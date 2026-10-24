@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class _EngineReaderCompatibilityAdapter:
+    """向后兼容适配器，让 engine.reader 能够在迁移期安全路由到 storage 与 index."""
+
     def __init__(self, engine: "Engine", original_reader: Any = None):
         self._engine = engine
         self._original = original_reader
@@ -85,6 +87,8 @@ class _EngineReaderCompatibilityAdapter:
 
 
 class _EngineWriterCompatibilityAdapter:
+    """向后兼容适配器，支持 engine.writer.create_node 等旧调用."""
+
     def __init__(self, engine: "Engine", original_writer: Any = None):
         self._engine = engine
         self._original = original_writer
@@ -128,7 +132,14 @@ class _EngineWriterCompatibilityAdapter:
 
 
 class Engine:
+    """
+    Quipu 状态引擎门面 (Facade).
+
+    协调 GitSnapshotStorage (物理状态真相) 与 GraphIndex (图谱索引/缓存加速).
+    """
+
     def _sync_persistent_ignores(self):
+        """将 config.yml 中的持久化忽略规则同步到 .git/info/exclude。"""
         try:
             config = ConfigManager(self.root_dir)
             patterns = config.get("sync.persistent_ignores", [])
@@ -229,10 +240,18 @@ class Engine:
             self._sync_persistent_ignores()
 
     def close(self):
+        """关闭引擎持有的所有资源，如数据库连接。"""
         if self.db_manager:
             self.db_manager.close()
 
     def _get_current_user_id(self) -> str:
+        """
+        确定当前用户的 ID，实现统一的、鲁棒的身份识别。
+        优先级:
+        1. .quipu/config.yml 中的 `sync.user_id`
+        2. `git config user.email` (经过规范化处理)
+        3. 回退到 "unknown-local-user"
+        """
         config = ConfigManager(self.root_dir)
         user_id = config.get("sync.user_id")
         if user_id:
@@ -430,6 +449,10 @@ class Engine:
         node_type: str | None = None,
         limit: int = 10,
     ) -> list[QuipuNode]:
+        """
+        在历史图谱中查找符合条件的节点。
+        此方法现在委托给配置的 HistoryReader 来执行查找。
+        """
         return self.index.find_nodes(
             summary_regex=summary_regex,
             node_type=node_type,

@@ -79,6 +79,7 @@ class QuipuUiApp(App[UiResult | None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Loads the first page of data."""
         logger.debug("TUI: on_mount started.")
         self.query_one(Header).tall = False
 
@@ -127,6 +128,7 @@ class QuipuUiApp(App[UiResult | None]):
             self.engine.close()
 
     def _update_header(self):
+        """Centralized method to update the app's title and sub_title."""
         assert self.view_model is not None
         mode = "Markdown" if self.markdown_enabled else "Raw Text"
         status_tag = "⚡ DIRTY" if self.is_workspace_dirty else "✔ CLEAN"
@@ -137,6 +139,7 @@ class QuipuUiApp(App[UiResult | None]):
         )
 
     def _load_page(self, page_number: int) -> None:
+        """Loads and displays a specific page of nodes."""
         assert self.view_model is not None
         logger.debug(f"TUI: Loading page {page_number}")
         self.view_model.load_page(page_number)
@@ -161,6 +164,7 @@ class QuipuUiApp(App[UiResult | None]):
         self._refresh_table()
 
     def action_toggle_markdown(self) -> None:
+        """Toggles the rendering mode between Markdown and raw text."""
         self.markdown_enabled = not self.markdown_enabled
         self._update_header()
         # If the content view is already showing, force a re-render with the new mode.
@@ -346,6 +350,7 @@ class QuipuUiApp(App[UiResult | None]):
             logger.exception("DEBUG: Failed to focus current node")
 
     def _update_loading_preview(self):
+        """A lightweight method to only update header/placeholder text."""
         assert self.view_model is not None
         node = self.view_model.get_selected_node()
         if not node:
@@ -438,10 +443,12 @@ class QuipuUiApp(App[UiResult | None]):
             self.update_timer = self.set_timer(self.debounce_delay_seconds, self._on_timer_finished)
 
     def _on_timer_finished(self) -> None:
+        """Callback for the debounce timer."""
         # The timer finished, so we are ready to show content
         self._set_state(ContentViewSate.SHOWING_CONTENT)
 
     def action_toggle_view(self) -> None:
+        """Handles the 'v' key press to toggle the content view."""
         if self.content_view_state == ContentViewSate.HIDDEN:
             assert self.view_model is not None
             # If a node is selected, transition to loading, otherwise do nothing

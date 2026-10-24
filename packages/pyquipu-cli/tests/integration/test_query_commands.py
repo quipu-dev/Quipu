@@ -85,6 +85,7 @@ def test_log_json_empty(runner, quipu_workspace):
 
 
 def test_log_filtering(runner, quipu_workspace):
+    """Test limit and time filtering logic for log command."""
     work_dir, _, engine = quipu_workspace
 
     specs = [
@@ -108,6 +109,7 @@ def test_log_filtering(runner, quipu_workspace):
 
 
 def test_log_reachable_only(runner, quipu_workspace):
+    """Test --reachable-only filtering for the log command."""
     work_dir, _, engine = quipu_workspace
 
     create_query_branching_history(engine)
