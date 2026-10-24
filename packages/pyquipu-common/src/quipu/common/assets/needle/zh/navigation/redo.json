@@ -1,7 +1,0 @@
-{
-  "atEnd": "✅ 已在分支末端。",
-  "reachedEnd": "✅ 已到达分支末端 (移动了 {steps} 步)。",
-  "info": {
-    "multiBranch": "💡 当前节点有多个分支，已自动选择最新分支 -> {short_hash}"
-  }
-}

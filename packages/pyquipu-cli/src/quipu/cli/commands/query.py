@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from needle.pointer import L
-from quipu.common.bus import bus
 from quipu.spec.models.graph import QuipuNode
 
 from ..config import DEFAULT_WORK_DIR
@@ -31,7 +29,6 @@ def _nodes_to_json_str(nodes: list[QuipuNode]) -> str:
             else:
                 node_dict[field.name] = value
 
-        # Explicitly add properties
         node_dict["short_hash"] = node.short_hash
         node_list.append(node_dict)
 
@@ -63,7 +60,7 @@ def register(app: typer.Typer):
                 if json_output:
                     typer.echo("[]", err=False)
                 else:
-                    bus.info(L.query.info.emptyHistory)
+                    typer.secho("📜 历史记录为空。", fg=typer.colors.BLUE, err=True)
                 raise typer.Exit(0)
 
             nodes_to_process = sorted(graph.values(), key=lambda n: n.timestamp, reverse=True)
@@ -74,21 +71,21 @@ def register(app: typer.Typer):
             try:
                 nodes = filter_nodes(nodes_to_process, limit, since, until)
             except typer.BadParameter as e:
-                bus.error(L.common.error.invalidConfig, error=str(e))
+                typer.secho(f"❌ 配置或参数无效: {e}", fg=typer.colors.RED, err=True)
                 ctx.exit(1)
 
             if not nodes:
                 if json_output:
                     typer.echo("[]", err=False)
                 else:
-                    bus.info(L.query.info.noResults)
+                    typer.secho("🤷 未找到符合条件的历史节点。", fg=typer.colors.BLUE, err=True)
                 raise typer.Exit(0)
 
             if json_output:
                 typer.echo(_nodes_to_json_str(nodes), err=False)
                 raise typer.Exit(0)
 
-            bus.info(L.query.log.ui.header)
+            typer.secho("--- Quipu History Log ---", fg=typer.colors.BLUE, err=True)
             for node in nodes:
                 ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 tag = f"[{node.node_type.upper()}]"
@@ -112,7 +109,7 @@ def register(app: typer.Typer):
                 if json_output:
                     typer.echo("[]", err=False)
                 else:
-                    bus.info(L.query.info.emptyHistory)
+                    typer.secho("📜 历史记录为空。", fg=typer.colors.BLUE, err=True)
                 ctx.exit(0)
 
             nodes = engine.find_nodes(summary_regex=summary_regex, node_type=node_type, limit=limit)
@@ -121,14 +118,14 @@ def register(app: typer.Typer):
                 if json_output:
                     typer.echo("[]", err=False)
                 else:
-                    bus.info(L.query.info.noResults)
+                    typer.secho("🤷 未找到符合条件的历史节点。", fg=typer.colors.BLUE, err=True)
                 ctx.exit(0)
 
             if json_output:
                 typer.echo(_nodes_to_json_str(nodes), err=False)
                 ctx.exit(0)
 
-            bus.info(L.query.find.ui.header)
+            typer.secho("--- 查找结果 ---", fg=typer.colors.BLUE, err=True)
             for node in nodes:
                 ts = node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 tag = f"[{node.node_type.upper()}]"

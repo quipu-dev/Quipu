@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from needle.pointer import L
-from quipu.common.bus import bus
 from rich.console import Console
 from rich.syntax import Syntax
 
@@ -23,14 +21,22 @@ def _find_target_node(graph: dict, hash_prefix: str):
         if node.commit_hash.startswith(hash_prefix) or node.output_tree.startswith(hash_prefix)
     ]
     if not matches:
-        bus.error(L.show.error.notFound, hash_prefix=hash_prefix)
+        typer.secho(
+            f"❌ 错误: 未找到哈希前缀为 '{hash_prefix}' 的历史节点。",
+            fg=typer.colors.RED,
+            err=True,
+        )
         raise typer.Exit(1)
 
     unique_commits = {node.commit_hash for node in matches}
     if len(unique_commits) > 1:
         unique_output_trees = {node.output_tree for node in matches}
         if len(unique_output_trees) > 1:
-            bus.error(L.show.error.notUnique, hash_prefix=hash_prefix, count=len(matches))
+            typer.secho(
+                f"❌ 错误: 哈希前缀 '{hash_prefix}' 不唯一，匹配到 {len(matches)} 个节点。",
+                fg=typer.colors.RED,
+                err=True,
+            )
             raise typer.Exit(1)
         matches.sort(key=lambda n: (1 if n.parent else 0, n.timestamp), reverse=True)
     return matches[0]
@@ -60,17 +66,24 @@ def register(app: typer.Typer):
                 if json_output:
                     typer.echo("{}", err=False)
                 else:
-                    bus.info(L.show.info.noContent)
+                    typer.secho("🤷 此节点内部无文件内容。", fg=typer.colors.BLUE, err=True)
                 raise typer.Exit()
 
-            # --- Phase 1: Build output dictionary ---
             output_data = {}
             files_to_process = extract if extract else sorted(blobs.keys())
 
             for filename in files_to_process:
                 if filename not in blobs:
-                    bus.error(L.show.error.fileNotInNode, filename=filename)
-                    bus.info(L.show.info.availableFiles, file_list=", ".join(blobs.keys()))
+                    typer.secho(
+                        f"❌ 错误: 在节点内未找到文件 '{filename}'。",
+                        fg=typer.colors.RED,
+                        err=True,
+                    )
+                    typer.secho(
+                        f"可用文件: {', '.join(blobs.keys())}",
+                        fg=typer.colors.BLUE,
+                        err=True,
+                    )
                     raise typer.Exit(1)
 
                 content_bytes = blobs[filename]
@@ -79,13 +92,11 @@ def register(app: typer.Typer):
                 except UnicodeDecodeError:
                     output_data[filename] = f"<binary data, {len(content_bytes)} bytes>"
 
-            # --- Phase 2: Render output ---
             if json_output:
                 typer.echo(json.dumps(output_data, indent=2, ensure_ascii=False), err=False)
             else:
                 console = Console()
                 if extract:
-                    # User explicitly extracted files, show them directly
                     for filename, content in output_data.items():
                         if len(extract) > 1:
                             console.rule(f"[bold]{filename}[/bold]", style="blue")
@@ -98,13 +109,7 @@ def register(app: typer.Typer):
                     ts = target_node.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                     tag = f"[{target_node.node_type.upper()}]"
                     typer.echo(
-                        bus.render_to_string(
-                            L.show.ui.header,
-                            ts=ts,
-                            tag=f"{tag:<9}",
-                            short_hash=target_node.short_hash,
-                            summary=target_node.summary,
-                        ),
+                        f"{ts} {tag:<9} {target_node.short_hash} - {target_node.summary}\n",
                         err=False,
                     )
 

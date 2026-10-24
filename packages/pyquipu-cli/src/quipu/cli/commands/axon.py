@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from needle.pointer import L
-from quipu.common.bus import bus
 
 from ..config import DEFAULT_ENTRY_FILE, DEFAULT_WORK_DIR
 from ..logger_config import setup_logging
@@ -38,13 +36,13 @@ def register(app: typer.Typer):
         if list_acts:
             from quipu.application.controller import get_available_acts
 
-            bus.info(L.axon.listActs.ui.header)
+            typer.secho("\n📋 可用的 Axon 指令列表:\n", fg=typer.colors.BLUE, err=True)
             acts = get_available_acts(work_dir)
             for name in sorted(acts.keys()):
                 doc = acts[name]
                 clean_doc = inspect.cleandoc(doc) if doc else "暂无说明"
                 indented_doc = "\n".join(f"   {line}" for line in clean_doc.splitlines())
-                item_header = bus.render_to_string(L.axon.listActs.ui.actItem, name=name)
+                item_header = f"🔹 {name}"
                 typer.echo(f"{item_header}\n{indented_doc}\n", err=False)
             ctx.exit(0)
 
@@ -55,7 +53,7 @@ def register(app: typer.Typer):
         source_desc = ""
         if file:
             if not file.exists():
-                bus.error(L.common.error.fileNotFound, path=file)
+                typer.secho(f"❌ 错误: 找不到指令文件: {file}", fg=typer.colors.RED, err=True)
                 ctx.exit(1)
             content = file.read_text(encoding="utf-8")
             source_desc = f"文件 ({file.name})"
@@ -73,7 +71,11 @@ def register(app: typer.Typer):
             source_desc = f"默认文件 ({DEFAULT_ENTRY_FILE.name})"
 
         if not content.strip():
-            bus.warning(L.axon.warning.noInput)
+            typer.secho(
+                "⚠️  提示: 未提供输入 (文件或管道)，且未找到默认文件。",
+                fg=typer.colors.YELLOW,
+                err=True,
+            )
             ctx.exit(0)
 
         # --- 2. 委托给应用层服务 (核心重构) ---
@@ -91,12 +93,11 @@ def register(app: typer.Typer):
 
         # --- 3. 渲染结果 (CLI 层职责) ---
         if result.message:
-            kwargs = result.msg_kwargs or {}
             if result.exit_code == 2:
-                bus.warning(result.message, **kwargs)
+                typer.secho(result.message, fg=typer.colors.YELLOW, err=True)
             elif not result.success:
-                bus.error(result.message, **kwargs)
+                typer.secho(result.message, fg=typer.colors.RED, err=True)
             else:
-                bus.success(result.message, **kwargs)
+                typer.secho(result.message, fg=typer.colors.GREEN, err=True)
 
         ctx.exit(result.exit_code)

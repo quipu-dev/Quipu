@@ -3,8 +3,6 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from needle.pointer import L
-from quipu.common.bus import bus
 
 from ..config import DEFAULT_WORK_DIR
 from ..logger_config import setup_logging
@@ -26,14 +24,14 @@ def cache_sync(
     ] = DEFAULT_WORK_DIR,
 ):
     """将 Git 历史增量同步到 SQLite 缓存。"""
-    bus.info(L.cache.sync.info.hydrating)
+    typer.secho("💧 正在执行增量数据补水...", fg=typer.colors.BLUE, err=True)
     try:
         with engine_context(work_dir):
             pass
-        bus.success(L.cache.sync.success)
+        typer.secho("✅ 数据同步完成。", fg=typer.colors.GREEN, err=True)
     except Exception as e:
         logger.exception("数据同步失败")
-        bus.error(L.cache.sync.error, error=str(e))
+        typer.secho(f"❌ 数据同步失败: {e}", fg=typer.colors.RED, err=True)
         ctx.exit(1)
 
 
@@ -52,7 +50,7 @@ def cache_rebuild(
     setup_logging()
     db_path = work_dir.resolve() / ".quipu" / "history.sqlite"
     if not db_path.exists():
-        bus.warning(L.cache.rebuild.info.dbNotFound)
+        typer.secho("🤷 数据库文件不存在，将直接创建。无需重建。", fg=typer.colors.YELLOW, err=True)
         cache_sync(ctx, work_dir)
 
 
@@ -73,12 +71,12 @@ def cache_prune_refs(
     setup_logging()
 
     with engine_context(work_dir) as engine:
-        bus.info(L.cache.prune.info.scanning)
+        typer.secho("🔍 正在扫描冗余引用...", fg=typer.colors.BLUE, err=True)
 
         # 1. 获取所有本地 heads
         local_heads = engine.git_db.get_all_ref_heads("refs/quipu/local/heads/")
         if not local_heads:
-            bus.success(L.cache.prune.info.noRedundant)
+            typer.secho("✅ 未发现冗余引用。", fg=typer.colors.GREEN, err=True)
             return
 
         head_commits = {h[0] for h in local_heads}
@@ -100,7 +98,7 @@ def cache_prune_refs(
         redundant_commits = head_commits.intersection(parents_of_heads)
 
         if not redundant_commits:
-            bus.success(L.cache.prune.info.noRedundant)
+            typer.secho("✅ 未发现冗余引用。", fg=typer.colors.GREEN, err=True)
             return
 
         # 4. 找出对应的 ref names 并删除
@@ -109,12 +107,16 @@ def cache_prune_refs(
             if c_hash in redundant_commits:
                 refs_to_delete.append(ref_name)
 
-        bus.info(L.cache.prune.info.found, count=len(refs_to_delete), total=len(local_heads))
+        typer.secho(
+            f"🗑️  发现 {len(refs_to_delete)} 个冗余引用 (总计 {len(local_heads)} 个 heads)。",
+            fg=typer.colors.BLUE,
+            err=True,
+        )
 
         deleted_count = 0
         for ref in refs_to_delete:
             engine.git_db.delete_ref(ref)
             deleted_count += 1
 
-        bus.success(L.cache.prune.success, count=deleted_count)
+        typer.secho(f"✅ 清理完成，已删除 {deleted_count} 个引用。", fg=typer.colors.GREEN, err=True)
         return

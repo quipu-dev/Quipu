@@ -1,7 +1,5 @@
 import click
 import typer
-from needle.pointer import L
-from quipu.common.bus import bus
 from quipu.spec.exceptions import OperationCancelledError
 
 
@@ -36,7 +34,7 @@ def prompt_for_confirmation(prompt: str, diff_lines: list[str] | None = None, de
         如果用户确认则返回 True，否则返回 False。
     """
     if diff_lines:
-        bus.info(L.prompt.ui.diffHeader)
+        typer.secho("\n🔍 变更预览:", fg=typer.colors.BLUE, err=True)
         for line in diff_lines:
             if line.startswith("+"):
                 typer.secho(line.strip("\n"), fg=typer.colors.GREEN, err=True)
@@ -48,9 +46,7 @@ def prompt_for_confirmation(prompt: str, diff_lines: list[str] | None = None, de
                 typer.echo(line.strip("\n"), err=True)
         typer.echo("", err=True)
 
-    prompt_suffix = (
-        bus.render_to_string(L.prompt.suffix.yesDefault) if default else bus.render_to_string(L.prompt.suffix.noDefault)
-    )
+    prompt_suffix = " [Y/n]: " if default else " [y/N]: "
     typer.secho(prompt + prompt_suffix, nl=False, err=True)
 
     try:
@@ -59,7 +55,7 @@ def prompt_for_confirmation(prompt: str, diff_lines: list[str] | None = None, de
         click.echo(char, err=True)  # 手动回显到 stderr
     except (OSError, EOFError):
         # 在完全没有 tty 的环境中 (例如 CI runner)，会抛出异常
-        bus.info(L.prompt.info.nonInteractive)
+        typer.secho(" (non-interactive)", fg=typer.colors.BLUE, err=True)
         return False  # 非交互式环境应安全失败
 
     if not char or char == "\r" or char == "\n":

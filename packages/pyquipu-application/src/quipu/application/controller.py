@@ -124,8 +124,7 @@ class QuipuApplication:
             return QuipuResult(
                 success=True,  # No failure, just nothing to do
                 exit_code=0,
-                message="axon.warning.noStatements",
-                msg_kwargs={"parser": final_parser_name},
+                message=f"⚠️  未解析到任何有效指令 (Parser: {final_parser_name})。",
             )
 
         # 3.2 Executor Setup
@@ -153,7 +152,7 @@ class QuipuApplication:
             summary_override=final_summary,
         )
 
-        return QuipuResult(success=True, exit_code=0, message="run.success")
+        return QuipuResult(success=True, exit_code=0, message="✨ 执行成功")
 
 
 def run_quipu(
@@ -176,21 +175,15 @@ def run_quipu(
 
     except OperationCancelledError as e:
         logger.info(f"🚫 操作已取消: {e}")
-        return QuipuResult(
-            success=False, exit_code=2, message="run.error.cancelled", msg_kwargs={"error": str(e)}, error=e
-        )
+        return QuipuResult(success=False, exit_code=2, message=f"🚫 操作已取消: {e}", error=e)
 
     except CoreExecutionError as e:
         logger.error(f"❌ 操作失败: {e}")
-        return QuipuResult(
-            success=False, exit_code=1, message="run.error.execution", msg_kwargs={"error": str(e)}, error=e
-        )
+        return QuipuResult(success=False, exit_code=1, message=f"❌ 操作失败: {e}", error=e)
 
     except Exception as e:
         logger.exception("运行时错误")
-        return QuipuResult(
-            success=False, exit_code=1, message="run.error.system", msg_kwargs={"error": str(e)}, error=e
-        )
+        return QuipuResult(success=False, exit_code=1, message=f"系统错误: {e}", error=e)
     finally:
         # 确保无论成功或失败，引擎资源都被关闭
         if app and hasattr(app, "engine") and app.engine:
@@ -240,20 +233,15 @@ def run_stateless_plan(
             return QuipuResult(
                 success=True,
                 exit_code=0,
-                message="axon.warning.noStatements",
-                msg_kwargs={"parser": final_parser_name},
+                message=f"⚠️  未解析到任何有效指令 (Parser: {final_parser_name})。",
             )
 
         executor.execute(statements)
-        return QuipuResult(success=True, exit_code=0, message="axon.success")
+        return QuipuResult(success=True, exit_code=0, message="✨ Axon 执行完成。")
 
     except CoreExecutionError as e:
         logger.error(f"❌ 操作失败: {e}")
-        return QuipuResult(
-            success=False, exit_code=1, message="run.error.execution", msg_kwargs={"error": str(e)}, error=e
-        )
+        return QuipuResult(success=False, exit_code=1, message=f"❌ 操作失败: {e}", error=e)
     except Exception as e:
         logger.exception("运行时错误")
-        return QuipuResult(
-            success=False, exit_code=1, message="run.error.system", msg_kwargs={"error": str(e)}, error=e
-        )
+        return QuipuResult(success=False, exit_code=1, message=f"系统错误: {e}", error=e)
