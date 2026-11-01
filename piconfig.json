@@ -1,15 +1,17 @@
 {
   "presets": {
     "full": {
+      "description": "核心引擎与运行时逻辑（排除测试代码）",
       "format": "xml",
-      "extension": ["py", "toml", "json"],
       "paths": ["."],
-      "ignore_dir": ["tests"]
+      "read": ["*.py", "*.toml", "*.json"],
+      "ignore": ["tests/"]
     },
     "fullt": {
+      "description": "全量工程代码（包含测试套件）",
       "format": "xml",
-      "extension": ["py", "toml", "json"],
-      "paths": ["."]
+      "paths": ["."],
+      "read": ["*.py", "*.toml", "*.json"]
     }
   }
 }
